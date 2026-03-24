@@ -175,7 +175,6 @@ export default function AidePage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 -mt-10 relative z-10">
-        {/* Quick Actions */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-20">
           {[
             { icon: <MessageCircle className="text-green-500"/>, label: "WhatsApp", sub: "Réponse < 15min", link: "https://wa.me/33600000000" },
@@ -183,7 +182,13 @@ export default function AidePage() {
             { icon: <Gift className="text-purple-500"/>, label: "Parrainage", sub: "Gagnez 10€", link: "/compte" },
             { icon: <AlertCircle className="text-[#FF4500]"/>, label: "Litige", sub: "Photo & Crédit", link: "mailto:contact@soleilsaveurs.fr" }
           ].map((action, i) => (
-            <a key={i} href={action.link} target={action.link.startsWith('http') ? "_blank" : undefined} rel={action.link.startsWith('http') ? "noopener noreferrer" : undefined} className="bg-white p-6 rounded-[32px] shadow-xl border border-slate-50 flex flex-col items-center text-center hover:translate-y-[-5px] transition-all group">
+            <a 
+              key={i} 
+              href={action.link} 
+              target={action.link.startsWith('http') ? "_blank" : undefined}
+              rel={action.link.startsWith('http') ? "noopener noreferrer" : undefined}
+              className="bg-white p-6 rounded-[32px] shadow-xl border border-slate-50 flex flex-col items-center text-center hover:translate-y-[-5px] transition-all group"
+            >
               <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">{action.icon}</div>
               <h3 className="font-black uppercase text-[10px] tracking-widest text-slate-900">{action.label}</h3>
               <p className="text-[9px] text-slate-400 font-bold mt-1 uppercase">{action.sub}</p>
@@ -192,7 +197,6 @@ export default function AidePage() {
         </div>
 
         <div className="grid lg:grid-cols-3 gap-12">
-          {/* FAQ Column (Wide) */}
           <div className="lg:col-span-2 space-y-16">
             {filteredCategories.length > 0 ? (
               filteredCategories.map((cat) => (
@@ -227,7 +231,6 @@ export default function AidePage() {
             )}
           </div>
 
-          {/* Sidebar (Form & Info) */}
           <div className="space-y-8">
             <div className="bg-white rounded-[40px] p-10 shadow-2xl border border-slate-50 sticky top-24">
               <div className="w-12 h-12 bg-slate-900 text-white rounded-2xl flex items-center justify-center mb-6"><Mail className="w-6 h-6"/></div>
@@ -238,7 +241,7 @@ export default function AidePage() {
                 <div className="bg-green-50 border border-green-100 p-8 rounded-[32px] text-center animate-in zoom-in duration-300">
                   <Sparkles className="w-10 h-10 text-green-500 mx-auto mb-4" />
                   <p className="font-black uppercase text-xs text-green-700">Reçu 5/5 !</p>
-                  <p className="text-[10px] mt-2 font-bold text-green-600/70 uppercase">L'équipe Soleil Saveurs arrive à la rescousse.</p>
+                  <p className="text-[10px] mt-2 font-bold text-green-600/70 uppercase">L'équipe arrive à la rescousse.</p>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -260,7 +263,7 @@ export default function AidePage() {
                 <Gift className="w-40 h-40" />
               </div>
               <h4 className="font-black uppercase text-xl italic tracking-tighter mb-4 leading-none">DEVENEZ <br/>AMBASSADEUR</h4>
-              <p className="text-[11px] font-bold opacity-80 mb-8 italic">Offrez 10€, recevez 10€. Le goût du soleil se partage entre voisins du 78.</p>
+              <p className="text-[11px] font-bold opacity-80 mb-8 italic">Offrez 10€, recevez 10€. Le goût se partage dans le 78.</p>
               <Link href="/compte" className="inline-flex items-center gap-3 bg-white text-[#FF4500] px-6 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest hover:scale-105 transition-all">
                 Mon Code <ArrowRight className="w-4 h-4" />
               </Link>
@@ -273,21 +276,21 @@ export default function AidePage() {
         <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-12 text-left mb-20">
           <div>
             <h5 className="font-black uppercase text-xs mb-4">Soleil Saveurs</h5>
-            <p className="text-[11px] text-slate-400 font-medium leading-relaxed italic">Le circuit-court réinventé dans les Yvelines. Du champ à votre table en moins de 12 heures.</p>
+            <p className="text-[11px] text-slate-400 font-medium leading-relaxed italic">Le circuit-court réinventé dans les Yvelines.</p>
           </div>
           <div>
-            <h5 className="font-black uppercase text-xs mb-4">Horaires Live</h5>
-            <p className="text-[11px] text-slate-400 font-medium leading-relaxed italic">Support WhatsApp : 07h — 22h<br/>Standard Téléphonique : 09h — 19h</p>
+            <h5 className="font-black uppercase text-xs mb-4">Horaires</h5>
+            <p className="text-[11px] text-slate-400 font-medium leading-relaxed italic">WhatsApp : 07h — 22h<br/>Standard : 09h — 19h</p>
           </div>
           <div>
             <h5 className="font-black uppercase text-xs mb-4">Sécurité</h5>
             <div className="flex gap-4">
-              <div className="bg-slate-100 px-3 py-1 rounded-md text-[9px] font-bold text-slate-400">STRIPE ENCRYPTED</div>
-              <div className="bg-slate-100 px-3 py-1 rounded-md text-[9px] font-bold text-slate-400">HTTPS SECURE</div>
+              <div className="bg-slate-100 px-3 py-1 rounded-md text-[9px] font-bold text-slate-400 uppercase">Stripe Secure</div>
+              <div className="bg-slate-100 px-3 py-1 rounded-md text-[9px] font-bold text-slate-400 uppercase">SSL Verified</div>
             </div>
           </div>
         </div>
-        <p className="text-[9px] font-black uppercase tracking-[0.5em] text-slate-200">
+        <p className="text-[9px] font-black uppercase tracking-[0.5em] text-slate-200 pb-10">
           © 2026 SOLEIL SAVEURS — TOUS DROITS RÉSERVÉS
         </p>
       </footer>
