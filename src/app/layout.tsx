@@ -76,11 +76,12 @@ export default function RootLayout({
               </Link>
 
               {/* BOUTON AIDE - CIBLE LA PAGE INTERNE /AIDE */}
-              <Link 
+              {/* Bouton d'aide flottant uniquement sur Mobile */}
+<Link 
   href="/aide" 
-  className="bg-yellow-400 text-black px-4 py-2 rounded-none font-bold animate-bounce"
+  className="md:hidden fixed bottom-24 right-6 z-50 bg-white text-slate-900 p-4 rounded-full shadow-2xl border border-slate-100 flex items-center justify-center animate-bounce"
 >
-  CECI EST UN TEST
+  <HelpCircle className="w-6 h-6 text-[#FF4500]" />
 </Link>
             </div>
           </div>
