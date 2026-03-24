@@ -24,7 +24,7 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-[#FDFCF9] text-slate-900 font-sans selection:bg-[#FF4500]/10 pb-10 overflow-x-hidden">
-      {/* Navbar Compacte - Correction : bg-white total et z-index élevé */}
+      {/* Navbar Compacte */}
       <nav className="fixed top-0 left-0 right-0 z-[100] bg-white border-b border-slate-100 px-4 md:px-8 h-14 flex items-center justify-between shadow-sm">
         <Link href="/" className="text-lg font-bold tracking-tight flex items-center gap-2">
           <div className="w-7 h-7 bg-[#FF4500] rounded flex items-center justify-center text-white text-[10px]">S</div>
@@ -38,7 +38,9 @@ export default function Home() {
           <Link href={user ? "/compte" : "/login"} className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
             <User className="w-5 h-5" />
           </Link>
-          <Link href="https://wa.me/ton-numero" target="_blank" className="hidden md:flex items-center gap-2 bg-slate-900 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-slate-800 transition-all">
+          
+          {/* MODIFICATION ICI : Lien vers /aide au lieu de WhatsApp */}
+          <Link href="/aide" className="hidden md:flex items-center gap-2 bg-slate-900 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-slate-800 transition-all">
             <HelpCircle className="w-3.5 h-3.5" />
             <span>Aide</span>
           </Link>
@@ -47,7 +49,7 @@ export default function Home() {
 
       <PanierDrawer isOpen={isPanierOpen} onClose={() => setIsPanierOpen(false)} />
 
-      {/* Hero Section - Correction : pt-14 (hauteur exacte nav) pour coller au header */}
+      {/* Hero Section */}
       <section className="pt-14 md:pt-20 pb-10 px-4 md:px-8">
         <div className="max-w-6xl mx-auto">
           <div className="inline-flex items-center gap-2 bg-[#FF4500]/10 text-[#FF4500] px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider mb-4">
@@ -85,7 +87,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Vidéo Format Portrait - Correction : suppression des marges inutiles */}
             <div className="relative aspect-[4/5] md:aspect-[3/4] max-w-[400px] mx-auto md:ml-auto w-full rounded-2xl overflow-hidden shadow-2xl bg-slate-100">
               <video id="hero-video" autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover">
                 <source src="/video.mp4" type="video/mp4" />
@@ -101,7 +102,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Bento Services - Correction : py-4 pour resserrer le contenu */}
+      {/* Bento Services */}
       <section className="max-w-6xl mx-auto px-4 md:px-8 py-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-slate-900 rounded-2xl p-6 text-white min-h-[160px] flex flex-col justify-center">
@@ -122,7 +123,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Stats Section - Correction : py-8 */}
+      {/* Stats Section */}
       <section className="max-w-6xl mx-auto px-4 md:px-8 py-8 border-y border-slate-100 my-6">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[

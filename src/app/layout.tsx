@@ -16,6 +16,25 @@ export default function RootLayout({
 }) {
   const [user, setUser] = useState<any>(null);
   const [isPanierOpen, setIsPanierOpen] = useState(false);
+  const [nombreArticles, setNombreArticles] = useState(0);
+
+  // Synchronisation du badge panier
+  useEffect(() => {
+    const updateBadge = () => {
+      const saved = localStorage.getItem('mon-panier');
+      if (saved) {
+        const items = JSON.parse(saved);
+        const total = items.reduce((acc: number, item: any) => acc + item.quantite, 0);
+        setNombreArticles(total);
+      } else {
+        setNombreArticles(0);
+      }
+    };
+
+    updateBadge();
+    window.addEventListener('storage', updateBadge);
+    return () => window.removeEventListener('storage', updateBadge);
+  }, []);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -27,12 +46,12 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <body className={`${inter.className} bg-[#FDFCF9] antialiased`}>
-        {/* NAVBAR UNIQUE ET FIXE */}
+        {/* NAVBAR */}
         <nav className="fixed top-0 left-0 right-0 z-[100] bg-white/95 backdrop-blur-md border-b border-slate-100 h-14 shadow-sm">
           <div className="max-w-7xl mx-auto h-full px-4 md:px-8 flex items-center justify-between">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2 group">
-              <div className="w-8 h-8 bg-[#FF4500] rounded-lg flex items-center justify-center text-white font-black text-xs transition-transform group-hover:scale-110">S</div>
+              <div className="w-8 h-8 bg-[#FF4500] rounded-lg flex items-center justify-center text-white font-black text-xs transition-transform group-hover:scale-110 shadow-sm">S</div>
               <span className="font-black tracking-tighter text-lg uppercase text-slate-900">
                 SOLEIL<span className="text-[#FF4500]">SAVEURS</span>
               </span>
@@ -42,42 +61,46 @@ export default function RootLayout({
             <div className="flex items-center gap-1 md:gap-3">
               <button 
                 onClick={() => setIsPanierOpen(true)} 
-                className="p-2 hover:bg-slate-50 rounded-full relative transition-colors"
+                className="p-2 hover:bg-slate-50 rounded-full relative transition-colors group"
               >
-                <ShoppingCart className="w-5 h-5 text-slate-700" />
-                <span className="absolute top-1 right-1 w-4 h-4 bg-[#FF4500] text-white text-[9px] flex items-center justify-center rounded-full font-bold border-2 border-white">
-                  0
-                </span>
+                <ShoppingCart className="w-5 h-5 text-slate-700 group-hover:text-[#FF4500]" />
+                {nombreArticles > 0 && (
+                  <span className="absolute top-1 right-1 w-4 h-4 bg-[#FF4500] text-white text-[9px] flex items-center justify-center rounded-full font-bold border-2 border-white animate-in zoom-in">
+                    {nombreArticles}
+                  </span>
+                )}
               </button>
 
-              <Link href={user ? "/compte" : "/login"} className="p-2 hover:bg-slate-50 rounded-full transition-colors">
-                <User className="w-5 h-5 text-slate-700" />
+              <Link href={user ? "/compte" : "/login"} className="p-2 hover:bg-slate-50 rounded-full transition-colors group">
+                <User className="w-5 h-5 text-slate-700 group-hover:text-slate-900" />
               </Link>
 
+              {/* BOUTON AIDE - CIBLE LA PAGE INTERNE /AIDE */}
               <Link 
-                href="https://wa.me/ton-numero" 
-                target="_blank" 
-                className="hidden sm:flex bg-slate-900 text-white px-4 py-2 rounded-full text-[11px] font-black uppercase tracking-widest hover:bg-[#FF4500] transition-all items-center gap-2"
-              >
-                <HelpCircle className="w-3.5 h-3.5" /> Aide
-              </Link>
+  href="/aide" 
+  className="bg-yellow-400 text-black px-4 py-2 rounded-none font-bold animate-bounce"
+>
+  CECI EST UN TEST
+</Link>
             </div>
           </div>
         </nav>
 
-        {/* Panier accessible partout */}
         <PanierDrawer isOpen={isPanierOpen} onClose={() => setIsPanierOpen(false)} />
 
-        {/* CONTENU DES PAGES */}
-        <div className="mt-14">
+        <main className="mt-14">
           {children}
-        </div>
+        </main>
 
-        {/* FOOTER PRO (Optionnel mais recommandé) */}
-        <footer className="bg-white border-t border-slate-100 py-10 px-4">
-          <div className="max-w-7xl mx-auto text-center">
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">
-              © 2024 Soleil Saveurs — Récolté avec passion dans le 78
+        <footer className="bg-white border-t border-slate-100 py-12 px-4 mt-20">
+          <div className="max-w-7xl mx-auto flex flex-col items-center gap-6">
+            <div className="flex gap-8 mb-4">
+               <Link href="/aide" className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-[#FF4500]">Support</Link>
+               <Link href="/cgv" className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-[#FF4500]">Livraison</Link>
+               <Link href="/mentions" className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-[#FF4500]">Mentions</Link>
+            </div>
+            <p className="text-[9px] font-black uppercase tracking-[0.4em] text-slate-300">
+              © 2026 Soleil Saveurs — Plaisir (78)
             </p>
           </div>
         </footer>
