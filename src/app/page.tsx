@@ -30,18 +30,19 @@ export default function Home() {
           <div className="w-7 h-7 bg-[#FF4500] rounded flex items-center justify-center text-white text-[10px]">S</div>
           <span>SOLEIL<span className="text-[#FF4500]">SAVEURS</span></span>
         </Link>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 md:gap-2">
           <button onClick={() => setIsPanierOpen(true)} className="p-2 hover:bg-slate-100 rounded-lg transition-colors relative">
             <ShoppingCart className="w-5 h-5" />
             <span className="absolute top-1 right-1 w-3.5 h-3.5 bg-[#FF4500] text-white text-[8px] flex items-center justify-center rounded-full font-bold">0</span>
           </button>
+          
           <Link href={user ? "/compte" : "/login"} className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
             <User className="w-5 h-5" />
           </Link>
           
-          {/* MODIFICATION ICI : Lien vers /aide au lieu de WhatsApp */}
-          <Link href="/aide" className="hidden md:flex items-center gap-2 bg-slate-900 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-slate-800 transition-all">
-            <HelpCircle className="w-3.5 h-3.5" />
+          {/* CORRECTION ICI : Retrait de 'hidden md:flex' pour affichage mobile + ajustement padding mobile */}
+          <Link href="/aide" className="flex items-center gap-1.5 bg-slate-900 text-white px-2 md:px-3 py-1.5 rounded-lg text-[10px] md:text-xs font-semibold hover:bg-slate-800 transition-all ml-1">
+            <HelpCircle className="w-3.5 h-3.5 text-[#FF4500]" />
             <span>Aide</span>
           </Link>
         </div>
@@ -50,7 +51,7 @@ export default function Home() {
       <PanierDrawer isOpen={isPanierOpen} onClose={() => setIsPanierOpen(false)} />
 
       {/* Hero Section */}
-      <section className="pt-14 md:pt-20 pb-10 px-4 md:px-8">
+      <section className="pt-20 md:pt-24 pb-10 px-4 md:px-8">
         <div className="max-w-6xl mx-auto">
           <div className="inline-flex items-center gap-2 bg-[#FF4500]/10 text-[#FF4500] px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider mb-4">
             <span className="w-1.5 h-1.5 rounded-full bg-[#FF4500] animate-pulse"></span>
