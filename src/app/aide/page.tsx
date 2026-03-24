@@ -183,7 +183,7 @@ export default function AidePage() {
             { icon: <Gift className="text-purple-500"/>, label: "Parrainage", sub: "Gagnez 10€", link: "/compte" },
             { icon: <AlertCircle className="text-[#FF4500]"/>, label: "Litige", sub: "Photo & Crédit", link: "mailto:contact@soleilsaveurs.fr" }
           ].map((action, i) => (
-            <a key={i} href={action.link} className="bg-white p-6 rounded-[32px] shadow-xl border border-slate-50 flex flex-col items-center text-center hover:translate-y-[-5px] transition-all group">
+            <a key={i} href={action.link} target={action.link.startsWith('http') ? "_blank" : undefined} rel={action.link.startsWith('http') ? "noopener noreferrer" : undefined} className="bg-white p-6 rounded-[32px] shadow-xl border border-slate-50 flex flex-col items-center text-center hover:translate-y-[-5px] transition-all group">
               <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">{action.icon}</div>
               <h3 className="font-black uppercase text-[10px] tracking-widest text-slate-900">{action.label}</h3>
               <p className="text-[9px] text-slate-400 font-bold mt-1 uppercase">{action.sub}</p>
@@ -229,7 +229,6 @@ export default function AidePage() {
 
           {/* Sidebar (Form & Info) */}
           <div className="space-y-8">
-            {/* Formulaire stylisé */}
             <div className="bg-white rounded-[40px] p-10 shadow-2xl border border-slate-50 sticky top-24">
               <div className="w-12 h-12 bg-slate-900 text-white rounded-2xl flex items-center justify-center mb-6"><Mail className="w-6 h-6"/></div>
               <h3 className="font-black uppercase text-2xl tracking-tighter text-slate-900 mb-2 leading-none">VOTRE QUESTION <br/>EST <span className="text-[#FF4500]">UNIQUE ?</span></h3>
@@ -256,7 +255,6 @@ export default function AidePage() {
               )}
             </div>
 
-            {/* Promo Card */}
             <div className="bg-[#FF4500] rounded-[40px] p-10 text-white relative overflow-hidden group shadow-xl shadow-[#FF4500]/30">
               <div className="absolute -right-4 -top-4 opacity-10 group-hover:scale-110 transition-transform duration-700">
                 <Gift className="w-40 h-40" />
@@ -271,7 +269,6 @@ export default function AidePage() {
         </div>
       </div>
       
-      {/* Footer Fin de page */}
       <footer className="mt-32 pt-20 border-t border-slate-100 text-center px-6">
         <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-12 text-left mb-20">
           <div>
