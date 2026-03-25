@@ -1,26 +1,48 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { X, Trash2, ShoppingBag, MapPin, CreditCard, Banknote, Phone, User, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { X, Trash2, ShoppingBag, MapPin, CreditCard, Banknote, Phone, User, Loader2, CheckCircle2, AlertCircle, LogIn } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { useRouter } from 'next/navigation';
 
+// AJOUT de user dans l'interface pour corriger l'erreur dans page.tsx
 interface PanierDrawerProps {
   isOpen: boolean;
   onClose: () => void;
+  user?: any; 
 }
 
-export default function PanierDrawer({ isOpen, onClose }: PanierDrawerProps) {
+export default function PanierDrawer({ isOpen, onClose, user: propUser }: PanierDrawerProps) {
+  // On utilise l'utilisateur passé par la page Home, sinon on garde l'état local
+  const [user, setUser] = useState<any>(propUser || null);
   const [panier, setPanier] = useState<any[]>([]);
   const [nom, setNom] = useState('');
   const [telephone, setTelephone] = useState('');
   const [adresse, setAdresse] = useState('');
   const [suggestions, setSuggestions] = useState<any[]>([]);
-  // MISE À JOUR : Uniquement Espèces ou Ligne
   const [methodePaiement, setMethodePaiement] = useState<'Espèces' | 'Ligne'>('Espèces');
   const [chargement, setChargement] = useState(false);
   const [distanceValide, setDistanceValide] = useState<boolean | null>(null);
+  
+  const router = useRouter();
+
+  // Mise à jour de l'utilisateur si la prop change
+  useEffect(() => {
+    if (propUser) setUser(propUser);
+  }, [propUser]);
+
+  // Initialisation de la session utilisateur (fallback sécurité)
+  useEffect(() => {
+    const getSession = async () => {
+      if (!user) {
+        const { data: { user: supabaseUser } } = await supabase.auth.getUser();
+        setUser(supabaseUser);
+      }
+    };
+    if (isOpen) getSession();
+  }, [isOpen, user]);
 
   const calculerPrixLigne = (item: any) => {
-    const qte = item.quantite;
+    const qte = item.quantite || 0;
     const p = item; 
     const remise = p.promotion || 0;
     const prixApresRemise = remise > 0 ? p.price * (1 - remise / 100) : p.price;
@@ -38,7 +60,13 @@ export default function PanierDrawer({ isOpen, onClose }: PanierDrawerProps) {
   useEffect(() => {
     const loadPanier = () => {
       const saved = localStorage.getItem('mon-panier');
-      if (saved) setPanier(JSON.parse(saved));
+      if (saved) {
+        try {
+            setPanier(JSON.parse(saved) || []);
+        } catch (e) {
+            setPanier([]);
+        }
+      }
     };
     if (isOpen) loadPanier();
     window.addEventListener('storage', loadPanier);
@@ -46,9 +74,9 @@ export default function PanierDrawer({ isOpen, onClose }: PanierDrawerProps) {
   }, [isOpen]);
 
   const updateQuantity = (id: number, delta: number) => {
-    const nouveauPanier = panier.map(item => {
+    const nouveauPanier = (panier || []).map(item => {
       if (item.id === id) {
-        const newQte = Math.max(0, item.quantite + delta);
+        const newQte = Math.max(0, (item.quantite || 0) + delta);
         return { ...item, quantite: newQte };
       }
       return item;
@@ -61,12 +89,17 @@ export default function PanierDrawer({ isOpen, onClose }: PanierDrawerProps) {
 
   const handleAdresseChange = async (val: string) => {
     setAdresse(val);
-    if (val.length > 5) {
+    if (val && val.length > 5) {
       try {
         const res = await fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(val)}&limit=5`);
         const data = await res.json();
-        setSuggestions(data.features);
-      } catch (err) { console.error(err); }
+        setSuggestions(data.features || []);
+      } catch (err) { 
+        console.error(err); 
+        setSuggestions([]);
+      }
+    } else {
+      setSuggestions([]);
     }
   };
 
@@ -74,18 +107,24 @@ export default function PanierDrawer({ isOpen, onClose }: PanierDrawerProps) {
     setAdresse(feat.properties.label);
     setSuggestions([]);
     const cp = feat.properties.postcode;
-    if (cp.startsWith('78')) {
+    if (cp && cp.startsWith('78')) {
       setDistanceValide(true);
     } else {
       setDistanceValide(false);
     }
   };
 
-  const sousTotal = panier.reduce((acc, item) => acc + calculerPrixLigne(item), 0);
+  const sousTotal = (panier || []).reduce((acc, item) => acc + calculerPrixLigne(item), 0);
   const fraisLivraison = sousTotal > 45 || sousTotal === 0 ? 0 : 2.50;
   const totalFinal = sousTotal + fraisLivraison;
 
   const envoyerCommande = async () => {
+    if (!user) {
+      onClose();
+      router.push('/login');
+      return;
+    }
+
     if (!nom || !telephone || !adresse || !distanceValide) return;
     setChargement(true);
     
@@ -96,7 +135,7 @@ export default function PanierDrawer({ isOpen, onClose }: PanierDrawerProps) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
             items: panier,
-            metadata: { nom, telephone, adresse }
+            metadata: { nom, telephone, adresse, user_id: user.id }
           }),
         });
         const { url } = await response.json();
@@ -139,7 +178,7 @@ export default function PanierDrawer({ isOpen, onClose }: PanierDrawerProps) {
 
         <div className="flex-1 overflow-y-auto p-6 space-y-8">
           <div className="space-y-4">
-            {panier.length === 0 ? (
+            {(panier || []).length === 0 ? (
               <div className="text-center py-20">
                 <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
                   <ShoppingBag className="w-8 h-8 text-slate-200" />
@@ -171,7 +210,7 @@ export default function PanierDrawer({ isOpen, onClose }: PanierDrawerProps) {
             )}
           </div>
 
-          {panier.length > 0 && (
+          {(panier || []).length > 0 && (
             <div className="space-y-5 pt-6 border-t border-slate-100">
               <h3 className="font-black uppercase text-sm tracking-widest text-slate-900">Infos de livraison</h3>
               
@@ -195,7 +234,7 @@ export default function PanierDrawer({ isOpen, onClose }: PanierDrawerProps) {
                     onChange={(e) => handleAdresseChange(e.target.value)}
                     className="w-full bg-white border border-slate-100 p-4 pl-12 rounded-2xl font-bold text-xs uppercase focus:border-[#FF4500] outline-none transition-all" 
                   />
-                  {suggestions.length > 0 && (
+                  {(suggestions || []).length > 0 && (
                     <div className="absolute z-50 top-full left-0 right-0 bg-white border border-slate-100 shadow-xl rounded-2xl mt-2 overflow-hidden">
                       {suggestions.map((s, i) => (
                         <button key={i} onClick={() => selectionnerAdresse(s)} className="w-full p-3 text-left text-[10px] font-bold uppercase border-b border-slate-50 hover:bg-slate-50">
@@ -220,7 +259,6 @@ export default function PanierDrawer({ isOpen, onClose }: PanierDrawerProps) {
                 )}
               </div>
 
-              {/* SELECTION PAIEMENT : DEUX OPTIONS */}
               <div className="grid grid-cols-2 gap-3">
                 <button onClick={()=>setMethodePaiement('Espèces')} className={`p-4 rounded-2xl border flex flex-col items-center gap-2 font-black text-[10px] transition-all ${methodePaiement === 'Espèces' ? 'bg-slate-900 text-white border-slate-900 shadow-lg' : 'bg-white text-slate-400 border-slate-100'}`}>
                   <Banknote className="w-5 h-5" /> ESPÈCES
@@ -250,11 +288,22 @@ export default function PanierDrawer({ isOpen, onClose }: PanierDrawerProps) {
           </div>
           
           <button 
-            disabled={chargement || !distanceValide || !nom || !telephone || panier.length === 0}
+            disabled={chargement || (user && (!(panier || []).length || !distanceValide || !nom || !telephone))}
             onClick={envoyerCommande}
-            className="w-full bg-slate-900 disabled:bg-slate-100 disabled:text-slate-300 text-white p-5 rounded-2xl font-black uppercase text-sm tracking-widest hover:bg-[#FF4500] transition-all shadow-xl flex items-center justify-center gap-3"
+            className={`w-full ${!user ? 'bg-blue-600' : 'bg-slate-900'} disabled:bg-slate-100 disabled:text-slate-300 text-white p-5 rounded-2xl font-black uppercase text-sm tracking-widest hover:opacity-90 transition-all shadow-xl flex items-center justify-center gap-3`}
           >
-            {chargement ? <Loader2 className="w-5 h-5 animate-spin" /> : (methodePaiement === 'Ligne' ? 'Payer par carte' : 'Confirmer la commande')}
+            {chargement ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : !user ? (
+              <>
+                <LogIn className="w-5 h-5" />
+                Se connecter pour commander
+              </>
+            ) : methodePaiement === 'Ligne' ? (
+              'Payer par carte'
+            ) : (
+              'Confirmer la commande'
+            )}
           </button>
         </div>
       </div>
