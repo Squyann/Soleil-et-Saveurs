@@ -2,17 +2,26 @@
 export const dynamic = 'force-dynamic';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { 
   ArrowRight, Zap, MapPin, ShoppingCart, Truck, 
-  User, HelpCircle, Search, X, CheckCircle2 
+  User, HelpCircle, Search, X, CheckCircle2, Star, Clock, ShieldCheck, Navigation, Loader2, AlertCircle
 } from 'lucide-react';
 import PanierDrawer from '@/components/ui/PanierDrawer';
 
 export default function Home() {
   const [user, setUser] = useState<any>(null);
   const [isPanierOpen, setIsPanierOpen] = useState(false);
-  const [zipCode, setZipCode] = useState('');
+  
+  // LOGIQUE ADRESSE (IDENTIQUE AU PANIER)
+  const [address, setAddress] = useState('');
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [showResult, setShowResult] = useState(false);
+  const [distanceValide, setDistanceValide] = useState<boolean | null>(null);
+  
+  const router = useRouter();
 
   useEffect(() => {
     const initSession = async () => {
@@ -21,6 +30,46 @@ export default function Home() {
     };
     initSession();
   }, []);
+
+  // Gestion de la saisie (API Gouv)
+  const handleAddressChange = async (val: string) => {
+    setAddress(val);
+    setDistanceValide(null); // Reset pendant la frappe
+    if (val.length > 5) {
+      try {
+        const res = await fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(val)}&limit=5`);
+        const data = await res.json();
+        setSuggestions(data.features);
+      } catch (err) { console.error(err); }
+    } else {
+      setSuggestions([]);
+    }
+  };
+
+  // Sélection de l'adresse (Logique 78)
+  const selectionnerAdresse = (feat: any) => {
+    setAddress(feat.properties.label);
+    setSuggestions([]);
+    setIsVerifying(true);
+    
+    const cp = feat.properties.postcode;
+    
+    // Simulation de vérification pour l'expérience utilisateur
+    setTimeout(() => {
+      setIsVerifying(false);
+      if (cp.startsWith('78')) {
+        setDistanceValide(true);
+        setShowResult(true); // Ouvre la pop-up de succès
+      } else {
+        setDistanceValide(false);
+      }
+    }, 800);
+  };
+
+  const handleAddressCheck = (e: React.FormEvent) => {
+    e.preventDefault();
+    // La validation se fait déjà via la sélection dans la liste
+  };
 
   return (
     <main className="min-h-screen bg-[#FDFCF9] text-slate-900 font-sans selection:bg-[#FF4500]/10 pb-10 overflow-x-hidden">
@@ -40,7 +89,6 @@ export default function Home() {
             <User className="w-5 h-5" />
           </Link>
           
-          {/* CORRECTION ICI : Retrait de 'hidden md:flex' pour affichage mobile + ajustement padding mobile */}
           <Link href="/aide" className="flex items-center gap-1.5 bg-slate-900 text-white px-2 md:px-3 py-1.5 rounded-lg text-[10px] md:text-xs font-semibold hover:bg-slate-800 transition-all ml-1">
             <HelpCircle className="w-3.5 h-3.5 text-[#FF4500]" />
             <span>Aide</span>
@@ -49,6 +97,27 @@ export default function Home() {
       </nav>
 
       <PanierDrawer isOpen={isPanierOpen} onClose={() => setIsPanierOpen(false)} />
+
+      {/* Pop-up de succès d'éligibilité */}
+      {showResult && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white rounded-[2rem] p-8 max-w-sm w-full shadow-2xl text-center scale-up-center">
+            <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle2 className="w-8 h-8" />
+            </div>
+            <h3 className="text-xl font-black uppercase italic mb-2">Vous êtes éligible !</h3>
+            <p className="text-sm text-slate-500 mb-6 italic">Votre adresse dans le 78 est bien située dans notre zone de livraison.</p>
+            <div className="space-y-3">
+              <button onClick={() => router.push('/commander')} className="w-full bg-[#FF4500] text-white py-4 rounded-xl font-bold hover:scale-105 transition-all shadow-lg shadow-orange-200">
+                Voir la récolte du jour
+              </button>
+              <button onClick={() => setShowResult(false)} className="w-full text-slate-400 text-xs font-bold uppercase tracking-widest">
+                Fermer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Hero Section */}
       <section className="pt-20 md:pt-24 pb-10 px-4 md:px-8">
@@ -72,18 +141,51 @@ export default function Home() {
                   <span>Accéder au catalogue direct</span>
                   <ArrowRight className="w-5 h-5" />
                 </Link>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-white border border-slate-200 p-3 rounded-xl">
-                    <p className="text-[10px] font-bold uppercase text-slate-400 mb-1">Livraison 10km</p>
-                    <div className="flex gap-1">
-                      <input type="text" placeholder="CP" className="w-full text-xs bg-slate-50 p-1.5 rounded focus:outline-none" value={zipCode} onChange={(e)=>setZipCode(e.target.value)} />
-                      <button className="bg-slate-900 text-white px-2 rounded text-[10px]">OK</button>
+                
+                {/* Sélecteur d'adresse avec suggestions (comme dans le panier) */}
+                <div className="bg-white border-2 border-slate-100 p-4 rounded-2xl shadow-xl relative">
+                  <p className="text-[10px] font-black uppercase text-slate-400 mb-2 flex justify-between">
+                    Vérifier mon adresse <Navigation className="w-3 h-3 text-[#FF4500]" />
+                  </p>
+                  <div className="relative">
+                    <div className="relative flex items-center">
+                      <input 
+                        type="text" 
+                        placeholder="Saisissez votre adresse complète..." 
+                        className="w-full text-xs font-bold uppercase bg-slate-50 p-4 pr-12 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF4500]/20 border border-slate-100"
+                        value={address}
+                        onChange={(e) => handleAddressChange(e.target.value)}
+                      />
+                      <div className="absolute right-4">
+                        {isVerifying ? <Loader2 className="w-4 h-4 animate-spin text-[#FF4500]" /> : <Search className="w-4 h-4 text-slate-300" />}
+                      </div>
                     </div>
+
+                    {/* Suggestions d'adresses (API Gouv) */}
+                    {suggestions.length > 0 && (
+                      <div className="absolute z-50 top-full left-0 right-0 bg-white border border-slate-100 shadow-2xl rounded-2xl mt-2 overflow-hidden">
+                        {suggestions.map((s, i) => (
+                          <button 
+                            key={i} 
+                            onClick={() => selectionnerAdresse(s)} 
+                            className="w-full p-4 text-left text-[10px] font-black uppercase border-b border-slate-50 hover:bg-slate-50 transition-colors"
+                          >
+                            {s.properties.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  <Link href="https://maps.google.com" target="_blank" className="bg-white border border-slate-200 p-3 rounded-xl flex flex-col justify-center">
-                    <p className="text-[10px] font-bold uppercase text-slate-400">Le Marché</p>
-                    <p className="text-xs font-bold flex items-center gap-1">Plaisir (78) <MapPin className="w-3 h-3 text-[#FF4500]"/></p>
-                  </Link>
+
+                  {/* Message d'erreur si hors 78 */}
+                  {distanceValide === false && (
+                    <div className="mt-3 p-3 bg-red-50 rounded-xl text-red-600 flex items-center gap-2 animate-in slide-in-from-top-1">
+                      <AlertCircle className="w-4 h-4" />
+                      <p className="text-[10px] font-black uppercase">Désolé, livraison uniquement dans le 78.</p>
+                    </div>
+                  )}
+                  
+                  <p className="text-[9px] text-slate-400 mt-2 italic font-medium">Nous livrons à 15km autour de Plaisir (78)</p>
                 </div>
               </div>
             </div>
@@ -111,11 +213,11 @@ export default function Home() {
             <h3 className="text-xl font-bold mb-1 uppercase italic tracking-tighter">Zéro Stock.</h3>
             <p className="text-slate-400 text-xs">L'arbre est notre seul entrepôt.</p>
           </div>
-          <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm min-h-[160px] flex flex-col justify-center">
-            <Truck className="w-8 h-8 text-[#FF4500] mb-3" />
+          <Link href="/livraison" className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm min-h-[160px] flex flex-col justify-center hover:border-[#FF4500]/20 transition-all group">
+            <Truck className="w-8 h-8 text-[#FF4500] mb-3 group-hover:translate-x-2 transition-transform" />
             <h3 className="text-xl font-bold mb-1 uppercase italic tracking-tighter">Livraison J+0</h3>
             <p className="text-slate-500 text-xs">Récolté le matin, chez vous le soir.</p>
-          </div>
+          </Link>
           <div className="bg-[#FF4500]/5 border border-[#FF4500]/10 rounded-2xl p-6 min-h-[160px] flex flex-col justify-center">
             <MapPin className="w-8 h-8 text-[#FF4500] mb-3" />
             <h3 className="text-xl font-bold mb-1 uppercase italic tracking-tighter">Local 78</h3>
@@ -124,7 +226,55 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Stats Section */}
+      {/* Promesse */}
+      <section className="max-w-6xl mx-auto px-4 md:px-8 py-16">
+        <h2 className="text-3xl font-black uppercase italic tracking-tighter mb-10 text-center">NOTRE <span className="text-[#FF4500]">PROMESSE</span></h2>
+        <div className="grid md:grid-cols-3 gap-8">
+          {[
+            { icon: <Clock />, title: "Récolte à 5h", desc: "Nos agriculteurs partenaires cueillent vos fruits et légumes à l'aube." },
+            { icon: <ShieldCheck />, title: "Tri Sélectif", desc: "Nous vérifions chaque pièce. Seul le meilleur arrive dans votre cagette." },
+            { icon: <Truck />, title: "Livré à 17h", desc: "Directement à votre porte dans le 78, sans passer par un frigo." }
+          ].map((item, i) => (
+            <div key={i} className="text-center group">
+              <div className="w-16 h-16 bg-white border border-slate-100 shadow-lg rounded-2xl flex items-center justify-center mx-auto mb-4 text-[#FF4500] group-hover:scale-110 transition-transform">
+                {item.icon}
+              </div>
+              <h4 className="font-bold uppercase text-sm mb-2 italic tracking-tight">{item.title}</h4>
+              <p className="text-xs text-slate-500 leading-relaxed">{item.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Map Interactive */}
+      <section className="max-w-6xl mx-auto px-4 md:px-8 py-10">
+        <div className="bg-white rounded-[2.5rem] overflow-hidden shadow-xl border border-slate-100 grid md:grid-cols-2">
+          <div className="p-8 md:p-12 flex flex-col justify-center">
+            <h3 className="text-3xl font-black uppercase italic tracking-tighter mb-4 text-slate-900">ZONE DE <br/><span className="text-[#FF4500]">FRAÎCHEUR</span></h3>
+            <p className="text-sm text-slate-500 mb-6 font-medium italic">Rayon de 15km autour de Plaisir. L'ultra-local est notre priorité.</p>
+            <ul className="grid grid-cols-2 gap-3 mb-6">
+              {['Plaisir', 'Versailles', 'St-Cyr', 'Villepreux', 'Clayes-sous-Bois', 'Beynes'].map((v, i) => (
+                <li key={i} className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                  <CheckCircle2 className="w-4 h-4 text-green-500" /> {v}
+                </li>
+              ))}
+            </ul>
+            <Link href="/livraison" className="text-xs font-bold text-[#FF4500] underline underline-offset-4">Voir les détails de livraison</Link>
+          </div>
+          <div className="h-[400px] w-full grayscale hover:grayscale-0 transition-all duration-700">
+            <iframe 
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d42036.08298713028!2d1.916723!3d48.814987!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x47e682236e76839d%3A0x40b82c3688c5660!2sPlaisir!5e0!3m2!1sfr!2sfr!4v1710000000000!5m2!1sfr!2sfr" 
+              width="100%" 
+              height="100%" 
+              style={{ border: 0 }} 
+              allowFullScreen={true} 
+              loading="lazy" 
+            ></iframe>
+          </div>
+        </div>
+      </section>
+
+      {/* Stats */}
       <section className="max-w-6xl mx-auto px-4 md:px-8 py-8 border-y border-slate-100 my-6">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
@@ -137,6 +287,25 @@ export default function Home() {
               <p className="text-2xl font-black text-slate-900 leading-none">{stat.val}</p>
               <p className="text-[10px] font-bold uppercase text-[#FF4500] mt-1">{stat.label}</p>
               <p className="text-[9px] text-slate-400 uppercase">{stat.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Avis */}
+      <section className="max-w-6xl mx-auto px-4 md:px-8 py-10">
+        <div className="grid md:grid-cols-3 gap-6">
+          {[
+            { name: "Marie L.", city: "Versailles", text: "Les tomates ont enfin du goût ! On sent qu'elles n'ont pas voyagé." },
+            { name: "Thomas B.", city: "Plaisir", text: "Le concept du 'cueilli le matin' est bluffant. Fraîcheur imbattable." },
+            { name: "Sophie D.", city: "Villepreux", text: "Livraison ponctuelle et livreur adorable. Je recommande !" }
+          ].map((avis, i) => (
+            <div key={i} className="bg-white p-6 rounded-3xl border border-slate-50 shadow-sm">
+              <div className="flex gap-1 mb-3 text-yellow-400">
+                {[...Array(5)].map((_, i) => <Star key={i} className="w-3 h-3 fill-current" />)}
+              </div>
+              <p className="text-xs font-medium italic text-slate-600 mb-4 leading-relaxed">"{avis.text}"</p>
+              <p className="text-[10px] font-black uppercase tracking-widest">{avis.name} — <span className="text-[#FF4500]">{avis.city}</span></p>
             </div>
           ))}
         </div>
