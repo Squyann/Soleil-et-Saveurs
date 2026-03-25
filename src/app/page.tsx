@@ -127,7 +127,7 @@ export default function Home() {
       <nav className="fixed top-0 left-0 right-0 z-[100] bg-white/80 backdrop-blur-md border-b border-slate-100 px-4 md:px-8 h-14 flex items-center justify-between shadow-sm">
         <Link href="/" className="text-lg font-bold tracking-tight flex items-center gap-2">
           <div className="w-7 h-7 bg-[#FF4500] rounded flex items-center justify-center text-white text-[10px]">S</div>
-          <span>SOLEIL<span className="text-[#FF4500]">SAVEURS</span></span>
+          <span>SOLEIL<span className="text-[#FF4500]">& SAVEURS</span></span>
         </Link>
         <div className="flex items-center gap-1 md:gap-2">
           <button onClick={() => setIsPanierOpen(true)} className="p-2 hover:bg-slate-100 rounded-lg transition-colors relative">
@@ -400,7 +400,7 @@ export default function Home() {
       </section>
 
       <footer className="text-center py-6 opacity-30 text-[8px] font-black uppercase tracking-[0.4em] italic">
-        © Soleil Saveurs 2026 — De l'arbre à l'assiette.
+        © Soleil & Saveurs 2026 — De l'arbre à l'assiette.
       </footer>
     </main>
   );
