@@ -1,21 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 
-// Client Supabase avec la clé SERVICE (jamais exposée côté client)
+// Client Supabase
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY! // clé secrète, pas la anon key
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { items, metadata } = body;
 
-    // --- VALIDATION DE BASE ---
+    // --- 1. VALIDATION DE BASE ---
     if (!items || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ error: 'Panier vide' }, { status: 400 });
     }
@@ -24,7 +21,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Informations de livraison manquantes' }, { status: 400 });
     }
 
-    // --- VÉRIFICATION ZONE DE LIVRAISON CÔTÉ SERVEUR ---
+    // --- 2. VÉRIFICATION ZONE DE LIVRAISON (78 uniquement) ---
     const cp = metadata.adresse.match(/\b(78\d{3})\b/)?.[1];
     if (!cp) {
       return NextResponse.json(
@@ -33,36 +30,30 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // --- RÉCUPÉRATION DES VRAIS PRIX DEPUIS SUPABASE ---
-    // Les ids sont des uuid (string) — on les envoie tels quels
+    // --- 3. RÉCUPÉRATION DES PRODUITS DEPUIS SUPABASE ---
     const ids: string[] = items.map((item: any) => String(item.id));
 
     const { data: products, error: dbError } = await supabase
-      .from('products')                               // ← nom réel de la table
-      .select('id, name, price, stock, description')  // ← colonnes réelles
+      .from('products')
+      .select('id, name, price, stock')
       .in('id', ids);
 
     if (dbError || !products) {
-      console.error('Erreur Supabase:', dbError);
       return NextResponse.json(
         { error: 'Erreur lors de la vérification des produits' },
         { status: 500 }
       );
     }
 
-    // --- CONSTRUCTION DES LINE ITEMS STRIPE AVEC LES VRAIS PRIX ---
-    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
-    const produitsVerifies: object[] = [];
+    // --- 4. CALCUL DU TOTAL ET VÉRIFICATION STOCK ---
+    let totalProduits = 0;
+    const produitsVerifies = [];
 
     for (const item of items) {
-      // Comparaison uuid string → string
       const productEnBase = products.find((p) => p.id === item.id);
 
       if (!productEnBase) {
-        return NextResponse.json(
-          { error: `Produit introuvable : ${item.id}` },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: `Produit introuvable : ${item.id}` }, { status: 400 });
       }
 
       // Vérification du stock
@@ -73,89 +64,52 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      // On utilise le VRAI prix depuis la base — jamais item.price
-      const vraiPrixCentimes = Math.round(parseFloat(productEnBase.price) * 100);
-
-      lineItems.push({
-        price_data: {
-          currency: 'eur',
-          product_data: {
-            name: productEnBase.name,
-            ...(productEnBase.description
-              ? { description: productEnBase.description }
-              : {}),
-          },
-          unit_amount: vraiPrixCentimes, // ← prix vérifié côté serveur
-        },
-        quantity: item.quantite,
-      });
+      const prixUnitaire = parseFloat(productEnBase.price);
+      totalProduits += prixUnitaire * item.quantite;
 
       produitsVerifies.push({
         id: productEnBase.id,
         name: productEnBase.name,
-        price: parseFloat(productEnBase.price),
+        price: prixUnitaire,
         quantite: item.quantite,
       });
     }
 
-    // --- CALCUL DU TOTAL RÉEL ---
-    const totalEuros = lineItems.reduce(
-      (acc, li) =>
-        acc + ((li.price_data as any).unit_amount / 100) * (li.quantity as number),
-      0
-    );
-
     // Frais de livraison : gratuit dès 45€, sinon 2.50€
-    if (totalEuros < 45) {
-      lineItems.push({
-        price_data: {
-          currency: 'eur',
-          product_data: { name: 'Frais de livraison' },
-          unit_amount: 250,
-        },
-        quantity: 1,
-      });
-    }
+    const fraisLivraison = totalProduits < 45 ? 2.5 : 0;
+    const totalFinal = totalProduits + fraisLivraison;
 
-    // --- CRÉATION SESSION STRIPE ---
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      line_items: lineItems,
-      mode: 'payment',
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/commander`,
-      metadata: {
-        nom: metadata.nom,
-        telephone: metadata.telephone,
-        adresse: metadata.adresse,
-        user_id: metadata.user_id || '',
-      },
-    });
-
-    // --- PRÉ-ENREGISTREMENT EN BASE ---
-    const { error: insertError } = await supabase.from('commandes').insert({
-      stripe_session_id: session.id,
-      user_id: metadata.user_id || null,
-      items: produitsVerifies,
-      total: totalEuros < 45 ? totalEuros + 2.5 : totalEuros,
-      status: 'en_attente_paiement',
-      adresse_livraison: metadata.adresse,
-      methode_paiement: 'Ligne',
-      nom_client: metadata.nom,
-      telephone_client: metadata.telephone,
-    });
+    // --- 5. ENREGISTREMENT DE LA COMMANDE ---
+    // Puisqu'il n'y a pas Stripe, on passe directement le statut en 'a_preparer' ou 'en_attente'
+    const { data: commande, error: insertError } = await supabase
+      .from('commandes')
+      .insert({
+        user_id: metadata.user_id || null,
+        items: produitsVerifies,
+        total: totalFinal,
+        status: 'nouvelle', // Statut par défaut sans paiement en ligne
+        adresse_livraison: metadata.adresse,
+        methode_paiement: 'Livraison', // Ou 'Espèces/Carte à la livraison'
+        nom_client: metadata.nom,
+        telephone_client: metadata.telephone,
+      })
+      .select()
+      .single();
 
     if (insertError) {
-      console.error('Erreur pré-enregistrement commande:', insertError);
+      console.error('Erreur enregistrement commande:', insertError);
+      return NextResponse.json({ error: 'Erreur lors de la création de la commande' }, { status: 500 });
     }
 
-    return NextResponse.json({ url: session.url });
+    // On retourne un succès pour rediriger l'utilisateur côté client
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Commande enregistrée avec succès',
+      commandeId: commande.id 
+    });
 
   } catch (err: any) {
-    console.error('Erreur checkout:', err);
-    return NextResponse.json(
-      { error: 'Erreur interne du serveur' },
-      { status: 500 }
-    );
+    console.error('Erreur API:', err);
+    return NextResponse.json({ error: 'Erreur interne du serveur' }, { status: 500 });
   }
 }
