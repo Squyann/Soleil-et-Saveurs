@@ -55,7 +55,7 @@ export default function SuccessPage() {
           </Link>
           
           <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">
-            Soleil Saveurs Direct — Qualité Garantie
+            Soleil & Saveurs — Qualité Garantie
           </p>
         </div>
       </div>

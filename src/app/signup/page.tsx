@@ -122,7 +122,7 @@ export default function SignupPage() {
       <div className="hidden md:flex md:w-1/2 bg-slate-900 relative overflow-hidden items-center justify-center p-12">
         <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-[#FF4500] rounded-full blur-[150px] opacity-10" />
         <div className="relative z-10 max-w-lg space-y-8 text-center md:text-left">
-          <h2 className="text-6xl font-black text-white leading-none tracking-tighter uppercase">Soleil <br /><span className="text-[#FF4500]">Saveurs.</span></h2>
+          <h2 className="text-6xl font-black text-white leading-none tracking-tighter uppercase">Soleil  <br /><span className="text-[#FF4500]">& Saveurs.</span></h2>
           <div className="space-y-4">
             <div className="bg-white/5 p-6 rounded-3xl border border-white/10 backdrop-blur-sm flex gap-4 items-center">
               <Gift className="w-8 h-8 text-[#FF4500]" />
