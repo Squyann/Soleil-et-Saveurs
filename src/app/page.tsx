@@ -10,10 +10,31 @@ import {
 } from 'lucide-react';
 import PanierDrawer from '@/components/ui/PanierDrawer';
 
+// --- CONFIGURATION DES VILLES (MISES À JOUR) ET CALCUL DE DISTANCE ---
+const VILLES_RELAIS = [
+  { nom: "Chatou", lat: 48.8897, lon: 2.1574 },
+  { nom: "Croissy-sur-Seine", lat: 48.8794, lon: 2.1431 },
+  { nom: "Mareil-sur-Mauldre", lat: 48.8944, lon: 1.8681 },
+  { nom: "Saint-Nom-la-Bretèche", lat: 48.8594, lon: 2.0186 },
+  { nom: "Plaisir", lat: 48.8111, lon: 1.9472 }
+];
+
+function calculerDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const R = 6371; // Rayon de la Terre en km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
+// -------------------------------------------------------
+
 export default function Home() {
   const [user, setUser] = useState<any>(null);
   const [isPanierOpen, setIsPanierOpen] = useState(false);
-  const [panierCount, setPanierCount] = useState(0); // État pour le badge du panier
+  const [panierCount, setPanierCount] = useState(0);
   
   // LOGIQUE ADRESSE
   const [address, setAddress] = useState('');
@@ -21,6 +42,7 @@ export default function Home() {
   const [isVerifying, setIsVerifying] = useState(false);
   const [showResult, setShowResult] = useState(false);
   const [distanceValide, setDistanceValide] = useState<boolean | null>(null);
+  const [distanceAffichee, setDistanceAffichee] = useState<number | null>(null);
   
   const router = useRouter();
 
@@ -63,17 +85,26 @@ export default function Home() {
     }
   };
 
-  // Sélection de l'adresse (Logique 78)
+  // Sélection de l'adresse
   const selectionnerAdresse = (feat: any) => {
+    const [lonSaisie, latSaisie] = feat.geometry.coordinates;
     setAddress(feat.properties.label);
     setSuggestions([]);
     setIsVerifying(true);
     
-    const cp = feat.properties.postcode;
-    
     setTimeout(() => {
       setIsVerifying(false);
-      if (cp && cp.startsWith('78')) {
+      
+      // Trouver la ville la plus proche
+      let minDistance = 999;
+      VILLES_RELAIS.forEach(ville => {
+        const d = calculerDistance(latSaisie, lonSaisie, ville.lat, ville.lon);
+        if (d < minDistance) minDistance = d;
+      });
+
+      // Verification du rayon de 5km
+      if (minDistance <= 5) {
+        setDistanceAffichee(parseFloat(minDistance.toFixed(1)));
         setDistanceValide(true);
         setShowResult(true);
       } else {
@@ -96,7 +127,7 @@ export default function Home() {
       <nav className="fixed top-0 left-0 right-0 z-[100] bg-white/80 backdrop-blur-md border-b border-slate-100 px-4 md:px-8 h-14 flex items-center justify-between shadow-sm">
         <Link href="/" className="text-lg font-bold tracking-tight flex items-center gap-2">
           <div className="w-7 h-7 bg-[#FF4500] rounded flex items-center justify-center text-white text-[10px]">S</div>
-          <span>SOLEIL<span className="text-[#FF4500]"> & SAVEURS</span></span>
+          <span>SOLEIL<span className="text-[#FF4500]">SAVEURS</span></span>
         </Link>
         <div className="flex items-center gap-1 md:gap-2">
           <button onClick={() => setIsPanierOpen(true)} className="p-2 hover:bg-slate-100 rounded-lg transition-colors relative">
@@ -119,7 +150,6 @@ export default function Home() {
         </div>
       </nav>
 
-      {/* Le PanierDrawer reçoit bien la prop user */}
       <PanierDrawer isOpen={isPanierOpen} onClose={() => setIsPanierOpen(false)} user={user} />
 
       {/* Pop-up de succès d'éligibilité */}
@@ -130,7 +160,9 @@ export default function Home() {
               <CheckCircle2 className="w-8 h-8" />
             </div>
             <h3 className="text-xl font-black uppercase italic mb-2 tracking-tighter">Vous êtes éligible !</h3>
-            <p className="text-sm text-slate-500 mb-6 italic leading-snug">Votre adresse dans le 78 est bien située dans notre zone de livraison.</p>
+            <p className="text-sm text-slate-500 mb-6 italic leading-snug">
+              Vous êtes à seulement <span className="text-[#FF4500] font-bold">{distanceAffichee} km</span> de nos champs. Livraison confirmée !
+            </p>
             <div className="space-y-3">
               <button 
                 onClick={() => handleActionClick('/commander')} 
@@ -151,7 +183,7 @@ export default function Home() {
         <div className="max-w-6xl mx-auto">
           <div className="inline-flex items-center gap-2 bg-[#FF4500]/10 text-[#FF4500] px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider mb-6">
             <span className="w-1.5 h-1.5 rounded-full bg-[#FF4500] animate-pulse"></span>
-            Récolte du jour 78
+            Récolte ultra-locale 78
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
             <div className="z-10">
@@ -209,11 +241,11 @@ export default function Home() {
                   {distanceValide === false && (
                     <div className="mx-2 mt-2 p-3 bg-red-50 rounded-xl text-red-600 flex items-center gap-2 animate-in fade-in zoom-in-95">
                       <AlertCircle className="w-3.5 h-3.5" />
-                      <p className="text-[10px] font-black uppercase">Livraison uniquement dans le 78.</p>
+                      <p className="text-[10px] font-black uppercase">Désolé, hors zone (Rayon 5km autour de nos points relais).</p>
                     </div>
                   )}
                 </div>
-                <p className="text-[10px] text-slate-400 px-4 italic font-semibold">📍 Plaisir, Versailles et alentours (Rayon 15km)</p>
+                <p className="text-[10px] text-slate-400 px-4 italic font-semibold">📍 Chatou, Croissy, Mareil, St-Nom, Plaisir (Rayon 5km)</p>
               </div>
             </div>
 
@@ -250,8 +282,8 @@ export default function Home() {
           </Link>
           <div className="bg-[#FFF5F1] rounded-[2rem] p-8 min-h-[180px] flex flex-col justify-center border border-orange-100 shadow-xl shadow-orange-50">
             <MapPin className="w-8 h-8 text-[#FF4500] mb-4" />
-            <h3 className="text-2xl font-black mb-1 uppercase italic tracking-tighter text-slate-900">Local 78</h3>
-            <p className="text-slate-600 text-sm font-medium">Plaisir, Versailles et alentours.</p>
+            <h3 className="text-2xl font-black mb-1 uppercase italic tracking-tighter text-slate-900">Zone 78</h3>
+            <p className="text-slate-600 text-sm font-medium">Ultra-local : rayon de 5km maximum.</p>
           </div>
         </div>
       </section>
@@ -263,7 +295,7 @@ export default function Home() {
           {[
             { icon: <Clock className="w-6 h-6" />, title: "Récolte à 5h", desc: "Nos agriculteurs partenaires cueillent vos fruits et légumes à l'aube." },
             { icon: <ShieldCheck className="w-6 h-6" />, title: "Tri Sélectif", desc: "Nous vérifions chaque pièce. Seul le meilleur arrive dans votre cagette." },
-            { icon: <Truck className="w-6 h-6" />, title: "Livré à 17h", desc: "Directement à votre porte dans le 78." }
+            { icon: <Truck className="w-6 h-6" />, title: "Livré à 17h", desc: "Directement à votre porte, sans jamais passer par un frigo." }
           ].map((item, i) => (
             <div key={i} className="text-center group">
               <div className="w-16 h-16 bg-white border border-slate-50 shadow-xl shadow-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-6 text-[#FF4500] group-hover:scale-110 group-hover:shadow-orange-100 transition-all duration-500">
@@ -298,9 +330,9 @@ export default function Home() {
       <section className="max-w-6xl mx-auto px-4 md:px-8 py-10">
         <div className="grid md:grid-cols-3 gap-8">
           {[
-            { name: "Marie L.", city: "Versailles", text: "Les tomates ont enfin du goût ! On sent qu'elles n'ont pas voyagé." },
+            { name: "Marie L.", city: "Chatou", text: "Les tomates ont enfin du goût ! On sent qu'elles n'ont pas voyagé." },
             { name: "Thomas B.", city: "Plaisir", text: "Le concept du 'cueilli le matin' est bluffant. Fraîcheur imbattable." },
-            { name: "Sophie D.", city: "Villepreux", text: "Livraison ponctuelle et livreur adorable. Je recommande !" }
+            { name: "Sophie D.", city: "Croissy", text: "Livraison ponctuelle et livreur adorable. Je recommande !" }
           ].map((avis, i) => (
             <div key={i} className="bg-white p-8 rounded-[2.5rem] border border-slate-50 shadow-xl shadow-slate-100/50 hover:shadow-slate-200 transition-all duration-500">
               <div className="flex gap-1 mb-6 text-orange-400">
@@ -322,9 +354,9 @@ export default function Home() {
         <div className="bg-white rounded-[3rem] overflow-hidden shadow-2xl shadow-slate-200 border border-slate-50 grid md:grid-cols-2">
           <div className="p-10 md:p-14 flex flex-col justify-center">
             <h3 className="text-4xl font-black uppercase italic tracking-tighter mb-6 text-slate-900 leading-[0.9]">ZONE DE <br/><span className="text-[#FF4500]">FRAÎCHEUR</span></h3>
-            <p className="text-sm text-slate-500 mb-8 font-semibold italic leading-relaxed">Rayon de 15km autour de Plaisir. L'ultra-local est notre priorité absolue.</p>
+            <p className="text-sm text-slate-500 mb-8 font-semibold italic leading-relaxed">Rayon de 5km autour de nos points de récolte. L'ultra-local est notre priorité.</p>
             <ul className="grid grid-cols-2 gap-4 mb-8">
-              {['Plaisir', 'Versailles', 'St-Cyr', 'Villepreux', 'Clayes-sous-Bois', 'Beynes'].map((v, i) => (
+              {['Chatou', 'Croissy', 'Mareil', 'St-Nom', 'Plaisir'].map((v, i) => (
                 <li key={i} className="flex items-center gap-2.5 text-[11px] font-black uppercase tracking-widest text-slate-400">
                   <div className="w-5 h-5 rounded-full bg-green-50 flex items-center justify-center">
                     <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
@@ -337,7 +369,7 @@ export default function Home() {
           </div>
           <div className="h-[450px] w-full grayscale contrast-[1.1] hover:grayscale-0 transition-all duration-1000">
             <iframe 
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d42013.4357285189!2d1.9168953999999998!3d48.8135359!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x47e683f12674e7d3%3A0x40b82c3688b3980!2s78370%20Plaisir!5e0!3m2!1sfr!2sfr!4v1709123456789!5m2!1sfr!2sfr" 
+              src="https://www.google.com/maps/embed?pb=!1m12!1m8!1m3!1d84030.82565651523!2d2.0125!3d48.855!3m2!1i1024!2i768!4f13.1!2m1!1sYvelines%20Chatou%20Plaisir!5e0!3m2!1sfr!2sfr!4v1710000000000!5m2!1sfr!2sfr" 
               width="100%" 
               height="100%" 
               style={{ border: 0 }} 

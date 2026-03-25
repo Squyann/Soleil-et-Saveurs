@@ -7,16 +7,40 @@ import {
   AlertCircle, Info
 } from 'lucide-react';
 
+// --- CONFIGURATION EXHAUSTIVE : 5KM AUTOUR DES 5 MARCHÉS ---
 const ELIGIBLE_ZONES = [
-  { cp: "78370", city: "Plaisir", delay: "J+0" },
-  { cp: "78340", city: "Les Clayes-sous-Bois", delay: "J+0" },
-  { cp: "78450", city: "Villepreux", delay: "J+0" },
-  { cp: "78000", city: "Versailles", delay: "J+1" },
-  { cp: "78150", city: "Le Chesnay", delay: "J+1" },
-  { cp: "78180", city: "Montigny-le-Bretonneux", delay: "J+0" },
+  // Zone CHATOU / CROISSY
+  { cp: "78400", city: "Chatou", delay: "J+0" },
+  { cp: "78290", city: "Croissy-sur-Seine", delay: "J+0" },
+  { cp: "78360", city: "Montesson", delay: "J+0" },
+  { cp: "78420", city: "Carrières-sur-Seine", delay: "J+0" },
+  { cp: "78110", city: "Le Vésinet", delay: "J+0" },
+  { cp: "78230", city: "Le Pecq", delay: "J+0" },
+  
+  // Zone SAINT-NOM-LA-BRETECHE
+  { cp: "78860", city: "Saint-Nom-la-Bretèche", delay: "J+0" },
+  { cp: "78590", city: "Noisy-le-Roi", delay: "J+0" },
+  { cp: "78620", city: "L'Étang-la-Ville", delay: "J+0" },
+  { cp: "78810", city: "Feucherolles", delay: "J+0" },
+  { cp: "78450", city: "Chavenay", delay: "J+0" },
+
+  // Zone MAREIL-SUR-MAULDRE
+  { cp: "78124", city: "Mareil-sur-Mauldre", delay: "J+0" },
+  { cp: "78580", city: "Maule", delay: "J+0" },
+  { cp: "78124", city: "Montainville", delay: "J+0" },
   { cp: "78650", city: "Beynes", delay: "J+0" },
+  { cp: "78580", city: "Herbeville", delay: "J+0" },
+
+  // Zone PLAISIR / VILLEPREUX
+  { cp: "78370", city: "Plaisir", delay: "J+0" },
+  { cp: "78450", city: "Villepreux", delay: "J+0" },
+  { cp: "78340", city: "Les Clayes-sous-Bois", delay: "J+0" },
+  { cp: "78330", city: "Fontenay-le-Fleury", delay: "J+0" },
   { cp: "78210", city: "Saint-Cyr-l'École", delay: "J+0" },
-];
+  { cp: "78640", city: "Neauphle-le-Château", delay: "J+0" },
+  { cp: "78760", city: "Jouars-Pontchartrain", delay: "J+0" },
+  { cp: "78640", city: "Villiers-Saint-Frédéric", delay: "J+0" },
+].sort((a, b) => a.city.localeCompare(b.city)); // Tri alphabétique pour la clarté
 
 export default function LivraisonPage() {
   const [userCP, setUserCP] = useState('');
@@ -47,7 +71,7 @@ export default function LivraisonPage() {
             LIVRAISON <span className="text-[#FF4500]">ULTRA-LOCALE</span>
           </h1>
           <p className="text-slate-400 text-sm md:text-base font-bold uppercase tracking-[0.2em] mb-12 max-w-2xl mx-auto">
-            Nous limitons nos trajets à 15km autour de nos champs pour une fraîcheur garantie.
+            Nous limitons nos trajets à 5km autour de nos points relais pour une fraîcheur absolue.
           </p>
 
           <form onSubmit={checkEligibility} className="max-w-md mx-auto relative">
@@ -60,7 +84,7 @@ export default function LivraisonPage() {
                 maxLength={5}
                 value={userCP}
                 onChange={(e) => setUserCP(e.target.value)}
-                placeholder="Entrez votre Code Postal (ex: 78370)" 
+                placeholder="Entrez votre Code Postal (ex: 78400)" 
                 className="w-full py-4 text-sm font-bold focus:outline-none"
               />
               <button className="bg-[#FF4500] text-white px-8 rounded-xl font-black uppercase text-[10px] hover:bg-slate-900 transition-colors">
@@ -73,7 +97,7 @@ export default function LivraisonPage() {
               {status === 'eligible' && (
                 <div className="bg-green-500/10 border border-green-500/20 p-4 rounded-xl flex items-center gap-3 text-green-400">
                   <CheckCircle2 className="w-5 h-5 shrink-0" />
-                  <p className="text-[10px] font-black uppercase text-left">Génial ! Vous êtes dans notre zone de récolte directe. Livraison J+0 possible.</p>
+                  <p className="text-[10px] font-black uppercase text-left">Génial ! Vous êtes dans notre zone de récolte directe. Livraison J+0 disponible.</p>
                 </div>
               )}
               {status === 'not-eligible' && (
@@ -121,11 +145,11 @@ export default function LivraisonPage() {
               Périmètre de sécurité fraîcheur
             </div>
             <h2 className="text-5xl font-black uppercase italic tracking-tighter leading-none">
-              POURQUOI <span className="text-[#FF4500]">15 KM ?</span>
+              POURQUOI <span className="text-[#FF4500]">5 KM ?</span>
             </h2>
             <p className="text-slate-500 font-medium leading-relaxed italic">
-              Parce que la saveur d'une fraise ou d'une salade décline à chaque kilomètre parcouru dans un camion. 
-              En restant dans ce rayon autour de <span className="text-slate-900 font-bold">Plaisir (78)</span>, nous garantissons un produit qui n'a jamais vu la couleur d'un réfrigérateur industriel.
+              Parce que la saveur d'une fraise ou d'une salade décline à chaque kilomètre parcouru. 
+              En limitant nos livraisons à un rayon de 5km autour de nos points stratégiques dans les <span className="text-slate-900 font-bold">Yvelines (78)</span>, nous garantissons un produit qui n'a jamais vu la couleur d'un réfrigérateur industriel.
             </p>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -160,7 +184,7 @@ export default function LivraisonPage() {
             <div className="absolute bottom-6 left-6 right-6 bg-slate-900 text-white p-6 rounded-3xl shadow-2xl flex items-center justify-between">
               <div>
                 <p className="text-[9px] font-black uppercase tracking-widest text-[#FF4500]">Zone de couverture</p>
-                <p className="text-xs font-bold italic">Cœur de zone : Plaisir & Environs</p>
+                <p className="text-xs font-bold italic">Chatou, Mareil, St-Nom, Plaisir...</p>
               </div>
               <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center">
                 <Info className="w-5 h-5" />
@@ -171,8 +195,8 @@ export default function LivraisonPage() {
 
         {/* Liste des villes détaillées */}
         <div className="bg-white rounded-[40px] p-12 shadow-sm border border-slate-100">
-           <h3 className="text-2xl font-black uppercase italic tracking-tighter mb-8 text-center">VILLES <span className="text-[#FF4500]">DESSERVIES</span></h3>
-           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+           <h3 className="text-2xl font-black uppercase italic tracking-tighter mb-8 text-center">VILLES <span className="text-[#FF4500]">DESSERVIES (RAYON 5KM)</span></h3>
+           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
               {ELIGIBLE_ZONES.map((zone, i) => (
                 <div key={i} className="flex flex-col border-l-2 border-[#FF4500] pl-4">
                   <span className="text-xs font-black text-slate-900 leading-none">{zone.city}</span>
@@ -181,6 +205,9 @@ export default function LivraisonPage() {
                 </div>
               ))}
            </div>
+           <p className="mt-8 text-center text-[10px] text-slate-400 font-bold uppercase tracking-widest italic">
+             📍 Zone couvrant les communes limitrophes de nos points de distribution officiels.
+           </p>
         </div>
       </div>
 
