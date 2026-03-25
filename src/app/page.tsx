@@ -96,7 +96,7 @@ export default function Home() {
       <nav className="fixed top-0 left-0 right-0 z-[100] bg-white/80 backdrop-blur-md border-b border-slate-100 px-4 md:px-8 h-14 flex items-center justify-between shadow-sm">
         <Link href="/" className="text-lg font-bold tracking-tight flex items-center gap-2">
           <div className="w-7 h-7 bg-[#FF4500] rounded flex items-center justify-center text-white text-[10px]">S</div>
-          <span>SOLEIL<span className="text-[#FF4500]">SAVEURS</span></span>
+          <span>SOLEIL<span className="text-[#FF4500]"> & SAVEURS</span></span>
         </Link>
         <div className="flex items-center gap-1 md:gap-2">
           <button onClick={() => setIsPanierOpen(true)} className="p-2 hover:bg-slate-100 rounded-lg transition-colors relative">
@@ -263,7 +263,7 @@ export default function Home() {
           {[
             { icon: <Clock className="w-6 h-6" />, title: "Récolte à 5h", desc: "Nos agriculteurs partenaires cueillent vos fruits et légumes à l'aube." },
             { icon: <ShieldCheck className="w-6 h-6" />, title: "Tri Sélectif", desc: "Nous vérifions chaque pièce. Seul le meilleur arrive dans votre cagette." },
-            { icon: <Truck className="w-6 h-6" />, title: "Livré à 17h", desc: "Directement à votre porte dans le 78, sans passer par un frigo." }
+            { icon: <Truck className="w-6 h-6" />, title: "Livré à 17h", desc: "Directement à votre porte dans le 78." }
           ].map((item, i) => (
             <div key={i} className="text-center group">
               <div className="w-16 h-16 bg-white border border-slate-50 shadow-xl shadow-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-6 text-[#FF4500] group-hover:scale-110 group-hover:shadow-orange-100 transition-all duration-500">
