@@ -167,6 +167,37 @@ export default function ComptePage() {
     );
   }
 
+  const commanderANouveau = (contenu: any) => {
+  console.log("Contenu reçu :", contenu); // Pour vérifier ce qui arrive
+
+  // 1. Sécurité : si contenu est vide ou n'est pas un tableau, on arrête
+  if (!contenu || !Array.isArray(contenu)) {
+    alert("Impossible de récupérer les articles de cette commande.");
+    return;
+  }
+
+  try {
+    // 2. Récupérer l'existant (vérifie bien que c'est 'soleilsaveurs_cart')
+    const panierLocal = localStorage.getItem('mon-panier');
+    const panierActuel = panierLocal ? JSON.parse(panierLocal) : [];
+
+    // 3. Fusionner (on ajoute les anciens articles au panier actuel)
+    const nouveauPanier = [...panierActuel, ...contenu];
+
+    // 4. Sauvegarder
+    localStorage.setItem('mon-panier', JSON.stringify(nouveauPanier));
+
+    // 5. Mise à jour en temps réel et redirection
+    window.dispatchEvent(new Event('storage'));
+    window.location.href = '/';
+    
+  } catch (error) {
+    console.error("Erreur panier:", error);
+    alert("Une erreur est survenue lors de l'ajout au panier.");
+  }
+ };
+ 
+
   return (
     <div className="min-h-screen bg-[#FDFCF9] text-slate-900 pb-20">
 
@@ -456,7 +487,8 @@ export default function ComptePage() {
                         </div>
                         <div>
                           <p className="font-black uppercase text-sm text-slate-800 tracking-tight">
-                            Commande #{order.id.slice(-6).toUpperCase()}
+                            {/* CORRECTION ID : AJOUT DE String() */}
+                            Commande #{String(order.id).slice(-6).toUpperCase()}
                           </p>
                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
                             {formatDate(order.created_at)}
@@ -481,6 +513,17 @@ export default function ComptePage() {
                       </div>
                     </div>
 
+                    {/* NOUVEAU BOUTON : COMMANDER À NOUVEAU */}
+                    <div className="mt-6 pt-4 border-t border-slate-50">
+                      <button
+                        onClick={() => commanderANouveau((order as any).contenu_panier)}
+                        className="w-full py-4 bg-[#FF4500] text-white rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-slate-900 transition-all shadow-lg shadow-orange-900/10 active:scale-95"
+                      >
+                        <ShoppingBag className="w-4 h-4" />
+                        Commander à nouveau
+                      </button>
+                    </div>
+
                     {/* ADRESSE */}
                     {order.adresse_livraison && (
                       <div className="mt-4 flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase">
@@ -492,6 +535,7 @@ export default function ComptePage() {
                 );
               })
             )}
+            
           </div>
         )}
 

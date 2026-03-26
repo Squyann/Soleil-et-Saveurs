@@ -40,7 +40,6 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
       }
 
       if (currentUser) {
-        // RÉCUPÉRATION DEPUIS LES METADATA AUTH (plus besoin de la table 'profiles')
         const meta = currentUser.user_metadata || {};
         setNom(meta.full_name || `${meta.first_name || ''} ${meta.last_name || ''}`.trim());
         setTelephone(meta.phone || '');
@@ -56,7 +55,6 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
     if (isOpen) fetchUserData();
   }, [isOpen, user]);
 
-  // LOGIQUE DE CALCUL : Gère % ET Quantité Offerte
   const calculerPrixLigne = (item: any) => {
     const qteTotale = item.quantite || 0;
     let prixUnitaire = parseFloat(item.price);
@@ -159,7 +157,6 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
     if (!nom || !telephone || !adresse || !distanceValide) return;
     setChargement(true);
 
-    // --- SYNCHRONISATION AVEC AUTH.UPDATEUSER ---
     try {
       await supabase.auth.updateUser({
         data: {
@@ -194,7 +191,6 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
 
     // --- ENREGISTREMENT DANS SUPABASE POUR LE MODE ESPÈCES ---
     try {
-      // Création d'une description textuelle lisible pour l'admin
       const desc = panier.map(item => `${item.quantite}x ${item.name}`).join(', ');
 
       const { error } = await supabase
@@ -207,7 +203,9 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
           total: totalFinal,
           methode_paiement: 'Espèces',
           statut: 'En attente',
-          description_commande: desc
+          description_commande: desc,
+          // ON AJOUTE ICI LE CONTENU DU PANIER POUR LE BOUTON "COMMANDER À NOUVEAU"
+          contenu_panier: panier 
         }]);
 
       if (error) throw error;
