@@ -18,33 +18,40 @@ export default function AdminPage() {
   const [filtreStatut, setFiltreStatut] = useState<'Toutes' | 'À préparer' | 'Livrée'>('Toutes');
   const [uploading, setUploading] = useState(false);
   const [promoProdId, setPromoProdId] = useState<string | null>(null);
+  
+  // États pour la gestion des promos
   const [pourcentage, setPourcentage] = useState(0);
   const [seuilAchat, setSeuilAchat] = useState(0);
   const [qteOfferte, setQteOfferte] = useState(0);
 
   const [nouveauProd, setNouveauProd] = useState({
-  name: '',
-  price: 0,
-  category: 'Légumes',
-  image_url: '',
-  stock: 0,
-  unite: 'kg',        // Ajouté
-  provenance: '',     // Ajouté
-  description: '',
-  promotion: 0,
-  seuil_achat: 0,
-  quantite_offerte: 0   // Ajouté
- });
-
-  
+    name: '',
+    price: 0,
+    category: 'Légumes',
+    image_url: '',
+    stock: 0,
+    unite: 'kg',
+    provenance: '',
+    description: '',
+    promotion: 0,
+    seuil_achat: 0,
+    quantite_offerte: 0
+  });
 
   useEffect(() => {
-    const isAdmin = localStorage.getItem('soleilsaveurs_admin_token');
-    if (isAdmin !== 'AUTH_OK') {
-      window.location.href = '/admin/login';
-      return;
+    async function verifierAcces() {
+      // On demande à Supabase si un utilisateur est actuellement connecté
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        // Si personne n'est connecté, on renvoie au login
+        window.location.href = '/admin/login';
+      } else {
+        // Si c'est bon, on charge les données
+        fetchData();
+      }
     }
-    fetchData();
+    verifierAcces();
   }, []);
 
   async function fetchData() {
@@ -56,32 +63,30 @@ export default function AdminPage() {
     if (prods) setProduits(prods);
     setLoading(false);
   }
+
   async function appliquerPromo(id: string) {
-  try {
-    const { error } = await supabase
-      .from('products')
-      .update({ 
-        promotion: pourcentage,
-        seuil_achat: seuilAchat,
-        quantite_offerte: qteOfferte
-      })
-      .eq('id', id);
+    try {
+      const { error } = await supabase
+        .from('products')
+        .update({ 
+          promotion: pourcentage,
+          seuil_achat: seuilAchat,
+          quantite_offerte: qteOfferte
+        })
+        .eq('id', id);
 
-    if (error) throw error;
+      if (error) throw error;
 
-    // On réinitialise tout après succès
-    setPromoProdId(null);
-    setPourcentage(0);
-    setSeuilAchat(0);
-    setQteOfferte(0);
-    
-    // On rafraîchit la liste pour voir le badge promo apparaître
-    fetchData();
-    
-  } catch (error: any) {
-    alert("Erreur lors de l'application de la promo : " + error.message);
+      setPromoProdId(null);
+      setPourcentage(0);
+      setSeuilAchat(0);
+      setQteOfferte(0);
+      fetchData();
+      
+    } catch (error: any) {
+      alert("Erreur lors de l'application de la promo : " + error.message);
+    }
   }
- }
 
   const envoyerWhatsApp = (cmd: any) => {
     const message = `Bonjour ${cmd.nom_client}, c'est Soleil Saveurs au sujet de votre commande #${cmd.id}. Nous préparons vos produits ! À quelle heure seriez-vous disponible pour la livraison ?`;
@@ -89,58 +94,52 @@ export default function AdminPage() {
     window.open(`https://wa.me/${rel}?text=${encodeURIComponent(message)}`, '_blank');
   };
 
- async function handleUpload(e: any) {
-  try {
-    setUploading(true);
-    const file = e.target.files[0];
-    if (!file) return;
+  async function handleUpload(e: any) {
+    try {
+      setUploading(true);
+      const file = e.target.files[0];
+      if (!file) return;
 
-    // On crée un nom unique SANS caractères spéciaux
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Date.now()}.${fileExt}`; // Exemple: 172546372.webp
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}.${fileExt}`;
 
-    const { error: uploadError } = await supabase.storage
-      .from('produits-images')
-      .upload(fileName, file);
+      const { error: uploadError } = await supabase.storage
+        .from('produits-images')
+        .upload(fileName, file);
 
-    if (uploadError) throw uploadError;
+      if (uploadError) throw uploadError;
 
-    const { data } = supabase.storage
-      .from('produits-images')
-      .getPublicUrl(fileName);
+      const { data } = supabase.storage
+        .from('produits-images')
+        .getPublicUrl(fileName);
 
-    setNouveauProd({ ...nouveauProd, image_url: data.publicUrl });
-    alert("Image chargée !");
-  } catch (error: any) {
-    alert("Erreur upload : " + error.message);
-  } finally {
-    setUploading(false);
+      setNouveauProd({ ...nouveauProd, image_url: data.publicUrl });
+      alert("Image chargée !");
+    } catch (error: any) {
+      alert("Erreur upload : " + error.message);
+    } finally {
+      setUploading(false);
+    }
   }
- }
 
   async function ajouterProduit(e: React.FormEvent) {
-  e.preventDefault();
-  console.log("Données envoyées :", nouveauProd); // Pour vérifier dans la console
+    e.preventDefault();
+    const { error } = await supabase
+      .from('products')
+      .insert([nouveauProd]);
 
-  const { error } = await supabase
-    .from('products')
-    .insert([nouveauProd]);
-
-  if (error) {
-    // Cela va t'afficher une alerte avec la raison précise du blocage
-    alert("Erreur Supabase : " + error.message);
-    console.error(error);
-  } else {
-    alert("Produit ajouté avec succès !");
-    // On vide le formulaire
-    setNouveauProd({ 
-      name: '', price: 0, description: '', category: 'Fruits', 
-      stock: 0, image_url: '', unite: 'kg', provenance: '',
-      promotion: 0, seuil_achat: 0, quantite_offerte: 0
-    });
-    if (typeof fetchData === 'function') fetchData();
+    if (error) {
+      alert("Erreur Supabase : " + error.message);
+    } else {
+      alert("Produit ajouté avec succès !");
+      setNouveauProd({ 
+        name: '', price: 0, description: '', category: 'Légumes', 
+        stock: 0, image_url: '', unite: 'kg', provenance: '',
+        promotion: 0, seuil_achat: 0, quantite_offerte: 0
+      });
+      fetchData();
+    }
   }
- }
 
   async function ajusterStock(id: string, actuel: number, delta: number) {
     await supabase.from('products').update({ stock: Math.max(0, actuel + delta) }).eq('id', id);
@@ -206,7 +205,7 @@ export default function AdminPage() {
                 `).join('')}
               </tbody>
             </table>
-            <h2 style="text-align:right; margin-top:30px; color:#FF4500">Total: ${cmd.total.toFixed(2)}€</h2>
+            <h2 style="text-align:right; margin-top:30px; color:#FF4500">Total: ${cmd.total?.toFixed(2)}€</h2>
           </body>
         </html>
       `);
@@ -251,7 +250,6 @@ export default function AdminPage() {
       <main className="max-w-6xl mx-auto px-6 mt-10">
         {onglet === 'commandes' && (
           <div className="space-y-8 animate-in fade-in duration-500">
-            {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm">
                 <p className="text-[10px] font-black uppercase text-slate-400 mb-1 tracking-widest">Total Commandes</p>
@@ -267,7 +265,6 @@ export default function AdminPage() {
               </div>
             </div>
 
-            {/* Besoin de récolte */}
             {calculerBesoinStock().length > 0 && (
               <div className="bg-[#FF4500]/5 rounded-[40px] p-10 border border-[#FF4500]/10">
                 <div className="flex justify-between items-center mb-8">
@@ -285,7 +282,6 @@ export default function AdminPage() {
               </div>
             )}
 
-            {/* Filtres de statut */}
             <div className="flex gap-2 p-1 bg-white border border-slate-100 rounded-2xl w-fit">
               {['Toutes', 'À préparer', 'Livrée'].map((s) => (
                 <button key={s} onClick={() => setFiltreStatut(s as any)} className={`px-8 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${filtreStatut === s ? 'bg-slate-900 text-white' : 'text-slate-400 hover:text-slate-600'}`}>
@@ -294,7 +290,6 @@ export default function AdminPage() {
               ))}
             </div>
 
-            {/* Liste des commandes */}
             <div className="space-y-6">
               {commandesFiltrees.map(cmd => (
                 <div key={cmd.id} className="bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm flex flex-col md:flex-row justify-between gap-8 group hover:border-[#FF4500]/20 transition-all">
@@ -332,11 +327,6 @@ export default function AdminPage() {
                           </div>
                         ))}
                       </div>
-                      {cmd.description_commande && (
-                        <div className="mt-4 p-4 bg-white rounded-2xl border-l-4 border-l-[#FF4500] text-xs text-slate-600 italic">
-                          "{cmd.description_commande}"
-                        </div>
-                      )}
                     </div>
                   </div>
                   <div className="text-right flex flex-col justify-between min-w-[180px]">
@@ -354,7 +344,6 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* --- SECTION STOCK (GESTION & PROMOS) --- */}
         {onglet === 'stock' && (
           <div className="animate-in fade-in space-y-8">
             <div className="bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm">
@@ -418,7 +407,6 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* --- SECTION CATALOGUE (AJOUT) --- */}
         {onglet === 'catalogue' && (
           <div className="space-y-12 animate-in fade-in">
             <section className="bg-white p-12 rounded-[40px] border border-slate-100 shadow-sm max-w-4xl mx-auto">
@@ -441,8 +429,8 @@ export default function AdminPage() {
                 </div>
                 
                 <select className="p-5 bg-slate-100 rounded-2xl font-black border-none text-xs uppercase" value={nouveauProd.category} onChange={e => setNouveauProd({...nouveauProd, category: e.target.value})}>
-                    <option value="Fruits">🍎 Fruits</option>
                     <option value="Légumes">🥦 Légumes</option>
+                    <option value="Fruits">🍎 Fruits</option>
                     <option value="Épicerie">🍯 Épicerie</option>
                 </select>
 

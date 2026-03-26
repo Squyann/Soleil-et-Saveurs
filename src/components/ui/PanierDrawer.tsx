@@ -1,10 +1,9 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { X, Trash2, ShoppingBag, MapPin, CreditCard, Banknote, Phone, User, Loader2, CheckCircle2, AlertCircle, LogIn } from 'lucide-react';
+import { X, Trash2, ShoppingBag, MapPin, CreditCard, Banknote, Phone, User, Loader2, CheckCircle2, AlertCircle, LogIn, Gift, TrendingDown } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 
-// AJOUT de user dans l'interface pour corriger l'erreur dans page.tsx
 interface PanierDrawerProps {
   isOpen: boolean;
   onClose: () => void;
@@ -12,7 +11,6 @@ interface PanierDrawerProps {
 }
 
 export default function PanierDrawer({ isOpen, onClose, user: propUser }: PanierDrawerProps) {
-  // On utilise l'utilisateur passé par la page Home, sinon on garde l'état local
   const [user, setUser] = useState<any>(propUser || null);
   const [panier, setPanier] = useState<any[]>([]);
   const [nom, setNom] = useState('');
@@ -25,36 +23,68 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
   
   const router = useRouter();
 
-  // Mise à jour de l'utilisateur si la prop change
   useEffect(() => {
     if (propUser) setUser(propUser);
   }, [propUser]);
 
-  // Initialisation de la session utilisateur (fallback sécurité)
   useEffect(() => {
-    const getSession = async () => {
-      if (!user) {
+    const fetchUserData = async () => {
+      let currentUser = user;
+      
+      if (!currentUser) {
         const { data: { user: supabaseUser } } = await supabase.auth.getUser();
-        setUser(supabaseUser);
+        if (supabaseUser) {
+          setUser(supabaseUser);
+          currentUser = supabaseUser;
+        }
+      }
+
+      if (currentUser) {
+        // RÉCUPÉRATION DEPUIS LES METADATA AUTH (plus besoin de la table 'profiles')
+        const meta = currentUser.user_metadata || {};
+        setNom(meta.full_name || `${meta.first_name || ''} ${meta.last_name || ''}`.trim());
+        setTelephone(meta.phone || '');
+        if (meta.address) {
+          setAdresse(meta.address);
+          if (meta.address.includes('78')) {
+            setDistanceValide(true);
+          }
+        }
       }
     };
-    if (isOpen) getSession();
+
+    if (isOpen) fetchUserData();
   }, [isOpen, user]);
 
+  // LOGIQUE DE CALCUL : Gère % ET Quantité Offerte
   const calculerPrixLigne = (item: any) => {
-    const qte = item.quantite || 0;
-    const p = item; 
-    const remise = p.promotion || 0;
-    const prixApresRemise = remise > 0 ? p.price * (1 - remise / 100) : p.price;
-    const seuil = p.seuil_achat || 0;
-    const offert = p.quantite_offerte || 0;
+    const qteTotale = item.quantite || 0;
+    let prixUnitaire = parseFloat(item.price);
 
-    if (seuil > 0 && offert > 0 && qte >= (seuil + offert)) {
-      const nombreDeLots = Math.floor(qte / (seuil + offert));
-      const unitesGratuites = nombreDeLots * offert;
-      return (qte - unitesGratuites) * parseFloat(prixApresRemise);
+    if (item.promotion && item.promotion > 0) {
+      prixUnitaire = prixUnitaire * (1 - item.promotion / 100);
     }
-    return qte * parseFloat(prixApresRemise);
+
+    const seuil = item.seuil_achat || 0;
+    const offert = item.quantite_offerte || 0;
+
+    if (seuil > 0 && offert > 0) {
+      const tailleLot = seuil + offert;
+      const nombreDeLots = Math.floor(qteTotale / tailleLot);
+      const resteHorsLots = qteTotale % tailleLot;
+      const qtePayante = (nombreDeLots * seuil) + Math.min(resteHorsLots, seuil);
+      return qtePayante * prixUnitaire;
+    }
+    
+    return qteTotale * prixUnitaire;
+  };
+
+  const calculerEconomieTotale = () => {
+    return (panier || []).reduce((acc, item) => {
+      const prixNormalSansPromo = (item.quantite || 0) * parseFloat(item.price);
+      const prixFinal = calculerPrixLigne(item);
+      return acc + (prixNormalSansPromo - prixFinal);
+    }, 0);
   };
 
   useEffect(() => {
@@ -114,9 +144,10 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
     }
   };
 
-  const sousTotal = (panier || []).reduce((acc, item) => acc + calculerPrixLigne(item), 0);
-  const fraisLivraison = sousTotal > 45 || sousTotal === 0 ? 0 : 2.50;
-  const totalFinal = sousTotal + fraisLivraison;
+  const sousTotalFinal = (panier || []).reduce((acc, item) => acc + calculerPrixLigne(item), 0);
+  const economie = calculerEconomieTotale();
+  const fraisLivraison = sousTotalFinal > 45 || sousTotalFinal === 0 ? 0 : 2.50;
+  const totalFinal = sousTotalFinal + fraisLivraison;
 
   const envoyerCommande = async () => {
     if (!user) {
@@ -127,6 +158,19 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
 
     if (!nom || !telephone || !adresse || !distanceValide) return;
     setChargement(true);
+
+    // --- SYNCHRONISATION AVEC AUTH.UPDATEUSER ---
+    try {
+      await supabase.auth.updateUser({
+        data: {
+          full_name: nom,
+          phone: telephone,
+          address: adresse
+        }
+      });
+    } catch (err) {
+      console.error("Erreur sync profil:", err);
+    }
     
     if (methodePaiement === 'Ligne') {
       try {
@@ -148,14 +192,36 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
       return;
     }
 
-    // Commande en espèces
-    setTimeout(() => {
+    // --- ENREGISTREMENT DANS SUPABASE POUR LE MODE ESPÈCES ---
+    try {
+      // Création d'une description textuelle lisible pour l'admin
+      const desc = panier.map(item => `${item.quantite}x ${item.name}`).join(', ');
+
+      const { error } = await supabase
+        .from('commandes')
+        .insert([{
+          user_id: user.id,
+          nom_client: nom,
+          telephone_client: telephone,
+          adresse_livraison: adresse,
+          total: totalFinal,
+          methode_paiement: 'Espèces',
+          statut: 'En attente',
+          description_commande: desc
+        }]);
+
+      if (error) throw error;
+
       alert("Commande reçue ! Nous vous contactons sur WhatsApp.");
       localStorage.removeItem('mon-panier');
       setPanier([]);
-      setChargement(false);
       onClose();
-    }, 1500);
+    } catch (err) {
+      console.error(err);
+      alert("Erreur lors de l'envoi de la commande.");
+    } finally {
+      setChargement(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -186,33 +252,56 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
                 <p className="font-bold text-slate-400 uppercase text-sm tracking-widest">Le panier est vide</p>
               </div>
             ) : (
-              panier.map((item) => (
-                <div key={item.id} className="flex gap-4 items-center bg-white p-4 rounded-3xl border border-slate-50 shadow-sm">
-                  <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center text-3xl">
-                    {item.img}
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-black uppercase text-xs text-slate-800">{item.name}</p>
-                    <div className="flex items-center gap-3 mt-2">
-                       <button onClick={() => updateQuantity(item.id, -1)} className="w-6 h-6 border border-slate-100 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-50">-</button>
-                       <span className="text-xs font-bold">{item.quantite}</span>
-                       <button onClick={() => updateQuantity(item.id, 1)} className="w-6 h-6 border border-slate-100 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-50">+</button>
+              panier.map((item) => {
+                const produitsOfferts = item.seuil_achat > 0 ? Math.floor(item.quantite / (item.seuil_achat + item.quantite_offerte)) * item.quantite_offerte : 0;
+
+                return (
+                  <div key={item.id} className="flex gap-4 items-center bg-white p-4 rounded-3xl border border-slate-50 shadow-sm">
+                    <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center overflow-hidden">
+                      {item.image_url ? (
+                        <img src={item.image_url} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-2xl">🧺</span>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-black uppercase text-xs text-slate-800">{item.name}</p>
+                      
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {item.promotion > 0 && (
+                          <span className="bg-green-100 text-green-700 text-[8px] font-black px-1.5 py-0.5 rounded-full">-{item.promotion}%</span>
+                        )}
+                        {produitsOfferts > 0 && (
+                          <div className="flex items-center gap-1 text-[#FF4500] text-[9px] font-black uppercase">
+                            <Gift className="w-3 h-3" /> {produitsOfferts} offert(s)
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-3 mt-2">
+                         <button onClick={() => updateQuantity(item.id, -1)} className="w-6 h-6 border border-slate-100 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-50">-</button>
+                         <span className="text-xs font-bold">{item.quantite}</span>
+                         <button onClick={() => updateQuantity(item.id, 1)} className="w-6 h-6 border border-slate-100 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-50">+</button>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-black text-sm">{calculerPrixLigne(item).toFixed(2)}€</p>
+                      <button onClick={() => updateQuantity(item.id, -item.quantite)} className="text-slate-300 hover:text-red-500 transition-colors mt-1">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="font-black text-sm">{calculerPrixLigne(item).toFixed(2)}€</p>
-                    <button onClick={() => updateQuantity(item.id, -item.quantite)} className="text-slate-300 hover:text-red-500 transition-colors mt-1">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
 
           {(panier || []).length > 0 && (
             <div className="space-y-5 pt-6 border-t border-slate-100">
-              <h3 className="font-black uppercase text-sm tracking-widest text-slate-900">Infos de livraison</h3>
+              <div className="flex items-center justify-between">
+                <h3 className="font-black uppercase text-sm tracking-widest text-slate-900">Infos de livraison</h3>
+                {user && <span className="text-[9px] bg-blue-50 text-blue-600 px-2 py-1 rounded-full font-bold uppercase">Profil connecté</span>}
+              </div>
               
               <div className="space-y-3">
                 <div className="relative group">
@@ -275,8 +364,16 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
           <div className="space-y-1">
             <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-widest">
               <span>Sous-total</span>
-              <span>{sousTotal.toFixed(2)}€</span>
+              <span>{(sousTotalFinal + economie).toFixed(2)}€</span>
             </div>
+            
+            {economie > 0 && (
+              <div className="flex justify-between text-[10px] font-black text-green-600 uppercase tracking-widest">
+                <span className="flex items-center gap-1"><TrendingDown className="w-3 h-3" /> Économie promo</span>
+                <span>-{economie.toFixed(2)}€</span>
+              </div>
+            )}
+
             <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-widest">
               <span>Livraison</span>
               <span>{fraisLivraison === 0 ? 'GRATUIT' : fraisLivraison.toFixed(2) + '€'}</span>

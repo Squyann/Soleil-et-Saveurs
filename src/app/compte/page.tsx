@@ -15,7 +15,11 @@ interface Order {
   id: string;
   created_at: string;
   total: number;
+  // Ajout de 'statut' car c'est le nom dans ta DB Supabase
+  statut: string; 
   status: 'en_attente' | 'confirmee' | 'livree' | 'annulee';
+  // Ajout de la colonne texte pour la liste des fruits
+  description_commande: string;
   items: { name: string; quantite: number; price: number }[];
   adresse_livraison: string;
   methode_paiement: string;
@@ -146,7 +150,7 @@ export default function ComptePage() {
     new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
 
   const totalDepense = orders
-    .filter(o => o.status !== 'annulee')
+    .filter(o => (o.statut || o.status) !== 'annulee' && (o.statut || o.status) !== 'Annulée')
     .reduce((acc, o) => acc + (o.total || 0), 0);
 
   // --- LOADING ---
@@ -209,7 +213,7 @@ export default function ComptePage() {
               </div>
               <div className="bg-white/5 border border-white/10 rounded-2xl px-5 py-3 text-center">
                 <p className="text-2xl font-black text-white">
-                  {orders.filter(o => o.status === 'livree').length}
+                  {orders.filter(o => (o.statut || o.status) === 'livree' || (o.statut || o.status) === 'Livrée').length}
                 </p>
                 <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Livrées</p>
               </div>
@@ -224,7 +228,7 @@ export default function ComptePage() {
         {/* TABS */}
         <div className="flex gap-2 mb-8 bg-white p-1.5 rounded-2xl shadow-xl shadow-slate-200/60 border border-slate-100 w-fit">
           {([
-            { id: 'profil',    label: 'Mon Profil',  icon: User },
+            { id: 'profil',     label: 'Mon Profil',  icon: User },
             { id: 'commandes', label: 'Commandes',   icon: ShoppingBag },
             { id: 'adresses',  label: 'Adresses',    icon: MapPin },
           ] as const).map(({ id, label, icon: Icon }) => (
@@ -376,17 +380,17 @@ export default function ComptePage() {
                     <p className="text-[10px] font-black text-[#FF4500] uppercase tracking-widest">Fidélité</p>
                   </div>
                   <p className="text-white font-black text-4xl mb-1">
-                    {orders.filter(o => o.status === 'livree').length}
+                    {orders.filter(o => (o.statut || o.status) === 'livree' || (o.statut || o.status) === 'Livrée').length}
                     <span className="text-slate-400 text-lg font-bold ml-2">commandes livrées</span>
                   </p>
                   <div className="mt-4 h-2 bg-white/10 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-[#FF4500] rounded-full transition-all duration-1000"
-                      style={{ width: `${Math.min((orders.filter(o => o.status === 'livree').length / 10) * 100, 100)}%` }}
+                      style={{ width: `${Math.min((orders.filter(o => (o.statut || o.status) === 'livree' || (o.statut || o.status) === 'Livrée').length / 10) * 100, 100)}%` }}
                     />
                   </div>
                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-2">
-                    {Math.max(10 - orders.filter(o => o.status === 'livree').length, 0)} commandes avant votre prochain avantage
+                    {Math.max(10 - orders.filter(o => (o.statut || o.status) === 'livree' || (o.statut || o.status) === 'Livrée').length, 0)} commandes avant votre prochain avantage
                   </p>
                 </div>
               </div>
@@ -433,8 +437,16 @@ export default function ComptePage() {
               </div>
             ) : (
               orders.map((order) => {
-                const statusCfg = STATUS_CONFIG[order.status] || STATUS_CONFIG.en_attente;
+                // Gestion du statut (Français vs Anglais et formatage pour config)
+                const currentStatus = (order.statut || order.status || 'en_attente').toLowerCase();
+                const statusKey = currentStatus.includes('attente') ? 'en_attente' : 
+                                currentStatus.includes('confirme') ? 'confirmee' : 
+                                currentStatus.includes('livre') ? 'livree' : 
+                                currentStatus.includes('annule') ? 'annulee' : 'en_attente';
+
+                const statusCfg = STATUS_CONFIG[statusKey as keyof typeof STATUS_CONFIG] || STATUS_CONFIG.en_attente;
                 const StatusIcon = statusCfg.icon;
+                
                 return (
                   <div key={order.id} className="bg-white rounded-[2rem] p-6 md:p-8 border border-slate-50 shadow-xl shadow-slate-100/50 hover:shadow-slate-200/60 transition-all">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5">
@@ -454,30 +466,20 @@ export default function ComptePage() {
                       <div className="flex items-center gap-3">
                         <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[10px] font-black uppercase tracking-tight ${statusCfg.bg} ${statusCfg.color} ${statusCfg.border}`}>
                           <StatusIcon className="w-3.5 h-3.5" />
-                          {statusCfg.label}
+                          {order.statut || statusCfg.label}
                         </span>
                         <span className="font-black text-xl text-slate-900">{(order.total || 0).toFixed(2)}€</span>
                       </div>
                     </div>
 
-                    {/* ARTICLES */}
-                    {Array.isArray(order.items) && order.items.length > 0 && (
-                      <div className="border-t border-slate-50 pt-4 space-y-2">
-                        {order.items.map((item, i) => (
-                          <div key={i} className="flex items-center justify-between text-xs">
-                            <div className="flex items-center gap-2">
-                              <span className="w-5 h-5 bg-orange-50 text-[#FF4500] rounded-full flex items-center justify-center font-black text-[9px]">
-                                {item.quantite}
-                              </span>
-                              <span className="font-bold text-slate-700 uppercase tracking-tight">{item.name}</span>
-                            </div>
-                            <span className="font-black text-slate-500">
-                              {((item.price || 0) * item.quantite).toFixed(2)}€
-                            </span>
-                          </div>
-                        ))}
+                    {/* ARTICLES (Via description_commande) */}
+                    <div className="border-t border-slate-50 pt-4">
+                      <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-100/50">
+                        <p className="text-[11px] font-bold text-slate-600 leading-relaxed uppercase tracking-tight">
+                          {order.description_commande || "Détail indisponible"}
+                        </p>
                       </div>
-                    )}
+                    </div>
 
                     {/* ADRESSE */}
                     {order.adresse_livraison && (

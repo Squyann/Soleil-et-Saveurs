@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { ShoppingCart, Star, ArrowLeft, Plus, Info, Tag, CheckCircle2 } from 'lucide-react';
+import { ShoppingCart, Star, ArrowLeft, Plus, Info, Tag, CheckCircle2, TrendingDown, Gift } from 'lucide-react';
 import Link from 'next/link';
 import PanierDrawer from '@/components/ui/PanierDrawer';
 import { supabase } from '@/lib/supabase';
@@ -12,8 +12,10 @@ export default function CommanderPage() {
   const [nombreArticles, setNombreArticles] = useState(0);
   const [loading, setLoading] = useState(true);
   const [showToast, setShowToast] = useState(false);
+  
+  // NOUVEAU : État pour gérer les quantités saisies par le client avant l'ajout
+  const [quantities, setQuantities] = useState<{ [key: string]: number }>({});
 
-  // CHARGEMENT DES PRODUITS DEPUIS SUPABASE
   useEffect(() => {
     fetchProducts();
     updateBadgeCount();
@@ -27,7 +29,13 @@ export default function CommanderPage() {
         .order('name', { ascending: true });
       
       if (error) throw error;
-      if (data) setProducts(data);
+      if (data) {
+        setProducts(data);
+        // Initialiser les quantités à 1 pour chaque produit
+        const initialQty: { [key: string]: number } = {};
+        data.forEach(p => initialQty[p.id] = 1);
+        setQuantities(initialQty);
+      }
     } catch (error) {
       console.error("Erreur lors de la récupération des produits:", error);
     } finally {
@@ -40,36 +48,50 @@ export default function CommanderPage() {
     setNombreArticles(panier.reduce((acc: number, item: any) => acc + item.quantite, 0));
   };
 
+  const handleQtyChange = (id: string, val: string) => {
+    const num = Math.max(1, parseInt(val) || 1);
+    setQuantities(prev => ({ ...prev, [id]: num }));
+  };
+
   const filteredProducts = filter === 'all' 
     ? products 
     : products.filter(p => p.category?.toLowerCase() === filter.toLowerCase());
 
   const ajouterAuPanier = (product: any) => {
+    const qteSaisie = quantities[product.id] || 1;
+    let qteFinale = qteSaisie;
+
+    // --- LOGIQUE PROMO X POUR Y ---
+    if (product.seuil_achat > 0 && product.quantite_offerte > 0) {
+      const nombreDePaliersAtteints = Math.floor(qteSaisie / product.seuil_achat);
+      const produitsGratuits = nombreDePaliersAtteints * product.quantite_offerte;
+      qteFinale = qteSaisie + produitsGratuits;
+    }
+
     const panierActuel = JSON.parse(localStorage.getItem('mon-panier') || '[]');
     const index = panierActuel.findIndex((item: any) => item.id === product.id);
     
-    // Calcul du prix avec promo si elle existe
-    const prixFinal = product.promotion > 0 
+    const prixUnitairePromo = product.promotion > 0 
       ? product.price * (1 - product.promotion / 100) 
       : product.price;
 
     if (index >= 0) {
-      panierActuel[index].quantite += 1;
+      panierActuel[index].quantite += qteFinale;
     } else {
       panierActuel.push({ 
         ...product, 
-        price: prixFinal, // On enregistre le prix remisé dans le panier
+        price: prixUnitairePromo, 
         originalPrice: product.price,
-        quantite: 1 
+        quantite: qteFinale 
       });
     }
 
     localStorage.setItem('mon-panier', JSON.stringify(panierActuel));
     updateBadgeCount();
     
-    // Petit message de confirmation (Toast)
     setShowToast(true);
     setTimeout(() => setShowToast(false), 2000);
+    setQuantities(prev => ({ ...prev, [product.id]: 1 }));
   };
 
   return (
@@ -77,15 +99,13 @@ export default function CommanderPage() {
       
       <PanierDrawer isOpen={isPanierOpen} onClose={() => setIsPanierOpen(false)} />
 
-      {/* TOAST DE CONFIRMATION */}
       {showToast && (
         <div className="fixed top-28 left-1/2 -translate-x-1/2 z-[100] bg-slate-900 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-300">
           <CheckCircle2 className="w-5 h-5 text-[#FF4500]" />
-          <span className="font-black text-[10px] uppercase tracking-widest">Produit ajouté !</span>
+          <span className="font-black text-[10px] uppercase tracking-widest">Ajouté au panier !</span>
         </div>
       )}
 
-      {/* BOUTON PANIER FLOTTANT */}
       <button 
         onClick={() => setIsPanierOpen(true)}
         className="fixed bottom-8 right-8 z-50 bg-slate-900 text-white p-4 rounded-full shadow-2xl hover:bg-[#FF4500] hover:scale-110 transition-all flex items-center gap-3 active:scale-95 group"
@@ -138,95 +158,154 @@ export default function CommanderPage() {
           ))}
         </div>
 
-        {/* LOADING STATE */}
         {loading ? (
           <div className="flex justify-center py-20">
             <div className="w-10 h-10 border-4 border-slate-200 border-t-[#FF4500] rounded-full animate-spin" />
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredProducts.map((product) => (
-              <div 
-                key={product.id}
-                className="bg-white rounded-[2.5rem] p-6 border border-slate-50 shadow-sm hover:shadow-[0_20px_50px_rgb(0,0,0,0.06)] transition-all flex flex-col group relative overflow-hidden"
-              >
-                {/* BADGE PROMO */}
-                {product.promotion > 0 && (
-                  <div className="absolute top-6 left-6 z-10 bg-[#FF4500] text-white text-[10px] font-black px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1 animate-pulse">
-                    <Tag className="w-3 h-3" /> -{product.promotion}%
-                  </div>
-                )}
-                {product.seuil_achat > 0 && (
-                  <div className="absolute top-6 left-6 z-10 bg-slate-900 text-white text-[10px] font-black px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1">
-                    🎁 {product.seuil_achat}+{product.quantite_offerte}
-                  </div>
-                )}
+            {filteredProducts.map((product) => {
+              const currentQty = quantities[product.id] || 1;
+              const unitPrice = product.promotion > 0 
+                ? product.price * (1 - product.promotion / 100) 
+                : product.price;
+              const totalPrice = unitPrice * currentQty;
+              const totalEconomy = (product.price * currentQty) - totalPrice;
 
-                {/* IMAGE */}
-                <div className="h-64 bg-slate-50 rounded-[2rem] mb-6 overflow-hidden flex items-center justify-center relative">
-                  {product.image_url ? (
-                    <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-all duration-700" />
-                  ) : (
-                    <span className="text-6xl grayscale opacity-20">🧺</span>
-                  )}
-                  {product.stock <= 0 && (
-                    <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] flex items-center justify-center">
-                      <span className="bg-white px-4 py-2 rounded-xl font-black text-xs uppercase tracking-[0.2em] shadow-sm">Épuisé</span>
+              // --- CALCULS D'AFFICHAGE POUR LA PROMO X+Y ---
+              const produitsOfferts = product.seuil_achat > 0 
+                ? Math.floor(currentQty / product.seuil_achat) * product.quantite_offerte 
+                : 0;
+              const totalItemsRecus = currentQty + produitsOfferts;
+
+              return (
+                <div 
+                  key={product.id}
+                  className="bg-white rounded-[2.5rem] p-6 border border-slate-50 shadow-sm hover:shadow-[0_20px_50px_rgb(0,0,0,0.06)] transition-all flex flex-col group relative overflow-hidden"
+                >
+                  {/* BADGES PROMO ET X+Y */}
+                  <div className="absolute top-6 left-6 z-10 flex flex-col gap-2">
+                    {product.promotion > 0 && (
+                      <div className="bg-[#FF4500] text-white text-[10px] font-black px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1 animate-pulse">
+                        <Tag className="w-3 h-3" /> -{product.promotion}%
+                      </div>
+                    )}
+                    {product.seuil_achat > 0 && (
+                      <div className="bg-slate-900 text-white text-[10px] font-black px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1 border border-slate-700">
+                        <span>🎁</span> {product.seuil_achat} ACHETÉS = {product.quantite_offerte} OFFERT(S)
+                      </div>
+                    )}
+                  </div>
+
+                  {/* IMAGE */}
+                  <div className="h-64 bg-slate-50 rounded-[2rem] mb-6 overflow-hidden flex items-center justify-center relative">
+                    {product.image_url ? (
+                      <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-all duration-700" />
+                    ) : (
+                      <span className="text-6xl grayscale opacity-20">🧺</span>
+                    )}
+                    {product.stock <= 0 && (
+                      <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] flex items-center justify-center">
+                        <span className="bg-white px-4 py-2 rounded-xl font-black text-xs uppercase tracking-[0.2em] shadow-sm">Épuisé</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex justify-between items-start mb-1">
+                    <h3 className="text-xl font-black uppercase tracking-tight text-slate-800">{product.name}</h3>
+                    {product.provenance && (
+                      <span className="text-[10px] font-bold text-[#FF4500] bg-orange-50 px-2 py-0.5 rounded-md uppercase">{product.provenance}</span>
+                    )}
+                  </div>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">
+                       Vendu à la {product.unite || 'pièce'}
+                  </p>
+
+                  {/* SECTION QUANTITÉ ET PRIX DYNAMIQUE */}
+                  <div className="bg-slate-50 rounded-3xl p-4 mb-6 border border-slate-100/50">
+                    <div className="flex items-center justify-between mb-3">
+                        <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Quantité</span>
+                        <div className="flex items-center bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                            <button 
+                              onClick={() => handleQtyChange(product.id, String(currentQty - 1))}
+                              className="px-3 py-2 hover:bg-slate-50 text-slate-900 font-bold transition-colors"
+                            >-</button>
+                            <input 
+                                type="number" 
+                                value={currentQty}
+                                onChange={(e) => handleQtyChange(product.id, e.target.value)}
+                                className="w-12 text-center font-black text-sm bg-transparent border-none focus:ring-0 p-0"
+                            />
+                            <button 
+                              onClick={() => handleQtyChange(product.id, String(currentQty + 1))}
+                              className="px-3 py-2 hover:bg-slate-50 text-slate-900 font-bold transition-colors"
+                            >+</button>
+                        </div>
                     </div>
-                  )}
-                </div>
 
-                {/* INFOS */}
-                <div className="flex justify-between items-start mb-1">
-                  <h3 className="text-xl font-black uppercase tracking-tight text-slate-800">{product.name}</h3>
-                  {product.provenance && (
-                    <span className="text-[10px] font-bold text-[#FF4500] bg-orange-50 px-2 py-0.5 rounded-md uppercase">{product.provenance}</span>
-                  )}
-                </div>
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6">
-                   Vendu à la {product.unite || 'pièce'}
-                </p>
-
-                {/* PRIX ET ACTION */}
-                <div className="mt-auto pt-6 border-t border-slate-50 flex items-center justify-between">
-                  <div>
-                    <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Prix</p>
-                    <div className="flex items-center gap-2">
-                      <p className="text-3xl font-black text-slate-900">
-                        {product.promotion > 0 
-                          ? (product.price * (1 - product.promotion / 100)).toFixed(2) 
-                          : product.price?.toFixed(2)}€
-                      </p>
-                      {product.promotion > 0 && (
-                        <span className="text-sm line-through text-slate-300 font-bold italic">{product.price?.toFixed(2)}€</span>
-                      )}
+                    <div className="flex justify-between items-end">
+                        <div>
+                            <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1">Total produit</p>
+                            <div className="flex items-baseline gap-2">
+                                <span className="text-2xl font-black text-slate-900">{totalPrice.toFixed(2)}€</span>
+                                {product.promotion > 0 && (
+                                    <span className="text-xs line-through text-slate-300 font-bold italic">{(product.price * currentQty).toFixed(2)}€</span>
+                                )}
+                            </div>
+                        </div>
+                        
+                        {/* AFFICHAGE DES ÉCONOMIES ET CADEAUX */}
+                        <div className="flex flex-col items-end gap-1">
+                          {totalEconomy > 0 && (
+                              <div className="flex items-center gap-1 text-green-600 bg-green-50 px-3 py-1 rounded-full">
+                                  <TrendingDown className="w-3 h-3" />
+                                  <span className="text-[10px] font-black">-{totalEconomy.toFixed(2)}€</span>
+                              </div>
+                          )}
+                          {produitsOfferts > 0 && (
+                              <div className="flex items-center gap-1 text-[#FF4500] bg-orange-50 px-3 py-1 rounded-full animate-bounce">
+                                  <Gift className="w-3 h-3" />
+                                  <span className="text-[10px] font-black">+{produitsOfferts} OFFERT(S)</span>
+                              </div>
+                          )}
+                        </div>
                     </div>
                   </div>
-                  
+
+                  {/* BOUTON ACTION FINAL */}
                   <button 
                     disabled={product.stock <= 0}
                     onClick={() => ajouterAuPanier(product)}
-                    className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${
+                    className={`w-full py-4 rounded-[1.5rem] font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 transition-all ${
                       product.stock > 0 
-                      ? 'bg-slate-900 text-white hover:bg-[#FF4500] shadow-xl hover:rotate-6 active:scale-90' 
+                      ? 'bg-slate-900 text-white hover:bg-[#FF4500] shadow-xl active:scale-95' 
                       : 'bg-slate-100 text-slate-300 cursor-not-allowed'
                     }`}
                   >
-                    {product.stock > 0 ? <Plus className="w-7 h-7" /> : <Info className="w-6 h-6" />}
+                    {product.stock > 0 ? (
+                        <>
+                            <ShoppingCart className="w-4 h-4" />
+                            Ajouter {totalItemsRecus} au panier
+                        </>
+                    ) : (
+                        <>
+                            <Info className="w-4 h-4" />
+                            Produit indisponible
+                        </>
+                    )}
                   </button>
-                </div>
 
-                {/* ALERTE STOCK FAIBLE */}
-                {product.stock > 0 && product.stock < 5 && (
-                  <div className="mt-4 flex items-center gap-2 px-3 py-1.5 bg-orange-50 rounded-lg">
-                    <span className="w-1.5 h-1.5 bg-[#FF4500] rounded-full animate-pulse" />
-                    <p className="text-[9px] font-black uppercase tracking-widest text-[#FF4500]">
-                      Derniers exemplaires en stock !
-                    </p>
-                  </div>
-                )}
-              </div>
-            ))}
+                  {product.stock > 0 && product.stock < 5 && (
+                    <div className="mt-4 flex items-center justify-center gap-2">
+                      <span className="w-1.5 h-1.5 bg-[#FF4500] rounded-full animate-pulse" />
+                      <p className="text-[9px] font-black uppercase tracking-widest text-[#FF4500]">
+                        Derniers exemplaires !
+                      </p>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
