@@ -1,0 +1,490 @@
+'use client';
+export const dynamic = 'force-dynamic';
+import React, { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
+import Link from 'next/link';
+import { 
+  LayoutDashboard, Package, ListTree, Search, 
+  RefreshCcw, Printer, Phone, MessageSquare, 
+  Trash2, Plus, Truck, CheckCircle2, Clock, Mail
+} from 'lucide-react';
+
+export default function AdminPage() {
+  const [commandes, setCommandes] = useState<any[]>([]);
+  const [produits, setProduits] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [recherche, setRecherche] = useState('');
+  const [onglet, setOnglet] = useState<'commandes' | 'stock' | 'catalogue'>('commandes');
+  const [filtreStatut, setFiltreStatut] = useState<'Toutes' | 'À préparer' | 'Livrée'>('Toutes');
+  const [uploading, setUploading] = useState(false);
+  const [promoProdId, setPromoProdId] = useState<string | null>(null);
+  const [pourcentage, setPourcentage] = useState(0);
+  const [seuilAchat, setSeuilAchat] = useState(0);
+  const [qteOfferte, setQteOfferte] = useState(0);
+
+  const [nouveauProd, setNouveauProd] = useState({
+  name: '',
+  price: 0,
+  category: 'Légumes',
+  image_url: '',
+  stock: 0,
+  unite: 'kg',        // Ajouté
+  provenance: '',     // Ajouté
+  description: '',
+  promotion: 0,
+  seuil_achat: 0,
+  quantite_offerte: 0   // Ajouté
+ });
+
+  
+
+  useEffect(() => {
+    const isAdmin = localStorage.getItem('soleilsaveurs_admin_token');
+    if (isAdmin !== 'AUTH_OK') {
+      window.location.href = '/admin/login';
+      return;
+    }
+    fetchData();
+  }, []);
+
+  async function fetchData() {
+    setLoading(true);
+    const { data: cmds } = await supabase.from('commandes').select('*').order('created_at', { ascending: false });
+    const { data: prods } = await supabase.from('products').select('*').order('name', { ascending: true });
+
+    if (cmds) setCommandes(cmds);
+    if (prods) setProduits(prods);
+    setLoading(false);
+  }
+  async function appliquerPromo(id: string) {
+  try {
+    const { error } = await supabase
+      .from('products')
+      .update({ 
+        promotion: pourcentage,
+        seuil_achat: seuilAchat,
+        quantite_offerte: qteOfferte
+      })
+      .eq('id', id);
+
+    if (error) throw error;
+
+    // On réinitialise tout après succès
+    setPromoProdId(null);
+    setPourcentage(0);
+    setSeuilAchat(0);
+    setQteOfferte(0);
+    
+    // On rafraîchit la liste pour voir le badge promo apparaître
+    fetchData();
+    
+  } catch (error: any) {
+    alert("Erreur lors de l'application de la promo : " + error.message);
+  }
+ }
+
+  const envoyerWhatsApp = (cmd: any) => {
+    const message = `Bonjour ${cmd.nom_client}, c'est Soleil Saveurs au sujet de votre commande #${cmd.id}. Nous préparons vos produits ! À quelle heure seriez-vous disponible pour la livraison ?`;
+    const rel = cmd.telephone_client.replace(/\s+/g, '');
+    window.open(`https://wa.me/${rel}?text=${encodeURIComponent(message)}`, '_blank');
+  };
+
+ async function handleUpload(e: any) {
+  try {
+    setUploading(true);
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // On crée un nom unique SANS caractères spéciaux
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}.${fileExt}`; // Exemple: 172546372.webp
+
+    const { error: uploadError } = await supabase.storage
+      .from('produits-images')
+      .upload(fileName, file);
+
+    if (uploadError) throw uploadError;
+
+    const { data } = supabase.storage
+      .from('produits-images')
+      .getPublicUrl(fileName);
+
+    setNouveauProd({ ...nouveauProd, image_url: data.publicUrl });
+    alert("Image chargée !");
+  } catch (error: any) {
+    alert("Erreur upload : " + error.message);
+  } finally {
+    setUploading(false);
+  }
+ }
+
+  async function ajouterProduit(e: React.FormEvent) {
+  e.preventDefault();
+  console.log("Données envoyées :", nouveauProd); // Pour vérifier dans la console
+
+  const { error } = await supabase
+    .from('products')
+    .insert([nouveauProd]);
+
+  if (error) {
+    // Cela va t'afficher une alerte avec la raison précise du blocage
+    alert("Erreur Supabase : " + error.message);
+    console.error(error);
+  } else {
+    alert("Produit ajouté avec succès !");
+    // On vide le formulaire
+    setNouveauProd({ 
+      name: '', price: 0, description: '', category: 'Fruits', 
+      stock: 0, image_url: '', unite: 'kg', provenance: '',
+      promotion: 0, seuil_achat: 0, quantite_offerte: 0
+    });
+    if (typeof fetchData === 'function') fetchData();
+  }
+ }
+
+  async function ajusterStock(id: string, actuel: number, delta: number) {
+    await supabase.from('products').update({ stock: Math.max(0, actuel + delta) }).eq('id', id);
+    fetchData();
+  }
+
+  async function supprimerProduit(id: string) {
+    if (confirm("Supprimer ce produit ?")) {
+      await supabase.from('products').delete().eq('id', id);
+      fetchData();
+    }
+  }
+
+  async function updateStatut(id: number, nouveauStatut: string) {
+    const { error } = await supabase.from('commandes').update({ statut: nouveauStatut }).eq('id', id);
+    if (!error) fetchData();
+  }
+
+  const stats = {
+    total: commandes.length,
+    aPreparer: commandes.filter(c => (c.statut || 'À préparer') === 'À préparer').length,
+    caTotal: commandes
+      .filter(c => c.statut === 'Livrée')
+      .reduce((acc, curr) => acc + (Number(curr.total) || 0), 0)
+  };
+
+  const calculerBesoinStock = () => {
+    const stockMap: { [key: string]: { quantite: number } } = {};
+    commandes.filter(cmd => (cmd.statut || 'À préparer') === 'À préparer').forEach(cmd => {
+      cmd.contenu_panier?.forEach((item: any) => {
+        const nom = item.name || item.nom;
+        const qte = Number(item.quantity || item.quantite || 0);
+        if (stockMap[nom]) stockMap[nom].quantite += qte;
+        else stockMap[nom] = { quantite: qte };
+      });
+    });
+    return Object.entries(stockMap);
+  };
+
+  const imprimerBon = (cmd: any) => {
+    const fenetre = window.open('', '', 'height=800,width=900');
+    if (fenetre) {
+      fenetre.document.write(`
+        <html>
+          <body style="font-family:sans-serif; padding:40px; color:#1a1a1b">
+            <h1 style="color:#FF4500; margin-bottom:0">SOLEIL SAVEURS</h1>
+            <p style="margin-top:5px; color:#666">Bon de préparation / Facture</p>
+            <div style="display:flex; justify-content:space-between; margin:30px 0; padding:20px; background:#f9f9f9; border-radius:10px">
+              <div><strong>Client:</strong> ${cmd.nom_client}<br/><strong>Tél:</strong> ${cmd.telephone_client}</div>
+              <div style="text-align:right"><strong>Commande #${cmd.id}</strong><br/>Date: ${new Date(cmd.created_at).toLocaleDateString()}</div>
+            </div>
+            <p><strong>Adresse de livraison:</strong><br/>${cmd.adresse_livraison}</p>
+            <table style="width:100%; border-collapse:collapse; margin-top:20px;">
+              <thead>
+                <tr style="background:#eee"><th style="padding:12px; text-align:left">Produit</th><th style="padding:12px; text-align:right">Qté</th></tr>
+              </thead>
+              <tbody>
+                ${cmd.contenu_panier?.map((i: any) => `
+                  <tr>
+                    <td style="padding:12px; border-bottom:1px solid #eee">${i.name || i.nom}</td>
+                    <td style="padding:12px; border-bottom:1px solid #eee; text-align:right"><strong>${i.quantity || i.quantite}</strong></td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+            <h2 style="text-align:right; margin-top:30px; color:#FF4500">Total: ${cmd.total.toFixed(2)}€</h2>
+          </body>
+        </html>
+      `);
+      fenetre.document.close();
+      fenetre.print();
+    }
+  };
+
+  const produitsFiltres = produits.filter(p => p.name?.toLowerCase().includes(recherche.toLowerCase()));
+  const commandesFiltrees = commandes.filter(cmd => {
+    const matchSearch = cmd.nom_client?.toLowerCase().includes(recherche.toLowerCase()) || cmd.id.toString().includes(recherche);
+    const matchStatut = filtreStatut === 'Toutes' || (cmd.statut || 'À préparer') === filtreStatut;
+    return matchSearch && matchStatut;
+  });
+
+  return (
+    <div className="min-h-screen bg-[#FDFCF9] text-slate-900 pb-20 font-sans">
+      <header className="bg-white border-b border-slate-100 sticky top-0 z-50 px-6 py-4">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+          <Link href="/" className="text-xl font-black uppercase tracking-tighter italic">
+            SOLEIL<span className="text-[#FF4500]">SAVEURS</span>
+          </Link>
+
+          <nav className="flex bg-slate-100 p-1 rounded-2xl">
+            {(['commandes', 'stock', 'catalogue'] as const).map(t => (
+              <button key={t} onClick={() => setOnglet(t)} className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${onglet === t ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}>
+                {t}
+              </button>
+            ))}
+          </nav>
+
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input type="text" placeholder="Rechercher..." value={recherche} onChange={(e) => setRecherche(e.target.value)} className="pl-10 pr-4 py-2 bg-slate-100 border-none rounded-xl text-xs font-bold w-48 focus:ring-2 focus:ring-[#FF4500]" />
+            </div>
+            <button onClick={fetchData} className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all"><RefreshCcw className="w-4 h-4" /></button>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-6xl mx-auto px-6 mt-10">
+        {onglet === 'commandes' && (
+          <div className="space-y-8 animate-in fade-in duration-500">
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm">
+                <p className="text-[10px] font-black uppercase text-slate-400 mb-1 tracking-widest">Total Commandes</p>
+                <p className="text-4xl font-black italic">{stats.total}</p>
+              </div>
+              <div className="bg-white p-8 rounded-[32px] border-l-4 border-l-[#FF4500] shadow-sm">
+                <p className="text-[10px] font-black uppercase text-[#FF4500] mb-1 tracking-widest">À préparer</p>
+                <p className="text-4xl font-black italic">{stats.aPreparer}</p>
+              </div>
+              <div className="bg-slate-900 p-8 rounded-[32px] text-white shadow-xl">
+                <p className="text-[10px] font-black uppercase opacity-50 mb-1 tracking-widest">Chiffre d'Affaires</p>
+                <p className="text-4xl font-black italic">{stats.caTotal.toFixed(2)}€</p>
+              </div>
+            </div>
+
+            {/* Besoin de récolte */}
+            {calculerBesoinStock().length > 0 && (
+              <div className="bg-[#FF4500]/5 rounded-[40px] p-10 border border-[#FF4500]/10">
+                <div className="flex justify-between items-center mb-8">
+                  <h2 className="font-black text-2xl text-slate-900 italic uppercase tracking-tighter">🛒 Besoin de récolte</h2>
+                  <button onClick={() => window.print()} className="bg-slate-900 text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:scale-105 transition-all"><Printer className="w-4 h-4" /> Imprimer</button>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {calculerBesoinStock().map(([nom, data]: any) => (
+                    <div key={nom} className="bg-white p-6 rounded-2xl shadow-sm border border-[#FF4500]/10">
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter block mb-1">{nom}</span>
+                      <span className="font-black text-2xl text-[#FF4500]">{data.quantite}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Filtres de statut */}
+            <div className="flex gap-2 p-1 bg-white border border-slate-100 rounded-2xl w-fit">
+              {['Toutes', 'À préparer', 'Livrée'].map((s) => (
+                <button key={s} onClick={() => setFiltreStatut(s as any)} className={`px-8 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${filtreStatut === s ? 'bg-slate-900 text-white' : 'text-slate-400 hover:text-slate-600'}`}>
+                  {s}
+                </button>
+              ))}
+            </div>
+
+            {/* Liste des commandes */}
+            <div className="space-y-6">
+              {commandesFiltrees.map(cmd => (
+                <div key={cmd.id} className="bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm flex flex-col md:flex-row justify-between gap-8 group hover:border-[#FF4500]/20 transition-all">
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="flex items-center gap-5">
+                        <div className="w-14 h-14 bg-slate-900 text-white rounded-[20px] flex items-center justify-center font-black text-sm italic">#{cmd.id}</div>
+                        <div>
+                          <h3 className="font-black text-2xl uppercase italic tracking-tighter">{cmd.nom_client}</h3>
+                          <div className="flex items-center gap-4 mt-1 text-[11px] font-bold text-slate-400">
+                            <span className="flex items-center gap-1"><Truck className="w-3 h-3 text-[#FF4500]" /> {cmd.adresse_livraison}</span>
+                            <span className="flex items-center gap-1 font-black text-slate-600">{cmd.telephone_client}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <button onClick={() => envoyerWhatsApp(cmd)} className="w-12 h-12 bg-green-50 text-green-600 rounded-2xl flex items-center justify-center hover:bg-green-600 hover:text-white transition-all shadow-sm">
+                          <MessageSquare className="w-5 h-5" />
+                        </button>
+                        <a href={`tel:${cmd.telephone_client}`} className="w-12 h-12 bg-slate-50 text-slate-600 rounded-2xl flex items-center justify-center hover:bg-slate-900 hover:text-white transition-all shadow-sm">
+                          <Phone className="w-5 h-5" />
+                        </a>
+                        <button onClick={() => imprimerBon(cmd)} className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center hover:bg-[#FF4500] hover:text-white transition-all shadow-sm">
+                          <Printer className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-slate-50 rounded-3xl p-6 border border-slate-100">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {cmd.contenu_panier?.map((item: any, idx: number) => (
+                          <div key={idx} className="flex justify-between items-center p-3 bg-white rounded-xl border border-slate-100 shadow-sm">
+                            <span className="text-xs font-black uppercase text-slate-600 tracking-tighter">{item.name || item.nom}</span>
+                            <span className="text-sm font-black">{item.quantity || item.quantite}</span>
+                          </div>
+                        ))}
+                      </div>
+                      {cmd.description_commande && (
+                        <div className="mt-4 p-4 bg-white rounded-2xl border-l-4 border-l-[#FF4500] text-xs text-slate-600 italic">
+                          "{cmd.description_commande}"
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-right flex flex-col justify-between min-w-[180px]">
+                    <div>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Payé</p>
+                      <p className="text-4xl font-black text-[#FF4500] italic tracking-tighter">{cmd.total?.toFixed(2)}€</p>
+                    </div>
+                    <button onClick={() => updateStatut(cmd.id, 'Livrée')} className={`w-full py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 ${cmd.statut === 'Livrée' ? 'bg-green-500/10 text-green-600 border border-green-500/20' : 'bg-slate-900 text-white hover:bg-[#FF4500] shadow-xl shadow-slate-900/10'}`}>
+                      <CheckCircle2 className="w-4 h-4" /> {cmd.statut === 'Livrée' ? '✓ Livrée' : 'Valider Livraison'}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* --- SECTION STOCK (GESTION & PROMOS) --- */}
+        {onglet === 'stock' && (
+          <div className="animate-in fade-in space-y-8">
+            <div className="bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm">
+              <h2 className="font-black text-2xl mb-8 text-slate-900 italic uppercase tracking-tighter">Gestion des stocks & Promos</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {produitsFiltres.map(p => (
+                  <div key={p.id} className="p-6 bg-[#FDFCF9] rounded-[2.5rem] border border-slate-100 flex flex-col items-center relative transition-all hover:shadow-md group">
+                    {(p.promotion > 0 || p.seuil_achat > 0) && (
+                      <div className="absolute top-4 right-4 bg-[#FF4500] text-white text-[9px] font-black px-2.5 py-1 rounded-full uppercase z-10 shadow-sm animate-pulse">
+                        {p.promotion > 0 ? `-${p.promotion}%` : `${p.seuil_achat}+${p.quantite_offerte}`}
+                      </div>
+                    )}
+                    <div className="w-24 h-24 bg-white rounded-3xl overflow-hidden mb-4 shadow-sm border border-slate-50 flex items-center justify-center">
+                      {p.image_url ? <img src={p.image_url} alt={p.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform" /> : <Package className="w-10 h-10 text-slate-200" />}
+                    </div>
+                    <p className="font-black text-sm mb-1 text-center text-slate-800 uppercase italic truncate w-full">{p.name}</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase mb-3">{p.category}</p>
+                    
+                    <div className="flex items-center gap-3 my-2 bg-white p-2 rounded-2xl shadow-inner border border-slate-100 w-full justify-between">
+                      <button onClick={() => ajusterStock(p.id, p.stock, -1)} className="w-10 h-10 flex items-center justify-center bg-slate-50 text-slate-400 rounded-xl font-black hover:bg-red-50 hover:text-red-500">-</button>
+                      <div className="flex flex-col items-center">
+                        <input type="number" step={p.unite === 'kg' ? "0.1" : "1"} value={p.stock} onChange={(e) => {
+                          const val = parseFloat(e.target.value);
+                          if (!isNaN(val)) supabase.from('products').update({ stock: val }).eq('id', p.id).then(() => fetchData());
+                        }} className={`w-14 text-center font-black text-lg bg-transparent border-none focus:ring-0 p-0 ${p.stock <= 5 ? 'text-red-500' : 'text-slate-900'}`} />
+                        <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest">{p.unite || 'unité'}</span>
+                      </div>
+                      <button onClick={() => ajusterStock(p.id, p.stock, 1)} className="w-10 h-10 flex items-center justify-center bg-slate-900 text-white rounded-xl font-black shadow-lg hover:bg-[#FF4500] transition-all">+</button>
+                    </div>
+
+                    <div className="w-full mt-2">
+                      <button onClick={() => setPromoProdId(promoProdId === p.id ? null : p.id)} className={`w-full text-[9px] font-black uppercase tracking-widest py-3 rounded-xl transition-all ${(p.promotion > 0 || p.seuil_achat > 0) ? 'bg-[#FF4500]/10 text-[#FF4500] border border-[#FF4500]/20' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}>
+                        {(p.promotion > 0 || p.seuil_achat > 0) ? '🔥 Modifier Promo' : 'Ajouter Promo'}
+                      </button>
+                      {promoProdId === p.id && (
+                        <div className="mt-3 p-4 bg-white rounded-2xl border border-slate-200 shadow-2xl flex flex-col gap-3 animate-in zoom-in-95 duration-200 z-20">
+                          <div>
+                            <p className="text-[8px] font-black uppercase text-slate-400 mb-1 tracking-tighter">Remise %</p>
+                            <input type="number" placeholder="Ex: 20" className="w-full p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg text-center" onChange={(e) => { setPourcentage(parseInt(e.target.value) || 0); setSeuilAchat(0); setQteOfferte(0); }} />
+                          </div>
+                          <div className="border-t border-slate-50 pt-2">
+                            <p className="text-[8px] font-black uppercase text-slate-400 mb-1 tracking-tighter">Option Lot (X+Y)</p>
+                            <div className="flex gap-2">
+                              <input type="number" placeholder="Payés" className="w-1/2 p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg text-center" onChange={(e) => { setSeuilAchat(parseInt(e.target.value) || 0); setPourcentage(0); }} />
+                              <input type="number" placeholder="Offerts" className="w-1/2 p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg text-center" onChange={(e) => setQteOfferte(parseInt(e.target.value) || 0)} />
+                            </div>
+                          </div>
+                          <div className="flex gap-2 mt-1">
+                            <button onClick={() => appliquerPromo(p.id)} className="flex-1 bg-slate-900 text-white text-[9px] font-black py-3 rounded-lg shadow-md hover:bg-[#FF4500]">VALIDER</button>
+                            {(p.promotion > 0 || p.seuil_achat > 0) && (
+                              <button onClick={() => { setPourcentage(0); setSeuilAchat(0); setQteOfferte(0); appliquerPromo(p.id); }} className="px-3 bg-red-100 text-red-500 rounded-lg"><Trash2 className="w-4 h-4" /></button>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* --- SECTION CATALOGUE (AJOUT) --- */}
+        {onglet === 'catalogue' && (
+          <div className="space-y-12 animate-in fade-in">
+            <section className="bg-white p-12 rounded-[40px] border border-slate-100 shadow-sm max-w-4xl mx-auto">
+              <h2 className="font-black text-3xl mb-10 italic uppercase tracking-tighter">Nouveau <span className="text-[#FF4500]">Produit</span></h2>
+              <form onSubmit={ajouterProduit} className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="md:col-span-3 border-4 border-dashed border-slate-100 rounded-[32px] p-10 bg-slate-50 flex flex-col items-center justify-center relative cursor-pointer hover:border-[#FF4500]/20 transition-all group">
+                  {nouveauProd.image_url ? <img src={nouveauProd.image_url} className="h-32 w-32 object-cover rounded-3xl shadow-lg border-4 border-white" /> : <Plus className="w-12 h-12 text-slate-200 group-hover:text-[#FF4500]" />}
+                  <input type="file" accept="image/*" onChange={handleUpload} className="absolute inset-0 opacity-0 cursor-pointer" />
+                  {uploading && <div className="absolute inset-0 bg-white/90 flex items-center justify-center font-black text-[#FF4500] rounded-[32px] animate-pulse">UPLOAD...</div>}
+                </div>
+                
+                <div className="md:col-span-2">
+                  <label className="text-[9px] font-black uppercase text-slate-400 ml-2 mb-1 block">Nom du produit</label>
+                  <input type="text" placeholder="ex: Salade Batavia" className="w-full p-5 bg-slate-100 rounded-2xl font-black border-none text-sm" value={nouveauProd.name} onChange={e => setNouveauProd({...nouveauProd, name: e.target.value})} required />
+                </div>
+
+                <div>
+                  <label className="text-[9px] font-black uppercase text-slate-400 ml-2 mb-1 block">Prix de base (€)</label>
+                  <input type="number" step="0.01" placeholder="0.00" className="w-full p-5 bg-slate-100 rounded-2xl font-black border-none text-sm" value={nouveauProd.price || ''} onChange={e => setNouveauProd({...nouveauProd, price: parseFloat(e.target.value)})} required />
+                </div>
+                
+                <select className="p-5 bg-slate-100 rounded-2xl font-black border-none text-xs uppercase" value={nouveauProd.category} onChange={e => setNouveauProd({...nouveauProd, category: e.target.value})}>
+                    <option value="Fruits">🍎 Fruits</option>
+                    <option value="Légumes">🥦 Légumes</option>
+                    <option value="Épicerie">🍯 Épicerie</option>
+                </select>
+
+                <select className="p-5 bg-slate-100 rounded-2xl font-black border-none text-xs uppercase" value={nouveauProd.unite} onChange={e => setNouveauProd({...nouveauProd, unite: e.target.value})}>
+                    <option value="kg">kilogramme (kg)</option>
+                    <option value="pièce">unité (pièce)</option>
+                    <option value="botte">botte</option>
+                    <option value="barquette">barquette</option>
+                </select>
+
+                <div className="relative">
+                    <input type="number" step={nouveauProd.unite === 'kg' ? '0.1' : '1'} placeholder="Stock initial" className="w-full p-5 bg-slate-100 rounded-2xl font-black border-none text-sm" value={nouveauProd.stock || ''} onChange={e => setNouveauProd({...nouveauProd, stock: parseFloat(e.target.value)})} required />
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-[#FF4500] uppercase">{nouveauProd.unite}</span>
+                </div>
+
+                <input type="text" placeholder="Provenance (ex: France)" className="p-5 bg-slate-100 rounded-2xl font-black border-none text-sm" value={nouveauProd.provenance} onChange={e => setNouveauProd({...nouveauProd, provenance: e.target.value})} />
+                <input type="text" placeholder="Description courte" className="md:col-span-2 p-5 bg-slate-100 rounded-2xl font-black border-none text-sm" value={nouveauProd.description} onChange={e => setNouveauProd({...nouveauProd, description: e.target.value})} />
+
+                <button type="submit" disabled={uploading} className="md:col-span-3 bg-slate-900 text-white py-6 rounded-3xl font-black uppercase tracking-[0.3em] shadow-xl hover:bg-[#FF4500] hover:scale-[1.01] transition-all disabled:opacity-50">
+                  Ajouter au catalogue
+                </button>
+              </form>
+            </section>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {produitsFiltres.map(p => (
+                <div key={p.id} className="bg-white p-6 rounded-[32px] border border-slate-100 flex items-center gap-6 group hover:shadow-md transition-all">
+                  <div className="w-20 h-20 bg-slate-50 rounded-3xl overflow-hidden flex-shrink-0 shadow-inner">
+                    {p.image_url ? <img src={p.image_url} className="w-full h-full object-cover" /> : <Package className="w-full h-full p-6 text-slate-200" />}
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-black text-sm uppercase italic tracking-tighter">{p.name}</h3>
+                    <p className="text-[10px] font-bold text-[#FF4500] uppercase tracking-tighter">{p.price?.toFixed(2)}€ / {p.unite}</p>
+                    {p.provenance && <p className="text-[9px] text-slate-400 font-medium italic">Origine: {p.provenance}</p>}
+                  </div>
+                  <button onClick={() => supprimerProduit(p.id)} className="w-10 h-10 bg-red-50 text-red-400 rounded-xl flex items-center justify-center hover:bg-red-500 hover:text-white transition-all shadow-sm"><Trash2 className="w-4 h-4" /></button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}
