@@ -202,20 +202,157 @@ export default function AdminPage() {
     return Object.entries(stockMap);
   };
 
-  const imprimerBon = (cmd: any) => {
-    const fenetre = window.open('', '', 'height=600,width=800');
-    fenetre?.document.write(`<h1>Commande #${cmd.id}</h1><p>Client: ${cmd.nom_client}</p>`);
-    fenetre?.print();
-  };
-
-  const produitsFiltres = produits.filter(p => p.name?.toLowerCase().includes(recherche.toLowerCase()));
-  
-  const commandesFiltrees = commandes.filter(cmd => {
+   const produitsFiltres = produits.filter(p => p.name?.toLowerCase().includes(recherche.toLowerCase()));
+   const commandesFiltrees = commandes.filter(cmd => {
     const matchSearch = cmd.nom_client?.toLowerCase().includes(recherche.toLowerCase()) || cmd.id.toString().includes(recherche);
     if (filtreStatut === 'À préparer') return matchSearch && cmd.statut !== 'livrée';
     if (filtreStatut === 'livrée') return matchSearch && cmd.statut === 'livrée';
     return matchSearch;
   });
+  // --- IMPRESSIONS ---
+    const imprimerBon = (cmd: any) => {
+    const isRetrait = cmd.adresse_livraison?.includes("Retrait");
+    const totalArticles = cmd.total;
+    const dateCmd = new Date(cmd.created_at).toLocaleDateString('fr-FR');
+    const refFacture = `INV-${new Date(cmd.created_at).getFullYear()}-${cmd.id.toString().slice(-4).toUpperCase()}`;
+
+    let fraisLivraison = 0;
+    if (isRetrait) {
+      fraisLivraison = 0;
+    } else if (totalArticles <= 15) {
+      fraisLivraison = 2.50;
+    } else if (totalArticles >= 45) {
+      fraisLivraison = 0;
+    } else {
+      const ratio = (totalArticles - 15) / (45 - 15);
+      const calculBrut = 2.50 * (1 - ratio);
+      fraisLivraison = Math.round(calculBrut * 10) / 10;
+    }
+
+    const totalFinal = totalArticles + fraisLivraison;
+    const totalHT = totalArticles / 1.055;
+    const montantTVA = totalArticles - totalHT;
+    
+    const fenetre = window.open('', '', 'height=800,width=900');
+    if (fenetre) {
+      fenetre.document.write(`
+        <html>
+          <head>
+            <title>Facture ${refFacture}</title>
+            <style>
+              body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #2D3748; padding: 50px; line-height: 1.5; }
+              .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 60px; }
+              .brand { flex: 1; }
+              .brand h1 { font-size: 28px; font-weight: 900; margin: 0; letter-spacing: -1px; color: #16423C; }
+              .brand h1 span { color: #6A9C89; }
+              .brand p { font-size: 12px; color: #718096; margin: 5px 0 0 0; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+              .invoice-details { text-align: right; }
+              .invoice-details h2 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 5px 0; color: #718096; }
+              .invoice-details p { font-size: 16px; font-weight: 800; margin: 0; color: #1A202C; }
+              .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 50px; }
+              .info-box h3 { font-size: 11px; text-transform: uppercase; color: #A0AEC0; margin-bottom: 10px; letter-spacing: 1px; border-bottom: 1px solid #EDF2F7; padding-bottom: 5px; }
+              .info-box p { font-size: 14px; margin: 0; font-weight: 600; }
+               table { width: 100%; border-collapse: collapse; margin-bottom: 40px; }
+               th { text-align: left; padding: 15px 10px; background: #F7FAFC; font-size: 11px; text-transform: uppercase; color: #718096; border-top: 2px solid #16423C; }
+               td { padding: 15px 10px; border-bottom: 1px solid #EDF2F7; font-size: 14px; }
+              .text-right { text-align: right; }
+              .totals-area { display: flex; justify-content: flex-end; }
+              .totals-table { width: 280px; }
+              .totals-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 14px; }
+              .totals-row.grand-total { border-top: 2px solid #16423C; margin-top: 10px; padding-top: 15px; font-size: 20px; font-weight: 900; color: #16423C; }
+              .footer-note { margin-top: 100px; text-align: center; font-size: 11px; color: #A0AEC0; border-top: 1px solid #EDF2F7; padding-top: 20px; }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <div class="brand">
+                <h1>Soleil Saveurs<span>.</span></h1>
+                <p>Produits Frais</p>
+                <div style="font-size: 11px; color: #718096; margin-top: 10px; font-weight: normal; text-transform: none;">
+                  Livraison Yvelines (78)
+                </div>
+              </div>
+              <div class="invoice-details">
+                <h2>Référence Facture</h2>
+                <p>${refFacture}</p>
+                <h2 style="margin-top: 15px;">Date de livraison</h2>
+                <p>${dateCmd}</p>
+              </div>
+            </div>
+            <div class="info-grid">
+              <div class="info-box">
+                <h3>Client</h3>
+                <p>${cmd.nom_client}</p>
+                <p style="font-weight: normal; margin-top: 4px;">Tél: ${cmd.telephone_client || 'Non renseigné'}</p>
+              </div>
+              <div class="info-box">
+                <h3>Mode de livraison</h3>
+                <p>${isRetrait ? '📍 Retrait au centre' : '🚚 Livraison à domicile'}</p>
+                <p style="font-weight: normal; color: #4A5568; font-size: 13px; margin-top: 5px;">${cmd.adresse_livraison}</p>
+              </div>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Description des articles</th>
+                  <th class="text-right">Quantité</th>
+                  <th class="text-right">Prix Unit. TTC</th>
+                  <th class="text-right">Total TTC</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${cmd.contenu_panier.map((i: any) => {
+                  // Récupération sécurisée des noms et quantités (FR ou EN)
+                  const nomProduit = i.nom || i.name || "Produit inconnu";
+                  const qte = i.quantite || i.quantity || 0;
+                  const unite = i.unite || "unité(s)";
+                  
+                  // Calcul sécurisé des prix
+                  const totalLigne = i.prixTotalLigne || (parseFloat(i.prixUnitaire || i.price || 0) * parseFloat(qte)) || 0;
+                  const prixUnit = i.prixUnitaire || i.price || (qte > 0 ? totalLigne / qte : 0);
+                  
+                  return `
+                  <tr>
+                    <td style="font-weight: bold;">${nomProduit}</td>
+                    <td class="text-right">${qte} ${unite}</td>
+                    <td class="text-right">${prixUnit.toFixed(2)}€</td>
+                    <td class="text-right" style="font-weight: bold;">${totalLigne.toFixed(2)}€</td>
+                  </tr>
+                `}).join('')}
+              </tbody>
+            </table>
+            <div class="totals-area">
+              <div class="totals-table">
+                <div class="totals-row">
+                  <span>Sous-total HT (5.5%)</span>
+                  <span>${totalHT.toFixed(2)}€</span>
+                </div>
+                <div class="totals-row">
+                  <span>TVA (5.5%)</span>
+                  <span>${montantTVA.toFixed(2)}€</span>
+                </div>
+                <div class="totals-row">
+                  <span>Frais de livraison</span>
+                  <span style="font-weight: bold;">${fraisLivraison === 0 ? 'OFFERT' : fraisLivraison.toFixed(2) + '€'}</span>
+                </div>
+                <div class="totals-row grand-total">
+                  <span>TOTAL À PAYER</span>
+                  <span>${totalFinal.toFixed(2)}€</span>
+                </div>
+              </div>
+            </div>
+            <div class="footer-note">
+              Merci d'avoir choisi le circuit court avec Soleil Saveurs.<br/>
+              <em>TVA non applicable, art. 293 B du CGI</em><br/>
+              Ce document fait office de bon de livraison et de facture.
+            </div>
+          </body>
+        </html>
+      `);
+      fenetre.document.close();
+      setTimeout(() => fenetre.print(), 500);
+    }
+  };
 
   // ICI CONTINUE TON RETURN (L'affichage)
   return (
