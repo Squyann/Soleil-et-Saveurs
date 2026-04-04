@@ -97,7 +97,7 @@ export default function RootLayout({
           <div className="max-w-7xl mx-auto flex flex-col items-center gap-6">
             <div className="flex gap-8 mb-4">
                <Link href="/aide" className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-[#FF4500]">Support</Link>
-               <Link href="/cgv" className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-[#FF4500]">Livraison</Link>
+               <Link href="/livraison" className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-[#FF4500]">Livraison</Link>
                <Link href="/mentions" className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-[#FF4500]">Mentions</Link>
             </div>
             <p className="text-[9px] font-black uppercase tracking-[0.4em] text-slate-300">
