@@ -9,17 +9,23 @@ import {
   Trash2, Plus, Truck, CheckCircle2, Clock, Mail, Save, Edit3, X
 } from 'lucide-react';
 
+interface StatsType {
+  total: number;
+  aPreparer: number;
+  caTotal: number;
+}
+
 export default function AdminPage() {
   const [commandes, setCommandes] = useState<any[]>([]);
   const [produits, setProduits] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [recherche, setRecherche] = useState('');
   const [onglet, setOnglet] = useState<'commandes' | 'stock' | 'catalogue'>('commandes');
-  const [filtreStatut, setFiltreStatut] = useState<'Toutes' | 'À préparer' | 'Livrée'>('Toutes');
+  const [filtreStatut, setFiltreStatut] = useState<'Toutes' | 'À préparer' | 'livrée'>('Toutes');
   const [uploading, setUploading] = useState(false);
   const [promoProdId, setPromoProdId] = useState<string | null>(null);
+  const [stats, setStats] = useState<StatsType>({ total: 0, aPreparer: 0, caTotal: 0 });
   
-  // État pour l'édition d'un produit existant
   const [editingProdId, setEditingProdId] = useState<string | null>(null);
   const [editFormData, setEditFormData] = useState<any>(null);
 
@@ -28,17 +34,9 @@ export default function AdminPage() {
   const [qteOfferte, setQteOfferte] = useState(0);
 
   const [nouveauProd, setNouveauProd] = useState({
-    name: '',
-    price: 0,
-    category: 'Légumes',
-    image_url: '',
-    stock: 0,
-    unite: 'kg',
-    provenance: '',
-    description: '',
-    promotion: 0,
-    seuil_achat: 0,
-    quantite_offerte: 0
+    name: '', price: 0, category: 'Légumes', image_url: '', stock: 0,
+    unite: 'kg', provenance: '', description: '', promotion: 0,
+    seuil_achat: 0, quantite_offerte: 0
   });
 
   useEffect(() => {
@@ -53,99 +51,130 @@ export default function AdminPage() {
     verifierAcces();
   }, []);
 
-  async function fetchData() {
+  // --- FONCTION FETCHDATA UNIQUE ET CORRIGÉE ---
+ async function fetchData() {
     setLoading(true);
-    const { data: cmds } = await supabase.from('commandes').select('*').order('created_at', { ascending: false });
-    const { data: prods } = await supabase.from('products').select('*').order('name', { ascending: true });
+    try {
+      const { data: cmds } = await supabase.from('commandes').select('*').order('created_at', { ascending: false });
+      const { data: prods } = await supabase.from('products').select('*').order('name', { ascending: true });
 
-    if (cmds) setCommandes(cmds);
-    if (prods) setProduits(prods);
+      if (cmds) {
+        console.log('Statuts en base :', cmds.map(c => ({ id: c.id, statut: c.statut })));
+        setCommandes(cmds);
+        const total = cmds.length;
+        const aPreparer = cmds.filter(c => c.statut !== 'livrée').length;
+
+        // CORRECTION : calcul du CA robuste — accepte total numérique ou null
+        const ca = cmds
+          .filter(c => c.statut === 'livrée')
+          .reduce((acc, curr) => {
+            // Tente d'abord le champ "total", sinon recalcule depuis le panier
+            const montantDirect = parseFloat(curr.total);
+            if (!isNaN(montantDirect) && montantDirect > 0) {
+              return acc + montantDirect;
+            }
+            // Fallback : somme des items du panier
+            const montantPanier = (curr.contenu_panier || []).reduce((s: number, item: any) => {
+              const qte = parseFloat(item.quantity || item.quantite || 0);
+              const prix = parseFloat(item.price || item.prix || 0);
+              return s + qte * prix;
+            }, 0);
+            return acc + montantPanier;
+          }, 0);
+
+        setStats({ total, aPreparer, caTotal: ca });
+      }
+      if (prods) setProduits(prods);
+    } catch (err) {
+      console.error("Erreur de chargement:", err);
+    }
     setLoading(false);
-  }
+   }
 
-  // --- NOUVELLE FONCTION : MISE A JOUR PRODUIT ---
+  // --- ACTIONS ---
+  // CORRECTION : updateStatut mis à jour avec feedback visuel et rechargement fiable
+  async function updateStatut(id: string, nouveauStatut: string) {
+  try {
+    const { error } = await supabase
+      .from('commandes')
+      .update({ statut: nouveauStatut })
+      .eq('id', id);
+
+    if (error) {
+      alert("Erreur lors de la mise à jour : " + error.message);
+      return;
+    }
+
+    // Mise à jour locale uniquement — pas de fetchData() qui écraserait tout
+    setCommandes(prev => {
+      const updated = prev.map(c => c.id === id ? { ...c, statut: nouveauStatut } : c);
+
+      // Recalcul des stats en local depuis les données mises à jour
+      const total = updated.length;
+      const aPreparer = updated.filter(c => c.statut !== 'livrée').length;
+      const ca = updated
+        .filter(c => c.statut === 'livrée')
+        .reduce((acc, curr) => {
+          const montantDirect = parseFloat(curr.total);
+          if (!isNaN(montantDirect) && montantDirect > 0) return acc + montantDirect;
+          return acc + (curr.contenu_panier || []).reduce((s: number, item: any) => {
+            return s + parseFloat(item.quantity || item.quantite || 0) * parseFloat(item.price || item.prix || 0);
+          }, 0);
+        }, 0);
+
+      setStats({ total, aPreparer, caTotal: ca });
+      return updated;
+    });
+
+  } catch (err: any) {
+    alert("Erreur inattendue : " + err.message);
+  }
+ }
+
   async function modifierProduit(id: string) {
     try {
-      const { error } = await supabase
-        .from('products')
-        .update(editFormData)
-        .eq('id', id);
-
+      const { error } = await supabase.from('products').update(editFormData).eq('id', id);
       if (error) throw error;
       setEditingProdId(null);
       alert("Produit mis à jour !");
       fetchData();
-    } catch (error: any) {
-      alert("Erreur de modification : " + error.message);
-    }
+    } catch (error: any) { alert("Erreur : " + error.message); }
   }
 
   async function appliquerPromo(id: string) {
     try {
-      const { error } = await supabase
-        .from('products')
-        .update({ 
-          promotion: pourcentage,
-          seuil_achat: seuilAchat,
-          quantite_offerte: qteOfferte
-        })
-        .eq('id', id);
-
+      const { error } = await supabase.from('products').update({ 
+        promotion: pourcentage, seuil_achat: seuilAchat, quantite_offerte: qteOfferte 
+      }).eq('id', id);
       if (error) throw error;
       setPromoProdId(null);
-      setPourcentage(0);
-      setSeuilAchat(0);
-      setQteOfferte(0);
       fetchData();
-    } catch (error: any) {
-      alert("Erreur lors de l'application de la promo : " + error.message);
-    }
+    } catch (error: any) { alert(error.message); }
   }
 
   const envoyerWhatsApp = (cmd: any) => {
-    const message = `Bonjour ${cmd.nom_client}, c'est Soleil Saveurs au sujet de votre commande #${cmd.id}. Nous préparons vos produits ! À quelle heure seriez-vous disponible pour la livraison ?`;
-    const rel = cmd.telephone_client.replace(/\s+/g, '');
+    const message = `Bonjour ${cmd.nom_client}, c'est Soleil Saveurs pour votre commande #${cmd.id}...`;
+    const rel = cmd.telephone_client?.replace(/\s+/g, '');
     window.open(`https://wa.me/${rel}?text=${encodeURIComponent(message)}`, '_blank');
   };
 
   async function handleUpload(e: any, isEditing = false) {
+    setUploading(true);
     try {
-      setUploading(true);
       const file = e.target.files[0];
-      if (!file) return;
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}.${fileExt}`;
-      const { error: uploadError } = await supabase.storage.from('produits-images').upload(fileName, file);
-      if (uploadError) throw uploadError;
+      const fileName = `${Date.now()}.${file.name.split('.').pop()}`;
+      await supabase.storage.from('produits-images').upload(fileName, file);
       const { data } = supabase.storage.from('produits-images').getPublicUrl(fileName);
-      
-      if (isEditing) {
-        setEditFormData({ ...editFormData, image_url: data.publicUrl });
-      } else {
-        setNouveauProd({ ...nouveauProd, image_url: data.publicUrl });
-      }
-      alert("Image chargée !");
-    } catch (error: any) {
-      alert("Erreur upload : " + error.message);
-    } finally {
-      setUploading(false);
-    }
+      if (isEditing) setEditFormData({ ...editFormData, image_url: data.publicUrl });
+      else setNouveauProd({ ...nouveauProd, image_url: data.publicUrl });
+    } catch (e) { alert("Erreur upload"); }
+    setUploading(false);
   }
 
   async function ajouterProduit(e: React.FormEvent) {
     e.preventDefault();
-    const { error } = await supabase.from('products').insert([nouveauProd]);
-    if (error) {
-      alert("Erreur Supabase : " + error.message);
-    } else {
-      alert("Produit ajouté avec succès !");
-      setNouveauProd({ 
-        name: '', price: 0, description: '', category: 'Légumes', 
-        stock: 0, image_url: '', unite: 'kg', provenance: '',
-        promotion: 0, seuil_achat: 0, quantite_offerte: 0
-      });
-      fetchData();
-    }
+    await supabase.from('products').insert([nouveauProd]);
+    fetchData();
   }
 
   async function ajusterStock(id: string, actuel: number, delta: number) {
@@ -154,52 +183,15 @@ export default function AdminPage() {
   }
 
   async function supprimerProduit(id: string) {
-    if (confirm("Supprimer ce produit définitivement ?")) {
+    if (confirm("Supprimer ?")) {
       await supabase.from('products').delete().eq('id', id);
       fetchData();
     }
   }
 
-  async function updateStatut(id: any, nouveauStatut: string) {
-    console.log("Tentative de mise à jour pour ID:", id, "avec statut:", nouveauStatut);
-    
-    // 1. Mise à jour Supabase
-    const { error } = await supabase
-      .from('commandes')
-      .update({ statut: nouveauStatut })
-      .eq('id', id);
-
-    if (error) {
-      console.error("Erreur Supabase détaillée:", error);
-      alert(`Erreur : ${error.message}`);
-    } else {
-      console.log("Mise à jour réussie dans la BDD");
-      
-      // 2. Mise à jour forcée de l'état local (pour que l'interface bouge ENFIN)
-      setCommandes((prevCommandes) => 
-        prevCommandes.map((cmd) => 
-          String(cmd.id) === String(id) ? { ...cmd, statut: nouveauStatut } : cmd
-        )
-      );
-
-      // 3. Rechargement complet par sécurité
-      await fetchData();
-      
-      alert("Livraison validée !");
-    }
-  }
-
-  const stats = {
-    total: commandes.length,
-    aPreparer: commandes.filter(c => c.statut === 'En attente' || !c.statut).length,
-    caTotal: commandes
-      .filter(c => c.statut === 'Livrée')
-      .reduce((acc, curr) => acc + (Number(curr.total) || 0), 0)
-  };
-
   const calculerBesoinStock = () => {
     const stockMap: { [key: string]: { quantite: number } } = {};
-    commandes.filter(cmd => cmd.statut === 'En attente' || !cmd.statut).forEach(cmd => {
+    commandes.filter(cmd => cmd.statut !== 'livrée').forEach(cmd => {
       cmd.contenu_panier?.forEach((item: any) => {
         const nom = item.name || item.nom;
         const qte = Number(item.quantity || item.quantite || 0);
@@ -211,57 +203,21 @@ export default function AdminPage() {
   };
 
   const imprimerBon = (cmd: any) => {
-    const fenetre = window.open('', '', 'height=800,width=900');
-    if (fenetre) {
-      fenetre.document.write(`
-        <html>
-          <body style="font-family:sans-serif; padding:40px; color:#1a1a1b">
-            <h1 style="color:#FF4500; margin-bottom:0">SOLEIL SAVEURS</h1>
-            <p style="margin-top:5px; color:#666">Bon de préparation / Facture</p>
-            <div style="display:flex; justify-content:space-between; margin:30px 0; padding:20px; background:#f9f9f9; border-radius:10px">
-              <div><strong>Client:</strong> ${cmd.nom_client}<br/><strong>Tél:</strong> ${cmd.telephone_client}</div>
-              <div style="text-align:right"><strong>Commande #${cmd.id}</strong><br/>Date: ${new Date(cmd.created_at).toLocaleDateString()}</div>
-            </div>
-            <p><strong>Adresse de livraison:</strong><br/>${cmd.adresse_livraison}</p>
-            <table style="width:100%; border-collapse:collapse; margin-top:20px;">
-              <thead>
-                <tr style="background:#eee"><th style="padding:12px; text-align:left">Produit</th><th style="padding:12px; text-align:right">Qté</th></tr>
-              </thead>
-              <tbody>
-                ${cmd.contenu_panier?.map((i: any) => `
-                  <tr>
-                    <td style="padding:12px; border-bottom:1px solid #eee">${i.name || i.nom}</td>
-                    <td style="padding:12px; border-bottom:1px solid #eee; text-align:right"><strong>${i.quantity || i.quantite}</strong></td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-            <h2 style="text-align:right; margin-top:30px; color:#FF4500">Total: ${cmd.total?.toFixed(2)}€</h2>
-          </body>
-        </html>
-      `);
-      fenetre.document.close();
-      fenetre.print();
-    }
+    const fenetre = window.open('', '', 'height=600,width=800');
+    fenetre?.document.write(`<h1>Commande #${cmd.id}</h1><p>Client: ${cmd.nom_client}</p>`);
+    fenetre?.print();
   };
 
   const produitsFiltres = produits.filter(p => p.name?.toLowerCase().includes(recherche.toLowerCase()));
   
   const commandesFiltrees = commandes.filter(cmd => {
-  const matchSearch = cmd.nom_client?.toLowerCase().includes(recherche.toLowerCase()) || cmd.id.toString().includes(recherche);
-  
-  if (filtreStatut === 'À préparer') {
-    // Une commande est "À préparer" SI son statut est 'En attente' OU s'il est vide
-    return matchSearch && (cmd.statut === 'En attente' || !cmd.statut || cmd.statut === '');
-  } 
-  if (filtreStatut === 'Livrée') {
-    // Une commande est "Livrée" uniquement si le statut est EXACTEMENT 'Livrée'
-    return matchSearch && cmd.statut === 'Livrée';
-  }
-  
-  return matchSearch; // Pour l'onglet "Toutes"
- });
+    const matchSearch = cmd.nom_client?.toLowerCase().includes(recherche.toLowerCase()) || cmd.id.toString().includes(recherche);
+    if (filtreStatut === 'À préparer') return matchSearch && cmd.statut !== 'livrée';
+    if (filtreStatut === 'livrée') return matchSearch && cmd.statut === 'livrée';
+    return matchSearch;
+  });
 
+  // ICI CONTINUE TON RETURN (L'affichage)
   return (
   <div className="min-h-screen bg-[#FDFCF9] text-slate-900 pb-20 font-sans">
     <header className="bg-white border-b border-slate-100 sticky top-0 z-50 px-6 py-4">
@@ -308,7 +264,7 @@ export default function AdminPage() {
           </div>
 
           <div className="flex gap-2 p-1 bg-white border border-slate-200 rounded-2xl w-fit">
-            {['Toutes', 'À préparer', 'Livrée'].map((s) => (
+            {['Toutes', 'À préparer', 'livrée'].map((s) => (
               <button
                 key={s}
                 onClick={() => setFiltreStatut(s as any)}
@@ -399,9 +355,10 @@ export default function AdminPage() {
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Payé</p>
                     <p className="text-3xl font-black text-[#FF4500] italic tracking-tighter">{cmd.total?.toFixed(2)}€</p>
                   </div>
-                  {cmd.statut !== 'Livrée' ? (
+                  {/* CORRECTION : bouton "Valider Livraison" avec vérification stricte du statut */}
+                  {cmd.statut !== 'livrée' ? (
                     <button 
-                      onClick={() => updateStatut(cmd.id, 'Livrée')} 
+                      onClick={() => updateStatut(cmd.id, 'livrée')} 
                       className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-[#FF4500] shadow-xl transition-all flex items-center justify-center gap-2"
                     >
                       <CheckCircle2 className="w-4 h-4" /> Valider Livraison

@@ -17,7 +17,7 @@ interface Order {
   total: number;
   // Ajout de 'statut' car c'est le nom dans ta DB Supabase
   statut: string; 
-  status: 'en_attente' | 'confirmee' | 'livree' | 'annulee';
+  status: 'en_attente' | 'confirmee' | 'livrée' | 'annulee';
   // Ajout de la colonne texte pour la liste des fruits
   description_commande: string;
   items: { name: string; quantite: number; price: number }[];
@@ -37,7 +37,7 @@ interface UserProfile {
 const STATUS_CONFIG = {
   en_attente: { label: 'En attente', icon: Clock, color: 'text-orange-500', bg: 'bg-orange-50', border: 'border-orange-100' },
   confirmee:  { label: 'Confirmée',  icon: CheckCircle2, color: 'text-blue-500', bg: 'bg-blue-50', border: 'border-blue-100' },
-  livree:     { label: 'Livrée',     icon: CheckCircle2, color: 'text-green-500', bg: 'bg-green-50', border: 'border-green-100' },
+  livree:     { label: 'livrée',     icon: CheckCircle2, color: 'text-green-500', bg: 'bg-green-50', border: 'border-green-100' },
   annulee:    { label: 'Annulée',    icon: XCircle, color: 'text-red-500', bg: 'bg-red-50', border: 'border-red-100' },
 };
 
@@ -244,7 +244,7 @@ export default function ComptePage() {
               </div>
               <div className="bg-white/5 border border-white/10 rounded-2xl px-5 py-3 text-center">
                 <p className="text-2xl font-black text-white">
-                  {orders.filter(o => (o.statut || o.status) === 'livree' || (o.statut || o.status) === 'Livrée').length}
+                  {orders.filter(o => (o.statut || o.status) === 'livrée' || (o.statut || o.status) === 'livrée').length}
                 </p>
                 <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Livrées</p>
               </div>
@@ -411,17 +411,17 @@ export default function ComptePage() {
                     <p className="text-[10px] font-black text-[#FF4500] uppercase tracking-widest">Fidélité</p>
                   </div>
                   <p className="text-white font-black text-4xl mb-1">
-                    {orders.filter(o => (o.statut || o.status) === 'livree' || (o.statut || o.status) === 'Livrée').length}
+                    {orders.filter(o => (o.statut || o.status) === 'livrée' || (o.statut || o.status) === 'livrée').length}
                     <span className="text-slate-400 text-lg font-bold ml-2">commandes livrées</span>
                   </p>
                   <div className="mt-4 h-2 bg-white/10 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-[#FF4500] rounded-full transition-all duration-1000"
-                      style={{ width: `${Math.min((orders.filter(o => (o.statut || o.status) === 'livree' || (o.statut || o.status) === 'Livrée').length / 10) * 100, 100)}%` }}
+                      style={{ width: `${Math.min((orders.filter(o => (o.statut || o.status) === 'livrée' || (o.statut || o.status) === 'Livrée').length / 10) * 100, 100)}%` }}
                     />
                   </div>
                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-2">
-                    {Math.max(10 - orders.filter(o => (o.statut || o.status) === 'livree' || (o.statut || o.status) === 'Livrée').length, 0)} commandes avant votre prochain avantage
+                    {Math.max(10 - orders.filter(o => (o.statut || o.status) === 'livrée' || (o.statut || o.status) === 'livrée').length, 0)} commandes avant votre prochain avantage
                   </p>
                 </div>
               </div>

@@ -20,7 +20,7 @@ const VILLES_RELAIS = [
 ];
 
 function calculerDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
-  const R = 6371; // Rayon de la Terre en km
+  const R = 6371;
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLon = (lon2 - lon1) * Math.PI / 180;
   const a = 
@@ -29,14 +29,12 @@ function calculerDistance(lat1: number, lon1: number, lat2: number, lon2: number
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
   return R * c;
 }
-// -------------------------------------------------------
 
 export default function Home() {
   const [user, setUser] = useState<any>(null);
   const [isPanierOpen, setIsPanierOpen] = useState(false);
   const [panierCount, setPanierCount] = useState(0);
   
-  // LOGIQUE ADRESSE
   const [address, setAddress] = useState('');
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [isVerifying, setIsVerifying] = useState(false);
@@ -46,7 +44,6 @@ export default function Home() {
   
   const router = useRouter();
 
-  // Initialisation Session + Panier Count
   useEffect(() => {
     const initSession = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -67,7 +64,6 @@ export default function Home() {
     return () => window.removeEventListener('storage', updateBadge);
   }, []);
 
-  // Gestion de la saisie (API Gouv)
   const handleAddressChange = async (val: string) => {
     setAddress(val);
     setDistanceValide(null);
@@ -85,7 +81,6 @@ export default function Home() {
     }
   };
 
-  // Sélection de l'adresse
   const selectionnerAdresse = (feat: any) => {
     const [lonSaisie, latSaisie] = feat.geometry.coordinates;
     setAddress(feat.properties.label);
@@ -95,14 +90,12 @@ export default function Home() {
     setTimeout(() => {
       setIsVerifying(false);
       
-      // Trouver la ville la plus proche
       let minDistance = 999;
       VILLES_RELAIS.forEach(ville => {
         const d = calculerDistance(latSaisie, lonSaisie, ville.lat, ville.lon);
         if (d < minDistance) minDistance = d;
       });
 
-      // Verification du rayon de 5km
       if (minDistance <= 5) {
         setDistanceAffichee(parseFloat(minDistance.toFixed(1)));
         setDistanceValide(true);
@@ -288,61 +281,175 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Promesse */}
-      <section className="max-w-6xl mx-auto px-4 md:px-8 py-20">
-        <h2 className="text-4xl font-black uppercase italic tracking-tighter mb-16 text-center">NOTRE <span className="text-[#FF4500]">PROMESSE</span></h2>
-        <div className="grid md:grid-cols-3 gap-12">
-          {[
-            { icon: <Clock className="w-6 h-6" />, title: "Récolte à 5h", desc: "Nos agriculteurs partenaires cueillent vos fruits et légumes à l'aube." },
-            { icon: <ShieldCheck className="w-6 h-6" />, title: "Tri Sélectif", desc: "Nous vérifions chaque pièce. Seul le meilleur arrive dans votre cagette." },
-            { icon: <Truck className="w-6 h-6" />, title: "Livré à 17h", desc: "Directement à votre porte, sans jamais passer par un frigo." }
-          ].map((item, i) => (
-            <div key={i} className="text-center group">
-              <div className="w-16 h-16 bg-white border border-slate-50 shadow-xl shadow-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-6 text-[#FF4500] group-hover:scale-110 group-hover:shadow-orange-100 transition-all duration-500">
-                {item.icon}
+      {/* ============================================================ */}
+      {/* PROMESSE — redesign                                           */}
+      {/* ============================================================ */}
+      <section className="max-w-6xl mx-auto px-4 md:px-8 py-24 overflow-hidden">
+        {/* Titre */}
+        <div className="flex items-center gap-4 mb-16">
+          <div className="h-px flex-1 bg-slate-200" />
+          <h2 className="text-4xl font-black uppercase italic tracking-tighter text-center whitespace-nowrap">
+            NOTRE <span className="text-[#FF4500]">PROMESSE</span>
+          </h2>
+          <div className="h-px flex-1 bg-slate-200" />
+        </div>
+
+        {/* 3 étapes en timeline horizontale */}
+        <div className="relative">
+          {/* Ligne de connexion (desktop) */}
+          <div className="hidden md:block absolute top-[52px] left-[calc(16.66%+16px)] right-[calc(16.66%+16px)] h-px bg-gradient-to-r from-transparent via-[#FF4500]/30 to-transparent" />
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-6">
+            {[
+              {
+                icon: <Clock className="w-7 h-7" />,
+                step: "01",
+                title: "Récolte à 5h",
+                desc: "Nos agriculteurs partenaires cueillent vos fruits et légumes à l'aube, au pic de leur maturité.",
+                tag: "L'aube",
+                bg: "bg-[#FFF5F1]",
+                border: "border-orange-100",
+              },
+              {
+                icon: <ShieldCheck className="w-7 h-7" />,
+                step: "02",
+                title: "Tri Sélectif",
+                desc: "Nous vérifions chaque pièce manuellement. Seul le meilleur arrive dans votre cagette.",
+                tag: "La sélection",
+                bg: "bg-white",
+                border: "border-slate-100",
+              },
+              {
+                icon: <Truck className="w-7 h-7" />,
+                step: "03",
+                title: "Livré à 17h",
+                desc: "Directement à votre porte, sans jamais passer par un frigo. De l'arbre à l'assiette.",
+                tag: "Le soir",
+                bg: "bg-[#0F172A]",
+                border: "border-transparent",
+                dark: true,
+              },
+            ].map((item, i) => (
+              <div
+                key={i}
+                className={`relative group rounded-[2rem] p-8 border ${item.bg} ${item.border} shadow-xl shadow-slate-100/60 hover:shadow-slate-200 transition-all duration-500 hover:-translate-y-1`}
+              >
+                {/* Numéro décoratif en arrière-plan */}
+                <span className={`absolute top-6 right-6 text-7xl font-black leading-none select-none pointer-events-none ${item.dark ? 'text-white/5' : 'text-slate-900/5'}`}>
+                  {item.step}
+                </span>
+
+                {/* Icône */}
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 transition-transform duration-500 group-hover:scale-110 ${item.dark ? 'bg-white/10 text-[#FF4500]' : 'bg-white border border-slate-100 shadow-md text-[#FF4500]'}`}>
+                  {item.icon}
+                </div>
+
+                {/* Tag */}
+                <span className={`inline-block text-[9px] font-black uppercase tracking-[0.2em] px-2.5 py-1 rounded-full mb-3 ${item.dark ? 'bg-white/10 text-white/60' : 'bg-[#FF4500]/10 text-[#FF4500]'}`}>
+                  {item.tag}
+                </span>
+
+                <h4 className={`text-2xl font-black uppercase italic tracking-tighter mb-3 ${item.dark ? 'text-white' : 'text-slate-900'}`}>
+                  {item.title}
+                </h4>
+                <p className={`text-sm leading-relaxed font-medium ${item.dark ? 'text-slate-400' : 'text-slate-500'}`}>
+                  {item.desc}
+                </p>
               </div>
-              <h4 className="font-black uppercase text-base mb-3 italic tracking-tight">{item.title}</h4>
-              <p className="text-sm text-slate-500 leading-relaxed max-w-[250px] mx-auto font-medium">{item.desc}</p>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* Stats */}
-      <section className="max-w-6xl mx-auto px-4 md:px-8 py-12 border-y border-slate-100 my-10 bg-white/50">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-4">
+      {/* ============================================================ */}
+      {/* STATS — redesign                                              */}
+      {/* ============================================================ */}
+      <section className="max-w-6xl mx-auto px-4 md:px-8 my-4">
+        <div className="bg-[#0F172A] rounded-[2.5rem] px-10 py-12 grid grid-cols-2 md:grid-cols-4 gap-8 shadow-2xl shadow-slate-300 relative overflow-hidden">
+          {/* Halo décoratif */}
+          <div className="absolute -top-20 -right-20 w-72 h-72 bg-[#FF4500]/10 blur-[80px] rounded-full pointer-events-none" />
+          <div className="absolute -bottom-10 -left-10 w-48 h-48 bg-blue-500/10 blur-[60px] rounded-full pointer-events-none" />
+
           {[
             { label: "Fraîcheur", val: "100%", desc: "Zéro frigo" },
             { label: "Maturité", val: "Optim.", desc: "Sur l'arbre" },
             { label: "Circuit", val: "Ultra", desc: "Zéro interm." },
-            { label: "Avis", val: "4.9/5", desc: "Note Google" }
+            { label: "Avis", val: "4.9/5", desc: "Note Google" },
           ].map((stat, i) => (
-            <div key={i} className="flex flex-col items-center md:items-start text-center md:text-left">
-              <p className="text-4xl font-black text-slate-900 leading-none tracking-tighter mb-2">{stat.val}</p>
-              <p className="text-[11px] font-black uppercase text-[#FF4500] tracking-widest">{stat.label}</p>
-              <p className="text-[10px] text-slate-400 font-bold uppercase mt-0.5">{stat.desc}</p>
+            <div key={i} className="flex flex-col items-start relative z-10 group">
+              <p className="text-4xl md:text-5xl font-black text-white leading-none tracking-tighter mb-2 group-hover:text-[#FF4500] transition-colors duration-300">
+                {stat.val}
+              </p>
+              <p className="text-[10px] font-black uppercase text-[#FF4500] tracking-widest mb-1">{stat.label}</p>
+              <div className="h-px w-8 bg-white/10 mb-1" />
+              <p className="text-[10px] text-slate-500 font-bold uppercase">{stat.desc}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* Avis */}
-      <section className="max-w-6xl mx-auto px-4 md:px-8 py-10">
-        <div className="grid md:grid-cols-3 gap-8">
+      {/* ============================================================ */}
+      {/* AVIS — redesign                                               */}
+      {/* ============================================================ */}
+      <section className="max-w-6xl mx-auto px-4 md:px-8 py-16">
+        <div className="flex items-center justify-between mb-12">
+          <div>
+            <p className="text-[10px] font-black uppercase text-[#FF4500] tracking-widest mb-2">Ce qu'ils en pensent</p>
+            <h3 className="text-3xl font-black uppercase italic tracking-tighter">Ils nous font <span className="text-[#FF4500]">confiance</span></h3>
+          </div>
+          <div className="hidden md:flex items-center gap-1">
+            {[...Array(5)].map((_, i) => (
+              <Star key={i} className="w-5 h-5 fill-[#FF4500] text-[#FF4500]" />
+            ))}
+            <span className="ml-2 text-sm font-black text-slate-900">4.9</span>
+            <span className="text-xs text-slate-400 font-bold ml-1">/ 5</span>
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-6">
           {[
-            { name: "Marie L.", city: "Chatou", text: "Les tomates ont enfin du goût ! On sent qu'elles n'ont pas voyagé." },
-            { name: "Thomas B.", city: "Plaisir", text: "Le concept du 'cueilli le matin' est bluffant. Fraîcheur imbattable." },
-            { name: "Sophie D.", city: "Croissy", text: "Livraison ponctuelle et livreur adorable. Je recommande !" }
+            { name: "Marie L.", city: "Chatou", text: "Les tomates ont enfin du goût ! On sent qu'elles n'ont pas voyagé.", stars: 5 },
+            { name: "Thomas B.", city: "Plaisir", text: "Le concept du 'cueilli le matin' est bluffant. Fraîcheur imbattable.", stars: 5 },
+            { name: "Sophie D.", city: "Croissy", text: "Livraison ponctuelle et livreur adorable. Je recommande !", stars: 5 },
           ].map((avis, i) => (
-            <div key={i} className="bg-white p-8 rounded-[2.5rem] border border-slate-50 shadow-xl shadow-slate-100/50 hover:shadow-slate-200 transition-all duration-500">
-              <div className="flex gap-1 mb-6 text-orange-400">
-                {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 fill-current" />)}
+            <div
+              key={i}
+              className={`relative p-8 rounded-[2rem] border transition-all duration-500 hover:-translate-y-1 group ${
+                i === 1
+                  ? 'bg-[#FF4500] border-transparent shadow-2xl shadow-[#FF4500]/25'
+                  : 'bg-white border-slate-100 shadow-xl shadow-slate-100/60 hover:shadow-slate-200'
+              }`}
+            >
+              {/* Guillemet décoratif */}
+              <span className={`absolute top-6 right-8 text-7xl font-black leading-none select-none pointer-events-none ${i === 1 ? 'text-white/10' : 'text-slate-900/5'}`}>
+                "
+              </span>
+
+              {/* Étoiles */}
+              <div className="flex gap-1 mb-5">
+                {[...Array(avis.stars)].map((_, j) => (
+                  <Star key={j} className={`w-3.5 h-3.5 fill-current ${i === 1 ? 'text-white' : 'text-[#FF4500]'}`} />
+                ))}
               </div>
-              <p className="text-[15px] font-semibold italic text-slate-600 mb-8 leading-relaxed">"{avis.text}"</p>
-              <div className="flex flex-col">
-                <p className="text-xs font-black uppercase tracking-[0.15em] text-slate-900">{avis.name}</p>
-                <div className="h-0.5 w-6 bg-[#FF4500] my-2 rounded-full" />
-                <p className="text-[10px] font-black uppercase tracking-widest text-[#FF4500]">{avis.city}</p>
+
+              {/* Texte */}
+              <p className={`text-[15px] font-semibold italic leading-relaxed mb-8 ${i === 1 ? 'text-white' : 'text-slate-600'}`}>
+                "{avis.text}"
+              </p>
+
+              {/* Auteur */}
+              <div className="flex items-center gap-3">
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-black ${i === 1 ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-700'}`}>
+                  {avis.name.charAt(0)}
+                </div>
+                <div>
+                  <p className={`text-xs font-black uppercase tracking-wider ${i === 1 ? 'text-white' : 'text-slate-900'}`}>
+                    {avis.name}
+                  </p>
+                  <p className={`text-[10px] font-black uppercase tracking-widest ${i === 1 ? 'text-white/60' : 'text-[#FF4500]'}`}>
+                    {avis.city}
+                  </p>
+                </div>
               </div>
             </div>
           ))}
