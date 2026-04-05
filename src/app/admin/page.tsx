@@ -6,7 +6,8 @@ import Link from 'next/link';
 import { 
   LayoutDashboard, Package, ListTree, Search, 
   RefreshCcw, Printer, Phone, MessageSquare, 
-  Trash2, Plus, Truck, CheckCircle2, Clock, Mail, Save, Edit3, X
+  Trash2, Plus, Truck, CheckCircle2, Clock, Mail, Save, Edit3, X,
+  Inbox, Send, Eye, EyeOff, ChevronDown, ChevronUp
 } from 'lucide-react';
 
 interface StatsType {
@@ -18,9 +19,10 @@ interface StatsType {
 export default function AdminPage() {
   const [commandes, setCommandes] = useState<any[]>([]);
   const [produits, setProduits] = useState<any[]>([]);
+  const [messages, setMessages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [recherche, setRecherche] = useState('');
-  const [onglet, setOnglet] = useState<'commandes' | 'stock' | 'catalogue'>('commandes');
+  const [onglet, setOnglet] = useState<'commandes' | 'stock' | 'catalogue' | 'messages'>('commandes');
   const [filtreStatut, setFiltreStatut] = useState<'Toutes' | 'À préparer' | 'livrée'>('Toutes');
   const [uploading, setUploading] = useState(false);
   const [promoProdId, setPromoProdId] = useState<string | null>(null);
@@ -32,6 +34,11 @@ export default function AdminPage() {
   const [pourcentage, setPourcentage] = useState(0);
   const [seuilAchat, setSeuilAchat] = useState(0);
   const [qteOfferte, setQteOfferte] = useState(0);
+
+  // NOUVEAU : états pour la réponse aux messages
+  const [reponseOuvert, setReponseOuvert] = useState<string | null>(null);
+  const [reponseTexte, setReponseTexte] = useState('');
+  const [envoiEnCours, setEnvoiEnCours] = useState(false);
 
   const [nouveauProd, setNouveauProd] = useState({
     name: '', price: 0, category: 'Légumes', image_url: '', stock: 0,
@@ -51,12 +58,14 @@ export default function AdminPage() {
     verifierAcces();
   }, []);
 
-  // --- FONCTION FETCHDATA UNIQUE ET CORRIGÉE ---
- async function fetchData() {
+  async function fetchData() {
     setLoading(true);
     try {
       const { data: cmds } = await supabase.from('commandes').select('*').order('created_at', { ascending: false });
       const { data: prods } = await supabase.from('products').select('*').order('name', { ascending: true });
+      const { data: msgs } = await supabase.from('messages').select('*').order('created_at', { ascending: false });
+
+      if (msgs) setMessages(msgs);
 
       if (cmds) {
         console.log('Statuts en base :', cmds.map(c => ({ id: c.id, statut: c.statut })));
@@ -64,16 +73,13 @@ export default function AdminPage() {
         const total = cmds.length;
         const aPreparer = cmds.filter(c => c.statut !== 'livrée').length;
 
-        // CORRECTION : calcul du CA robuste — accepte total numérique ou null
         const ca = cmds
           .filter(c => c.statut === 'livrée')
           .reduce((acc, curr) => {
-            // Tente d'abord le champ "total", sinon recalcule depuis le panier
             const montantDirect = parseFloat(curr.total);
             if (!isNaN(montantDirect) && montantDirect > 0) {
               return acc + montantDirect;
             }
-            // Fallback : somme des items du panier
             const montantPanier = (curr.contenu_panier || []).reduce((s: number, item: any) => {
               const qte = parseFloat(item.quantity || item.quantite || 0);
               const prix = parseFloat(item.price || item.prix || 0);
@@ -89,47 +95,77 @@ export default function AdminPage() {
       console.error("Erreur de chargement:", err);
     }
     setLoading(false);
-   }
-
-  // --- ACTIONS ---
-  // CORRECTION : updateStatut mis à jour avec feedback visuel et rechargement fiable
-  async function updateStatut(id: string, nouveauStatut: string) {
-  try {
-    const { error } = await supabase
-      .from('commandes')
-      .update({ statut: nouveauStatut })
-      .eq('id', id);
-
-    if (error) {
-      alert("Erreur lors de la mise à jour : " + error.message);
-      return;
-    }
-
-    // Mise à jour locale uniquement — pas de fetchData() qui écraserait tout
-    setCommandes(prev => {
-      const updated = prev.map(c => c.id === id ? { ...c, statut: nouveauStatut } : c);
-
-      // Recalcul des stats en local depuis les données mises à jour
-      const total = updated.length;
-      const aPreparer = updated.filter(c => c.statut !== 'livrée').length;
-      const ca = updated
-        .filter(c => c.statut === 'livrée')
-        .reduce((acc, curr) => {
-          const montantDirect = parseFloat(curr.total);
-          if (!isNaN(montantDirect) && montantDirect > 0) return acc + montantDirect;
-          return acc + (curr.contenu_panier || []).reduce((s: number, item: any) => {
-            return s + parseFloat(item.quantity || item.quantite || 0) * parseFloat(item.price || item.prix || 0);
-          }, 0);
-        }, 0);
-
-      setStats({ total, aPreparer, caTotal: ca });
-      return updated;
-    });
-
-  } catch (err: any) {
-    alert("Erreur inattendue : " + err.message);
   }
- }
+
+  // NOUVEAU : Marquer comme lu/non lu
+  async function toggleLu(id: string, luActuel: boolean) {
+    const { error } = await supabase.from('messages').update({ lu: !luActuel }).eq('id', id);
+    if (!error) setMessages(prev => prev.map(m => m.id === id ? { ...m, lu: !luActuel } : m));
+  }
+
+  // NOUVEAU : Supprimer un message
+  async function supprimerMessage(id: string) {
+    if (confirm("Supprimer ce message définitivement ?")) {
+      const { error } = await supabase.from('messages').delete().eq('id', id);
+      if (!error) setMessages(prev => prev.filter(m => m.id !== id));
+    }
+  }
+
+  // NOUVEAU : Répondre par email via mailto
+  async function envoyerReponse(msg: any) {
+    if (!reponseTexte.trim()) return;
+    setEnvoiEnCours(true);
+
+    // Marquer comme lu automatiquement à la réponse
+    await supabase.from('messages').update({ lu: true }).eq('id', msg.id);
+    setMessages(prev => prev.map(m => m.id === msg.id ? { ...m, lu: true } : m));
+
+    // Ouvrir le client mail avec la réponse pré-remplie
+    const sujet = encodeURIComponent(`Réponse à votre message — Soleil Saveurs`);
+    const corps = encodeURIComponent(
+      `Bonjour ${msg.nom},\n\n${reponseTexte}\n\nCordialement,\nL'équipe Soleil Saveurs`
+    );
+    window.open(`mailto:${msg.email}?subject=${sujet}&body=${corps}`, '_blank');
+
+    setReponseTexte('');
+    setReponseOuvert(null);
+    setEnvoiEnCours(false);
+  }
+
+  async function updateStatut(id: string, nouveauStatut: string) {
+    try {
+      const { error } = await supabase
+        .from('commandes')
+        .update({ statut: nouveauStatut })
+        .eq('id', id);
+
+      if (error) {
+        alert("Erreur lors de la mise à jour : " + error.message);
+        return;
+      }
+
+      setCommandes(prev => {
+        const updated = prev.map(c => c.id === id ? { ...c, statut: nouveauStatut } : c);
+        const total = updated.length;
+        const aPreparer = updated.filter(c => c.statut !== 'livrée').length;
+        const ca = updated
+          .filter(c => c.statut === 'livrée')
+          .reduce((acc, curr) => {
+            const montantDirect = parseFloat(curr.total);
+            if (!isNaN(montantDirect) && montantDirect > 0) return acc + montantDirect;
+            return acc + (curr.contenu_panier || []).reduce((s: number, item: any) => {
+              return s + parseFloat(item.quantity || item.quantite || 0) * parseFloat(item.price || item.prix || 0);
+            }, 0);
+          }, 0);
+
+        setStats({ total, aPreparer, caTotal: ca });
+        return updated;
+      });
+
+    } catch (err: any) {
+      alert("Erreur inattendue : " + err.message);
+    }
+  }
 
   async function modifierProduit(id: string) {
     try {
@@ -202,15 +238,15 @@ export default function AdminPage() {
     return Object.entries(stockMap);
   };
 
-   const produitsFiltres = produits.filter(p => p.name?.toLowerCase().includes(recherche.toLowerCase()));
-   const commandesFiltrees = commandes.filter(cmd => {
+  const produitsFiltres = produits.filter(p => p.name?.toLowerCase().includes(recherche.toLowerCase()));
+  const commandesFiltrees = commandes.filter(cmd => {
     const matchSearch = cmd.nom_client?.toLowerCase().includes(recherche.toLowerCase()) || cmd.id.toString().includes(recherche);
     if (filtreStatut === 'À préparer') return matchSearch && cmd.statut !== 'livrée';
     if (filtreStatut === 'livrée') return matchSearch && cmd.statut === 'livrée';
     return matchSearch;
   });
-  // --- IMPRESSIONS ---
-    const imprimerBon = (cmd: any) => {
+
+  const imprimerBon = (cmd: any) => {
     const isRetrait = cmd.adresse_livraison?.includes("Retrait");
     const totalArticles = cmd.total;
     const dateCmd = new Date(cmd.created_at).toLocaleDateString('fr-FR');
@@ -301,25 +337,21 @@ export default function AdminPage() {
                 </tr>
               </thead>
               <tbody>
-                ${cmd.contenu_panier.map((i: any) => {
-                  // Récupération sécurisée des noms et quantités (FR ou EN)
+                ${cmd.contenu_panier.map((i: any) => {
                   const nomProduit = i.nom || i.name || "Produit inconnu";
                   const qte = i.quantite || i.quantity || 0;
                   const unite = i.unite || "unité(s)";
-                  
-                  // Calcul sécurisé des prix
-                  const totalLigne = i.prixTotalLigne || (parseFloat(i.prixUnitaire || i.price || 0) * parseFloat(qte)) || 0;
-                  const prixUnit = i.prixUnitaire || i.price || (qte > 0 ? totalLigne / qte : 0);
-                  
-                  return `
-                  <tr>
-                    <td style="font-weight: bold;">${nomProduit}</td>
-                    <td class="text-right">${qte} ${unite}</td>
-                    <td class="text-right">${prixUnit.toFixed(2)}€</td>
-                    <td class="text-right" style="font-weight: bold;">${totalLigne.toFixed(2)}€</td>
-                  </tr>
-                `}).join('')}
-              </tbody>
+                  const totalLigne = i.prixTotalLigne || (parseFloat(i.prixUnitaire || i.price || 0) * parseFloat(qte)) || 0;
+                  const prixUnit = i.prixUnitaire || i.price || (qte > 0 ? totalLigne / qte : 0);
+                  return `
+                  <tr>
+                    <td style="font-weight: bold;">${nomProduit}</td>
+                    <td class="text-right">${qte} ${unite}</td>
+                    <td class="text-right">${prixUnit.toFixed(2)}€</td>
+                    <td class="text-right" style="font-weight: bold;">${totalLigne.toFixed(2)}€</td>
+                  </tr>
+                `}).join('')}
+              </tbody>
             </table>
             <div class="totals-area">
               <div class="totals-table">
@@ -354,7 +386,9 @@ export default function AdminPage() {
     }
   };
 
-  // ICI CONTINUE TON RETURN (L'affichage)
+  // Compteur messages non lus pour le badge
+  const nbNonLus = messages.filter(m => !m.lu).length;
+
   return (
   <div className="min-h-screen bg-[#FDFCF9] text-slate-900 pb-20 font-sans">
     <header className="bg-white border-b border-slate-100 sticky top-0 z-50 px-6 py-4">
@@ -369,6 +403,18 @@ export default function AdminPage() {
               {t}
             </button>
           ))}
+          {/* NOUVEAU : Onglet Messages avec badge */}
+          <button
+            onClick={() => setOnglet('messages')}
+            className={`relative px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${onglet === 'messages' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}
+          >
+            Messages
+            {nbNonLus > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#FF4500] text-white text-[8px] font-black rounded-full flex items-center justify-center">
+                {nbNonLus}
+              </span>
+            )}
+          </button>
         </nav>
 
         <div className="flex items-center gap-3">
@@ -382,7 +428,8 @@ export default function AdminPage() {
     </header>
 
     <main className="max-w-6xl mx-auto px-6 mt-10">
-      {/* --- SECTION COMMANDES (MISE À JOUR AVEC TON ANCIEN CODE) --- */}
+
+      {/* --- SECTION COMMANDES --- */}
       {onglet === 'commandes' && (
         <div className="space-y-10 animate-in fade-in duration-500">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -492,7 +539,6 @@ export default function AdminPage() {
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Payé</p>
                     <p className="text-3xl font-black text-[#FF4500] italic tracking-tighter">{cmd.total?.toFixed(2)}€</p>
                   </div>
-                  {/* CORRECTION : bouton "Valider Livraison" avec vérification stricte du statut */}
                   {cmd.statut !== 'livrée' ? (
                     <button 
                       onClick={() => updateStatut(cmd.id, 'livrée')} 
@@ -681,6 +727,139 @@ export default function AdminPage() {
           </div>
         </div>
       )}
+
+      {/* --- SECTION MESSAGES --- */}
+      {onglet === 'messages' && (
+        <div className="space-y-6 animate-in fade-in duration-500">
+
+          {/* En-tête avec stats */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+              <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1">Total Messages</p>
+              <p className="text-4xl font-black italic text-slate-900">{messages.length}</p>
+            </div>
+            <div className="bg-white p-6 rounded-3xl shadow-sm border-l-4 border-l-[#FF4500]">
+              <p className="text-[10px] font-black uppercase text-[#FF4500] tracking-widest mb-1">Non lus</p>
+              <p className="text-4xl font-black italic text-slate-900">{nbNonLus}</p>
+            </div>
+            <div className="bg-slate-900 p-6 rounded-3xl shadow-xl text-white">
+              <p className="text-[10px] font-black uppercase opacity-60 tracking-widest mb-1">Traités</p>
+              <p className="text-4xl font-black italic">{messages.filter(m => m.lu).length}</p>
+            </div>
+          </div>
+
+          {/* Liste des messages */}
+          {messages.length === 0 ? (
+            <div className="bg-white rounded-[2.5rem] p-16 text-center border border-slate-100 shadow-sm">
+              <Inbox className="w-12 h-12 text-slate-200 mx-auto mb-4" />
+              <p className="font-black uppercase text-sm text-slate-400 tracking-widest">Aucun message pour l'instant</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {messages.map(msg => (
+                <div
+                  key={msg.id}
+                  className={`bg-white rounded-[2rem] border shadow-sm transition-all ${
+                    !msg.lu ? 'border-[#FF4500]/30 shadow-[#FF4500]/5' : 'border-slate-100'
+                  }`}
+                >
+                  {/* En-tête du message */}
+                  <div className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      {/* Avatar initiale */}
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-black text-lg shrink-0 ${!msg.lu ? 'bg-[#FF4500] text-white' : 'bg-slate-100 text-slate-500'}`}>
+                        {(msg.nom || '?')[0].toUpperCase()}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-black text-sm uppercase italic tracking-tighter">{msg.nom || 'Inconnu'}</h3>
+                          {!msg.lu && (
+                            <span className="text-[8px] font-black bg-[#FF4500] text-white px-2 py-0.5 rounded-full uppercase tracking-widest">Nouveau</span>
+                          )}
+                        </div>
+                        <a href={`mailto:${msg.email}`} className="text-[11px] font-bold text-[#FF4500] hover:underline flex items-center gap-1">
+                          <Mail className="w-3 h-3" /> {msg.email}
+                        </a>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase mt-0.5">
+                          {new Date(msg.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex gap-2 shrink-0">
+                      <button
+                        onClick={() => toggleLu(msg.id, msg.lu)}
+                        title={msg.lu ? 'Marquer non lu' : 'Marquer comme lu'}
+                        className="w-10 h-10 bg-slate-50 text-slate-400 rounded-xl flex items-center justify-center hover:bg-slate-900 hover:text-white transition-all"
+                      >
+                        {msg.lu ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                      <button
+                        onClick={() => { setReponseOuvert(reponseOuvert === msg.id ? null : msg.id); setReponseTexte(''); }}
+                        className="flex items-center gap-1.5 bg-slate-900 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase hover:bg-[#FF4500] transition-all"
+                      >
+                        <Send className="w-3.5 h-3.5" /> Répondre
+                      </button>
+                      <button
+                        onClick={() => supprimerMessage(msg.id)}
+                        className="w-10 h-10 bg-red-50 text-red-400 rounded-xl flex items-center justify-center hover:bg-red-500 hover:text-white transition-all"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Corps du message */}
+                  <div className="px-6 pb-4">
+                    <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+                      <p className="text-sm text-slate-700 leading-relaxed font-medium">{msg.message}</p>
+                    </div>
+                  </div>
+
+                  {/* Zone de réponse (dépliable) */}
+                  {reponseOuvert === msg.id && (
+                    <div className="px-6 pb-6 animate-in slide-in-from-top-2 duration-200">
+                      <div className="border-t border-slate-100 pt-4">
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">
+                          Votre réponse à {msg.nom} ({msg.email})
+                        </p>
+                        <textarea
+                          value={reponseTexte}
+                          onChange={e => setReponseTexte(e.target.value)}
+                          placeholder={`Bonjour ${msg.nom},\n\nEcrivez votre réponse ici...`}
+                          rows={5}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm font-medium text-slate-700 focus:border-[#FF4500] focus:ring-0 outline-none resize-none transition-all"
+                        />
+                        <div className="flex gap-3 mt-3">
+                          <button
+                            onClick={() => envoyerReponse(msg)}
+                            disabled={!reponseTexte.trim() || envoiEnCours}
+                            className="flex items-center gap-2 bg-[#FF4500] text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-900 transition-all shadow-lg shadow-orange-900/10 disabled:opacity-40 disabled:cursor-not-allowed"
+                          >
+                            <Send className="w-3.5 h-3.5" />
+                            Envoyer via Mail
+                          </button>
+                          <button
+                            onClick={() => { setReponseOuvert(null); setReponseTexte(''); }}
+                            className="px-4 py-3 bg-slate-100 text-slate-400 rounded-xl font-black text-[10px] uppercase hover:bg-slate-200 transition-all"
+                          >
+                            Annuler
+                          </button>
+                        </div>
+                        <p className="text-[9px] text-slate-300 font-bold uppercase mt-2 tracking-widest">
+                          → Ouvrira votre client mail avec la réponse pré-remplie
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
     </main>
   </div>
 );
