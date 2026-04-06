@@ -8,7 +8,6 @@ import {
   ArrowRight, Zap, MapPin, ShoppingCart, Truck, 
   User, HelpCircle, Search, X, CheckCircle2, Star, Clock, ShieldCheck, Navigation, Loader2, AlertCircle
 } from 'lucide-react';
-import PanierDrawer from '@/components/ui/PanierDrawer';
 
 // --- CONFIGURATION DES VILLES (MISES À JOUR) ET CALCUL DE DISTANCE ---
 const VILLES_RELAIS = [
@@ -32,8 +31,7 @@ function calculerDistance(lat1: number, lon1: number, lat2: number, lon2: number
 
 export default function Home() {
   const [user, setUser] = useState<any>(null);
-  const [isPanierOpen, setIsPanierOpen] = useState(false);
-  const [panierCount, setPanierCount] = useState(0);
+  // isPanierOpen et panierCount supprimés — gérés par le layout
   
   const [address, setAddress] = useState('');
   const [suggestions, setSuggestions] = useState<any[]>([]);
@@ -49,19 +47,7 @@ export default function Home() {
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
     };
-    
-    const updateBadge = () => {
-      const saved = localStorage.getItem('mon-panier');
-      if (saved) {
-        const items = JSON.parse(saved);
-        setPanierCount(Array.isArray(items) ? items.length : 0);
-      }
-    };
-
     initSession();
-    updateBadge();
-    window.addEventListener('storage', updateBadge);
-    return () => window.removeEventListener('storage', updateBadge);
   }, []);
 
   const handleAddressChange = async (val: string) => {
@@ -116,34 +102,6 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-[#FDFCF9] text-slate-900 font-sans selection:bg-[#FF4500]/10 pb-10 overflow-x-hidden">
-      {/* Navbar Compacte */}
-      <nav className="fixed top-0 left-0 right-0 z-[100] bg-white/80 backdrop-blur-md border-b border-slate-100 px-4 md:px-8 h-14 flex items-center justify-between shadow-sm">
-        <Link href="/" className="text-lg font-bold tracking-tight flex items-center gap-2">
-          <div className="w-7 h-7 bg-[#FF4500] rounded flex items-center justify-center text-white text-[10px]">S</div>
-          <span>SOLEIL<span className="text-[#FF4500]">& SAVEURS</span></span>
-        </Link>
-        <div className="flex items-center gap-1 md:gap-2">
-          <button onClick={() => setIsPanierOpen(true)} className="p-2 hover:bg-slate-100 rounded-lg transition-colors relative">
-            <ShoppingCart className="w-5 h-5" />
-            {panierCount > 0 && (
-              <span className="absolute top-1 right-1 w-3.5 h-3.5 bg-[#FF4500] text-white text-[8px] flex items-center justify-center rounded-full font-bold animate-in zoom-in">
-                {panierCount}
-              </span>
-            )}
-          </button>
-          
-          <Link href={user ? "/compte" : "/login"} className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
-            <User className="w-5 h-5" />
-          </Link>
-          
-          <Link href="/aide" className="flex items-center gap-1.5 bg-slate-900 text-white px-2 md:px-3 py-1.5 rounded-lg text-[10px] md:text-xs font-semibold hover:bg-slate-800 transition-all ml-1 shadow-lg shadow-slate-200">
-            <HelpCircle className="w-3.5 h-3.5 text-[#FF4500]" />
-            <span>Aide</span>
-          </Link>
-        </div>
-      </nav>
-
-      <PanierDrawer isOpen={isPanierOpen} onClose={() => setIsPanierOpen(false)} user={user} />
 
       {/* Pop-up de succès d'éligibilité */}
       {showResult && (
@@ -281,11 +239,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ============================================================ */}
-      {/* PROMESSE — redesign                                           */}
-      {/* ============================================================ */}
+      {/* PROMESSE */}
       <section className="max-w-6xl mx-auto px-4 md:px-8 py-24 overflow-hidden">
-        {/* Titre */}
         <div className="flex items-center gap-4 mb-16">
           <div className="h-px flex-1 bg-slate-200" />
           <h2 className="text-4xl font-black uppercase italic tracking-tighter text-center whitespace-nowrap">
@@ -294,11 +249,8 @@ export default function Home() {
           <div className="h-px flex-1 bg-slate-200" />
         </div>
 
-        {/* 3 étapes en timeline horizontale */}
         <div className="relative">
-          {/* Ligne de connexion (desktop) */}
           <div className="hidden md:block absolute top-[52px] left-[calc(16.66%+16px)] right-[calc(16.66%+16px)] h-px bg-gradient-to-r from-transparent via-[#FF4500]/30 to-transparent" />
-
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-6">
             {[
               {
@@ -334,21 +286,15 @@ export default function Home() {
                 key={i}
                 className={`relative group rounded-[2rem] p-8 border ${item.bg} ${item.border} shadow-xl shadow-slate-100/60 hover:shadow-slate-200 transition-all duration-500 hover:-translate-y-1`}
               >
-                {/* Numéro décoratif en arrière-plan */}
                 <span className={`absolute top-6 right-6 text-7xl font-black leading-none select-none pointer-events-none ${item.dark ? 'text-white/5' : 'text-slate-900/5'}`}>
                   {item.step}
                 </span>
-
-                {/* Icône */}
                 <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 transition-transform duration-500 group-hover:scale-110 ${item.dark ? 'bg-white/10 text-[#FF4500]' : 'bg-white border border-slate-100 shadow-md text-[#FF4500]'}`}>
                   {item.icon}
                 </div>
-
-                {/* Tag */}
                 <span className={`inline-block text-[9px] font-black uppercase tracking-[0.2em] px-2.5 py-1 rounded-full mb-3 ${item.dark ? 'bg-white/10 text-white/60' : 'bg-[#FF4500]/10 text-[#FF4500]'}`}>
                   {item.tag}
                 </span>
-
                 <h4 className={`text-2xl font-black uppercase italic tracking-tighter mb-3 ${item.dark ? 'text-white' : 'text-slate-900'}`}>
                   {item.title}
                 </h4>
@@ -361,15 +307,11 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ============================================================ */}
-      {/* STATS — redesign                                              */}
-      {/* ============================================================ */}
+      {/* STATS */}
       <section className="max-w-6xl mx-auto px-4 md:px-8 my-4">
         <div className="bg-[#0F172A] rounded-[2.5rem] px-10 py-12 grid grid-cols-2 md:grid-cols-4 gap-8 shadow-2xl shadow-slate-300 relative overflow-hidden">
-          {/* Halo décoratif */}
           <div className="absolute -top-20 -right-20 w-72 h-72 bg-[#FF4500]/10 blur-[80px] rounded-full pointer-events-none" />
           <div className="absolute -bottom-10 -left-10 w-48 h-48 bg-blue-500/10 blur-[60px] rounded-full pointer-events-none" />
-
           {[
             { label: "Fraîcheur", val: "100%", desc: "Zéro frigo" },
             { label: "Maturité", val: "Optim.", desc: "Sur l'arbre" },
@@ -388,9 +330,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ============================================================ */}
-      {/* AVIS — redesign                                               */}
-      {/* ============================================================ */}
+      {/* AVIS */}
       <section className="max-w-6xl mx-auto px-4 md:px-8 py-16">
         <div className="flex items-center justify-between mb-12">
           <div>
@@ -405,7 +345,6 @@ export default function Home() {
             <span className="text-xs text-slate-400 font-bold ml-1">/ 5</span>
           </div>
         </div>
-
         <div className="grid md:grid-cols-3 gap-6">
           {[
             { name: "Marie L.", city: "Chatou", text: "Les tomates ont enfin du goût ! On sent qu'elles n'ont pas voyagé.", stars: 5 },
@@ -420,24 +359,17 @@ export default function Home() {
                   : 'bg-white border-slate-100 shadow-xl shadow-slate-100/60 hover:shadow-slate-200'
               }`}
             >
-              {/* Guillemet décoratif */}
               <span className={`absolute top-6 right-8 text-7xl font-black leading-none select-none pointer-events-none ${i === 1 ? 'text-white/10' : 'text-slate-900/5'}`}>
                 "
               </span>
-
-              {/* Étoiles */}
               <div className="flex gap-1 mb-5">
                 {[...Array(avis.stars)].map((_, j) => (
                   <Star key={j} className={`w-3.5 h-3.5 fill-current ${i === 1 ? 'text-white' : 'text-[#FF4500]'}`} />
                 ))}
               </div>
-
-              {/* Texte */}
               <p className={`text-[15px] font-semibold italic leading-relaxed mb-8 ${i === 1 ? 'text-white' : 'text-slate-600'}`}>
                 "{avis.text}"
               </p>
-
-              {/* Auteur */}
               <div className="flex items-center gap-3">
                 <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-black ${i === 1 ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-700'}`}>
                   {avis.name.charAt(0)}
@@ -492,7 +424,6 @@ export default function Home() {
         <div className="bg-[#0F172A] rounded-[3.5rem] p-12 md:p-20 text-center text-white relative overflow-hidden shadow-2xl shadow-slate-400">
           <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-[#FF4500]/15 blur-[120px] pointer-events-none rounded-full" />
           <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-blue-500/10 blur-[100px] pointer-events-none rounded-full" />
-          
           <h2 className="text-4xl md:text-6xl font-black uppercase italic tracking-tighter mb-10 relative z-10 leading-[0.95]">
             PRÊT À GOÛTER <br/><span className="text-[#FF4500]">LA DIFFÉRENCE ?</span>
           </h2>
