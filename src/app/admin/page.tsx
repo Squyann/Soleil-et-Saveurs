@@ -48,12 +48,12 @@ export default function AdminPage() {
 
   useEffect(() => {
     async function verifierAcces() {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
         window.location.href = '/admin/login';
-      } else {
-        fetchData();
+        return;
       }
+      fetchData();
     }
     verifierAcces();
   }, []);

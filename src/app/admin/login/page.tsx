@@ -45,7 +45,7 @@ export default function AdminLogin() {
             <label className="text-[10px] font-black uppercase text-slate-400 ml-4 mb-2 block">Identifiant Email</label>
             <input 
               type="email" 
-              placeholder="Squyann_net@outlook.fr"
+              placeholder="Email administrateur"
               required
               className="w-full p-6 bg-slate-100 rounded-[24px] font-black border-none text-sm focus:ring-2 focus:ring-[#FF4500] transition-all placeholder:text-slate-300"
               value={email}
@@ -57,7 +57,7 @@ export default function AdminLogin() {
             <label className="text-[10px] font-black uppercase text-slate-400 ml-4 mb-2 block">Mot de passe</label>
             <input 
               type="password" 
-              placeholder="Bouyann$quid280405!"
+              placeholder="••••••••••••"
               required
               className="w-full p-6 bg-slate-100 rounded-[24px] font-black border-none text-sm focus:ring-2 focus:ring-[#FF4500] transition-all placeholder:text-slate-300"
               value={password}
