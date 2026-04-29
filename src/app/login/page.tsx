@@ -50,8 +50,13 @@ export default function LoginPage() {
       });
 
       if (error) throw error;
-      
-      router.push('/');
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user?.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL) {
+        router.push('/admin');
+      } else {
+        router.push('/');
+      }
       router.refresh();
     } catch (err: any) {
       setError(err.message || "Erreur lors de la connexion");
