@@ -52,7 +52,7 @@ export default function LoginPage() {
       if (error) throw error;
 
       const { data: { user } } = await supabase.auth.getUser();
-      if (user?.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL) {
+      if (user?.email?.toLowerCase() === process.env.NEXT_PUBLIC_ADMIN_EMAIL?.toLowerCase()) {
         router.push('/admin');
       } else {
         router.push('/');

@@ -38,7 +38,7 @@ export async function middleware(request: NextRequest) {
     }
     // Check admin identity against server-side env var (never exposed to browser)
     const adminEmail = process.env.ADMIN_EMAIL
-    if (adminEmail && user.email !== adminEmail) {
+    if (adminEmail && user.email?.toLowerCase() !== adminEmail.toLowerCase()) {
       return NextResponse.redirect(new URL('/', request.url))
     }
   }
