@@ -20,7 +20,23 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [resetSent, setResetSent] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
   const router = useRouter();
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setError('Entrez votre email ci-dessus puis cliquez sur "Oublié ?".');
+      return;
+    }
+    setResetLoading(true);
+    setError(null);
+    await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setResetSent(true);
+    setResetLoading(false);
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -134,7 +150,14 @@ export default function LoginPage() {
             <div className="space-y-2">
               <div className="flex justify-between items-center ml-4">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Mot de passe</label>
-                <button type="button" className="text-[10px] font-black text-[#FF4500] uppercase hover:underline">Oublié ?</button>
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  disabled={resetLoading || resetSent}
+                  className="text-[10px] font-black text-[#FF4500] uppercase hover:underline disabled:opacity-50"
+                >
+                  {resetLoading ? 'Envoi…' : resetSent ? 'Email envoyé ✓' : 'Oublié ?'}
+                </button>
               </div>
               <div className="relative group">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-[#FF4500] transition-colors" />
