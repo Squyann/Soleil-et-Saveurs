@@ -1,14 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-// Client Supabase
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 
 export async function POST(req: NextRequest) {
   try {
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() { return cookieStore.getAll(); },
+          setAll() {},
+        },
+      }
+    );
+
+    // Récupérer l'utilisateur depuis le JWT — ne jamais faire confiance au body
+    const { data: { user } } = await supabase.auth.getUser();
+
     const body = await req.json();
     const { items, metadata } = body;
 
@@ -84,14 +94,15 @@ export async function POST(req: NextRequest) {
     const { data: commande, error: insertError } = await supabase
       .from('commandes')
       .insert({
-        user_id: metadata.user_id || null,
-        items: produitsVerifies,
+        user_id: user?.id || null, // Toujours depuis le JWT, jamais depuis le body
+        contenu_panier: produitsVerifies,
         total: totalFinal,
-        status: 'nouvelle', // Statut par défaut sans paiement en ligne
+        statut: 'En attente', // Cohérent avec PanierDrawer et la DB
         adresse_livraison: metadata.adresse,
-        methode_paiement: 'Livraison', // Ou 'Espèces/Carte à la livraison'
+        methode_paiement: metadata.methodePaiement || 'Espèces',
         nom_client: metadata.nom,
         telephone_client: metadata.telephone,
+        description_commande: produitsVerifies.map((p: any) => `${p.quantite}x ${p.name}`).join(', '),
       })
       .select()
       .single();
