@@ -101,15 +101,19 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
     return () => window.removeEventListener('storage', loadPanier);
   }, [isOpen]);
 
-  const updateQuantity = (id: number, delta: number) => {
+  const updateQuantity = (id: number, delta: number, unite?: string) => {
+    const step = unite === 'kg' ? 0.5 : 1;
     const nouveauPanier = (panier || []).map(item => {
       if (item.id === id) {
-        const newQte = Math.max(0, (item.quantite || 0) + delta);
+        // delta = 0 signifie suppression totale
+        if (delta === 0) return { ...item, quantite: 0 };
+        const actualDelta = delta > 0 ? step : -step;
+        const newQte = Math.max(0, parseFloat(((item.quantite || 0) + actualDelta).toFixed(2)));
         return { ...item, quantite: newQte };
       }
       return item;
     }).filter(item => item.quantite > 0);
-    
+
     setPanier(nouveauPanier);
     localStorage.setItem('mon-panier', JSON.stringify(nouveauPanier));
     window.dispatchEvent(new Event('storage'));
@@ -277,14 +281,14 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
                       </div>
 
                       <div className="flex items-center gap-3 mt-2">
-                         <button onClick={() => updateQuantity(item.id, -1)} className="w-6 h-6 border border-slate-100 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-50">-</button>
-                         <span className="text-xs font-bold">{item.quantite}</span>
-                         <button onClick={() => updateQuantity(item.id, 1)} className="w-6 h-6 border border-slate-100 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-50">+</button>
+                         <button onClick={() => updateQuantity(item.id, -1, item.unite)} className="w-6 h-6 border border-slate-100 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-50">-</button>
+                         <span className="text-xs font-bold">{item.quantite}{item.unite === 'kg' ? ' kg' : ''}</span>
+                         <button onClick={() => updateQuantity(item.id, 1, item.unite)} className="w-6 h-6 border border-slate-100 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-50">+</button>
                       </div>
                     </div>
                     <div className="text-right">
                       <p className="font-black text-sm">{calculerPrixLigne(item).toFixed(2)}€</p>
-                      <button onClick={() => updateQuantity(item.id, -item.quantite)} className="text-slate-300 hover:text-red-500 transition-colors mt-1">
+                      <button onClick={() => updateQuantity(item.id, -Infinity, item.unite)} className="text-slate-300 hover:text-red-500 transition-colors mt-1">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
