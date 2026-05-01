@@ -68,7 +68,6 @@ export default function AdminPage() {
       if (msgs) setMessages(msgs);
 
       if (cmds) {
-        console.log('Statuts en base :', cmds.map(c => ({ id: c.id, statut: c.statut })));
         setCommandes(cmds);
         const total = cmds.length;
         const aPreparer = cmds.filter(c => c.statut !== 'livrée').length;

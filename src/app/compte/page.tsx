@@ -150,7 +150,7 @@ export default function ComptePage() {
     new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
 
   const totalDepense = orders
-    .filter(o => (o.statut || o.status) !== 'annulee' && (o.statut || o.status) !== 'Annulée')
+    .filter(o => !o.statut?.toLowerCase().includes('annul'))
     .reduce((acc, o) => acc + (o.total || 0), 0);
 
   // --- LOADING ---
@@ -168,8 +168,6 @@ export default function ComptePage() {
   }
 
   const commanderANouveau = (contenu: any) => {
-  console.log("Contenu reçu :", contenu); // Pour vérifier ce qui arrive
-
   // 1. Sécurité : si contenu est vide ou n'est pas un tableau, on arrête
   if (!contenu || !Array.isArray(contenu)) {
     alert("Impossible de récupérer les articles de cette commande.");
@@ -244,7 +242,7 @@ export default function ComptePage() {
               </div>
               <div className="bg-white/5 border border-white/10 rounded-2xl px-5 py-3 text-center">
                 <p className="text-2xl font-black text-white">
-                  {orders.filter(o => (o.statut || o.status) === 'livrée' || (o.statut || o.status) === 'livrée').length}
+                  {orders.filter(o => o.statut?.toLowerCase().includes('livr')).length}
                 </p>
                 <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Livrées</p>
               </div>
@@ -411,17 +409,17 @@ export default function ComptePage() {
                     <p className="text-[10px] font-black text-[#FF4500] uppercase tracking-widest">Fidélité</p>
                   </div>
                   <p className="text-white font-black text-4xl mb-1">
-                    {orders.filter(o => (o.statut || o.status) === 'livrée' || (o.statut || o.status) === 'livrée').length}
+                    {orders.filter(o => o.statut?.toLowerCase().includes('livr')).length}
                     <span className="text-slate-400 text-lg font-bold ml-2">commandes livrées</span>
                   </p>
                   <div className="mt-4 h-2 bg-white/10 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-[#FF4500] rounded-full transition-all duration-1000"
-                      style={{ width: `${Math.min((orders.filter(o => (o.statut || o.status) === 'livrée' || (o.statut || o.status) === 'Livrée').length / 10) * 100, 100)}%` }}
+                      style={{ width: `${Math.min((orders.filter(o => o.statut?.toLowerCase().includes('livr')).length / 10) * 100, 100)}%` }}
                     />
                   </div>
                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-2">
-                    {Math.max(10 - orders.filter(o => (o.statut || o.status) === 'livrée' || (o.statut || o.status) === 'livrée').length, 0)} commandes avant votre prochain avantage
+                    {Math.max(10 - orders.filter(o => o.statut?.toLowerCase().includes('livr')).length, 0)} commandes avant votre prochain avantage
                   </p>
                 </div>
               </div>
@@ -469,7 +467,7 @@ export default function ComptePage() {
             ) : (
               orders.map((order) => {
                 // Gestion du statut (Français vs Anglais et formatage pour config)
-                const currentStatus = (order.statut || order.status || 'en_attente').toLowerCase();
+                const currentStatus = (order.statut || 'en_attente').toLowerCase();
                 const statusKey = currentStatus.includes('attente') ? 'en_attente' : 
                                 currentStatus.includes('confirme') ? 'confirmee' : 
                                 currentStatus.includes('livre') ? 'livree' : 
