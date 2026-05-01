@@ -346,13 +346,23 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
                 )}
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <button onClick={()=>setMethodePaiement('Espèces')} className={`p-4 rounded-2xl border flex flex-col items-center gap-2 font-black text-[10px] transition-all ${methodePaiement === 'Espèces' ? 'bg-slate-900 text-white border-slate-900 shadow-lg' : 'bg-white text-slate-400 border-slate-100'}`}>
-                  <Banknote className="w-5 h-5" /> ESPÈCES
-                </button>
-                <button onClick={()=>setMethodePaiement('Ligne')} className={`p-4 rounded-2xl border flex flex-col items-center gap-2 font-black text-[10px] transition-all ${methodePaiement === 'Ligne' ? 'bg-[#FF4500] text-white border-[#FF4500] shadow-lg' : 'bg-white text-slate-400 border-slate-100'}`}>
-                  <CreditCard className="w-5 h-5" /> CARTE EN LIGNE
-                </button>
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <button onClick={()=>setMethodePaiement('Espèces')} className={`p-4 rounded-2xl border flex flex-col items-center gap-2 font-black text-[10px] transition-all ${methodePaiement === 'Espèces' ? 'bg-slate-900 text-white border-slate-900 shadow-lg' : 'bg-white text-slate-400 border-slate-100'}`}>
+                    <Banknote className="w-5 h-5" /> ESPÈCES
+                  </button>
+                  <button onClick={()=>setMethodePaiement('Ligne')} className="p-4 rounded-2xl border flex flex-col items-center gap-2 font-black text-[10px] transition-all bg-white text-slate-300 border-slate-100 cursor-not-allowed opacity-60">
+                    <CreditCard className="w-5 h-5" /> CARTE EN LIGNE
+                  </button>
+                </div>
+                {methodePaiement === 'Ligne' && (
+                  <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-100 rounded-xl">
+                    <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                    <p className="text-[10px] font-bold text-amber-700 leading-relaxed">
+                      Paiement en ligne indisponible pour l'instant. Un règlement par carte est possible lors de la livraison.
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -383,7 +393,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
           </div>
           
           <button 
-            disabled={chargement || (user && (!(panier || []).length || !distanceValide || !nom || !telephone))}
+            disabled={chargement || methodePaiement === 'Ligne' || (user && (!(panier || []).length || !distanceValide || !nom || !telephone))}
             onClick={envoyerCommande}
             className={`w-full ${!user ? 'bg-blue-600' : 'bg-slate-900'} disabled:bg-slate-100 disabled:text-slate-300 text-white p-5 rounded-2xl font-black uppercase text-sm tracking-widest hover:opacity-90 transition-all shadow-xl flex items-center justify-center gap-3`}
           >
