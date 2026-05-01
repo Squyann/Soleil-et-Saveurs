@@ -33,7 +33,7 @@ export default function CommanderPage() {
         setProducts(data);
         // Initialiser les quantités à 1 pour chaque produit
         const initialQty: { [key: string]: number } = {};
-        data.forEach(p => initialQty[p.id] = 1);
+        data.forEach(p => initialQty[p.id] = p.unite === 'kg' ? 0.5 : 1);
         setQuantities(initialQty);
       }
     } catch (error) {
@@ -48,9 +48,16 @@ export default function CommanderPage() {
     setNombreArticles(panier.reduce((acc: number, item: any) => acc + item.quantite, 0));
   };
 
-  const handleQtyChange = (id: string, val: string) => {
-    const num = Math.max(1, parseInt(val) || 1);
-    setQuantities(prev => ({ ...prev, [id]: num }));
+  const getStep = (product: any) => product.unite === 'kg' ? 0.5 : 1;
+  const getMin  = (product: any) => product.unite === 'kg' ? 0.5 : 1;
+
+  const handleQtyChange = (id: string, val: string, product: any) => {
+    const step = getStep(product);
+    const min  = getMin(product);
+    const num  = Math.max(min, parseFloat(val) || min);
+    // Arrondi au pas le plus proche (ex: 0.5)
+    const rounded = Math.round(num / step) * step;
+    setQuantities(prev => ({ ...prev, [id]: parseFloat(rounded.toFixed(2)) }));
   };
 
   const filteredProducts = filter === 'all' 
@@ -91,7 +98,7 @@ export default function CommanderPage() {
     
     setShowToast(true);
     setTimeout(() => setShowToast(false), 2000);
-    setQuantities(prev => ({ ...prev, [product.id]: 1 }));
+    setQuantities(prev => ({ ...prev, [product.id]: product.unite === 'kg' ? 0.5 : 1 }));
   };
 
   return (
@@ -226,18 +233,20 @@ export default function CommanderPage() {
                     <div className="flex items-center justify-between mb-3">
                         <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Quantité</span>
                         <div className="flex items-center bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-                            <button 
-                              onClick={() => handleQtyChange(product.id, String(currentQty - 1))}
+                            <button
+                              onClick={() => handleQtyChange(product.id, String(currentQty - getStep(product)), product)}
                               className="px-3 py-2 hover:bg-slate-50 text-slate-900 font-bold transition-colors"
                             >-</button>
-                            <input 
-                                type="number" 
+                            <input
+                                type="number"
+                                min={getMin(product)}
+                                step={getStep(product)}
                                 value={currentQty}
-                                onChange={(e) => handleQtyChange(product.id, e.target.value)}
-                                className="w-12 text-center font-black text-sm bg-transparent border-none focus:ring-0 p-0"
+                                onChange={(e) => handleQtyChange(product.id, e.target.value, product)}
+                                className="w-16 text-center font-black text-sm bg-transparent border-none focus:ring-0 p-0"
                             />
-                            <button 
-                              onClick={() => handleQtyChange(product.id, String(currentQty + 1))}
+                            <button
+                              onClick={() => handleQtyChange(product.id, String(currentQty + getStep(product)), product)}
                               className="px-3 py-2 hover:bg-slate-50 text-slate-900 font-bold transition-colors"
                             >+</button>
                         </div>
