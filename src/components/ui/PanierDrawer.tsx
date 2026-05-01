@@ -288,7 +288,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
                     </div>
                     <div className="text-right">
                       <p className="font-black text-sm">{calculerPrixLigne(item).toFixed(2)}€</p>
-                      <button onClick={() => updateQuantity(item.id, -Infinity, item.unite)} className="text-slate-300 hover:text-red-500 transition-colors mt-1">
+                      <button onClick={() => updateQuantity(item.id, 0, item.unite)} className="text-slate-300 hover:text-red-500 transition-colors mt-1">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
