@@ -36,9 +36,9 @@ export async function middleware(request: NextRequest) {
     if (!user) {
       return NextResponse.redirect(new URL('/admin/login', request.url))
     }
-    // Check admin identity against server-side env var (never exposed to browser)
+    // Bloquer si ADMIN_EMAIL non configuré ou si l'email ne correspond pas
     const adminEmail = process.env.ADMIN_EMAIL
-    if (adminEmail && user.email?.toLowerCase() !== adminEmail.toLowerCase()) {
+    if (!adminEmail || user.email?.toLowerCase() !== adminEmail.toLowerCase()) {
       return NextResponse.redirect(new URL('/', request.url))
     }
   }
