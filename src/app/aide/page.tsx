@@ -167,14 +167,10 @@ export default function AidePage() {
         lu: false
       };
 
-      console.log('Envoi vers Supabase:', payload);
-
       const { data, error } = await supabase
         .from('messages')
         .insert([payload])
-        .select(); // .select() force Supabase à retourner la ligne insérée — utile pour détecter les RLS silencieux
-
-      console.log('Réponse Supabase:', { data, error });
+        .select();
 
       if (error) {
         console.error('Erreur Supabase:', error);
