@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { ShoppingCart, Star, ArrowLeft, Plus, Info, Tag, CheckCircle2, TrendingDown, Gift } from 'lucide-react';
+import { ShoppingCart, Star, ArrowLeft, Plus, Info, Tag, CheckCircle2, TrendingDown, Gift, Search, X } from 'lucide-react';
 import Link from 'next/link';
 import PanierDrawer from '@/components/ui/PanierDrawer';
 import { supabase } from '@/lib/supabase';
@@ -15,6 +15,7 @@ export default function CommanderPage() {
   
   // NOUVEAU : État pour gérer les quantités saisies par le client avant l'ajout
   const [quantities, setQuantities] = useState<{ [key: string]: number }>({});
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     fetchProducts();
@@ -60,9 +61,17 @@ export default function CommanderPage() {
     setQuantities(prev => ({ ...prev, [id]: parseFloat(rounded.toFixed(2)) }));
   };
 
-  const filteredProducts = filter === 'all' 
-    ? products 
-    : products.filter(p => p.category?.toLowerCase() === filter.toLowerCase());
+  const filteredProducts = products
+    .filter(p => filter === 'all' || p.category?.toLowerCase() === filter.toLowerCase())
+    .filter(p => {
+      const q = search.trim().toLowerCase();
+      if (!q) return true;
+      return (
+        p.name?.toLowerCase().includes(q) ||
+        p.category?.toLowerCase().includes(q) ||
+        p.provenance?.toLowerCase().includes(q)
+      );
+    });
 
   const ajouterAuPanier = (product: any) => {
     const qteSaisie = quantities[product.id] || 1;
@@ -148,6 +157,26 @@ export default function CommanderPage() {
           </div>
         </header>
 
+        {/* BARRE DE RECHERCHE */}
+        <div className="relative mb-6">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Rechercher un produit, une provenance..."
+            className="w-full bg-white border border-slate-100 shadow-sm rounded-2xl pl-11 pr-10 py-3.5 text-sm font-bold text-slate-700 placeholder:text-slate-300 placeholder:font-medium focus:outline-none focus:border-[#FF4500] transition-colors"
+          />
+          {search && (
+            <button
+              onClick={() => setSearch('')}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+
         {/* FILTRES */}
         <div className="flex flex-wrap gap-2 mb-10 overflow-x-auto pb-2 scrollbar-hide">
           {['all', 'Fruits', 'Légumes', 'Épicerie'].map((cat) => (
@@ -168,6 +197,21 @@ export default function CommanderPage() {
         {loading ? (
           <div className="flex justify-center py-20">
             <div className="w-10 h-10 border-4 border-slate-200 border-t-[#FF4500] rounded-full animate-spin" />
+          </div>
+        ) : filteredProducts.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-24 text-center">
+            <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
+              <Search className="w-7 h-7 text-slate-200" />
+            </div>
+            <p className="font-black text-slate-300 uppercase tracking-widest text-sm">Aucun produit trouvé</p>
+            {search && (
+              <button
+                onClick={() => setSearch('')}
+                className="mt-4 text-xs font-bold text-[#FF4500] hover:underline uppercase tracking-widest"
+              >
+                Effacer la recherche
+              </button>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
