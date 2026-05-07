@@ -600,15 +600,40 @@ export default function AdminPage() {
                       <div className="mt-3 p-4 bg-white rounded-2xl border border-slate-200 shadow-2xl flex flex-col gap-3 animate-in zoom-in-95 duration-200 z-20">
                         <div>
                           <p className="text-[8px] font-black uppercase text-slate-400 mb-1 tracking-tighter">Remise %</p>
-                          <input type="number" placeholder="Ex: 20" className="w-full p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg text-center" onChange={(e) => { setPourcentage(parseInt(e.target.value) || 0); setSeuilAchat(0); setQteOfferte(0); }} />
+                          <input type="number" min="0" max="100" placeholder="Ex: 20" className="w-full p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg text-center" onChange={(e) => { setPourcentage(parseInt(e.target.value) || 0); setSeuilAchat(0); setQteOfferte(0); }} />
                         </div>
-                        <div className="border-t border-slate-50 pt-2">
-                          <p className="text-[8px] font-black uppercase text-slate-400 mb-1 tracking-tighter">Option Lot (X+Y) — fonctionne au kg</p>
-                          <div className="flex gap-2">
-                            <input type="number" step="0.5" placeholder="Payés" className="w-1/2 p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg text-center" onChange={(e) => { setSeuilAchat(parseFloat(e.target.value) || 0); setPourcentage(0); }} />
-                            <input type="number" step="0.5" placeholder="Offerts" className="w-1/2 p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg text-center" onChange={(e) => setQteOfferte(parseFloat(e.target.value) || 0)} />
+                        {p.unite === 'kg' ? (
+                          <div className="border-t border-slate-50 pt-2">
+                            <p className="text-[8px] font-black uppercase text-slate-400 mb-1 tracking-tighter">Lot au kg (X kg achetés + Y kg offerts)</p>
+                            <div className="flex gap-2">
+                              <div className="w-1/2">
+                                <input type="number" step="0.5" min="0" placeholder="Ex: 2 kg" className="w-full p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg text-center" onChange={(e) => { setSeuilAchat(parseFloat(e.target.value) || 0); setPourcentage(0); }} />
+                                <p className="text-[7px] text-center text-slate-300 font-bold mt-0.5 uppercase">Payés (kg)</p>
+                              </div>
+                              <div className="w-1/2">
+                                <input type="number" step="0.5" min="0" placeholder="Ex: 0.5 kg" className="w-full p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg text-center" onChange={(e) => setQteOfferte(parseFloat(e.target.value) || 0)} />
+                                <p className="text-[7px] text-center text-slate-300 font-bold mt-0.5 uppercase">Offerts (kg)</p>
+                              </div>
+                            </div>
+                            {seuilAchat > 0 && qteOfferte > 0 && (
+                              <p className="text-[8px] font-black text-[#FF4500] mt-1 text-center">{seuilAchat} kg achetés = {qteOfferte} kg offerts</p>
+                            )}
                           </div>
-                        </div>
+                        ) : (
+                          <div className="border-t border-slate-50 pt-2">
+                            <p className="text-[8px] font-black uppercase text-slate-400 mb-1 tracking-tighter">Lot à l'unité (X achetés + Y offerts)</p>
+                            <div className="flex gap-2">
+                              <div className="w-1/2">
+                                <input type="number" step="1" min="0" placeholder="Ex: 3" className="w-full p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg text-center" onChange={(e) => { setSeuilAchat(parseFloat(e.target.value) || 0); setPourcentage(0); }} />
+                                <p className="text-[7px] text-center text-slate-300 font-bold mt-0.5 uppercase">Payés</p>
+                              </div>
+                              <div className="w-1/2">
+                                <input type="number" step="1" min="0" placeholder="Ex: 1" className="w-full p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg text-center" onChange={(e) => setQteOfferte(parseFloat(e.target.value) || 0)} />
+                                <p className="text-[7px] text-center text-slate-300 font-bold mt-0.5 uppercase">Offerts</p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                         <div className="flex gap-2 mt-1">
                           <button onClick={() => appliquerPromo(p.id)} className="flex-1 bg-slate-900 text-white text-[9px] font-black py-3 rounded-lg shadow-md hover:bg-[#FF4500]">VALIDER</button>
                           {(p.promotion > 0 || p.seuil_achat > 0) && (
