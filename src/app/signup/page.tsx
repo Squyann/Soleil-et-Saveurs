@@ -17,7 +17,8 @@ export default function SignupPage() {
   const [birthDate, setBirthDate] = useState('');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
-  
+  const [referralCodeInput, setReferralCodeInput] = useState('');
+
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -87,7 +88,22 @@ export default function SignupPage() {
     setLoading(true);
     setError(null);
 
+    const cleanReferral = referralCodeInput.trim().toUpperCase();
+
     try {
+      if (cleanReferral) {
+        const { data: refData } = await supabase
+          .from('profiles')
+          .select('user_id')
+          .eq('referral_code', cleanReferral)
+          .maybeSingle();
+        if (!refData) {
+          setError("Code de parrainage invalide.");
+          setLoading(false);
+          return;
+        }
+      }
+
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -99,11 +115,13 @@ export default function SignupPage() {
             birth_date: birthDate,
             phone: phone,
             address: address,
+            referral_code_used: cleanReferral || null,
+            referral_processed: false,
           },
         },
       });
       if (error) throw error;
-      
+
       triggerConfetti();
       setTimeout(() => {
         router.push('/login?message=check-email');
@@ -229,7 +247,24 @@ export default function SignupPage() {
               </div>
             </div>
 
-            <button type="submit" 
+            <div className="space-y-1">
+              <label className="text-[10px] font-black text-slate-400 uppercase ml-4">
+                Code parrainage <span className="text-slate-300 normal-case font-bold">(optionnel)</span>
+              </label>
+              <div className="relative">
+                <Gift className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
+                <input
+                  type="text"
+                  placeholder="EX: ABC12345"
+                  value={referralCodeInput}
+                  onChange={(e) => setReferralCodeInput(e.target.value.toUpperCase())}
+                  className="w-full bg-white border border-slate-100 p-3 pl-10 rounded-2xl font-bold text-sm uppercase outline-none focus:border-[#FF4500] tracking-widest"
+                />
+              </div>
+              <p className="text-[9px] text-slate-400 font-bold ml-4">Vous et votre parrain obtiendrez -10% sur votre prochaine commande</p>
+            </div>
+
+            <button type="submit"
               disabled={loading || !isEligibleZone || !isPhoneValid || !isAdult || password.length < 8}
               className="w-full bg-[#FF4500] text-white p-5 rounded-3xl font-black uppercase text-sm tracking-widest hover:bg-slate-900 transition-all shadow-xl disabled:bg-slate-200 mt-4 flex items-center justify-center gap-3 active:scale-95"
             >

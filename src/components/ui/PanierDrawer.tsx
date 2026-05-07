@@ -20,7 +20,10 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
   const [methodePaiement, setMethodePaiement] = useState<'Espèces' | 'Ligne'>('Espèces');
   const [chargement, setChargement] = useState(false);
   const [distanceValide, setDistanceValide] = useState<boolean | null>(null);
-  
+  const [dbProfile, setDbProfile] = useState<{ loyalty_points: number; has_referral_discount: boolean } | null>(null);
+  const [applyLoyalty, setApplyLoyalty] = useState(false);
+  const [applyReferral, setApplyReferral] = useState(false);
+
   const router = useRouter();
 
   useEffect(() => {
@@ -30,7 +33,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
   useEffect(() => {
     const fetchUserData = async () => {
       let currentUser = user;
-      
+
       if (!currentUser) {
         const { data: { user: supabaseUser } } = await supabase.auth.getUser();
         if (supabaseUser) {
@@ -49,10 +52,21 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
             setDistanceValide(true);
           }
         }
+
+        const { data: prof } = await supabase
+          .from('profiles')
+          .select('loyalty_points, has_referral_discount')
+          .eq('user_id', currentUser.id)
+          .single();
+        if (prof) setDbProfile(prof);
       }
     };
 
-    if (isOpen) fetchUserData();
+    if (isOpen) {
+      setApplyLoyalty(false);
+      setApplyReferral(false);
+      fetchUserData();
+    }
   }, [isOpen, user]);
 
   const calculerPrixLigne = (item: any) => {
@@ -148,8 +162,11 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
 
   const sousTotalFinal = (panier || []).reduce((acc, item) => acc + calculerPrixLigne(item), 0);
   const economie = calculerEconomieTotale();
-  const fraisLivraison = sousTotalFinal > 45 || sousTotalFinal === 0 ? 0 : 2.50;
-  const totalFinal = sousTotalFinal + fraisLivraison;
+  const remisePct = (applyLoyalty ? 10 : 0) + (applyReferral ? 10 : 0);
+  const remiseMontant = sousTotalFinal * remisePct / 100;
+  const totalApresRemise = sousTotalFinal - remiseMontant;
+  const fraisLivraison = totalApresRemise > 45 || totalApresRemise === 0 ? 0 : 2.50;
+  const totalFinal = totalApresRemise + fraisLivraison;
 
   const envoyerCommande = async () => {
     if (!user) {
@@ -213,6 +230,19 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
         }]);
 
       if (error) throw error;
+
+      // Mise à jour des points de fidélité et remises
+      const pointsGagnes = Math.floor(totalApresRemise);
+      const newPoints = applyLoyalty
+        ? pointsGagnes
+        : (dbProfile?.loyalty_points ?? 0) + pointsGagnes;
+      const profileUpdate: Record<string, any> = { loyalty_points: Math.max(0, newPoints) };
+      if (applyReferral) profileUpdate.has_referral_discount = false;
+
+      await supabase
+        .from('profiles')
+        .update(profileUpdate)
+        .eq('user_id', user.id);
 
       alert("Commande reçue ! Nous vous contactons sur WhatsApp.");
       localStorage.removeItem('mon-panier');
@@ -350,6 +380,43 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
                 )}
               </div>
 
+              {/* REMISES DISPONIBLES */}
+              {user && ((dbProfile?.loyalty_points ?? 0) >= 100 || dbProfile?.has_referral_discount) && (
+                <div className="space-y-2">
+                  <h3 className="font-black uppercase text-xs tracking-widest text-slate-900">Remises disponibles</h3>
+                  {(dbProfile?.loyalty_points ?? 0) >= 100 && (
+                    <label className="flex items-center gap-3 p-4 bg-white border border-slate-100 rounded-2xl cursor-pointer hover:border-green-200 transition-all">
+                      <input
+                        type="checkbox"
+                        checked={applyLoyalty}
+                        onChange={(e) => setApplyLoyalty(e.target.checked)}
+                        className="w-4 h-4 accent-[#FF4500] shrink-0"
+                      />
+                      <div className="flex-1">
+                        <p className="font-black text-[11px] text-slate-900 uppercase">Remise fidélité -10%</p>
+                        <p className="text-[9px] text-slate-400 font-bold uppercase">{dbProfile?.loyalty_points} points · réinitialise à 0</p>
+                      </div>
+                      <span className="font-black text-xs text-green-600 shrink-0">-{(sousTotalFinal * 0.1).toFixed(2)}€</span>
+                    </label>
+                  )}
+                  {dbProfile?.has_referral_discount && (
+                    <label className="flex items-center gap-3 p-4 bg-white border border-slate-100 rounded-2xl cursor-pointer hover:border-green-200 transition-all">
+                      <input
+                        type="checkbox"
+                        checked={applyReferral}
+                        onChange={(e) => setApplyReferral(e.target.checked)}
+                        className="w-4 h-4 accent-[#FF4500] shrink-0"
+                      />
+                      <div className="flex-1">
+                        <p className="font-black text-[11px] text-slate-900 uppercase">Remise parrainage -10%</p>
+                        <p className="text-[9px] text-slate-400 font-bold uppercase">Offerte par votre parrain</p>
+                      </div>
+                      <span className="font-black text-xs text-green-600 shrink-0">-{(sousTotalFinal * 0.1).toFixed(2)}€</span>
+                    </label>
+                  )}
+                </div>
+              )}
+
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
                   <button onClick={()=>setMethodePaiement('Espèces')} className={`p-4 rounded-2xl border flex flex-col items-center gap-2 font-black text-[10px] transition-all ${methodePaiement === 'Espèces' ? 'bg-slate-900 text-white border-slate-900 shadow-lg' : 'bg-white text-slate-400 border-slate-100'}`}>
@@ -383,6 +450,13 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
               <div className="flex justify-between text-[10px] font-black text-green-600 uppercase tracking-widest">
                 <span className="flex items-center gap-1"><TrendingDown className="w-3 h-3" /> Économie promo</span>
                 <span>-{economie.toFixed(2)}€</span>
+              </div>
+            )}
+
+            {remiseMontant > 0 && (
+              <div className="flex justify-between text-[10px] font-black text-green-600 uppercase tracking-widest">
+                <span className="flex items-center gap-1"><TrendingDown className="w-3 h-3" /> Remise -{remisePct}%</span>
+                <span>-{remiseMontant.toFixed(2)}€</span>
               </div>
             )}
 
