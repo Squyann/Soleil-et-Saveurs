@@ -247,26 +247,29 @@ export default function AdminPage() {
 
   const imprimerBon = (cmd: any) => {
     const isRetrait = cmd.adresse_livraison?.includes("Retrait");
-    const totalArticles = cmd.total;
     const dateCmd = new Date(cmd.created_at).toLocaleDateString('fr-FR');
     const refFacture = `INV-${new Date(cmd.created_at).getFullYear()}-${cmd.id.toString().slice(-4).toUpperCase()}`;
 
-    let fraisLivraison = 0;
-    if (isRetrait) {
-      fraisLivraison = 0;
-    } else if (totalArticles <= 15) {
-      fraisLivraison = 2.50;
-    } else if (totalArticles >= 45) {
-      fraisLivraison = 0;
-    } else {
-      const ratio = (totalArticles - 15) / (45 - 15);
-      const calculBrut = 2.50 * (1 - ratio);
-      fraisLivraison = Math.round(calculBrut * 10) / 10;
-    }
+    // Recalculer le sous-total produits depuis le panier pour éviter de doubler les frais de livraison
+    const sousTotalProduits = (cmd.contenu_panier || []).reduce((acc: number, item: any) => {
+      const qte = parseFloat(item.quantite || item.quantity || 0);
+      let prixUnit = parseFloat(item.price || item.prix || 0);
+      if (item.promotion && item.promotion > 0) prixUnit *= (1 - item.promotion / 100);
+      const seuil = item.seuil_achat || 0;
+      const offert = item.quantite_offerte || 0;
+      if (seuil > 0 && offert > 0) {
+        const tailleLot = seuil + offert;
+        const lots = Math.floor(qte / tailleLot);
+        const reste = qte % tailleLot;
+        return acc + (lots * seuil + Math.min(reste, seuil)) * prixUnit;
+      }
+      return acc + qte * prixUnit;
+    }, 0);
 
-    const totalFinal = totalArticles + fraisLivraison;
-    const totalHT = totalArticles / 1.055;
-    const montantTVA = totalArticles - totalHT;
+    const fraisLivraison = isRetrait || sousTotalProduits === 0 || sousTotalProduits >= 45 ? 0 : 2.50;
+    const totalFinal = parseFloat(cmd.total); // Montant réel stocké en base
+    const totalHT = sousTotalProduits / 1.055;
+    const montantTVA = sousTotalProduits - totalHT;
     
     const fenetre = window.open('', '', 'height=800,width=900');
     if (fenetre) {
@@ -600,10 +603,10 @@ export default function AdminPage() {
                           <input type="number" placeholder="Ex: 20" className="w-full p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg text-center" onChange={(e) => { setPourcentage(parseInt(e.target.value) || 0); setSeuilAchat(0); setQteOfferte(0); }} />
                         </div>
                         <div className="border-t border-slate-50 pt-2">
-                          <p className="text-[8px] font-black uppercase text-slate-400 mb-1 tracking-tighter">Option Lot (X+Y)</p>
+                          <p className="text-[8px] font-black uppercase text-slate-400 mb-1 tracking-tighter">Option Lot (X+Y) — fonctionne au kg</p>
                           <div className="flex gap-2">
-                            <input type="number" placeholder="Payés" className="w-1/2 p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg text-center" onChange={(e) => { setSeuilAchat(parseInt(e.target.value) || 0); setPourcentage(0); }} />
-                            <input type="number" placeholder="Offerts" className="w-1/2 p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg text-center" onChange={(e) => setQteOfferte(parseInt(e.target.value) || 0)} />
+                            <input type="number" step="0.5" placeholder="Payés" className="w-1/2 p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg text-center" onChange={(e) => { setSeuilAchat(parseFloat(e.target.value) || 0); setPourcentage(0); }} />
+                            <input type="number" step="0.5" placeholder="Offerts" className="w-1/2 p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg text-center" onChange={(e) => setQteOfferte(parseFloat(e.target.value) || 0)} />
                           </div>
                         </div>
                         <div className="flex gap-2 mt-1">
@@ -664,6 +667,43 @@ export default function AdminPage() {
 
               <input type="text" placeholder="Provenance (ex: France)" className="p-5 bg-slate-100 rounded-2xl font-black border-none text-sm" value={nouveauProd.provenance} onChange={e => setNouveauProd({...nouveauProd, provenance: e.target.value})} />
               <input type="text" placeholder="Description courte" className="md:col-span-2 p-5 bg-slate-100 rounded-2xl font-black border-none text-sm" value={nouveauProd.description} onChange={e => setNouveauProd({...nouveauProd, description: e.target.value})} />
+
+              {/* PROMOTION OPTIONNELLE */}
+              <div className="md:col-span-3 border border-dashed border-slate-200 rounded-3xl p-6 space-y-4 bg-slate-50/50">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Promotion (optionnel)</p>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <label className="text-[9px] font-black uppercase text-slate-400 ml-2 mb-1 block">Remise %</label>
+                    <input
+                      type="number" min="0" max="100" placeholder="Ex: 20"
+                      className="w-full p-4 bg-white rounded-xl font-black border border-slate-200 text-sm text-center focus:border-[#FF4500] outline-none"
+                      value={nouveauProd.promotion || ''}
+                      onChange={e => setNouveauProd({ ...nouveauProd, promotion: parseFloat(e.target.value) || 0, seuil_achat: 0, quantite_offerte: 0 })}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[9px] font-black uppercase text-slate-400 ml-2 mb-1 block">Qté payée (lot)</label>
+                    <input
+                      type="number" step="0.5" min="0"
+                      placeholder={nouveauProd.unite === 'kg' ? 'Ex: 2 kg' : 'Ex: 3'}
+                      className="w-full p-4 bg-white rounded-xl font-black border border-slate-200 text-sm text-center focus:border-[#FF4500] outline-none"
+                      value={nouveauProd.seuil_achat || ''}
+                      onChange={e => setNouveauProd({ ...nouveauProd, seuil_achat: parseFloat(e.target.value) || 0, promotion: 0 })}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[9px] font-black uppercase text-slate-400 ml-2 mb-1 block">Qté offerte (lot)</label>
+                    <input
+                      type="number" step="0.5" min="0"
+                      placeholder={nouveauProd.unite === 'kg' ? 'Ex: 0.5 kg' : 'Ex: 1'}
+                      className="w-full p-4 bg-white rounded-xl font-black border border-slate-200 text-sm text-center focus:border-[#FF4500] outline-none"
+                      value={nouveauProd.quantite_offerte || ''}
+                      onChange={e => setNouveauProd({ ...nouveauProd, quantite_offerte: parseFloat(e.target.value) || 0 })}
+                    />
+                  </div>
+                </div>
+                <p className="text-[9px] text-slate-400 font-bold">Remise % ou lot — pas les deux en même temps. Le lot fonctionne en kg (ex: 2 kg achetés = 0.5 kg offert).</p>
+              </div>
 
               <button type="submit" disabled={uploading} className="md:col-span-3 bg-slate-900 text-white py-6 rounded-3xl font-black uppercase tracking-[0.3em] shadow-xl hover:bg-[#FF4500] hover:scale-[1.01] transition-all disabled:opacity-50">
                 Ajouter au catalogue
