@@ -229,12 +229,12 @@ export default function RGPDPage() {
             </p>
             <div className="grid sm:grid-cols-2 gap-3">
               {[
-                { right: 'Droit d'accès', desc: 'Obtenir une copie de vos données personnelles', art: 'Art. 15' },
+                { right: "Droit d'accès", desc: 'Obtenir une copie de vos données personnelles', art: 'Art. 15' },
                 { right: 'Droit de rectification', desc: 'Corriger vos données inexactes ou incomplètes', art: 'Art. 16' },
-                { right: 'Droit à l'effacement', desc: 'Demander la suppression de vos données', art: 'Art. 17' },
+                { right: "Droit à l'effacement", desc: 'Demander la suppression de vos données', art: 'Art. 17' },
                 { right: 'Droit à la limitation', desc: 'Restreindre le traitement de vos données', art: 'Art. 18' },
                 { right: 'Droit à la portabilité', desc: 'Recevoir vos données dans un format structuré', art: 'Art. 20' },
-                { right: 'Droit d'opposition', desc: 'Vous opposer au traitement de vos données', art: 'Art. 21' },
+                { right: "Droit d'opposition", desc: 'Vous opposer au traitement de vos données', art: 'Art. 21' },
               ].map((item) => (
                 <div key={item.right} className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
                   <div className="flex items-center justify-between mb-2">
