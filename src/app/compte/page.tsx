@@ -7,7 +7,7 @@ import {
   User, Mail, Phone, MapPin, LogOut, ArrowLeft,
   ShoppingBag, Package, CheckCircle2, Clock, XCircle,
   Loader2, Edit3, Save, X, ChevronRight, Star, Truck,
-  AlertCircle, Plus
+  AlertCircle, Plus, Gift, Copy
 } from 'lucide-react';
 
 // --- TYPES ---
@@ -33,6 +33,12 @@ interface UserProfile {
   email: string;
 }
 
+interface DBProfile {
+  loyalty_points: number;
+  referral_code: string;
+  has_referral_discount: boolean;
+}
+
 // --- CONFIG STATUTS ---
 const STATUS_CONFIG = {
   en_attente: { label: 'En attente', icon: Clock, color: 'text-orange-500', bg: 'bg-orange-50', border: 'border-orange-100' },
@@ -54,6 +60,8 @@ export default function ComptePage() {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [addressSuggestions, setAddressSuggestions] = useState<any[]>([]);
+  const [dbProfile, setDbProfile] = useState<DBProfile | null>(null);
+  const [referralCopied, setReferralCopied] = useState(false);
   const router = useRouter();
 
   // --- INIT ---
@@ -77,9 +85,36 @@ export default function ComptePage() {
       setEditForm(p);
       setLoading(false);
       fetchOrders(user.id);
+      loadDBProfile(user.id);
+      processReferral(user);
     };
     init();
   }, [router]);
+
+  // --- PROFIL DB ---
+  const loadDBProfile = async (userId: string) => {
+    const { data } = await supabase
+      .from('profiles')
+      .select('loyalty_points, referral_code, has_referral_discount')
+      .eq('user_id', userId)
+      .single();
+    if (data) setDbProfile(data as DBProfile);
+  };
+
+  const processReferral = async (currentUser: any) => {
+    const meta = currentUser.user_metadata || {};
+    if (!meta.referral_code_used || meta.referral_processed === true) return;
+
+    const { data: success } = await supabase.rpc('process_referral', {
+      p_referral_code: meta.referral_code_used,
+      p_new_user_id: currentUser.id,
+    });
+
+    if (success) {
+      await supabase.auth.updateUser({ data: { referral_processed: true } });
+      await loadDBProfile(currentUser.id);
+    }
+  };
 
   // --- COMMANDES SUPABASE ---
   const fetchOrders = async (userId: string) => {
@@ -397,31 +432,68 @@ export default function ComptePage() {
               </div>
             </div>
 
-            {/* DÉCONNEXION + CARTE FIDÉLITÉ */}
-            <div className="space-y-6">
+            {/* FIDÉLITÉ + PARRAINAGE + DÉCONNEXION */}
+            <div className="space-y-4">
 
               {/* CARTE FIDÉLITÉ */}
-              <div className="bg-slate-900 rounded-[2rem] p-8 relative overflow-hidden shadow-xl">
+              <div className="bg-slate-900 rounded-[2rem] p-6 relative overflow-hidden shadow-xl">
                 <div className="absolute top-0 right-0 w-48 h-48 bg-[#FF4500]/20 blur-[60px] rounded-full pointer-events-none" />
                 <div className="relative z-10">
-                  <div className="flex items-center gap-2 mb-4">
+                  <div className="flex items-center gap-2 mb-3">
                     <Star className="w-5 h-5 text-[#FF4500] fill-[#FF4500]" />
                     <p className="text-[10px] font-black text-[#FF4500] uppercase tracking-widest">Fidélité</p>
                   </div>
-                  <p className="text-white font-black text-4xl mb-1">
-                    {orders.filter(o => o.statut?.toLowerCase().includes('livr')).length}
-                    <span className="text-slate-400 text-lg font-bold ml-2">commandes livrées</span>
+                  <p className="text-white font-black text-3xl mb-1">
+                    {dbProfile?.loyalty_points ?? 0}
+                    <span className="text-slate-400 text-base font-bold ml-2">/ 100 pts</span>
                   </p>
-                  <div className="mt-4 h-2 bg-white/10 rounded-full overflow-hidden">
+                  <div className="mt-3 h-2 bg-white/10 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-[#FF4500] rounded-full transition-all duration-1000"
-                      style={{ width: `${Math.min((orders.filter(o => o.statut?.toLowerCase().includes('livr')).length / 10) * 100, 100)}%` }}
+                      style={{ width: `${Math.min(((dbProfile?.loyalty_points ?? 0) / 100) * 100, 100)}%` }}
                     />
                   </div>
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-2">
-                    {Math.max(10 - orders.filter(o => o.statut?.toLowerCase().includes('livr')).length, 0)} commandes avant votre prochain avantage
-                  </p>
+                  {(dbProfile?.loyalty_points ?? 0) >= 100 ? (
+                    <p className="text-[9px] font-black text-green-400 uppercase tracking-widest mt-2">
+                      ✓ Remise -10% disponible — activez-la dans le panier
+                    </p>
+                  ) : (
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-2">
+                      {100 - (dbProfile?.loyalty_points ?? 0)} pts avant votre remise de -10%
+                    </p>
+                  )}
                 </div>
+              </div>
+
+              {/* CARTE PARRAINAGE */}
+              <div className="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-sm">
+                <div className="flex items-center gap-2 mb-2">
+                  <Gift className="w-5 h-5 text-[#FF4500]" />
+                  <p className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Parrainage</p>
+                </div>
+                <p className="text-[10px] text-slate-400 font-bold mb-3 uppercase">Partagez votre code — vous gagnez tous les deux -10%</p>
+                <div className="flex items-center gap-2 bg-slate-50 rounded-xl p-3 border border-slate-100">
+                  <p className="font-black text-lg text-slate-900 tracking-[0.2em] flex-1">{dbProfile?.referral_code ?? '—'}</p>
+                  <button
+                    onClick={() => {
+                      if (dbProfile?.referral_code) {
+                        navigator.clipboard.writeText(dbProfile.referral_code);
+                        setReferralCopied(true);
+                        setTimeout(() => setReferralCopied(false), 2000);
+                      }
+                    }}
+                    className="flex items-center gap-1 bg-[#FF4500] text-white px-3 py-1.5 rounded-lg text-[9px] font-black uppercase hover:bg-slate-900 transition-all"
+                  >
+                    <Copy className="w-3 h-3" />
+                    {referralCopied ? 'Copié !' : 'Copier'}
+                  </button>
+                </div>
+                {dbProfile?.has_referral_discount && (
+                  <div className="mt-3 flex items-center gap-2 p-3 bg-green-50 rounded-xl border border-green-100">
+                    <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
+                    <p className="text-[9px] font-black text-green-700 uppercase tracking-wide">Remise parrainage -10% dispo — activez-la dans le panier</p>
+                  </div>
+                )}
               </div>
 
               {/* DÉCONNEXION */}
