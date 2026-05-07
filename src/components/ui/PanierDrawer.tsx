@@ -244,6 +244,30 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
         .update(profileUpdate)
         .eq('user_id', user.id);
 
+      // Notification admin (email + SMS) — non bloquant
+      fetch('/api/notify-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          commande: {
+            nom,
+            telephone,
+            adresse,
+            methode_paiement: 'Espèces',
+            panier: panier.map(item => ({
+              name: item.name,
+              quantite: item.quantite,
+              unite: item.unite || '',
+              prix_ligne: calculerPrixLigne(item),
+            })),
+            remise_pct: remisePct,
+            remise_montant: remiseMontant,
+            frais_livraison: fraisLivraison,
+            total: totalFinal,
+          },
+        }),
+      }).catch(err => console.error('Notification admin échouée:', err));
+
       alert("Commande reçue ! Nous vous contactons sur WhatsApp.");
       localStorage.removeItem('mon-panier');
       window.dispatchEvent(new Event('storage'));
