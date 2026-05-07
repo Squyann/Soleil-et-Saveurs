@@ -269,7 +269,7 @@ export default function CommanderPage() {
                     )}
                   </div>
                   <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">
-                       Vendu à la {product.unite || 'pièce'}
+                       Vendu {product.unite === 'kg' ? 'au' : 'à la'} {product.unite || 'pièce'}
                   </p>
 
                   {/* SECTION QUANTITÉ ET PRIX DYNAMIQUE */}
