@@ -68,7 +68,7 @@ export default function MentionsLegales() {
                 <p><span className="text-slate-400 text-xs uppercase font-black tracking-widest mr-2">Responsable</span> [Prénom Nom]</p>
                 <p><span className="text-slate-400 text-xs uppercase font-black tracking-widest mr-2">Siège social</span> Plaisir (78370), Yvelines, France</p>
                 <p><span className="text-slate-400 text-xs uppercase font-black tracking-widest mr-2">SIRET</span> [Numéro SIRET]</p>
-                <p><span className="text-slate-400 text-xs uppercase font-black tracking-widest mr-2">Email</span> [adresse@email.fr]</p>
+                <p><span className="text-slate-400 text-xs uppercase font-black tracking-widest mr-2">Email</span> soleiletsaveurs.livraison@gmail.com</p>
                 <p><span className="text-slate-400 text-xs uppercase font-black tracking-widest mr-2">Téléphone</span> [+33 6 XX XX XX XX]</p>
                 <p><span className="text-slate-400 text-xs uppercase font-black tracking-widest mr-2">Statut TVA</span> TVA non applicable — Art. 293 B du CGI (micro-entreprise)</p>
               </div>
@@ -134,7 +134,7 @@ export default function MentionsLegales() {
               Pour en savoir plus, consultez notre <Link href="/rgpd" className="text-[#FF4500] hover:underline font-bold">Politique de confidentialité</Link>.
             </p>
             <p className="text-slate-600 font-medium text-sm leading-relaxed">
-              Vous disposez d'un droit d'accès, de rectification, de suppression et de portabilité de vos données. Pour exercer ces droits, contactez-nous à : <strong className="text-slate-900">[adresse@email.fr]</strong>
+              Vous disposez d'un droit d'accès, de rectification, de suppression et de portabilité de vos données. Pour exercer ces droits, contactez-nous à : <strong className="text-slate-900">soleiletsaveurs.livraison@gmail.com</strong>
             </p>
           </section>
 

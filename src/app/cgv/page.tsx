@@ -207,7 +207,7 @@ export default function CGVPage() {
               Soleil Saveurs s'engage à livrer des produits conformes à la commande et aux normes de qualité en vigueur. En cas de problème (produit abîmé, erreur de livraison), le Client dispose de <strong className="text-slate-900">24h après réception</strong> pour nous le signaler avec photo à l'appui.
             </p>
             <p className="text-slate-600 font-medium leading-relaxed">
-              Contact : <strong className="text-slate-900">[adresse@email.fr]</strong> ou via WhatsApp au <strong className="text-slate-900">[+33 6 XX XX XX XX]</strong>.
+              Contact : <strong className="text-slate-900">soleiletsaveurs.livraison@gmail.com</strong> ou via WhatsApp au <strong className="text-slate-900">[+33 6 XX XX XX XX]</strong>.
             </p>
           </section>
 
