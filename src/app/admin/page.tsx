@@ -247,7 +247,6 @@ export default function AdminPage() {
 
   const imprimerBon = (cmd: any) => {
     const isRetrait = cmd.adresse_livraison?.includes("Retrait");
-    const totalArticles = cmd.total;
     const dateCmd = new Date(cmd.created_at).toLocaleDateString('fr-FR');
     const refFacture = `INV-${new Date(cmd.created_at).getFullYear()}-${cmd.id.toString().slice(-4).toUpperCase()}`;
 
@@ -273,8 +272,8 @@ export default function AdminPage() {
     }
 
     const totalFinal = parseFloat(cmd.total);
-    const totalHT = totalArticles / 1.055;
-    const montantTVA = totalArticles - totalHT;
+    const totalHT = sousTotalProduits / 1.055;
+    const montantTVA = sousTotalProduits - totalHT;
     
     const fenetre = window.open('', '', 'height=800,width=900');
     if (fenetre) {
@@ -605,15 +604,40 @@ export default function AdminPage() {
                       <div className="mt-3 p-4 bg-white rounded-2xl border border-slate-200 shadow-2xl flex flex-col gap-3 animate-in zoom-in-95 duration-200 z-20">
                         <div>
                           <p className="text-[8px] font-black uppercase text-slate-400 mb-1 tracking-tighter">Remise %</p>
-                          <input type="number" placeholder="Ex: 20" className="w-full p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg text-center" onChange={(e) => { setPourcentage(parseInt(e.target.value) || 0); setSeuilAchat(0); setQteOfferte(0); }} />
+                          <input type="number" min="0" max="100" placeholder="Ex: 20" className="w-full p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg text-center" onChange={(e) => { setPourcentage(parseInt(e.target.value) || 0); setSeuilAchat(0); setQteOfferte(0); }} />
                         </div>
-                        <div className="border-t border-slate-50 pt-2">
-                          <p className="text-[8px] font-black uppercase text-slate-400 mb-1 tracking-tighter">Option Lot (X+Y)</p>
-                          <div className="flex gap-2">
-                            <input type="number" placeholder="Payés" className="w-1/2 p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg text-center" onChange={(e) => { setSeuilAchat(parseInt(e.target.value) || 0); setPourcentage(0); }} />
-                            <input type="number" placeholder="Offerts" className="w-1/2 p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg text-center" onChange={(e) => setQteOfferte(parseInt(e.target.value) || 0)} />
+                        {p.unite === 'kg' ? (
+                          <div className="border-t border-slate-50 pt-2">
+                            <p className="text-[8px] font-black uppercase text-slate-400 mb-1 tracking-tighter">Lot au kg (X kg achetés + Y kg offerts)</p>
+                            <div className="flex gap-2">
+                              <div className="w-1/2">
+                                <input type="number" step="0.5" min="0" placeholder="Ex: 2 kg" className="w-full p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg text-center" onChange={(e) => { setSeuilAchat(parseFloat(e.target.value) || 0); setPourcentage(0); }} />
+                                <p className="text-[7px] text-center text-slate-300 font-bold mt-0.5 uppercase">Payés (kg)</p>
+                              </div>
+                              <div className="w-1/2">
+                                <input type="number" step="0.5" min="0" placeholder="Ex: 0.5 kg" className="w-full p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg text-center" onChange={(e) => setQteOfferte(parseFloat(e.target.value) || 0)} />
+                                <p className="text-[7px] text-center text-slate-300 font-bold mt-0.5 uppercase">Offerts (kg)</p>
+                              </div>
+                            </div>
+                            {seuilAchat > 0 && qteOfferte > 0 && (
+                              <p className="text-[8px] font-black text-[#FF4500] mt-1 text-center">{seuilAchat} kg achetés = {qteOfferte} kg offerts</p>
+                            )}
                           </div>
-                        </div>
+                        ) : (
+                          <div className="border-t border-slate-50 pt-2">
+                            <p className="text-[8px] font-black uppercase text-slate-400 mb-1 tracking-tighter">Lot à l'unité (X achetés + Y offerts)</p>
+                            <div className="flex gap-2">
+                              <div className="w-1/2">
+                                <input type="number" step="1" min="0" placeholder="Ex: 3" className="w-full p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg text-center" onChange={(e) => { setSeuilAchat(parseFloat(e.target.value) || 0); setPourcentage(0); }} />
+                                <p className="text-[7px] text-center text-slate-300 font-bold mt-0.5 uppercase">Payés</p>
+                              </div>
+                              <div className="w-1/2">
+                                <input type="number" step="1" min="0" placeholder="Ex: 1" className="w-full p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg text-center" onChange={(e) => setQteOfferte(parseFloat(e.target.value) || 0)} />
+                                <p className="text-[7px] text-center text-slate-300 font-bold mt-0.5 uppercase">Offerts</p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                         <div className="flex gap-2 mt-1">
                           <button onClick={() => appliquerPromo(p.id)} className="flex-1 bg-slate-900 text-white text-[9px] font-black py-3 rounded-lg shadow-md hover:bg-[#FF4500]">VALIDER</button>
                           {(p.promotion > 0 || p.seuil_achat > 0) && (
@@ -672,6 +696,43 @@ export default function AdminPage() {
 
               <input type="text" placeholder="Provenance (ex: France)" className="p-5 bg-slate-100 rounded-2xl font-black border-none text-sm" value={nouveauProd.provenance} onChange={e => setNouveauProd({...nouveauProd, provenance: e.target.value})} />
               <input type="text" placeholder="Description courte" className="md:col-span-2 p-5 bg-slate-100 rounded-2xl font-black border-none text-sm" value={nouveauProd.description} onChange={e => setNouveauProd({...nouveauProd, description: e.target.value})} />
+
+              {/* PROMOTION OPTIONNELLE */}
+              <div className="md:col-span-3 border border-dashed border-slate-200 rounded-3xl p-6 space-y-4 bg-slate-50/50">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Promotion (optionnel)</p>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <label className="text-[9px] font-black uppercase text-slate-400 ml-2 mb-1 block">Remise %</label>
+                    <input
+                      type="number" min="0" max="100" placeholder="Ex: 20"
+                      className="w-full p-4 bg-white rounded-xl font-black border border-slate-200 text-sm text-center focus:border-[#FF4500] outline-none"
+                      value={nouveauProd.promotion || ''}
+                      onChange={e => setNouveauProd({ ...nouveauProd, promotion: parseFloat(e.target.value) || 0, seuil_achat: 0, quantite_offerte: 0 })}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[9px] font-black uppercase text-slate-400 ml-2 mb-1 block">Qté payée (lot)</label>
+                    <input
+                      type="number" step="0.5" min="0"
+                      placeholder={nouveauProd.unite === 'kg' ? 'Ex: 2 kg' : 'Ex: 3'}
+                      className="w-full p-4 bg-white rounded-xl font-black border border-slate-200 text-sm text-center focus:border-[#FF4500] outline-none"
+                      value={nouveauProd.seuil_achat || ''}
+                      onChange={e => setNouveauProd({ ...nouveauProd, seuil_achat: parseFloat(e.target.value) || 0, promotion: 0 })}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[9px] font-black uppercase text-slate-400 ml-2 mb-1 block">Qté offerte (lot)</label>
+                    <input
+                      type="number" step="0.5" min="0"
+                      placeholder={nouveauProd.unite === 'kg' ? 'Ex: 0.5 kg' : 'Ex: 1'}
+                      className="w-full p-4 bg-white rounded-xl font-black border border-slate-200 text-sm text-center focus:border-[#FF4500] outline-none"
+                      value={nouveauProd.quantite_offerte || ''}
+                      onChange={e => setNouveauProd({ ...nouveauProd, quantite_offerte: parseFloat(e.target.value) || 0 })}
+                    />
+                  </div>
+                </div>
+                <p className="text-[9px] text-slate-400 font-bold">Remise % ou lot — pas les deux en même temps. Le lot fonctionne en kg (ex: 2 kg achetés = 0.5 kg offert).</p>
+              </div>
 
               <button type="submit" disabled={uploading} className="md:col-span-3 bg-slate-900 text-white py-6 rounded-3xl font-black uppercase tracking-[0.3em] shadow-xl hover:bg-[#FF4500] hover:scale-[1.01] transition-all disabled:opacity-50">
                 Ajouter au catalogue
