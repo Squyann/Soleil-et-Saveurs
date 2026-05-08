@@ -340,7 +340,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
 
                       <div className="flex items-center gap-3 mt-2">
                          <button onClick={() => updateQuantity(item.id, -1, item.unite)} className="w-6 h-6 border border-slate-100 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-50">-</button>
-                         <span className="text-xs font-bold">{item.quantite}{item.unite === 'kg' ? ' kg' : ''}</span>
+                         <span className="text-xs font-bold">{item.quantite}{item.unite ? ` ${item.unite}` : ''}</span>
                          <button onClick={() => updateQuantity(item.id, 1, item.unite)} className="w-6 h-6 border border-slate-100 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-50">+</button>
                       </div>
                     </div>
