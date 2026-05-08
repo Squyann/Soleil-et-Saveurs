@@ -68,7 +68,7 @@ const FAQ_CATEGORIES = [
     questions: [
       {
         q: "Comment fonctionne le programme de fidélité ?",
-        a: "C'est entièrement automatique ! Votre compteur de commandes livrées est visible dans votre espace client. Au bout de 10 commandes livrées, vous recevez automatiquement un avantage exclusif sur votre 11ème commande. Pas de carte à tampionner, pas de code à retrouver."
+        a: "C'est entièrement automatique ! Chaque euro dépensé vous rapporte 1 point de fidélité. Dès 100 points atteints, vous débloquez une remise de -10% que vous pouvez activer librement lors de votre prochaine commande. Votre solde de points est visible dans votre espace client."
       },
       {
         q: "Puis-je modifier mon adresse après avoir passé une commande ?",
@@ -235,7 +235,7 @@ export default function AidePage() {
           {[
             { icon: <MessageCircle className="text-green-500"/>, label: "WhatsApp", sub: "Réponse < 15min", link: "https://wa.me/33600000000" },
             { icon: <Phone className="text-blue-500"/>, label: "Téléphone", sub: "9h-19h Non-stop", link: "tel:+33600000000" },
-            { icon: <Star className="text-purple-500"/>, label: "Fidélité", sub: "-15% après 10 cmd", link: "/compte" },
+            { icon: <Star className="text-purple-500"/>, label: "Fidélité", sub: "-10% dès 100 pts", link: "/compte" },
             { icon: <AlertCircle className="text-[#FF4500]"/>, label: "Litige", sub: "Photo & Crédit", link: "mailto:soleiletsaveurs.livraison@gmail.com" }
           ].map((action, i) => (
             <a 
@@ -364,7 +364,7 @@ export default function AidePage() {
                   <Star className="w-40 h-40" />
                 </div>
                 <h4 className="font-black uppercase text-xl italic tracking-tighter mb-4 leading-none">FIDÉLITÉ <br/>RÉCOMPENSÉE</h4>
-                <p className="text-[11px] font-bold opacity-80 mb-8 italic">Passez 10 commandes et bénéficiez d'un avantage exclusif sur la 11ème. Votre compteur est visible dans votre espace client.</p>
+                <p className="text-[11px] font-bold opacity-80 mb-8 italic">1€ dépensé = 1 point. Dès 100 points, débloquez -10% sur votre prochaine commande. Votre solde est visible dans votre espace client.</p>
                 <div className="inline-flex items-center gap-3 bg-white text-[#FF4500] px-6 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest group-hover:scale-105 transition-all">
                   Voir mon compteur <ArrowRight className="w-4 h-4" />
                 </div>
