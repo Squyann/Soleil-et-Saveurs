@@ -165,7 +165,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
   const remisePct = (applyLoyalty ? 10 : 0) + (applyReferral ? 10 : 0);
   const remiseMontant = sousTotalFinal * remisePct / 100;
   const totalApresRemise = sousTotalFinal - remiseMontant;
-  const fraisLivraison = totalApresRemise === 0 ? 0
+  const fraisLivraison = totalApresRemise === 0 || totalApresRemise < 10 ? 0
     : totalApresRemise >= 30 ? 0
     : Math.round(2.50 * (30 - totalApresRemise) / 20 * 100) / 100;
   const totalFinal = totalApresRemise + fraisLivraison;
@@ -488,10 +488,12 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
               </div>
             )}
 
-            <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-              <span>Livraison</span>
-              <span>{totalApresRemise === 0 ? '—' : fraisLivraison === 0 ? 'GRATUIT' : fraisLivraison.toFixed(2) + '€'}</span>
-            </div>
+            {totalApresRemise >= 10 && (
+              <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                <span>Livraison</span>
+                <span>{fraisLivraison === 0 ? 'GRATUIT' : fraisLivraison.toFixed(2) + '€'}</span>
+              </div>
+            )}
             <div className="flex justify-between font-black text-xl text-slate-900 pt-2">
               <span>TOTAL</span>
               <span className="text-2xl text-[#FF4500]">{totalFinal.toFixed(2)}€</span>
