@@ -167,6 +167,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
   const totalApresRemise = sousTotalFinal - remiseMontant;
   const fraisLivraison = totalApresRemise === 0 ? 0
     : totalApresRemise >= 30 ? 0
+    : totalApresRemise < 10 ? 3.50
     : Math.round(2.50 * (30 - totalApresRemise) / 20 * 100) / 100;
   const totalFinal = totalApresRemise + fraisLivraison;
   const minimumNonAtteint = user && (panier || []).length > 0 && totalApresRemise < 10;
