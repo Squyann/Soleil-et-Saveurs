@@ -250,7 +250,6 @@ export default function AdminPage() {
     const dateCmd = new Date(cmd.created_at).toLocaleDateString('fr-FR');
     const refFacture = `INV-${new Date(cmd.created_at).getFullYear()}-${cmd.id.toString().slice(-4).toUpperCase()}`;
 
-    // Recalculer le sous-total produits depuis le panier pour éviter de doubler les frais de livraison
     const sousTotalProduits = (cmd.contenu_panier || []).reduce((acc: number, item: any) => {
       const qte = parseFloat(item.quantite || item.quantity || 0);
       let prixUnit = parseFloat(item.price || item.prix || 0);
@@ -259,15 +258,20 @@ export default function AdminPage() {
       const offert = item.quantite_offerte || 0;
       if (seuil > 0 && offert > 0) {
         const tailleLot = seuil + offert;
-        const lots = Math.floor(qte / tailleLot);
+        const nbLots = Math.floor(qte / tailleLot);
         const reste = qte % tailleLot;
-        return acc + (lots * seuil + Math.min(reste, seuil)) * prixUnit;
+        return acc + (nbLots * seuil + Math.min(reste, seuil)) * prixUnit;
       }
       return acc + qte * prixUnit;
     }, 0);
 
-    const fraisLivraison = isRetrait || sousTotalProduits === 0 || sousTotalProduits >= 45 ? 0 : 2.50;
-    const totalFinal = parseFloat(cmd.total); // Montant réel stocké en base
+    let fraisLivraison = 0;
+    if (!isRetrait && sousTotalProduits > 0) {
+      fraisLivraison = sousTotalProduits >= 30 ? 0
+        : Math.round(2.50 * (30 - sousTotalProduits) / 20 * 100) / 100;
+    }
+
+    const totalFinal = parseFloat(cmd.total);
     const totalHT = sousTotalProduits / 1.055;
     const montantTVA = sousTotalProduits - totalHT;
     
