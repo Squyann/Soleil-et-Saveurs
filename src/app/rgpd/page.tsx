@@ -78,7 +78,7 @@ export default function RGPDPage() {
               <p><span className="text-slate-400 text-xs uppercase font-black tracking-widest mr-2">Entité</span> Soleil Saveurs (entreprise individuelle)</p>
               <p><span className="text-slate-400 text-xs uppercase font-black tracking-widest mr-2">Responsable</span> [Prénom Nom]</p>
               <p><span className="text-slate-400 text-xs uppercase font-black tracking-widest mr-2">Adresse</span> Plaisir (78370), Yvelines, France</p>
-              <p><span className="text-slate-400 text-xs uppercase font-black tracking-widest mr-2">Email</span> [adresse@email.fr]</p>
+              <p><span className="text-slate-400 text-xs uppercase font-black tracking-widest mr-2">Email</span> soleiletsaveurs.livraison@gmail.com</p>
             </div>
           </section>
 
@@ -248,7 +248,7 @@ export default function RGPDPage() {
             <div className="bg-slate-900 rounded-2xl p-5 mt-5 text-white">
               <p className="font-black text-xs uppercase tracking-widest text-[#FF4500] mb-2">Exercer vos droits</p>
               <p className="font-medium text-sm leading-relaxed text-slate-300">
-                Adressez votre demande par email à <strong className="text-white">[adresse@email.fr]</strong> en précisant votre identité. Nous répondrons dans un délai maximum d'<strong className="text-white">un mois</strong>.
+                Adressez votre demande par email à <strong className="text-white">soleiletsaveurs.livraison@gmail.com</strong> en précisant votre identité. Nous répondrons dans un délai maximum d'<strong className="text-white">un mois</strong>.
               </p>
             </div>
           </section>
@@ -324,7 +324,7 @@ export default function RGPDPage() {
               Pour toute question ou demande relative à vos données personnelles :
             </p>
             <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100 space-y-2 text-slate-600 font-medium">
-              <p><span className="text-slate-400 text-xs uppercase font-black tracking-widest mr-2">Email</span> [adresse@email.fr]</p>
+              <p><span className="text-slate-400 text-xs uppercase font-black tracking-widest mr-2">Email</span> soleiletsaveurs.livraison@gmail.com</p>
               <p><span className="text-slate-400 text-xs uppercase font-black tracking-widest mr-2">WhatsApp</span> [+33 6 XX XX XX XX]</p>
             </div>
             <p className="text-slate-600 font-medium leading-relaxed mt-4">
