@@ -251,20 +251,28 @@ export default function AdminPage() {
     const dateCmd = new Date(cmd.created_at).toLocaleDateString('fr-FR');
     const refFacture = `INV-${new Date(cmd.created_at).getFullYear()}-${cmd.id.toString().slice(-4).toUpperCase()}`;
 
+    const sousTotalProduits = (cmd.contenu_panier || []).reduce((acc: number, item: any) => {
+      const qte = parseFloat(item.quantite || item.quantity || 0);
+      let prixUnit = parseFloat(item.price || item.prix || 0);
+      if (item.promotion && item.promotion > 0) prixUnit *= (1 - item.promotion / 100);
+      const seuil = item.seuil_achat || 0;
+      const offert = item.quantite_offerte || 0;
+      if (seuil > 0 && offert > 0) {
+        const tailleLot = seuil + offert;
+        const nbLots = Math.floor(qte / tailleLot);
+        const reste = qte % tailleLot;
+        return acc + (nbLots * seuil + Math.min(reste, seuil)) * prixUnit;
+      }
+      return acc + qte * prixUnit;
+    }, 0);
+
     let fraisLivraison = 0;
-    if (isRetrait) {
-      fraisLivraison = 0;
-    } else if (totalArticles <= 15) {
-      fraisLivraison = 2.50;
-    } else if (totalArticles >= 45) {
-      fraisLivraison = 0;
-    } else {
-      const ratio = (totalArticles - 15) / (45 - 15);
-      const calculBrut = 2.50 * (1 - ratio);
-      fraisLivraison = Math.round(calculBrut * 10) / 10;
+    if (!isRetrait && sousTotalProduits > 0) {
+      fraisLivraison = sousTotalProduits >= 30 ? 0
+        : Math.round(2.50 * (30 - sousTotalProduits) / 20 * 100) / 100;
     }
 
-    const totalFinal = totalArticles + fraisLivraison;
+    const totalFinal = parseFloat(cmd.total);
     const totalHT = totalArticles / 1.055;
     const montantTVA = totalArticles - totalHT;
     

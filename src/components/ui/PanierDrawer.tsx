@@ -165,8 +165,11 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
   const remisePct = (applyLoyalty ? 10 : 0) + (applyReferral ? 10 : 0);
   const remiseMontant = sousTotalFinal * remisePct / 100;
   const totalApresRemise = sousTotalFinal - remiseMontant;
-  const fraisLivraison = totalApresRemise > 45 || totalApresRemise === 0 ? 0 : 2.50;
+  const fraisLivraison = totalApresRemise === 0 ? 0
+    : totalApresRemise >= 30 ? 0
+    : Math.round(2.50 * (30 - totalApresRemise) / 20 * 100) / 100;
   const totalFinal = totalApresRemise + fraisLivraison;
+  const minimumNonAtteint = user && (panier || []).length > 0 && totalApresRemise < 10;
 
   const envoyerCommande = async () => {
     if (!user) {
@@ -487,7 +490,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
 
             <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-widest">
               <span>Livraison</span>
-              <span>{fraisLivraison === 0 ? 'GRATUIT' : fraisLivraison.toFixed(2) + '€'}</span>
+              <span>{totalApresRemise === 0 ? '—' : fraisLivraison === 0 ? 'GRATUIT' : fraisLivraison.toFixed(2) + '€'}</span>
             </div>
             <div className="flex justify-between font-black text-xl text-slate-900 pt-2">
               <span>TOTAL</span>
@@ -495,8 +498,17 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
             </div>
           </div>
           
-          <button 
-            disabled={chargement || methodePaiement === 'Ligne' || (user && (!(panier || []).length || !distanceValide || !nom || !telephone))}
+          {minimumNonAtteint && (
+            <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-100 rounded-xl">
+              <AlertCircle className="w-4 h-4 text-amber-500 shrink-0" />
+              <p className="text-[10px] font-black text-amber-700 uppercase">
+                Minimum de commande : 10€ (encore {(10 - totalApresRemise).toFixed(2)}€)
+              </p>
+            </div>
+          )}
+
+          <button
+            disabled={chargement || methodePaiement === 'Ligne' || !!minimumNonAtteint || (user && (!(panier || []).length || !distanceValide || !nom || !telephone))}
             onClick={envoyerCommande}
             className={`w-full ${!user ? 'bg-blue-600' : 'bg-slate-900'} disabled:bg-slate-100 disabled:text-slate-300 text-white p-5 rounded-2xl font-black uppercase text-sm tracking-widest hover:opacity-90 transition-all shadow-xl flex items-center justify-center gap-3`}
           >
