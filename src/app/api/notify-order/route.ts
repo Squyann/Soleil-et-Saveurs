@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-const ADMIN_EMAIL = 'clement.sigwald041005@gmail.com';
+import { requireAdmin } from '@/lib/api-auth';
 
 function getSiteUrl() {
   if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
@@ -33,11 +32,15 @@ async function sendEmail(to: string, subject: string, html: string, apiKey: stri
 }
 
 export async function POST(req: NextRequest) {
+  const { error } = await requireAdmin();
+  if (error) return error;
+
   try {
     const { commande } = await req.json();
     const siteUrl = getSiteUrl();
     const adminUrl = `${siteUrl}/admin`;
     const compteUrl = `${siteUrl}/compte`;
+    const adminEmail = process.env.ADMIN_EMAIL!;
 
     const lignesHTML = buildLignesHTML(commande.panier || []);
 
@@ -133,7 +136,7 @@ export async function POST(req: NextRequest) {
 
     const from = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
 
-    await sendEmail(ADMIN_EMAIL, `🛒 Commande de ${commande.nom} — ${Number(commande.total).toFixed(2)}€`, adminHtml, process.env.RESEND_API_KEY, from);
+    await sendEmail(adminEmail, `🛒 Commande de ${commande.nom} — ${Number(commande.total).toFixed(2)}€`, adminHtml, process.env.RESEND_API_KEY, from);
 
     if (commande.email_client) {
       await sendEmail(commande.email_client, `✅ Commande confirmée — Soleil et Saveurs`, clientHtml, process.env.RESEND_API_KEY, from);
