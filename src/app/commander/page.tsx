@@ -55,8 +55,8 @@ export default function CommanderPage() {
   const handleQtyChange = (id: string, val: string, product: any) => {
     const step = getStep(product);
     const min  = getMin(product);
-    const num  = Math.max(min, parseFloat(val) || min);
-    // Arrondi au pas le plus proche (ex: 0.5)
+    const max  = product.stock;
+    const num  = Math.min(max, Math.max(min, parseFloat(val) || min));
     const rounded = Math.round(num / step) * step;
     setQuantities(prev => ({ ...prev, [id]: parseFloat(rounded.toFixed(2)) }));
   };
@@ -290,6 +290,7 @@ export default function CommanderPage() {
                             <input
                                 type="number"
                                 min={getMin(product)}
+                                max={product.stock}
                                 step={getStep(product)}
                                 value={currentQty}
                                 onChange={(e) => handleQtyChange(product.id, e.target.value, product)}
@@ -297,7 +298,8 @@ export default function CommanderPage() {
                             />
                             <button
                               onClick={() => handleQtyChange(product.id, String(currentQty + getStep(product)), product)}
-                              className="px-3 py-2 hover:bg-slate-50 text-slate-900 font-bold transition-colors"
+                              disabled={currentQty >= product.stock}
+                              className="px-3 py-2 hover:bg-slate-50 text-slate-900 font-bold transition-colors disabled:text-slate-300 disabled:cursor-not-allowed"
                             >+</button>
                         </div>
                     </div>
@@ -354,7 +356,7 @@ export default function CommanderPage() {
                     )}
                   </button>
 
-                  {product.stock > 0 && product.stock < 5 && (
+                  {product.stock > 0 && product.stock < (product.unite === 'g' ? 500 : 5) && (
                     <div className="mt-4 flex items-center justify-center gap-2">
                       <span className="w-1.5 h-1.5 bg-[#FF4500] rounded-full animate-pulse" />
                       <p className="text-[9px] font-black uppercase tracking-widest text-[#FF4500]">
