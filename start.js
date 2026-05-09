@@ -41,7 +41,8 @@ async function start() {
       console.log('[start] next bin:', nextBin, '| cwd:', __dirname);
       console.log('[start] .next exists:', fs.existsSync(path.join(__dirname, '.next')));
 
-      const proc = spawn(process.execPath, [nextBin, 'start'], {
+      console.log('[start] PORT env:', process.env.PORT);
+      const proc = spawn(process.execPath, [nextBin, 'start', '-p', String(PORT)], {
         stdio: ['inherit', 'pipe', 'pipe'],
         cwd: __dirname,
         env: process.env,
