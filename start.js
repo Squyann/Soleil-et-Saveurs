@@ -3,8 +3,10 @@
 const fs = require('fs');
 const { spawn } = require('child_process');
 
+const path = require('path');
 const PORT = parseInt(process.env.PORT || '3000', 10);
-const LOCK = '/tmp/nextjs-' + PORT + '.lock';
+// /tmp est isolé par worker sur Hostinger — on utilise le répertoire du projet (partagé)
+const LOCK = path.join(__dirname, '.nextjs-' + PORT + '.lock');
 
 function acquireLock() {
   try {
