@@ -3,11 +3,12 @@ export const dynamic = 'force-dynamic';
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
-import { 
-  LayoutDashboard, Package, ListTree, Search, 
-  RefreshCcw, Printer, Phone, MessageSquare, 
+import {
+  LayoutDashboard, Package, ListTree, Search,
+  RefreshCcw, Printer, Phone, MessageSquare,
   Trash2, Plus, Truck, CheckCircle2, Clock, Mail, Save, Edit3, X,
-  Inbox, Send, Eye, EyeOff, ChevronDown, ChevronUp
+  Inbox, Send, Eye, EyeOff, ChevronDown, ChevronUp,
+  BarChart2, Calendar, TrendingUp, ToggleLeft, ToggleRight
 } from 'lucide-react';
 
 interface StatsType {
@@ -22,7 +23,7 @@ export default function AdminPage() {
   const [messages, setMessages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [recherche, setRecherche] = useState('');
-  const [onglet, setOnglet] = useState<'commandes' | 'stock' | 'catalogue' | 'messages'>('commandes');
+  const [onglet, setOnglet] = useState<'commandes' | 'stock' | 'catalogue' | 'messages' | 'stats' | 'creneaux'>('commandes');
   const [filtreStatut, setFiltreStatut] = useState<'Toutes' | 'À préparer' | 'livrée'>('Toutes');
   const [uploading, setUploading] = useState(false);
   const [erreurNomProduit, setErreurNomProduit] = useState('');
@@ -40,6 +41,8 @@ export default function AdminPage() {
   const [reponseOuvert, setReponseOuvert] = useState<string | null>(null);
   const [reponseTexte, setReponseTexte] = useState('');
   const [envoiEnCours, setEnvoiEnCours] = useState(false);
+  const [creneaux, setCreneaux] = useState<any[]>([]);
+  const [nouveauCreneau, setNouveauCreneau] = useState('');
 
   const [nouveauProd, setNouveauProd] = useState({
     name: '', price: 0, category: 'Légumes', image_url: '', stock: 0,
@@ -65,6 +68,8 @@ export default function AdminPage() {
       const { data: cmds } = await supabase.from('commandes').select('*').order('created_at', { ascending: false });
       const { data: prods } = await supabase.from('products').select('*').order('name', { ascending: true });
       const { data: msgs } = await supabase.from('messages').select('*').order('created_at', { ascending: false });
+      const { data: cren } = await supabase.from('creneaux').select('*').order('created_at', { ascending: true });
+      if (cren) setCreneaux(cren);
 
       if (msgs) setMessages(msgs);
 
@@ -252,6 +257,22 @@ export default function AdminPage() {
     }
   }
 
+  async function ajouterCreneau() {
+    if (!nouveauCreneau.trim()) return;
+    const { data } = await supabase.from('creneaux').insert([{ label: nouveauCreneau.trim() }]).select().single();
+    if (data) { setCreneaux(prev => [...prev, data]); setNouveauCreneau(''); }
+  }
+
+  async function toggleCreneau(id: string, actif: boolean) {
+    await supabase.from('creneaux').update({ actif: !actif }).eq('id', id);
+    setCreneaux(prev => prev.map(c => c.id === id ? { ...c, actif: !actif } : c));
+  }
+
+  async function supprimerCreneau(id: string) {
+    await supabase.from('creneaux').delete().eq('id', id);
+    setCreneaux(prev => prev.filter(c => c.id !== id));
+  }
+
   const calculerBesoinStock = () => {
     const stockMap: { [key: string]: { quantite: number } } = {};
     commandes.filter(cmd => cmd.statut !== 'livrée').forEach(cmd => {
@@ -431,23 +452,23 @@ export default function AdminPage() {
           SOLEIL<span className="text-[#FF4500]">SAVEURS</span>
         </Link>
 
-        <nav className="flex bg-slate-100 p-1 rounded-2xl">
+        <nav className="flex flex-wrap gap-1 bg-slate-100 p-1 rounded-2xl">
           {(['commandes', 'stock', 'catalogue'] as const).map(t => (
-            <button key={t} onClick={() => setOnglet(t)} className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${onglet === t ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}>
+            <button key={t} onClick={() => setOnglet(t)} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${onglet === t ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}>
               {t}
             </button>
           ))}
-          {/* NOUVEAU : Onglet Messages avec badge */}
-          <button
-            onClick={() => setOnglet('messages')}
-            className={`relative px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${onglet === 'messages' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}
-          >
+          <button onClick={() => setOnglet('messages')} className={`relative px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${onglet === 'messages' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}>
             Messages
             {nbNonLus > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#FF4500] text-white text-[8px] font-black rounded-full flex items-center justify-center">
-                {nbNonLus}
-              </span>
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#FF4500] text-white text-[8px] font-black rounded-full flex items-center justify-center">{nbNonLus}</span>
             )}
+          </button>
+          <button onClick={() => setOnglet('stats')} className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${onglet === 'stats' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}>
+            <BarChart2 className="w-3 h-3" /> Stats
+          </button>
+          <button onClick={() => setOnglet('creneaux')} className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${onglet === 'creneaux' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}>
+            <Calendar className="w-3 h-3" /> Créneaux
           </button>
         </nav>
 
@@ -972,6 +993,157 @@ export default function AdminPage() {
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* --- SECTION STATS --- */}
+      {onglet === 'stats' && (() => {
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const caThisMonth = commandes.filter(c => c.statut === 'livrée' && new Date(c.created_at) >= startOfMonth).reduce((a, c) => a + parseFloat(c.total || 0), 0);
+        const cmdThisMonth = commandes.filter(c => new Date(c.created_at) >= startOfMonth).length;
+        const cmdEnAttente = commandes.filter(c => c.statut !== 'livrée').length;
+
+        const weeklyData = Array.from({ length: 8 }, (_, i) => {
+          const weeksAgo = 7 - i;
+          const wStart = new Date(now); wStart.setDate(now.getDate() - weeksAgo * 7 - now.getDay()); wStart.setHours(0,0,0,0);
+          const wEnd = new Date(wStart); wEnd.setDate(wStart.getDate() + 7);
+          const rev = commandes.filter(c => c.statut === 'livrée' && new Date(c.created_at) >= wStart && new Date(c.created_at) < wEnd).reduce((a, c) => a + parseFloat(c.total || 0), 0);
+          const label = weeksAgo === 0 ? 'Cette sem.' : wStart.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+          return { label, rev };
+        });
+        const maxRev = Math.max(...weeklyData.map(w => w.rev), 1);
+
+        const topProduits = Object.entries(
+          commandes.filter(c => c.statut === 'livrée').flatMap(c => c.contenu_panier || []).reduce((acc: Record<string, number>, item: any) => {
+            const name = item.name || item.nom || 'Inconnu';
+            acc[name] = (acc[name] || 0) + parseFloat(item.quantite || item.quantity || 1);
+            return acc;
+          }, {})
+        ).sort((a, b) => (b[1] as number) - (a[1] as number)).slice(0, 5);
+        const maxQte = Math.max(...topProduits.map(p => p[1] as number), 1);
+
+        return (
+          <div className="space-y-8 animate-in fade-in duration-500">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[
+                { label: 'CA Total', value: `${stats.caTotal.toFixed(0)}€`, sub: 'commandes livrées', icon: TrendingUp, color: 'text-green-600', bg: 'bg-green-50' },
+                { label: 'CA ce mois', value: `${caThisMonth.toFixed(0)}€`, sub: new Date().toLocaleDateString('fr-FR', { month: 'long' }), icon: BarChart2, color: 'text-blue-600', bg: 'bg-blue-50' },
+                { label: 'Commandes / mois', value: String(cmdThisMonth), sub: 'ce mois', icon: Package, color: 'text-purple-600', bg: 'bg-purple-50' },
+                { label: 'En attente', value: String(cmdEnAttente), sub: 'à préparer / livrer', icon: Clock, color: 'text-orange-600', bg: 'bg-orange-50' },
+              ].map(({ label, value, sub, icon: Icon, color, bg }) => (
+                <div key={label} className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm">
+                  <div className={`w-10 h-10 ${bg} rounded-2xl flex items-center justify-center mb-3`}>
+                    <Icon className={`w-5 h-5 ${color}`} />
+                  </div>
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{label}</p>
+                  <p className="text-3xl font-black text-slate-900 mt-1">{value}</p>
+                  <p className="text-[9px] text-slate-400 font-bold uppercase mt-1">{sub}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm">
+              <h3 className="font-black uppercase text-sm tracking-widest text-slate-900 mb-6">CA par semaine (8 dernières)</h3>
+              <div className="flex items-end gap-2 h-40">
+                {weeklyData.map((w, i) => (
+                  <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                    <p className="text-[8px] font-black text-slate-500">{w.rev > 0 ? `${w.rev.toFixed(0)}€` : ''}</p>
+                    <div className="w-full bg-slate-100 rounded-lg overflow-hidden" style={{ height: '100px' }}>
+                      <div
+                        className="w-full bg-[#FF4500] rounded-lg transition-all duration-700"
+                        style={{ height: `${(w.rev / maxRev) * 100}%`, marginTop: `${100 - (w.rev / maxRev) * 100}%` }}
+                      />
+                    </div>
+                    <p className="text-[7px] font-black text-slate-400 uppercase text-center leading-tight">{w.label}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm">
+              <h3 className="font-black uppercase text-sm tracking-widest text-slate-900 mb-6">Top 5 produits (quantité vendue)</h3>
+              {topProduits.length === 0 ? (
+                <p className="text-slate-300 font-bold text-xs uppercase text-center py-8">Aucune commande livrée pour l'instant</p>
+              ) : (
+                <div className="space-y-3">
+                  {topProduits.map(([name, qte], i) => (
+                    <div key={name} className="flex items-center gap-4">
+                      <span className="text-[10px] font-black text-slate-300 w-4">{i + 1}</span>
+                      <span className="font-black text-sm uppercase text-slate-800 w-36 truncate">{name}</span>
+                      <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-[#FF4500] rounded-full" style={{ width: `${((qte as number) / maxQte) * 100}%` }} />
+                      </div>
+                      <span className="text-[10px] font-black text-slate-500 w-12 text-right">{(qte as number).toFixed(1)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* --- SECTION CRÉNEAUX --- */}
+      {onglet === 'creneaux' && (
+        <div className="space-y-8 animate-in fade-in duration-500 max-w-2xl mx-auto">
+          <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm">
+            <h3 className="font-black uppercase text-sm tracking-widest text-slate-900 mb-2">Ajouter un créneau</h3>
+            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-6">Ex : "Lundi 14h–18h", "Mercredi matin 9h–12h"</p>
+            <div className="flex gap-3">
+              <input
+                type="text"
+                placeholder="Lundi 14h–18h"
+                value={nouveauCreneau}
+                onChange={e => setNouveauCreneau(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && ajouterCreneau()}
+                className="flex-1 p-4 bg-slate-100 rounded-2xl font-black text-sm border-none focus:ring-2 focus:ring-[#FF4500] outline-none"
+              />
+              <button
+                onClick={ajouterCreneau}
+                disabled={!nouveauCreneau.trim()}
+                className="flex items-center gap-2 bg-slate-900 text-white px-6 py-4 rounded-2xl font-black text-[10px] uppercase hover:bg-[#FF4500] transition-all disabled:opacity-30"
+              >
+                <Plus className="w-4 h-4" /> Ajouter
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm">
+            <h3 className="font-black uppercase text-sm tracking-widest text-slate-900 mb-6">Créneaux configurés</h3>
+            {creneaux.length === 0 ? (
+              <div className="text-center py-12">
+                <Calendar className="w-10 h-10 text-slate-200 mx-auto mb-3" />
+                <p className="text-slate-300 font-bold text-xs uppercase">Aucun créneau défini</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {creneaux.map(c => (
+                  <div key={c.id} className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${c.actif ? 'bg-green-50 border-green-100' : 'bg-slate-50 border-slate-100'}`}>
+                    <div className="flex items-center gap-3">
+                      <button onClick={() => toggleCreneau(c.id, c.actif)} className="shrink-0">
+                        {c.actif
+                          ? <ToggleRight className="w-7 h-7 text-green-500" />
+                          : <ToggleLeft className="w-7 h-7 text-slate-300" />}
+                      </button>
+                      <div>
+                        <p className="font-black text-sm text-slate-900">{c.label}</p>
+                        <p className={`text-[9px] font-black uppercase tracking-widest ${c.actif ? 'text-green-600' : 'text-slate-400'}`}>{c.actif ? 'Affiché aux clients' : 'Masqué'}</p>
+                      </div>
+                    </div>
+                    <button onClick={() => supprimerCreneau(c.id)} className="w-8 h-8 bg-white border border-slate-100 rounded-xl flex items-center justify-center text-slate-300 hover:text-red-500 hover:border-red-200 transition-all">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="bg-amber-50 border border-amber-100 rounded-3xl p-6">
+            <p className="text-[10px] font-black text-amber-700 uppercase tracking-widest mb-1">Comment ça marche</p>
+            <p className="text-xs text-amber-600 font-medium leading-relaxed">Les créneaux actifs sont affichés dans le panier du client sous forme de bannière informative. Le flux de commande reste inchangé — c'est une information, pas une contrainte.</p>
+          </div>
         </div>
       )}
 
