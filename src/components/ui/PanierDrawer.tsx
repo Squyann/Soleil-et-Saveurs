@@ -236,8 +236,8 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
           methode_paiement: 'Espèces',
           statut: 'En attente',
           description_commande: desc,
-          // ON AJOUTE ICI LE CONTENU DU PANIER POUR LE BOUTON "COMMANDER À NOUVEAU"
-          contenu_panier: panier 
+          contenu_panier: panier,
+          email_client: user.email,
         }]);
 
       if (error) throw error;
@@ -255,7 +255,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
         .update(profileUpdate)
         .eq('user_id', user.id);
 
-      // Notification admin (email + SMS) — non bloquant
+      // Notifications email — non bloquant
       fetch('/api/notify-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -264,6 +264,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
             nom,
             telephone,
             adresse,
+            email_client: user.email,
             methode_paiement: 'Espèces',
             panier: panier.map(item => ({
               name: item.name,

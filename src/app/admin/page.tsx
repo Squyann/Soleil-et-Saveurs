@@ -144,6 +144,24 @@ export default function AdminPage() {
         return;
       }
 
+      if (nouveauStatut === 'livrée') {
+        const cmd = commandes.find(c => c.id === id);
+        if (cmd?.email_client) {
+          fetch('/api/notify-delivery', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              commande: {
+                email_client: cmd.email_client,
+                nom: cmd.nom_client,
+                adresse: cmd.adresse_livraison,
+                total: cmd.total,
+              },
+            }),
+          }).catch(err => console.error('notify-delivery failed:', err));
+        }
+      }
+
       setCommandes(prev => {
         const updated = prev.map(c => c.id === id ? { ...c, statut: nouveauStatut } : c);
         const total = updated.length;
