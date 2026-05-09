@@ -1,4 +1,5 @@
 const fs = require('fs');
+const net = require('net');
 const path = require('path');
 const { spawn } = require('child_process');
 
@@ -14,7 +15,7 @@ function acquireLock() {
     try {
       const pid = parseInt(fs.readFileSync(LOCK, 'utf8'), 10);
       process.kill(pid, 0);
-      return false; // autre process vivant
+      return false;
     } catch (_) {
       try { fs.unlinkSync(LOCK); } catch (_) {}
       return acquireLock();
@@ -24,6 +25,14 @@ function acquireLock() {
 
 function releaseLock() {
   try { fs.unlinkSync(LOCK); } catch (_) {}
+}
+
+function isPortInUse(port) {
+  return new Promise((resolve) => {
+    const client = net.createConnection({ port, host: '127.0.0.1' });
+    client.on('connect', () => { client.destroy(); resolve(true); });
+    client.on('error', () => { client.destroy(); resolve(false); });
+  });
 }
 
 function launchNext() {
@@ -42,29 +51,39 @@ function launchNext() {
     process.exit(1);
   });
 
-  proc.on('exit', (code, signal) => {
+  proc.on('exit', async (code, signal) => {
     console.log('[start] Next.js terminé — code:', code, '| signal:', signal);
+
     if (signal === 'SIGTERM' || signal === 'SIGINT') {
-      // Arrêt volontaire (déploiement) — on libère et on sort proprement
       releaseLock();
       process.exit(0);
     }
-    // Crash inattendu — on relance directement sans sortir
-    console.log('[start] Crash inattendu, relance dans 2s...');
-    setTimeout(launchNext, 2000);
+
+    if (code === 1) {
+      // Peut être EADDRINUSE — vérifier si le port est déjà pris
+      const portPris = await isPortInUse(PORT);
+      if (portPris) {
+        console.log('[start] Port', PORT, 'occupé par une autre instance — sortie propre');
+        releaseLock();
+        process.exit(0);
+      }
+    }
+
+    // Crash réel (pas EADDRINUSE, pas SIGTERM) — relancer
+    console.log('[start] Crash inattendu, relance dans 3s...');
+    setTimeout(launchNext, 3000);
   });
 }
 
 function main() {
   if (acquireLock()) {
+    console.log('[start] Verrou acquis (PID', process.pid + '), démarrage...');
     const cleanup = () => { releaseLock(); process.exit(0); };
     process.on('SIGTERM', cleanup);
     process.on('SIGINT', cleanup);
     launchNext();
   } else {
-    // Une autre instance tourne déjà — sortie immédiate code 0
-    // (évite que Hostinger health-checke ce worker et fasse un rolling restart)
-    console.log('[start] Autre instance active, sortie propre');
+    console.log('[start] Autre instance active, sortie propre (PID', process.pid + ')');
     process.exit(0);
   }
 }
