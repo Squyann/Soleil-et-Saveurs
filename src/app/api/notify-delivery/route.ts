@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/api-auth';
 
 function getSiteUrl() {
   if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
@@ -7,6 +8,9 @@ function getSiteUrl() {
 }
 
 export async function POST(req: NextRequest) {
+  const { error } = await requireAdmin();
+  if (error) return error;
+
   try {
     const { commande } = await req.json();
 
