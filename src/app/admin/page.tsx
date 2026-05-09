@@ -54,7 +54,9 @@ export default function AdminPage() {
   useEffect(() => {
     async function verifierAcces() {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'squyann_net@outlook.fr';
+      if (!user || user.email?.toLowerCase() !== adminEmail.toLowerCase()) {
+        await supabase.auth.signOut();
         window.location.href = '/admin/login';
         return;
       }
@@ -480,6 +482,7 @@ export default function AdminPage() {
             <input type="text" placeholder="Rechercher..." value={recherche} onChange={(e) => setRecherche(e.target.value)} className="pl-10 pr-4 py-2 bg-slate-100 border-none rounded-xl text-xs font-bold w-48 focus:ring-2 focus:ring-[#FF4500]" />
           </div>
           <button onClick={fetchData} className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all"><RefreshCcw className="w-4 h-4" /></button>
+          <button onClick={async () => { await supabase.auth.signOut(); window.location.href = '/admin/login'; }} className="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-red-500 border border-red-200 rounded-xl hover:bg-red-50 transition-all">Déco</button>
         </div>
       </div>
       {adminEmail && <div className="max-w-7xl mx-auto mt-1 text-[9px] text-slate-400 font-mono">connecté : {adminEmail}</div>}
