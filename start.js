@@ -1,35 +1,60 @@
-// Attend que le port 3000 soit libre avant de démarrer Next.js
-// Évite les conflits de port quand Hostinger lance 2 workers simultanément
-const net = require('net');
+// Verrou fichier atomique pour éviter le crash loop quand Hostinger
+// lance 2 workers simultanément qui se battent pour le port 3000
+const fs = require('fs');
 const { spawn } = require('child_process');
 
 const PORT = parseInt(process.env.PORT || '3000', 10);
+const LOCK = '/tmp/nextjs-' + PORT + '.lock';
 
-function isPortFree() {
-  return new Promise((resolve) => {
-    const server = net.createServer();
-    server.once('error', () => resolve(false));
-    server.once('listening', () => { server.close(); resolve(true); });
-    server.listen(PORT);
-  });
+function acquireLock() {
+  try {
+    // O_EXCL = atomique : un seul process peut créer le fichier
+    fs.writeFileSync(LOCK, String(process.pid), { flag: 'wx' });
+    return true;
+  } catch (e) {
+    // Vérifier si le process propriétaire du verrou est encore vivant
+    try {
+      const pid = parseInt(fs.readFileSync(LOCK, 'utf8'), 10);
+      process.kill(pid, 0); // lève une exception si le process n'existe plus
+      return false; // Process vivant, verrou valide
+    } catch (_) {
+      // Process mort → verrou périmé, on le supprime et réessaie
+      try { fs.unlinkSync(LOCK); } catch (_) {}
+      return acquireLock();
+    }
+  }
+}
+
+function releaseLock() {
+  try { fs.unlinkSync(LOCK); } catch (_) {}
 }
 
 async function start() {
   let attempts = 0;
-  while (attempts < 30) {
-    const free = await isPortFree();
-    if (free) {
-      console.log(`[start] Port ${PORT} libre, démarrage de Next.js...`);
+  while (attempts < 60) {
+    if (acquireLock()) {
+      console.log('[start] Verrou acquis, démarrage de Next.js sur le port ' + PORT);
+
       const proc = spawn('node_modules/.bin/next', ['start'], { stdio: 'inherit' });
-      proc.on('exit', (code) => process.exit(code || 0));
+
+      const cleanup = () => { releaseLock(); proc.kill(); };
+      process.on('SIGTERM', cleanup);
+      process.on('SIGINT', cleanup);
+
+      proc.on('exit', (code) => {
+        releaseLock();
+        process.exit(code || 0);
+      });
       return;
     }
-    console.log(`[start] Port ${PORT} occupé, attente... (${attempts + 1}/30)`);
+
+    console.log('[start] Autre instance en cours, attente... (' + (attempts + 1) + '/60)');
     await new Promise(r => setTimeout(r, 1000));
     attempts++;
   }
-  console.error(`[start] Port ${PORT} toujours occupé après 30s`);
-  process.exit(1);
+
+  console.log('[start] Timeout 60s, sortie propre');
+  process.exit(0);
 }
 
 start();
