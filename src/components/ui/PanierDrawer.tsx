@@ -121,11 +121,22 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
     return () => window.removeEventListener('storage', loadPanier);
   }, [isOpen]);
 
+  const GRAM_PRESETS = [100, 250, 500, 750, 1000, 1250, 1500, 1750, 2000, 2250, 2500, 2750, 3000];
+  const getGramPresets = (stock: number) => GRAM_PRESETS.filter(p => p <= stock);
+
   const updateQuantity = (id: number, delta: number, unite?: string) => {
-    const step = unite === 'kg' ? 0.5 : unite === 'g' ? 50 : 1;
+    const step = unite === 'kg' ? 0.5 : 1;
     const nouveauPanier = (panier || []).map(item => {
       if (item.id === id) {
         if (delta === 0) return { ...item, quantite: 0 };
+        if (item.unite === 'g') {
+          const presets = getGramPresets(item.stock || 0);
+          const idx = presets.indexOf(item.quantite);
+          const newIdx = delta > 0
+            ? Math.min(presets.length - 1, idx === -1 ? 0 : idx + 1)
+            : Math.max(0, idx === -1 ? 0 : idx - 1);
+          return { ...item, quantite: presets[newIdx] ?? item.quantite };
+        }
         const actualDelta = delta > 0 ? step : -step;
         const newQte = Math.min(
           item.stock ?? Infinity,

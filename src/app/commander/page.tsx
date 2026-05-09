@@ -34,7 +34,7 @@ export default function CommanderPage() {
         setProducts(data);
         // Initialiser les quantités à 1 pour chaque produit
         const initialQty: { [key: string]: number } = {};
-        data.forEach(p => initialQty[p.id] = p.unite === 'kg' ? 0.5 : p.unite === 'g' ? 500 : 1);
+        data.forEach(p => initialQty[p.id] = p.unite === 'kg' ? 0.5 : p.unite === 'g' ? 100 : 1);
         setQuantities(initialQty);
       }
     } catch (error) {
@@ -49,8 +49,12 @@ export default function CommanderPage() {
     setNombreArticles(panier.reduce((acc: number, item: any) => acc + item.quantite, 0));
   };
 
-  const getStep = (product: any) => product.unite === 'kg' ? 0.5 : product.unite === 'g' ? 50 : 1;
-  const getMin  = (product: any) => product.unite === 'kg' ? 0.5 : product.unite === 'g' ? 50 : 1;
+  const getStep = (product: any) => product.unite === 'kg' ? 0.5 : 1;
+  const getMin  = (product: any) => product.unite === 'kg' ? 0.5 : 1;
+
+  const GRAM_PRESETS = [100, 250, 500, 750, 1000, 1250, 1500, 1750, 2000, 2250, 2500, 2750, 3000];
+  const getGramPresets = (stock: number) => GRAM_PRESETS.filter(p => p <= stock);
+  const formatGramLabel = (g: number) => g < 1000 ? `${g}g` : `${(g / 1000).toString().replace('.', ',')}kg`;
 
   const handleQtyChange = (id: string, val: string, product: any) => {
     const step = getStep(product);
@@ -107,7 +111,7 @@ export default function CommanderPage() {
     
     setShowToast(true);
     setTimeout(() => setShowToast(false), 2000);
-    setQuantities(prev => ({ ...prev, [product.id]: product.unite === 'kg' ? 0.5 : product.unite === 'g' ? 500 : 1 }));
+    setQuantities(prev => ({ ...prev, [product.id]: product.unite === 'kg' ? 0.5 : product.unite === 'g' ? 100 : 1 }));
   };
 
   return (
@@ -280,9 +284,26 @@ export default function CommanderPage() {
 
                   {/* SECTION QUANTITÉ ET PRIX DYNAMIQUE */}
                   <div className="bg-slate-50 rounded-3xl p-4 mb-6 border border-slate-100/50">
-                    <div className="flex items-center justify-between mb-3">
-                        <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Quantité</span>
-                        <div className="flex items-center bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                    <div className="mb-3">
+                      <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Quantité</span>
+                      {product.unite === 'g' ? (
+                        <div className="flex flex-wrap gap-1.5 mt-2">
+                          {getGramPresets(product.stock).map(preset => (
+                            <button
+                              key={preset}
+                              onClick={() => setQuantities(prev => ({ ...prev, [product.id]: preset }))}
+                              className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase transition-all ${
+                                currentQty === preset
+                                  ? 'bg-slate-900 text-white shadow-sm'
+                                  : 'bg-white border border-slate-100 text-slate-500 hover:bg-slate-50'
+                              }`}
+                            >
+                              {formatGramLabel(preset)}
+                            </button>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="flex items-center bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden mt-2">
                             <button
                               onClick={() => handleQtyChange(product.id, String(currentQty - getStep(product)), product)}
                               className="px-3 py-2 hover:bg-slate-50 text-slate-900 font-bold transition-colors"
@@ -302,6 +323,7 @@ export default function CommanderPage() {
                               className="px-3 py-2 hover:bg-slate-50 text-slate-900 font-bold transition-colors disabled:text-slate-300 disabled:cursor-not-allowed"
                             >+</button>
                         </div>
+                      )}
                     </div>
 
                     <div className="flex justify-between items-end">
