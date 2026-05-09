@@ -43,7 +43,7 @@ export default function AdminPage() {
   const [nouveauProd, setNouveauProd] = useState({
     name: '', price: 0, category: 'Légumes', image_url: '', stock: 0,
     unite: 'kg', provenance: '', description: '', promotion: 0,
-    seuil_achat: 0, quantite_offerte: 0
+    seuil_achat: 0, quantite_offerte: 0, pas_g: 100
   });
 
   useEffect(() => {
@@ -695,6 +695,13 @@ export default function AdminPage() {
                   <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-[#FF4500] uppercase">{nouveauProd.unite}</span>
               </div>
 
+              {nouveauProd.unite === 'g' && (
+                <div className="relative">
+                  <input type="number" step="50" min="50" placeholder="Pas de quantité (ex: 250)" className="w-full p-5 bg-slate-100 rounded-2xl font-black border-none text-sm" value={nouveauProd.pas_g || ''} onChange={e => setNouveauProd({...nouveauProd, pas_g: parseInt(e.target.value) || 100})} />
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-[#FF4500] uppercase">g/step</span>
+                </div>
+              )}
+
               <input type="text" placeholder="Provenance (ex: France)" className="p-5 bg-slate-100 rounded-2xl font-black border-none text-sm" value={nouveauProd.provenance} onChange={e => setNouveauProd({...nouveauProd, provenance: e.target.value})} />
               <input type="text" placeholder="Description courte" className="md:col-span-2 p-5 bg-slate-100 rounded-2xl font-black border-none text-sm" value={nouveauProd.description} onChange={e => setNouveauProd({...nouveauProd, description: e.target.value})} />
 
@@ -771,6 +778,12 @@ export default function AdminPage() {
                         <option value="barquette">barquette</option>
                       </select>
                     </div>
+                    {editFormData.unite === 'g' && (
+                      <div className="relative">
+                        <input type="number" step="50" min="50" placeholder="Pas (g), ex: 250" className="w-full bg-slate-50 border-none rounded-lg p-2 text-xs font-black" value={editFormData.pas_g || ''} onChange={e => setEditFormData({...editFormData, pas_g: parseInt(e.target.value) || 100})} />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-black text-[#FF4500]">g/step</span>
+                      </div>
+                    )}
                     <input type="text" placeholder="Description" className="w-full bg-slate-50 border-none rounded-lg p-2 text-xs" value={editFormData.description} onChange={e => setEditFormData({...editFormData, description: e.target.value})} />
                     <div className="flex gap-2">
                       <button onClick={() => modifierProduit(p.id)} className="flex-1 bg-slate-900 text-white py-2 rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-2"><Save className="w-3 h-3"/> Enregistrer</button>

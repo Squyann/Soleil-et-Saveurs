@@ -34,7 +34,7 @@ export default function CommanderPage() {
         setProducts(data);
         // Initialiser les quantités à 1 pour chaque produit
         const initialQty: { [key: string]: number } = {};
-        data.forEach(p => initialQty[p.id] = p.unite === 'kg' ? 0.5 : p.unite === 'g' ? 100 : 1);
+        data.forEach(p => initialQty[p.id] = p.unite === 'kg' ? 0.5 : p.unite === 'g' ? (p.pas_g || 100) : 1);
         setQuantities(initialQty);
       }
     } catch (error) {
@@ -49,11 +49,9 @@ export default function CommanderPage() {
     setNombreArticles(panier.reduce((acc: number, item: any) => acc + item.quantite, 0));
   };
 
-  const getStep = (product: any) => product.unite === 'kg' ? 0.5 : 1;
-  const getMin  = (product: any) => product.unite === 'kg' ? 0.5 : 1;
-
-  const GRAM_PRESETS = [100, 250, 500, 750, 1000, 1250, 1500, 1750, 2000, 2250, 2500, 2750, 3000];
-  const getGramPresets = (stock: number) => GRAM_PRESETS.filter(p => p <= stock);
+  const getPasG = (product: any) => product.pas_g || 100;
+  const getStep = (product: any) => product.unite === 'kg' ? 0.5 : product.unite === 'g' ? getPasG(product) : 1;
+  const getMin  = (product: any) => product.unite === 'kg' ? 0.5 : product.unite === 'g' ? getPasG(product) : 1;
   const formatGramLabel = (g: number) => g < 1000 ? `${g}g` : `${(g / 1000).toString().replace('.', ',')}kg`;
 
   const handleQtyChange = (id: string, val: string, product: any) => {
@@ -111,7 +109,7 @@ export default function CommanderPage() {
     
     setShowToast(true);
     setTimeout(() => setShowToast(false), 2000);
-    setQuantities(prev => ({ ...prev, [product.id]: product.unite === 'kg' ? 0.5 : product.unite === 'g' ? 100 : 1 }));
+    setQuantities(prev => ({ ...prev, [product.id]: product.unite === 'kg' ? 0.5 : product.unite === 'g' ? (product.pas_g || 100) : 1 }));
   };
 
   return (
@@ -284,46 +282,28 @@ export default function CommanderPage() {
 
                   {/* SECTION QUANTITÉ ET PRIX DYNAMIQUE */}
                   <div className="bg-slate-50 rounded-3xl p-4 mb-6 border border-slate-100/50">
-                    <div className="mb-3">
-                      <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Quantité</span>
-                      {product.unite === 'g' ? (
-                        <div className="flex flex-wrap gap-1.5 mt-2">
-                          {getGramPresets(product.stock).map(preset => (
-                            <button
-                              key={preset}
-                              onClick={() => setQuantities(prev => ({ ...prev, [product.id]: preset }))}
-                              className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase transition-all ${
-                                currentQty === preset
-                                  ? 'bg-slate-900 text-white shadow-sm'
-                                  : 'bg-white border border-slate-100 text-slate-500 hover:bg-slate-50'
-                              }`}
-                            >
-                              {formatGramLabel(preset)}
-                            </button>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="flex items-center bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden mt-2">
-                            <button
-                              onClick={() => handleQtyChange(product.id, String(currentQty - getStep(product)), product)}
-                              className="px-3 py-2 hover:bg-slate-50 text-slate-900 font-bold transition-colors"
-                            >-</button>
-                            <input
-                                type="number"
-                                min={getMin(product)}
-                                max={product.stock}
-                                step={getStep(product)}
-                                value={currentQty}
-                                onChange={(e) => handleQtyChange(product.id, e.target.value, product)}
-                                className="w-16 text-center font-black text-sm bg-transparent border-none focus:ring-0 p-0"
-                            />
-                            <button
-                              onClick={() => handleQtyChange(product.id, String(currentQty + getStep(product)), product)}
-                              disabled={currentQty >= product.stock}
-                              className="px-3 py-2 hover:bg-slate-50 text-slate-900 font-bold transition-colors disabled:text-slate-300 disabled:cursor-not-allowed"
-                            >+</button>
-                        </div>
-                      )}
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Quantité</span>
+                        {product.unite === 'g' && (
+                          <p className="text-[9px] text-slate-300 font-bold mt-0.5">pas : {formatGramLabel(getPasG(product))}</p>
+                        )}
+                      </div>
+                      <div className="flex items-center bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                          <button
+                            onClick={() => handleQtyChange(product.id, String(currentQty - getStep(product)), product)}
+                            disabled={currentQty <= getMin(product)}
+                            className="px-3 py-2 hover:bg-slate-50 text-slate-900 font-bold transition-colors disabled:text-slate-300 disabled:cursor-not-allowed"
+                          >-</button>
+                          <span className="w-20 text-center font-black text-sm px-1">
+                            {product.unite === 'g' ? formatGramLabel(currentQty) : currentQty}
+                          </span>
+                          <button
+                            onClick={() => handleQtyChange(product.id, String(currentQty + getStep(product)), product)}
+                            disabled={currentQty >= product.stock}
+                            className="px-3 py-2 hover:bg-slate-50 text-slate-900 font-bold transition-colors disabled:text-slate-300 disabled:cursor-not-allowed"
+                          >+</button>
+                      </div>
                     </div>
 
                     <div className="flex justify-between items-end">
@@ -368,7 +348,7 @@ export default function CommanderPage() {
                     {product.stock > 0 ? (
                         <>
                             <ShoppingCart className="w-4 h-4" />
-                            Ajouter {product.unite === 'g' ? `${totalItemsRecus}g` : totalItemsRecus} au panier
+                            Ajouter {product.unite === 'g' ? formatGramLabel(totalItemsRecus) : totalItemsRecus} au panier
                         </>
                     ) : (
                         <>
