@@ -2,11 +2,11 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 
-// Rate limiting : in-memory par IP (persist le temps de vie du worker)
+// Rate limiting : in-memory par IP
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
-const RATE_WINDOW_MS = 60_000; // 1 minute
-const RATE_LIMIT_API = 60;     // 60 req/min pour les API générales
-const RATE_LIMIT_NOTIFY = 10;  // 10 req/min pour les endpoints d'email
+const RATE_WINDOW_MS = 60_000;
+const RATE_LIMIT_API = 60;
+const RATE_LIMIT_NOTIFY = 10;
 
 function getIp(req: NextRequest): string {
   return req.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? 'unknown';
@@ -24,7 +24,7 @@ function checkRateLimit(key: string, max: number): boolean {
   return true;
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
   const ip = getIp(request);
 
@@ -42,11 +42,12 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // --- CSRF : vérifier l'origine sur les mutations POST/PUT/DELETE ---
+  // --- CSRF : vérifier l'origine sur les mutations ---
   if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(request.method) && pathname.startsWith('/api/')) {
     const origin = request.headers.get('origin');
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || `https://${process.env.VERCEL_URL}` || 'http://localhost:3000';
-    if (origin && !origin.startsWith(siteUrl) && !origin.startsWith('http://localhost')) {
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+    // On ne bloque que si on connaît l'URL du site ET que l'origine ne correspond pas
+    if (origin && siteUrl && !origin.startsWith(siteUrl) && !origin.startsWith('http://localhost')) {
       return NextResponse.json({ error: 'Origine non autorisée' }, { status: 403 });
     }
   }
@@ -72,7 +73,7 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  // Protect /compte — redirect to /login if not authenticated
+  // Protect /compte
   if (pathname.startsWith('/compte') && !user) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
