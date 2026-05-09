@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { X, Trash2, ShoppingBag, MapPin, CreditCard, Banknote, Phone, User, Loader2, CheckCircle2, AlertCircle, LogIn, Gift, TrendingDown } from 'lucide-react';
+import { X, Trash2, ShoppingBag, MapPin, CreditCard, Banknote, Phone, User, Loader2, CheckCircle2, AlertCircle, LogIn, Gift, TrendingDown, Calendar } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 
@@ -23,6 +23,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
   const [dbProfile, setDbProfile] = useState<{ loyalty_points: number; has_referral_discount: boolean } | null>(null);
   const [applyLoyalty, setApplyLoyalty] = useState(false);
   const [applyReferral, setApplyReferral] = useState(false);
+  const [creneaux, setCreneaux] = useState<string[]>([]);
 
   const router = useRouter();
 
@@ -66,6 +67,9 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
       setApplyLoyalty(false);
       setApplyReferral(false);
       fetchUserData();
+      supabase.from('creneaux').select('label').eq('actif', true).then(({ data }) => {
+        if (data) setCreneaux(data.map((c: any) => c.label));
+      });
     }
   }, [isOpen, user]);
 
@@ -509,6 +513,16 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
             </div>
           </div>
           
+          {creneaux.length > 0 && (
+            <div className="flex items-start gap-2 p-3 bg-blue-50 border border-blue-100 rounded-xl">
+              <Calendar className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-[10px] font-black text-blue-700 uppercase tracking-wide mb-0.5">Créneaux de livraison</p>
+                <p className="text-[10px] text-blue-600 font-bold leading-relaxed">{creneaux.join(' · ')}</p>
+              </div>
+            </div>
+          )}
+
           {minimumNonAtteint && (
             <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-100 rounded-xl">
               <AlertCircle className="w-4 h-4 text-amber-500 shrink-0" />
