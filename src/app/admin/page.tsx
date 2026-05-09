@@ -1014,14 +1014,43 @@ export default function AdminPage() {
         });
         const maxRev = Math.max(...weeklyData.map(w => w.rev), 1);
 
-        const topProduits = Object.entries(
-          commandes.filter(c => c.statut === 'livrée').flatMap(c => c.contenu_panier || []).reduce((acc: Record<string, number>, item: any) => {
+        const produitStats = commandes
+          .filter(c => c.statut === 'livrée')
+          .flatMap(c => c.contenu_panier || [])
+          .reduce((acc: Record<string, { qty: number; unite: string }>, item: any) => {
             const name = item.name || item.nom || 'Inconnu';
-            acc[name] = (acc[name] || 0) + parseFloat(item.quantite || item.quantity || 1);
+            const qty = parseFloat(item.quantite || item.quantity || 1);
+            const unite = item.unite || 'pièce';
+            if (acc[name]) acc[name].qty += qty;
+            else acc[name] = { qty, unite };
             return acc;
-          }, {})
-        ).sort((a, b) => (b[1] as number) - (a[1] as number)).slice(0, 5);
-        const maxQte = Math.max(...topProduits.map(p => p[1] as number), 1);
+          }, {});
+
+        const topProduits = Object.entries(produitStats)
+          .sort((a, b) => b[1].qty - a[1].qty)
+          .slice(0, 5);
+        const maxQte = Math.max(...topProduits.map(p => p[1].qty), 1);
+
+        const formatQteUnite = (qty: number, unite: string) => {
+          if (unite === 'g') return qty < 1000 ? `${qty.toFixed(0)}g` : `${(qty / 1000).toFixed(2)}kg`;
+          if (unite === 'kg') return `${qty.toFixed(2)} kg`;
+          return `${qty.toFixed(unite === 'pièce' ? 0 : 1)} ${unite}`;
+        };
+
+        const topClients = Object.values(
+          commandes
+            .filter(c => !c.statut?.includes('annul'))
+            .reduce((acc: Record<string, { nom: string; email: string; orders: number; total: number }>, c) => {
+              const key = c.email_client || c.nom_client || 'Inconnu';
+              if (acc[key]) {
+                acc[key].total += parseFloat(c.total || 0);
+                acc[key].orders += 1;
+              } else {
+                acc[key] = { nom: c.nom_client || 'Inconnu', email: c.email_client || '', orders: 1, total: parseFloat(c.total || 0) };
+              }
+              return acc;
+            }, {})
+        ).sort((a, b) => b.total - a.total).slice(0, 10);
 
         return (
           <div className="space-y-8 animate-in fade-in duration-500">
@@ -1045,17 +1074,20 @@ export default function AdminPage() {
 
             <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm">
               <h3 className="font-black uppercase text-sm tracking-widest text-slate-900 mb-6">CA par semaine (8 dernières)</h3>
-              <div className="flex items-end gap-2 h-40">
+              <div className="flex items-end gap-2" style={{ height: '160px' }}>
                 {weeklyData.map((w, i) => (
-                  <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                    <p className="text-[8px] font-black text-slate-500">{w.rev > 0 ? `${w.rev.toFixed(0)}€` : ''}</p>
-                    <div className="w-full bg-slate-100 rounded-lg overflow-hidden" style={{ height: '100px' }}>
-                      <div
-                        className="w-full bg-[#FF4500] rounded-lg transition-all duration-700"
-                        style={{ height: `${(w.rev / maxRev) * 100}%`, marginTop: `${100 - (w.rev / maxRev) * 100}%` }}
-                      />
-                    </div>
-                    <p className="text-[7px] font-black text-slate-400 uppercase text-center leading-tight">{w.label}</p>
+                  <div key={i} className="flex-1 flex flex-col items-center justify-end" style={{ height: '100%' }}>
+                    {w.rev > 0 && (
+                      <p className="text-[8px] font-black text-[#FF4500] mb-1 whitespace-nowrap">{w.rev.toFixed(0)}€</p>
+                    )}
+                    <div
+                      className="w-full rounded-t-xl transition-all duration-700"
+                      style={{
+                        height: `${Math.max((w.rev / maxRev) * 120, w.rev > 0 ? 6 : 3)}px`,
+                        background: w.rev > 0 ? '#FF4500' : '#f1f5f9',
+                      }}
+                    />
+                    <p className="text-[7px] font-black text-slate-400 uppercase text-center mt-1.5 leading-tight">{w.label}</p>
                   </div>
                 ))}
               </div>
@@ -1067,14 +1099,38 @@ export default function AdminPage() {
                 <p className="text-slate-300 font-bold text-xs uppercase text-center py-8">Aucune commande livrée pour l'instant</p>
               ) : (
                 <div className="space-y-3">
-                  {topProduits.map(([name, qte], i) => (
+                  {topProduits.map(([name, { qty, unite }], i) => (
                     <div key={name} className="flex items-center gap-4">
                       <span className="text-[10px] font-black text-slate-300 w-4">{i + 1}</span>
                       <span className="font-black text-sm uppercase text-slate-800 w-36 truncate">{name}</span>
                       <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
-                        <div className="h-full bg-[#FF4500] rounded-full" style={{ width: `${((qte as number) / maxQte) * 100}%` }} />
+                        <div className="h-full bg-[#FF4500] rounded-full" style={{ width: `${(qty / maxQte) * 100}%` }} />
                       </div>
-                      <span className="text-[10px] font-black text-slate-500 w-12 text-right">{(qte as number).toFixed(1)}</span>
+                      <span className="text-[10px] font-black text-slate-500 w-20 text-right">{formatQteUnite(qty, unite)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm">
+              <h3 className="font-black uppercase text-sm tracking-widest text-slate-900 mb-2">Top clients</h3>
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-6">Classés par montant total dépensé</p>
+              {topClients.length === 0 ? (
+                <p className="text-slate-300 font-bold text-xs uppercase text-center py-8">Aucune commande pour l'instant</p>
+              ) : (
+                <div className="space-y-2">
+                  {topClients.map((client, i) => (
+                    <div key={i} className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 hover:bg-slate-100 transition-colors">
+                      <span className="text-[10px] font-black text-slate-300 w-5 shrink-0">{i + 1}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-black text-sm text-slate-900 truncate">{client.nom}</p>
+                        {client.email && <p className="text-[10px] text-slate-400 font-bold truncate">{client.email}</p>}
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="font-black text-sm text-slate-900">{client.total.toFixed(2)}€</p>
+                        <p className="text-[9px] text-slate-400 font-bold uppercase">{client.orders} commande{client.orders > 1 ? 's' : ''}</p>
+                      </div>
                     </div>
                   ))}
                 </div>
