@@ -25,6 +25,7 @@ export default function AdminPage() {
   const [onglet, setOnglet] = useState<'commandes' | 'stock' | 'catalogue' | 'messages'>('commandes');
   const [filtreStatut, setFiltreStatut] = useState<'Toutes' | 'À préparer' | 'livrée'>('Toutes');
   const [uploading, setUploading] = useState(false);
+  const [erreurNomProduit, setErreurNomProduit] = useState('');
   const [promoProdId, setPromoProdId] = useState<string | null>(null);
   const [stats, setStats] = useState<StatsType>({ total: 0, aPreparer: 0, caTotal: 0 });
   
@@ -208,7 +209,16 @@ export default function AdminPage() {
 
   async function ajouterProduit(e: React.FormEvent) {
     e.preventDefault();
-    await supabase.from('products').insert([nouveauProd]);
+    setErreurNomProduit('');
+    const { error } = await supabase.from('products').insert([nouveauProd]);
+    if (error) {
+      if (error.code === '23505') {
+        setErreurNomProduit(`Un produit nommé "${nouveauProd.name}" existe déjà. Choisissez un autre nom.`);
+      } else {
+        setErreurNomProduit("Erreur lors de l'ajout du produit.");
+      }
+      return;
+    }
     fetchData();
   }
 
@@ -668,7 +678,10 @@ export default function AdminPage() {
               
               <div className="md:col-span-2">
                 <label className="text-[9px] font-black uppercase text-slate-400 ml-2 mb-1 block">Nom du produit</label>
-                <input type="text" placeholder="ex: Salade Batavia" className="w-full p-5 bg-slate-100 rounded-2xl font-black border-none text-sm" value={nouveauProd.name} onChange={e => setNouveauProd({...nouveauProd, name: e.target.value})} required />
+                <input type="text" placeholder="ex: Salade Batavia" className={`w-full p-5 bg-slate-100 rounded-2xl font-black border-2 text-sm ${erreurNomProduit ? 'border-red-400 bg-red-50' : 'border-transparent'}`} value={nouveauProd.name} onChange={e => { setNouveauProd({...nouveauProd, name: e.target.value}); setErreurNomProduit(''); }} required />
+                {erreurNomProduit && (
+                  <p className="text-[10px] font-black text-red-500 uppercase mt-1.5 ml-2">{erreurNomProduit}</p>
+                )}
               </div>
 
               <div>
