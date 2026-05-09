@@ -54,9 +54,15 @@ async function start() {
       process.on('SIGTERM', cleanup);
       process.on('SIGINT', cleanup);
 
-      proc.on('exit', (code) => {
+      proc.on('exit', (code, signal) => {
+        console.log('[start] Next.js process terminé — code:', code, '| signal:', signal);
         releaseLock();
         process.exit(code || 0);
+      });
+      proc.on('error', (err) => {
+        console.error('[start] Erreur spawn:', err.message);
+        releaseLock();
+        process.exit(1);
       });
       return;
     }
