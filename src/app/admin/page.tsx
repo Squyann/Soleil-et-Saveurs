@@ -27,6 +27,7 @@ export default function AdminPage() {
   const [filtreStatut, setFiltreStatut] = useState<'Toutes' | 'À préparer' | 'livrée'>('Toutes');
   const [uploading, setUploading] = useState(false);
   const [erreurNomProduit, setErreurNomProduit] = useState('');
+  const [adminEmail, setAdminEmail] = useState('');
   const [promoProdId, setPromoProdId] = useState<string | null>(null);
   const [stats, setStats] = useState<StatsType>({ total: 0, aPreparer: 0, caTotal: 0 });
   
@@ -57,6 +58,7 @@ export default function AdminPage() {
         window.location.href = '/admin/login';
         return;
       }
+      setAdminEmail(user.email || '');
       fetchData();
     }
     verifierAcces();
@@ -238,7 +240,7 @@ export default function AdminPage() {
       if (error.code === '23505') {
         setErreurNomProduit(`Un produit nommé "${nouveauProd.name}" existe déjà. Choisissez un autre nom.`);
       } else {
-        setErreurNomProduit("Erreur lors de l'ajout du produit.");
+        setErreurNomProduit(`Erreur: ${error.message} (code: ${error.code})`);
       }
       return;
     }
@@ -480,6 +482,7 @@ export default function AdminPage() {
           <button onClick={fetchData} className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all"><RefreshCcw className="w-4 h-4" /></button>
         </div>
       </div>
+      {adminEmail && <div className="max-w-7xl mx-auto mt-1 text-[9px] text-slate-400 font-mono">connecté : {adminEmail}</div>}
     </header>
 
     <main className="max-w-6xl mx-auto px-6 mt-10">
