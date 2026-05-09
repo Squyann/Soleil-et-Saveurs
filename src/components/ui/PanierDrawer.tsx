@@ -88,12 +88,18 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
       return qtePayante * prixUnitaire;
     }
     
+    if (item.unite === 'g') {
+      return (qteTotale / 1000) * prixUnitaire;
+    }
+
     return qteTotale * prixUnitaire;
   };
 
   const calculerEconomieTotale = () => {
     return (panier || []).reduce((acc, item) => {
-      const prixNormalSansPromo = (item.quantite || 0) * parseFloat(item.price);
+      const prixNormalSansPromo = item.unite === 'g'
+        ? ((item.quantite || 0) / 1000) * parseFloat(item.price)
+        : (item.quantite || 0) * parseFloat(item.price);
       const prixFinal = calculerPrixLigne(item);
       return acc + (prixNormalSansPromo - prixFinal);
     }, 0);
@@ -116,7 +122,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
   }, [isOpen]);
 
   const updateQuantity = (id: number, delta: number, unite?: string) => {
-    const step = unite === 'kg' ? 0.5 : 1;
+    const step = unite === 'kg' ? 0.5 : unite === 'g' ? 50 : 1;
     const nouveauPanier = (panier || []).map(item => {
       if (item.id === id) {
         // delta = 0 signifie suppression totale

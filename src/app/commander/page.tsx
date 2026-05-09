@@ -34,7 +34,7 @@ export default function CommanderPage() {
         setProducts(data);
         // Initialiser les quantités à 1 pour chaque produit
         const initialQty: { [key: string]: number } = {};
-        data.forEach(p => initialQty[p.id] = p.unite === 'kg' ? 0.5 : 1);
+        data.forEach(p => initialQty[p.id] = p.unite === 'kg' ? 0.5 : p.unite === 'g' ? 500 : 1);
         setQuantities(initialQty);
       }
     } catch (error) {
@@ -49,8 +49,8 @@ export default function CommanderPage() {
     setNombreArticles(panier.reduce((acc: number, item: any) => acc + item.quantite, 0));
   };
 
-  const getStep = (product: any) => product.unite === 'kg' ? 0.5 : 1;
-  const getMin  = (product: any) => product.unite === 'kg' ? 0.5 : 1;
+  const getStep = (product: any) => product.unite === 'kg' ? 0.5 : product.unite === 'g' ? 50 : 1;
+  const getMin  = (product: any) => product.unite === 'kg' ? 0.5 : product.unite === 'g' ? 50 : 1;
 
   const handleQtyChange = (id: string, val: string, product: any) => {
     const step = getStep(product);
@@ -107,7 +107,7 @@ export default function CommanderPage() {
     
     setShowToast(true);
     setTimeout(() => setShowToast(false), 2000);
-    setQuantities(prev => ({ ...prev, [product.id]: product.unite === 'kg' ? 0.5 : 1 }));
+    setQuantities(prev => ({ ...prev, [product.id]: product.unite === 'kg' ? 0.5 : product.unite === 'g' ? 500 : 1 }));
   };
 
   return (
@@ -217,11 +217,15 @@ export default function CommanderPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredProducts.map((product) => {
               const currentQty = quantities[product.id] || 1;
-              const unitPrice = product.promotion > 0 
-                ? product.price * (1 - product.promotion / 100) 
+              const unitPrice = product.promotion > 0
+                ? product.price * (1 - product.promotion / 100)
                 : product.price;
-              const totalPrice = unitPrice * currentQty;
-              const totalEconomy = (product.price * currentQty) - totalPrice;
+              const totalPrice = product.unite === 'g'
+                ? (currentQty / 1000) * unitPrice
+                : unitPrice * currentQty;
+              const totalEconomy = product.unite === 'g'
+                ? (product.price * currentQty / 1000) - totalPrice
+                : (product.price * currentQty) - totalPrice;
 
               // --- CALCULS D'AFFICHAGE POUR LA PROMO X+Y ---
               const produitsOfferts = product.seuil_achat > 0 
@@ -269,7 +273,9 @@ export default function CommanderPage() {
                     )}
                   </div>
                   <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">
-                       Vendu {product.unite === 'kg' ? 'au' : 'à la'} {product.unite || 'pièce'}
+                    {product.unite === 'g'
+                      ? `Vendu au gramme · ${product.price.toFixed(2)}€/kg`
+                      : `Vendu ${product.unite === 'kg' ? 'au' : 'à la'} ${product.unite || 'pièce'}`}
                   </p>
 
                   {/* SECTION QUANTITÉ ET PRIX DYNAMIQUE */}
@@ -338,7 +344,7 @@ export default function CommanderPage() {
                     {product.stock > 0 ? (
                         <>
                             <ShoppingCart className="w-4 h-4" />
-                            Ajouter {totalItemsRecus} au panier
+                            Ajouter {product.unite === 'g' ? `${totalItemsRecus}g` : totalItemsRecus} au panier
                         </>
                     ) : (
                         <>

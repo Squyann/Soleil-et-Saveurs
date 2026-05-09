@@ -684,6 +684,7 @@ export default function AdminPage() {
 
               <select className="p-5 bg-slate-100 rounded-2xl font-black border-none text-xs uppercase" value={nouveauProd.unite} onChange={e => setNouveauProd({...nouveauProd, unite: e.target.value})}>
                   <option value="kg">kilogramme (kg)</option>
+                  <option value="g">grammes (g) — prix saisi au kg</option>
                   <option value="pièce">unité (pièce)</option>
                   <option value="botte">botte</option>
                   <option value="barquette">barquette</option>
@@ -764,8 +765,10 @@ export default function AdminPage() {
                       </select>
                       <select className="bg-slate-50 border-none rounded-lg p-2 text-[10px] font-black uppercase" value={editFormData.unite} onChange={e => setEditFormData({...editFormData, unite: e.target.value})}>
                         <option value="kg">kg</option>
+                        <option value="g">g (prix/kg)</option>
                         <option value="pièce">pièce</option>
                         <option value="botte">botte</option>
+                        <option value="barquette">barquette</option>
                       </select>
                     </div>
                     <input type="text" placeholder="Description" className="w-full bg-slate-50 border-none rounded-lg p-2 text-xs" value={editFormData.description} onChange={e => setEditFormData({...editFormData, description: e.target.value})} />
