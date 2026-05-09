@@ -31,11 +31,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Informations de livraison manquantes' }, { status: 400 });
     }
 
-    // --- 2. VÉRIFICATION ZONE DE LIVRAISON (78 uniquement) ---
-    const cp = metadata.adresse.match(/\b(78\d{3})\b/)?.[1];
-    if (!cp) {
+    // --- 2. VÉRIFICATION ADRESSE ---
+    if (!metadata.adresse || metadata.adresse.trim().length < 5) {
       return NextResponse.json(
-        { error: 'Adresse hors zone de livraison (78 uniquement)' },
+        { error: 'Adresse de livraison manquante' },
         { status: 400 }
       );
     }
