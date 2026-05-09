@@ -583,7 +583,38 @@ export default function ComptePage() {
                       </div>
                     </div>
 
-                    {/* NOUVEAU BOUTON : COMMANDER À NOUVEAU */}
+                    {/* TIMELINE SUIVI */}
+                    {!statusKey.includes('annule') && (
+                      <div className="mt-5 pt-4 border-t border-slate-50">
+                        <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-3">Suivi de commande</p>
+                        <div className="flex items-center">
+                          {([
+                            { key: 'en_attente', label: 'Reçue', order: 0 },
+                            { key: 'confirmee',  label: 'En prépa', order: 1 },
+                            { key: 'livree',     label: 'Livrée', order: 2 },
+                          ] as const).map((step, idx, arr) => {
+                            const currentOrder = statusKey === 'en_attente' ? 0 : statusKey === 'confirmee' ? 1 : 2;
+                            const done = step.order <= currentOrder;
+                            const isLast = idx === arr.length - 1;
+                            return (
+                              <React.Fragment key={step.key}>
+                                <div className="flex flex-col items-center gap-1 shrink-0">
+                                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-black transition-all ${done ? (step.key === 'livree' ? 'bg-green-500 text-white' : 'bg-[#FF4500] text-white') : 'bg-slate-100 text-slate-300'}`}>
+                                    {done ? '✓' : idx + 1}
+                                  </div>
+                                  <span className={`text-[8px] font-black uppercase tracking-tight text-center ${done ? 'text-slate-600' : 'text-slate-300'}`}>{step.label}</span>
+                                </div>
+                                {!isLast && (
+                                  <div className={`flex-1 h-0.5 mb-3 mx-1 transition-all ${arr[idx + 1].order <= currentOrder ? 'bg-[#FF4500]' : 'bg-slate-100'}`} />
+                                )}
+                              </React.Fragment>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* BOUTON : COMMANDER À NOUVEAU */}
                     <div className="mt-6 pt-4 border-t border-slate-50">
                       <button
                         onClick={() => commanderANouveau((order as any).contenu_panier)}
