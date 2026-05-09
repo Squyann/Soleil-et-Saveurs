@@ -54,7 +54,9 @@ export default function AdminPage() {
   useEffect(() => {
     async function verifierAcces() {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'squyann_net@outlook.fr';
+      if (!user || user.email?.toLowerCase() !== adminEmail.toLowerCase()) {
+        await supabase.auth.signOut();
         window.location.href = '/admin/login';
         return;
       }
