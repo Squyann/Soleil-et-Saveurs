@@ -17,7 +17,7 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
       "font-src 'self'",
-      "connect-src 'self' https://*.supabase.co https://api.resend.com",
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.resend.com https://api-adresse.data.gouv.fr",
       "frame-ancestors 'none'",
     ].join('; '),
   },
