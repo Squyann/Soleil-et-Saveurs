@@ -37,7 +37,17 @@ async function start() {
     if (acquireLock()) {
       console.log('[start] Verrou acquis, démarrage de Next.js sur le port ' + PORT);
 
-      const proc = spawn('node_modules/.bin/next', ['start'], { stdio: 'inherit' });
+      const nextBin = path.join(__dirname, 'node_modules/.bin/next');
+      console.log('[start] next bin:', nextBin, '| cwd:', __dirname);
+      console.log('[start] .next exists:', fs.existsSync(path.join(__dirname, '.next')));
+
+      const proc = spawn(process.execPath, [nextBin, 'start'], {
+        stdio: ['inherit', 'pipe', 'pipe'],
+        cwd: __dirname,
+        env: process.env,
+      });
+      proc.stdout.on('data', (d) => process.stdout.write(d));
+      proc.stderr.on('data', (d) => process.stderr.write(d));
 
       const cleanup = () => { releaseLock(); proc.kill(); };
       process.on('SIGTERM', cleanup);
