@@ -539,10 +539,11 @@ export default function ComptePage() {
             ) : (
               orders.map((order) => {
                 // Gestion du statut (Français vs Anglais et formatage pour config)
-                const currentStatus = (order.statut || 'en_attente').toLowerCase();
-                const statusKey = currentStatus.includes('attente') ? 'en_attente' : 
-                                currentStatus.includes('confirme') ? 'confirmee' : 
-                                currentStatus.includes('livre') ? 'livree' : 
+                const currentStatus = (order.statut || 'en_attente')
+                  .normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+                const statusKey = currentStatus.includes('attente') ? 'en_attente' :
+                                currentStatus.includes('confirme') ? 'confirmee' :
+                                currentStatus.includes('livre') ? 'livree' :
                                 currentStatus.includes('annule') ? 'annulee' : 'en_attente';
 
                 const statusCfg = STATUS_CONFIG[statusKey as keyof typeof STATUS_CONFIG] || STATUS_CONFIG.en_attente;
