@@ -49,9 +49,8 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
         setTelephone(meta.phone || '');
         if (meta.address) {
           setAdresse(meta.address);
-          if (meta.address.includes('78')) {
-            setDistanceValide(true);
-          }
+          const cp = meta.address.match(/\b(\d{5})\b/)?.[1];
+          setDistanceValide(cp ? cp.startsWith('78') : false);
         }
 
         const { data: prof } = await supabase

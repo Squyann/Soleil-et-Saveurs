@@ -167,19 +167,13 @@ export default function AidePage() {
         lu: false
       };
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('messages')
-        .insert([payload])
-        .select();
+        .insert([payload]);
 
       if (error) {
         console.error('Erreur Supabase:', error);
         throw new Error(error.message || 'Erreur inconnue');
-      }
-
-      // Vérification que l'insertion a bien eu lieu
-      if (!data || data.length === 0) {
-        throw new Error('Insertion silencieusement bloquée. Vérifiez les RLS policies de la table messages dans Supabase (autoriser INSERT pour anon).');
       }
 
       setFormStatus('sent');
