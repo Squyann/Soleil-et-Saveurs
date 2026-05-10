@@ -4,6 +4,36 @@ import { X, Trash2, ShoppingBag, MapPin, CreditCard, Banknote, Phone, User, Load
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 
+const VILLES_RELAIS = [
+  { nom: "Chatou", lat: 48.8897, lon: 2.1574 },
+  { nom: "Croissy-sur-Seine", lat: 48.8794, lon: 2.1431 },
+  { nom: "Mareil-sur-Mauldre", lat: 48.8944, lon: 1.8681 },
+  { nom: "Saint-Nom-la-Bretèche", lat: 48.8594, lon: 2.0186 },
+  { nom: "Plaisir", lat: 48.8111, lon: 1.9472 },
+];
+
+function calculerDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+async function validerZoneLivraison(adresse: string): Promise<boolean | null> {
+  try {
+    const res = await fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(adresse)}&limit=1`);
+    const data = await res.json();
+    const feat = data.features?.[0];
+    if (!feat) return null;
+    const [lon, lat] = feat.geometry.coordinates;
+    const minDist = Math.min(...VILLES_RELAIS.map(v => calculerDistance(lat, lon, v.lat, v.lon)));
+    return minDist <= 5;
+  } catch {
+    return null;
+  }
+}
+
 interface PanierDrawerProps {
   isOpen: boolean;
   onClose: () => void;
@@ -49,8 +79,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
         setTelephone(meta.phone || '');
         if (meta.address) {
           setAdresse(meta.address);
-          const cp = meta.address.match(/\b(\d{5})\b/)?.[1];
-          setDistanceValide(cp ? cp.startsWith('78') : false);
+          validerZoneLivraison(meta.address).then(v => setDistanceValide(v));
         }
 
         const { data: prof } = await supabase
@@ -163,12 +192,9 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
   const selectionnerAdresse = (feat: any) => {
     setAdresse(feat.properties.label);
     setSuggestions([]);
-    const cp = feat.properties.postcode;
-    if (cp && cp.startsWith('78')) {
-      setDistanceValide(true);
-    } else {
-      setDistanceValide(false);
-    }
+    const [lon, lat] = feat.geometry.coordinates;
+    const minDist = Math.min(...VILLES_RELAIS.map(v => calculerDistance(lat, lon, v.lat, v.lon)));
+    setDistanceValide(minDist <= 5);
   };
 
   const sousTotalFinal = (panier || []).reduce((acc, item) => acc + calculerPrixLigne(item), 0);
