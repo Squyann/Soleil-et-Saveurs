@@ -54,6 +54,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
   const [applyLoyalty, setApplyLoyalty] = useState(false);
   const [applyReferral, setApplyReferral] = useState(false);
   const [creneaux, setCreneaux] = useState<string[]>([]);
+  const [selectedCreneau, setSelectedCreneau] = useState<string>('');
 
   const router = useRouter();
 
@@ -94,6 +95,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
     if (isOpen) {
       setApplyLoyalty(false);
       setApplyReferral(false);
+      setSelectedCreneau('');
       fetchUserData();
       supabase.from('creneaux').select('label').eq('actif', true).then(({ data }) => {
         if (data) setCreneaux(data.map((c: any) => c.label));
@@ -216,6 +218,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
     }
 
     if (!nom || !telephone || !adresse || !distanceValide) return;
+    if (creneaux.length > 0 && !selectedCreneau) return;
     setChargement(true);
 
     try {
@@ -267,6 +270,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
           description_commande: desc,
           contenu_panier: panier,
           email_client: user.email,
+          creneau_livraison: selectedCreneau || null,
         }]);
 
       if (error) throw error;
@@ -301,6 +305,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
               unite: item.unite || '',
               prix_ligne: calculerPrixLigne(item),
             })),
+            creneau_livraison: selectedCreneau || null,
             remise_pct: remisePct,
             remise_montant: remiseMontant,
             frais_livraison: fraisLivraison,
@@ -539,12 +544,38 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
           </div>
           
           {creneaux.length > 0 && (
-            <div className="flex items-start gap-2 p-3 bg-blue-50 border border-blue-100 rounded-xl">
-              <Calendar className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
-              <div>
-                <p className="text-[10px] font-black text-blue-700 uppercase tracking-wide mb-0.5">Créneaux de livraison</p>
-                <p className="text-[10px] text-blue-600 font-bold leading-relaxed">{creneaux.join(' · ')}</p>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-blue-500" />
+                <h3 className="font-black uppercase text-xs tracking-widest text-slate-900">Créneau de livraison</h3>
+                <span className="text-[9px] bg-red-50 text-red-500 px-2 py-0.5 rounded-full font-bold uppercase">Requis</span>
               </div>
+              <div className="grid grid-cols-1 gap-2">
+                {creneaux.map((creneau) => (
+                  <button
+                    key={creneau}
+                    type="button"
+                    onClick={() => setSelectedCreneau(creneau)}
+                    className={`w-full p-3 rounded-2xl border text-left flex items-center gap-3 transition-all font-bold text-[11px] uppercase tracking-wide ${
+                      selectedCreneau === creneau
+                        ? 'bg-slate-900 text-white border-slate-900 shadow-md'
+                        : 'bg-white text-slate-600 border-slate-100 hover:border-slate-300'
+                    }`}
+                  >
+                    <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                      selectedCreneau === creneau ? 'border-white' : 'border-slate-300'
+                    }`}>
+                      {selectedCreneau === creneau && <span className="w-2 h-2 bg-white rounded-full" />}
+                    </span>
+                    {creneau}
+                  </button>
+                ))}
+              </div>
+              {creneaux.length > 0 && !selectedCreneau && (
+                <p className="text-[9px] font-bold text-amber-600 uppercase tracking-wide pl-1">
+                  Veuillez sélectionner un créneau pour valider
+                </p>
+              )}
             </div>
           )}
 
@@ -558,7 +589,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
           )}
 
           <button
-            disabled={chargement || methodePaiement === 'Ligne' || !!minimumNonAtteint || (user && (!(panier || []).length || !distanceValide || !nom || !telephone))}
+            disabled={chargement || methodePaiement === 'Ligne' || !!minimumNonAtteint || (user && (!(panier || []).length || !distanceValide || !nom || !telephone || (creneaux.length > 0 && !selectedCreneau)))}
             onClick={envoyerCommande}
             className={`w-full ${!user ? 'bg-blue-600' : 'bg-slate-900'} disabled:bg-slate-100 disabled:text-slate-300 text-white p-5 rounded-2xl font-black uppercase text-sm tracking-widest hover:opacity-90 transition-all shadow-xl flex items-center justify-center gap-3`}
           >
