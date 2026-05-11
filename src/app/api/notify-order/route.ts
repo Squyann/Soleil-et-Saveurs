@@ -85,6 +85,7 @@ export async function POST(req: NextRequest) {
         <tr><td style="padding:10px 16px;color:#64748b;font-size:13px;font-weight:600;">Téléphone</td><td style="padding:10px 16px;font-size:14px;">${commande.telephone}</td></tr>
         <tr style="background:white;"><td style="padding:10px 16px;color:#64748b;font-size:13px;font-weight:600;">Adresse</td><td style="padding:10px 16px;font-size:14px;">${commande.adresse}</td></tr>
         <tr><td style="padding:10px 16px;color:#64748b;font-size:13px;font-weight:600;">Paiement</td><td style="padding:10px 16px;font-size:14px;">${commande.methode_paiement}</td></tr>
+        ${commande.creneau_livraison ? `<tr style="background:white;"><td style="padding:10px 16px;color:#64748b;font-size:13px;font-weight:600;">Créneau</td><td style="padding:10px 16px;font-size:14px;font-weight:800;color:#FF4500;">🕐 ${commande.creneau_livraison}</td></tr>` : ''}
       </table>
       <h2 style="margin:28px 0 16px;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:2px;color:#94a3b8;">Détail de la commande</h2>
       ${tableCommande}
@@ -117,6 +118,7 @@ export async function POST(req: NextRequest) {
       <div style="margin-top:24px;padding:16px;background:#f9f8f6;border-radius:12px;">
         <p style="margin:0;font-size:13px;color:#64748b;font-weight:600;">📍 Livraison à : <strong style="color:#1e293b;">${commande.adresse}</strong></p>
         <p style="margin:8px 0 0;font-size:13px;color:#64748b;font-weight:600;">💳 Paiement : <strong style="color:#1e293b;">${commande.methode_paiement}</strong></p>
+        ${commande.creneau_livraison ? `<p style="margin:8px 0 0;font-size:13px;color:#64748b;font-weight:600;">🕐 Créneau : <strong style="color:#FF4500;">${commande.creneau_livraison}</strong></p>` : ''}
       </div>
       <div style="margin-top:32px;text-align:center;">
         <a href="${compteUrl}" style="display:inline-block;background:#1e293b;color:white;padding:16px 32px;border-radius:10px;text-decoration:none;font-weight:800;font-size:14px;letter-spacing:1px;text-transform:uppercase;">Suivre ma commande →</a>
