@@ -37,6 +37,8 @@ export default function AdminPage() {
   const [pourcentage, setPourcentage] = useState(0);
   const [seuilAchat, setSeuilAchat] = useState(0);
   const [qteOfferte, setQteOfferte] = useState(0);
+  const [seuilPromoQte, setSeuilPromoQte] = useState(0);
+  const [prixPromo, setPrixPromo] = useState(0);
 
   // NOUVEAU : états pour la réponse aux messages
   const [reponseOuvert, setReponseOuvert] = useState<string | null>(null);
@@ -48,7 +50,8 @@ export default function AdminPage() {
   const [nouveauProd, setNouveauProd] = useState({
     name: '', price: 0, category: 'Légumes', image_url: '', stock: 0,
     unite: 'kg', provenance: '', description: '', promotion: 0,
-    seuil_achat: 0, quantite_offerte: 0, pas_g: 100
+    seuil_achat: 0, quantite_offerte: 0, pas_g: 100,
+    seuil_promo_qte: 0, prix_promo: 0,
   });
 
   useEffect(() => {
@@ -206,8 +209,12 @@ export default function AdminPage() {
 
   async function appliquerPromo(id: string) {
     try {
-      const { error } = await supabase.from('products').update({ 
-        promotion: pourcentage, seuil_achat: seuilAchat, quantite_offerte: qteOfferte 
+      const { error } = await supabase.from('products').update({
+        promotion: pourcentage,
+        seuil_achat: seuilAchat,
+        quantite_offerte: qteOfferte,
+        seuil_promo_qte: seuilPromoQte,
+        prix_promo: prixPromo,
       }).eq('id', id);
       if (error) throw error;
       setPromoProdId(null);
@@ -665,21 +672,21 @@ export default function AdminPage() {
                   </div>
 
                   <div className="w-full mt-2">
-                    <button onClick={() => setPromoProdId(promoProdId === p.id ? null : p.id)} className={`w-full text-[9px] font-black uppercase tracking-widest py-3 rounded-xl transition-all ${(p.promotion > 0 || p.seuil_achat > 0) ? 'bg-[#FF4500]/10 text-[#FF4500] border border-[#FF4500]/20' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}>
-                      {(p.promotion > 0 || p.seuil_achat > 0) ? '🔥 Modifier Promo' : 'Ajouter Promo'}
+                    <button onClick={() => { setPromoProdId(promoProdId === p.id ? null : p.id); setPourcentage(0); setSeuilAchat(0); setQteOfferte(0); setSeuilPromoQte(0); setPrixPromo(0); }} className={`w-full text-[9px] font-black uppercase tracking-widest py-3 rounded-xl transition-all ${(p.promotion > 0 || p.seuil_achat > 0 || p.seuil_promo_qte > 0) ? 'bg-[#FF4500]/10 text-[#FF4500] border border-[#FF4500]/20' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}>
+                      {(p.promotion > 0 || p.seuil_achat > 0 || p.seuil_promo_qte > 0) ? '🔥 Modifier Promo' : 'Ajouter Promo'}
                     </button>
                     {promoProdId === p.id && (
                       <div className="mt-3 p-4 bg-white rounded-2xl border border-slate-200 shadow-2xl flex flex-col gap-3 animate-in zoom-in-95 duration-200 z-20">
                         <div>
                           <p className="text-[8px] font-black uppercase text-slate-400 mb-1 tracking-tighter">Remise %</p>
-                          <input type="number" min="0" max="100" placeholder="Ex: 20" className="w-full p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg text-center" onChange={(e) => { setPourcentage(parseInt(e.target.value) || 0); setSeuilAchat(0); setQteOfferte(0); }} />
+                          <input type="number" min="0" max="100" placeholder="Ex: 20" className="w-full p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg text-center" onChange={(e) => { setPourcentage(parseInt(e.target.value) || 0); setSeuilAchat(0); setQteOfferte(0); setSeuilPromoQte(0); setPrixPromo(0); }} />
                         </div>
                         {p.unite === 'kg' ? (
                           <div className="border-t border-slate-50 pt-2">
                             <p className="text-[8px] font-black uppercase text-slate-400 mb-1 tracking-tighter">Lot au kg (X kg achetés + Y kg offerts)</p>
                             <div className="flex gap-2">
                               <div className="w-1/2">
-                                <input type="number" step="0.5" min="0" placeholder="Ex: 2 kg" className="w-full p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg text-center" onChange={(e) => { setSeuilAchat(parseFloat(e.target.value) || 0); setPourcentage(0); }} />
+                                <input type="number" step="0.5" min="0" placeholder="Ex: 2 kg" className="w-full p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg text-center" onChange={(e) => { setSeuilAchat(parseFloat(e.target.value) || 0); setPourcentage(0); setSeuilPromoQte(0); setPrixPromo(0); }} />
                                 <p className="text-[7px] text-center text-slate-300 font-bold mt-0.5 uppercase">Payés (kg)</p>
                               </div>
                               <div className="w-1/2">
@@ -696,7 +703,7 @@ export default function AdminPage() {
                             <p className="text-[8px] font-black uppercase text-slate-400 mb-1 tracking-tighter">Lot à l'unité (X achetés + Y offerts)</p>
                             <div className="flex gap-2">
                               <div className="w-1/2">
-                                <input type="number" step="1" min="0" placeholder="Ex: 3" className="w-full p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg text-center" onChange={(e) => { setSeuilAchat(parseFloat(e.target.value) || 0); setPourcentage(0); }} />
+                                <input type="number" step="1" min="0" placeholder="Ex: 3" className="w-full p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg text-center" onChange={(e) => { setSeuilAchat(parseFloat(e.target.value) || 0); setPourcentage(0); setSeuilPromoQte(0); setPrixPromo(0); }} />
                                 <p className="text-[7px] text-center text-slate-300 font-bold mt-0.5 uppercase">Payés</p>
                               </div>
                               <div className="w-1/2">
@@ -706,10 +713,38 @@ export default function AdminPage() {
                             </div>
                           </div>
                         )}
+                        <div className="border-t border-slate-50 pt-2">
+                          <p className="text-[8px] font-black uppercase text-blue-500 mb-1 tracking-tighter">Prix dégressif (à partir de X, tout à Y€)</p>
+                          <div className="flex gap-2">
+                            <div className="w-1/2">
+                              <input
+                                type="number" step={p.unite === 'kg' || p.unite === 'g' ? '0.5' : '1'} min="0"
+                                placeholder={p.unite === 'g' ? 'Ex: 2 (kg)' : p.unite === 'kg' ? 'Ex: 2 kg' : 'Ex: 4'}
+                                className="w-full p-2.5 text-xs font-bold border border-blue-100 bg-blue-50 rounded-lg text-center focus:outline-none"
+                                onChange={(e) => { setSeuilPromoQte(parseFloat(e.target.value) || 0); setPourcentage(0); setSeuilAchat(0); setQteOfferte(0); }}
+                              />
+                              <p className="text-[7px] text-center text-blue-300 font-bold mt-0.5 uppercase">Seuil ({p.unite === 'g' ? 'kg' : p.unite})</p>
+                            </div>
+                            <div className="w-1/2">
+                              <input
+                                type="number" step="0.01" min="0"
+                                placeholder="Ex: 2.50"
+                                className="w-full p-2.5 text-xs font-bold border border-blue-100 bg-blue-50 rounded-lg text-center focus:outline-none"
+                                onChange={(e) => setPrixPromo(parseFloat(e.target.value) || 0)}
+                              />
+                              <p className="text-[7px] text-center text-blue-300 font-bold mt-0.5 uppercase">Prix ({p.unite === 'g' ? '€/kg' : `€/${p.unite}`})</p>
+                            </div>
+                          </div>
+                          {seuilPromoQte > 0 && prixPromo > 0 && (
+                            <p className="text-[8px] font-black text-blue-600 mt-1 text-center">
+                              À partir de {seuilPromoQte}{p.unite === 'g' ? 'kg' : ` ${p.unite}`} → {prixPromo.toFixed(2)}€/{p.unite === 'g' ? 'kg' : p.unite}
+                            </p>
+                          )}
+                        </div>
                         <div className="flex gap-2 mt-1">
                           <button onClick={() => appliquerPromo(p.id)} className="flex-1 bg-slate-900 text-white text-[9px] font-black py-3 rounded-lg shadow-md hover:bg-[#FF4500]">VALIDER</button>
-                          {(p.promotion > 0 || p.seuil_achat > 0) && (
-                            <button onClick={() => { setPourcentage(0); setSeuilAchat(0); setQteOfferte(0); appliquerPromo(p.id); }} className="px-3 bg-red-100 text-red-500 rounded-lg"><Trash2 className="w-4 h-4" /></button>
+                          {(p.promotion > 0 || p.seuil_achat > 0 || p.seuil_promo_qte > 0) && (
+                            <button onClick={() => { setPourcentage(0); setSeuilAchat(0); setQteOfferte(0); setSeuilPromoQte(0); setPrixPromo(0); appliquerPromo(p.id); }} className="px-3 bg-red-100 text-red-500 rounded-lg"><Trash2 className="w-4 h-4" /></button>
                           )}
                         </div>
                       </div>
@@ -778,7 +813,7 @@ export default function AdminPage() {
 
               {/* PROMOTION OPTIONNELLE */}
               <div className="md:col-span-3 border border-dashed border-slate-200 rounded-3xl p-6 space-y-4 bg-slate-50/50">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Promotion (optionnel)</p>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Promotion (optionnel — choisir un seul type)</p>
                 <div className="grid grid-cols-3 gap-4">
                   <div>
                     <label className="text-[9px] font-black uppercase text-slate-400 ml-2 mb-1 block">Remise %</label>
@@ -786,7 +821,7 @@ export default function AdminPage() {
                       type="number" min="0" max="100" placeholder="Ex: 20"
                       className="w-full p-4 bg-white rounded-xl font-black border border-slate-200 text-sm text-center focus:border-[#FF4500] outline-none"
                       value={nouveauProd.promotion || ''}
-                      onChange={e => setNouveauProd({ ...nouveauProd, promotion: parseFloat(e.target.value) || 0, seuil_achat: 0, quantite_offerte: 0 })}
+                      onChange={e => setNouveauProd({ ...nouveauProd, promotion: parseFloat(e.target.value) || 0, seuil_achat: 0, quantite_offerte: 0, seuil_promo_qte: 0, prix_promo: 0 })}
                     />
                   </div>
                   <div>
@@ -796,7 +831,7 @@ export default function AdminPage() {
                       placeholder={nouveauProd.unite === 'kg' ? 'Ex: 2 kg' : 'Ex: 3'}
                       className="w-full p-4 bg-white rounded-xl font-black border border-slate-200 text-sm text-center focus:border-[#FF4500] outline-none"
                       value={nouveauProd.seuil_achat || ''}
-                      onChange={e => setNouveauProd({ ...nouveauProd, seuil_achat: parseFloat(e.target.value) || 0, promotion: 0 })}
+                      onChange={e => setNouveauProd({ ...nouveauProd, seuil_achat: parseFloat(e.target.value) || 0, promotion: 0, seuil_promo_qte: 0, prix_promo: 0 })}
                     />
                   </div>
                   <div>
@@ -810,7 +845,36 @@ export default function AdminPage() {
                     />
                   </div>
                 </div>
-                <p className="text-[9px] text-slate-400 font-bold">Remise % ou lot — pas les deux en même temps. Le lot fonctionne en kg (ex: 2 kg achetés = 0.5 kg offert).</p>
+                <div className="border-t border-slate-200 pt-4">
+                  <p className="text-[9px] font-black text-blue-500 uppercase tracking-widest mb-3">— OU — Prix dégressif (à partir d'une qté, tout passe au prix réduit)</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-[9px] font-black uppercase text-slate-400 ml-2 mb-1 block">
+                        Seuil ({nouveauProd.unite === 'g' ? 'kg' : nouveauProd.unite})
+                      </label>
+                      <input
+                        type="number" step={nouveauProd.unite === 'kg' || nouveauProd.unite === 'g' ? '0.5' : '1'} min="0"
+                        placeholder={nouveauProd.unite === 'g' ? 'Ex: 2 (=2kg)' : nouveauProd.unite === 'kg' ? 'Ex: 2' : 'Ex: 4'}
+                        className="w-full p-4 bg-blue-50 rounded-xl font-black border border-blue-200 text-sm text-center focus:border-blue-500 outline-none"
+                        value={nouveauProd.seuil_promo_qte || ''}
+                        onChange={e => setNouveauProd({ ...nouveauProd, seuil_promo_qte: parseFloat(e.target.value) || 0, promotion: 0, seuil_achat: 0, quantite_offerte: 0 })}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[9px] font-black uppercase text-slate-400 ml-2 mb-1 block">
+                        Prix réduit ({nouveauProd.unite === 'g' ? '€/kg' : `€/${nouveauProd.unite}`})
+                      </label>
+                      <input
+                        type="number" step="0.01" min="0"
+                        placeholder="Ex: 2.50"
+                        className="w-full p-4 bg-blue-50 rounded-xl font-black border border-blue-200 text-sm text-center focus:border-blue-500 outline-none"
+                        value={nouveauProd.prix_promo || ''}
+                        onChange={e => setNouveauProd({ ...nouveauProd, prix_promo: parseFloat(e.target.value) || 0 })}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <p className="text-[9px] text-slate-400 font-bold">Un seul type de promo à la fois : remise %, lot X+Y ou prix dégressif.</p>
               </div>
 
               <button type="submit" disabled={uploading} className="md:col-span-3 bg-slate-900 text-white py-6 rounded-3xl font-black uppercase tracking-[0.3em] shadow-xl hover:bg-[#FF4500] hover:scale-[1.01] transition-all disabled:opacity-50">
@@ -856,6 +920,26 @@ export default function AdminPage() {
                       </div>
                     )}
                     <input type="text" placeholder="Description" className="w-full bg-slate-50 border-none rounded-lg p-2 text-xs" value={editFormData.description} onChange={e => setEditFormData({...editFormData, description: e.target.value})} />
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="relative">
+                        <input type="number" step={editFormData.unite === 'kg' || editFormData.unite === 'g' ? '0.5' : '1'} min="0"
+                          placeholder={`Seuil dégressif (${editFormData.unite === 'g' ? 'kg' : editFormData.unite})`}
+                          className="w-full bg-blue-50 border border-blue-100 rounded-lg p-2 text-xs font-black"
+                          value={editFormData.seuil_promo_qte || ''}
+                          onChange={e => setEditFormData({...editFormData, seuil_promo_qte: parseFloat(e.target.value) || 0, promotion: 0, seuil_achat: 0, quantite_offerte: 0})}
+                        />
+                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[8px] font-black text-blue-400">seuil</span>
+                      </div>
+                      <div className="relative">
+                        <input type="number" step="0.01" min="0"
+                          placeholder={`Prix dégressif (${editFormData.unite === 'g' ? '€/kg' : `€/${editFormData.unite}`})`}
+                          className="w-full bg-blue-50 border border-blue-100 rounded-lg p-2 text-xs font-black"
+                          value={editFormData.prix_promo || ''}
+                          onChange={e => setEditFormData({...editFormData, prix_promo: parseFloat(e.target.value) || 0})}
+                        />
+                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[8px] font-black text-blue-400">prix</span>
+                      </div>
+                    </div>
                     <div className="flex gap-2">
                       <button onClick={() => modifierProduit(p.id)} className="flex-1 bg-slate-900 text-white py-2 rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-2"><Save className="w-3 h-3"/> Enregistrer</button>
                       <button onClick={() => setEditingProdId(null)} className="px-4 bg-slate-100 text-slate-400 py-2 rounded-xl text-[10px] font-black uppercase"><X className="w-4 h-4"/></button>

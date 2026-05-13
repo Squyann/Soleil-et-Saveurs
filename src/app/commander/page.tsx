@@ -222,19 +222,24 @@ export default function CommanderPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredProducts.map((product) => {
               const currentQty = quantities[product.id] || 1;
-              const unitPrice = product.promotion > 0
-                ? product.price * (1 - product.promotion / 100)
-                : product.price;
-              const totalPrice = product.unite === 'g'
-                ? (currentQty / 1000) * unitPrice
-                : unitPrice * currentQty;
-              const totalEconomy = product.unite === 'g'
-                ? (product.price * currentQty / 1000) - totalPrice
-                : (product.price * currentQty) - totalPrice;
+              const qteEffective = product.unite === 'g' ? currentQty / 1000 : currentQty;
+
+              // Prix dégressif
+              const prixDegressifActif = product.seuil_promo_qte > 0 && product.prix_promo > 0
+                && qteEffective >= product.seuil_promo_qte;
+
+              const unitPrice = prixDegressifActif
+                ? product.prix_promo
+                : product.promotion > 0
+                  ? product.price * (1 - product.promotion / 100)
+                  : product.price;
+
+              const totalPrice = qteEffective * unitPrice;
+              const totalEconomy = qteEffective * product.price - totalPrice;
 
               // --- CALCULS D'AFFICHAGE POUR LA PROMO X+Y ---
-              const produitsOfferts = product.seuil_achat > 0 
-                ? Math.floor(currentQty / product.seuil_achat) * product.quantite_offerte 
+              const produitsOfferts = product.seuil_achat > 0
+                ? Math.floor(currentQty / product.seuil_achat) * product.quantite_offerte
                 : 0;
               const totalItemsRecus = currentQty + produitsOfferts;
 
@@ -253,6 +258,12 @@ export default function CommanderPage() {
                     {product.seuil_achat > 0 && (
                       <div className="bg-slate-900 text-white text-[10px] font-black px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1 border border-slate-700">
                         <span>🎁</span> {product.seuil_achat} ACHETÉS = {product.quantite_offerte} OFFERT(S)
+                      </div>
+                    )}
+                    {product.seuil_promo_qte > 0 && product.prix_promo > 0 && (
+                      <div className="bg-blue-600 text-white text-[10px] font-black px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1">
+                        <TrendingDown className="w-3 h-3" />
+                        {`À partir de ${product.seuil_promo_qte}${product.unite === 'g' ? 'kg' : product.unite === 'pièce' ? ' pcs' : ` ${product.unite}`} : ${product.prix_promo.toFixed(2)}€`}
                       </div>
                     )}
                   </div>
@@ -313,17 +324,26 @@ export default function CommanderPage() {
                         <div>
                             <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1">Total produit</p>
                             <div className="flex items-baseline gap-2">
-                                <span className="text-2xl font-black text-slate-900">{totalPrice.toFixed(2)}€</span>
-                                {product.promotion > 0 && (
-                                    <span className="text-xs line-through text-slate-300 font-bold italic">{(product.price * currentQty).toFixed(2)}€</span>
+                                <span className={`text-2xl font-black ${prixDegressifActif ? 'text-blue-600' : 'text-slate-900'}`}>{totalPrice.toFixed(2)}€</span>
+                                {(product.promotion > 0 || prixDegressifActif) && (
+                                    <span className="text-xs line-through text-slate-300 font-bold italic">{(product.price * qteEffective).toFixed(2)}€</span>
                                 )}
                             </div>
+                            {/* Indication seuil pas encore atteint */}
+                            {product.seuil_promo_qte > 0 && product.prix_promo > 0 && !prixDegressifActif && (
+                              <p className="text-[9px] font-bold text-blue-500 mt-1">
+                                encore {product.unite === 'g'
+                                  ? `${((product.seuil_promo_qte - qteEffective) * 1000).toFixed(0)}g`
+                                  : `${(product.seuil_promo_qte - qteEffective).toFixed(product.unite === 'kg' ? 1 : 0)} ${product.unite}`
+                                } pour {product.prix_promo.toFixed(2)}€/{product.unite === 'g' ? 'kg' : product.unite}
+                              </p>
+                            )}
                         </div>
-                        
+
                         {/* AFFICHAGE DES ÉCONOMIES ET CADEAUX */}
                         <div className="flex flex-col items-end gap-1">
                           {totalEconomy > 0 && (
-                              <div className="flex items-center gap-1 text-green-600 bg-green-50 px-3 py-1 rounded-full">
+                              <div className={`flex items-center gap-1 px-3 py-1 rounded-full ${prixDegressifActif ? 'text-blue-600 bg-blue-50' : 'text-green-600 bg-green-50'}`}>
                                   <TrendingDown className="w-3 h-3" />
                                   <span className="text-[10px] font-black">-{totalEconomy.toFixed(2)}€</span>
                               </div>
