@@ -105,6 +105,13 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
 
   const calculerPrixLigne = (item: any) => {
     const qteTotale = item.quantite || 0;
+    const qteEffective = item.unite === 'g' ? qteTotale / 1000 : qteTotale;
+
+    // Prix dégressif : à partir d'un seuil, tout passe au prix réduit
+    if (item.seuil_promo_qte > 0 && item.prix_promo > 0 && qteEffective >= item.seuil_promo_qte) {
+      return qteEffective * item.prix_promo;
+    }
+
     let prixUnitaire = parseFloat(item.price);
 
     if (item.promotion && item.promotion > 0) {
@@ -121,12 +128,8 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
       const qtePayante = (nombreDeLots * seuil) + Math.min(resteHorsLots, seuil);
       return qtePayante * prixUnitaire;
     }
-    
-    if (item.unite === 'g') {
-      return (qteTotale / 1000) * prixUnitaire;
-    }
 
-    return qteTotale * prixUnitaire;
+    return qteEffective * prixUnitaire;
   };
 
   const calculerEconomieTotale = () => {
@@ -357,6 +360,8 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
             ) : (
               panier.map((item) => {
                 const produitsOfferts = item.seuil_achat > 0 ? Math.floor(item.quantite / (item.seuil_achat + item.quantite_offerte)) * item.quantite_offerte : 0;
+                const qteEffective = item.unite === 'g' ? item.quantite / 1000 : item.quantite;
+                const prixDegressifActif = item.seuil_promo_qte > 0 && item.prix_promo > 0 && qteEffective >= item.seuil_promo_qte;
 
                 return (
                   <div key={item.id} className="flex gap-4 items-center bg-white p-4 rounded-3xl border border-slate-50 shadow-sm">
@@ -369,7 +374,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
                     </div>
                     <div className="flex-1">
                       <p className="font-black uppercase text-xs text-slate-800">{item.name}</p>
-                      
+
                       <div className="flex flex-wrap gap-2 mt-1">
                         {item.promotion > 0 && (
                           <span className="bg-green-100 text-green-700 text-[8px] font-black px-1.5 py-0.5 rounded-full">-{item.promotion}%</span>
@@ -378,6 +383,16 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
                           <div className="flex items-center gap-1 text-[#FF4500] text-[9px] font-black uppercase">
                             <Gift className="w-3 h-3" /> {produitsOfferts} offert(s)
                           </div>
+                        )}
+                        {prixDegressifActif && (
+                          <span className="bg-blue-100 text-blue-700 text-[8px] font-black px-1.5 py-0.5 rounded-full">
+                            {item.prix_promo.toFixed(2)}€/{item.unite === 'g' ? 'kg' : item.unite}
+                          </span>
+                        )}
+                        {item.seuil_promo_qte > 0 && item.prix_promo > 0 && !prixDegressifActif && (
+                          <span className="bg-slate-100 text-slate-500 text-[8px] font-bold px-1.5 py-0.5 rounded-full">
+                            -{item.seuil_promo_qte}{item.unite === 'g' ? 'kg' : item.unite === 'pièce' ? ' pcs' : ` ${item.unite}`}: {item.prix_promo.toFixed(2)}€
+                          </span>
                         )}
                       </div>
 
