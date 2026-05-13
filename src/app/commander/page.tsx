@@ -46,7 +46,10 @@ export default function CommanderPage() {
 
   const updateBadgeCount = () => {
     const panier = JSON.parse(localStorage.getItem('mon-panier') || '[]');
-    setNombreArticles(panier.reduce((acc: number, item: any) => acc + item.quantite, 0));
+    setNombreArticles(panier.reduce((acc: number, item: any) => {
+      if (item.unite === 'g' || item.unite === 'kg') return acc + 1;
+      return acc + Math.round(item.quantite || 1);
+    }, 0));
   };
 
   const getPasG = (product: any) => product.pas_g || 100;
