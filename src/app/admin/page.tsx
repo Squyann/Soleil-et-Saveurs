@@ -305,17 +305,18 @@ export default function AdminPage() {
 
     const sousTotalProduits = (cmd.contenu_panier || []).reduce((acc: number, item: any) => {
       const qte = parseFloat(item.quantite || item.quantity || 0);
+      const qteEffective = item.unite === 'g' ? qte / 1000 : qte;
       let prixUnit = parseFloat(item.price || item.prix || 0);
       if (item.promotion && item.promotion > 0) prixUnit *= (1 - item.promotion / 100);
       const seuil = item.seuil_achat || 0;
       const offert = item.quantite_offerte || 0;
       if (seuil > 0 && offert > 0) {
         const tailleLot = seuil + offert;
-        const nbLots = Math.floor(qte / tailleLot);
-        const reste = qte % tailleLot;
+        const nbLots = Math.floor(qteEffective / tailleLot);
+        const reste = qteEffective % tailleLot;
         return acc + (nbLots * seuil + Math.min(reste, seuil)) * prixUnit;
       }
-      return acc + qte * prixUnit;
+      return acc + qteEffective * prixUnit;
     }, 0);
 
     let fraisLivraison = 0;
@@ -384,6 +385,7 @@ export default function AdminPage() {
                 <h3>Mode de livraison</h3>
                 <p>${isRetrait ? '📍 Retrait au centre' : '🚚 Livraison à domicile'}</p>
                 <p style="font-weight: normal; color: #4A5568; font-size: 13px; margin-top: 5px;">${cmd.adresse_livraison}</p>
+                ${cmd.creneau_livraison ? `<p style="font-weight: bold; color: #FF4500; font-size: 13px; margin-top: 8px;">🕐 Créneau : ${cmd.creneau_livraison}</p>` : ''}
               </div>
             </div>
             <table>
@@ -398,15 +400,21 @@ export default function AdminPage() {
               <tbody>
                 ${cmd.contenu_panier.map((i: any) => {
                   const nomProduit = i.nom || i.name || "Produit inconnu";
-                  const qte = i.quantite || i.quantity || 0;
+                  const qte = parseFloat(i.quantite || i.quantity || 0);
                   const unite = i.unite || "unité(s)";
-                  const totalLigne = i.prixTotalLigne || (parseFloat(i.prixUnitaire || i.price || 0) * parseFloat(qte)) || 0;
-                  const prixUnit = i.prixUnitaire || i.price || (qte > 0 ? totalLigne / qte : 0);
+                  const isGram = unite === 'g';
+                  const qteEffective = isGram ? qte / 1000 : qte;
+                  const prixUnit = parseFloat(i.prixUnitaire || i.price || 0);
+                  const totalLigne = i.prixTotalLigne ? parseFloat(i.prixTotalLigne) : qteEffective * prixUnit;
+                  const qteAffiche = isGram
+                    ? (qte < 1000 ? `${qte}g` : `${(qte / 1000).toFixed(2).replace('.', ',')} kg`)
+                    : `${qte} ${unite}`;
+                  const prixAffiche = isGram ? `${prixUnit.toFixed(2)}€/kg` : `${prixUnit.toFixed(2)}€`;
                   return `
                   <tr>
                     <td style="font-weight: bold;">${nomProduit}</td>
-                    <td class="text-right">${qte} ${unite}</td>
-                    <td class="text-right">${prixUnit.toFixed(2)}€</td>
+                    <td class="text-right">${qteAffiche}</td>
+                    <td class="text-right">${prixAffiche}</td>
                     <td class="text-right" style="font-weight: bold;">${totalLigne.toFixed(2)}€</td>
                   </tr>
                 `}).join('')}
@@ -556,6 +564,11 @@ export default function AdminPage() {
                         <p className="text-xs font-bold text-slate-400 uppercase flex items-center gap-1">
                           <Truck className="w-3 h-3" /> {cmd.adresse_livraison}
                         </p>
+                        {cmd.creneau_livraison && (
+                          <p className="text-[10px] font-black text-blue-500 uppercase flex items-center gap-1 mt-0.5">
+                            <Calendar className="w-3 h-3" /> {cmd.creneau_livraison}
+                          </p>
+                        )}
                       </div>
                     </div>
                     
