@@ -55,6 +55,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
   const [applyReferral, setApplyReferral] = useState(false);
   const [creneaux, setCreneaux] = useState<string[]>([]);
   const [selectedCreneau, setSelectedCreneau] = useState<string>('');
+  const [commentaire, setCommentaire] = useState('');
 
   const router = useRouter();
 
@@ -96,6 +97,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
       setApplyLoyalty(false);
       setApplyReferral(false);
       setSelectedCreneau('');
+      setCommentaire('');
       fetchUserData();
       supabase.from('creneaux').select('label').eq('actif', true).then(({ data }) => {
         if (data) setCreneaux(data.map((c: any) => c.label));
@@ -254,6 +256,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
           contenu_panier: panier,
           email_client: user.email,
           creneau_livraison: selectedCreneau || null,
+          commentaire: commentaire.trim() || null,
         }]);
 
       if (error) throw error;
@@ -289,6 +292,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
               prix_ligne: calculerPrixLigne(item),
             })),
             creneau_livraison: selectedCreneau || null,
+            commentaire: commentaire.trim() || null,
             remise_pct: remisePct,
             remise_montant: remiseMontant,
             frais_livraison: fraisLivraison,
@@ -431,6 +435,15 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
                     </div>
                   )}
                 </div>
+
+                <textarea
+                  placeholder="COMMENTAIRE (optionnel) — instructions de livraison, allergies..."
+                  value={commentaire}
+                  onChange={(e) => setCommentaire(e.target.value)}
+                  rows={2}
+                  maxLength={500}
+                  className="w-full bg-white border border-slate-100 p-4 rounded-2xl font-bold text-xs uppercase focus:border-[#FF4500] outline-none transition-all resize-none placeholder:normal-case"
+                />
 
                 {distanceValide === false && (
                   <div className="flex items-center gap-2 p-3 bg-red-50 rounded-xl text-red-600">
