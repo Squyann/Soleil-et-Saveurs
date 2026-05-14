@@ -1,6 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/api-auth';
 
+function escapeHtml(str: string): string {
+  return String(str ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 function getSiteUrl() {
   if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
   if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
@@ -12,7 +21,13 @@ export async function POST(req: NextRequest) {
   if (error) return error;
 
   try {
-    const { commande } = await req.json();
+    const { commande: raw } = await req.json();
+    const commande = {
+      ...raw,
+      nom: escapeHtml(raw.nom),
+      adresse: escapeHtml(raw.adresse),
+      email_client: escapeHtml(raw.email_client),
+    };
 
     if (!commande.email_client) {
       return NextResponse.json({ ok: true, skipped: true, reason: 'no email_client' });
