@@ -54,6 +54,7 @@ export async function POST(req: NextRequest) {
       email_client: escapeHtml(raw.email_client),
       methode_paiement: escapeHtml(raw.methode_paiement),
       creneau_livraison: raw.creneau_livraison ? escapeHtml(raw.creneau_livraison) : null,
+      commentaire: raw.commentaire ? escapeHtml(raw.commentaire) : null,
       panier: (raw.panier || []).map((item: any) => ({
         ...item,
         name: escapeHtml(item.name),
@@ -109,6 +110,7 @@ export async function POST(req: NextRequest) {
         <tr style="background:white;"><td style="padding:10px 16px;color:#64748b;font-size:13px;font-weight:600;">Adresse</td><td style="padding:10px 16px;font-size:14px;">${commande.adresse}</td></tr>
         <tr><td style="padding:10px 16px;color:#64748b;font-size:13px;font-weight:600;">Paiement</td><td style="padding:10px 16px;font-size:14px;">${commande.methode_paiement}</td></tr>
         ${commande.creneau_livraison ? `<tr style="background:white;"><td style="padding:10px 16px;color:#64748b;font-size:13px;font-weight:600;">Créneau</td><td style="padding:10px 16px;font-size:14px;font-weight:800;color:#FF4500;">🕐 ${commande.creneau_livraison}</td></tr>` : ''}
+        ${commande.commentaire ? `<tr><td style="padding:10px 16px;color:#64748b;font-size:13px;font-weight:600;">Commentaire</td><td style="padding:10px 16px;font-size:14px;font-style:italic;color:#f59e0b;">💬 ${commande.commentaire}</td></tr>` : ''}
       </table>
       <h2 style="margin:28px 0 16px;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:2px;color:#94a3b8;">Détail de la commande</h2>
       ${tableCommande}
