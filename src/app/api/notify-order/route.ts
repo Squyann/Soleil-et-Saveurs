@@ -1,5 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdmin } from '@/lib/api-auth';
+import { requireAuth } from '@/lib/api-auth';
+
+function escapeHtml(str: string): string {
+  return String(str ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
 
 function getSiteUrl() {
   if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
@@ -32,11 +41,25 @@ async function sendEmail(to: string, subject: string, html: string, apiKey: stri
 }
 
 export async function POST(req: NextRequest) {
-  const { error } = await requireAdmin();
+  const { error } = await requireAuth();
   if (error) return error;
 
   try {
-    const { commande } = await req.json();
+    const { commande: raw } = await req.json();
+    const commande = {
+      ...raw,
+      nom: escapeHtml(raw.nom),
+      telephone: escapeHtml(raw.telephone),
+      adresse: escapeHtml(raw.adresse),
+      email_client: escapeHtml(raw.email_client),
+      methode_paiement: escapeHtml(raw.methode_paiement),
+      creneau_livraison: raw.creneau_livraison ? escapeHtml(raw.creneau_livraison) : null,
+      panier: (raw.panier || []).map((item: any) => ({
+        ...item,
+        name: escapeHtml(item.name),
+        unite: escapeHtml(item.unite ?? ''),
+      })),
+    };
     const siteUrl = getSiteUrl();
     const adminUrl = `${siteUrl}/admin`;
     const compteUrl = `${siteUrl}/compte`;
