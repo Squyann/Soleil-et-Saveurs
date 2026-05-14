@@ -236,26 +236,6 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
       console.error("Erreur sync profil:", err);
     }
     
-    if (methodePaiement === 'Ligne') {
-      try {
-        const response = await fetch('/api/checkout', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            items: panier,
-            metadata: { nom, telephone, adresse, user_id: user.id }
-          }),
-        });
-        const { url } = await response.json();
-        if (url) window.location.href = url;
-      } catch (err) {
-        alert("Erreur lors de l'initialisation du paiement.");
-      } finally {
-        setChargement(false);
-      }
-      return;
-    }
-
     // --- ENREGISTREMENT DANS SUPABASE POUR LE MODE ESPÈCES ---
     try {
       const desc = panier.map(item => `${item.quantite}x ${item.name}`).join(', ');
@@ -508,7 +488,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
                   <button onClick={()=>setMethodePaiement('Espèces')} className={`p-4 rounded-2xl border flex flex-col items-center gap-2 font-black text-[10px] transition-all ${methodePaiement === 'Espèces' ? 'bg-slate-900 text-white border-slate-900 shadow-lg' : 'bg-white text-slate-400 border-slate-100'}`}>
                     <Banknote className="w-5 h-5" /> ESPÈCES
                   </button>
-                  <button onClick={()=>setMethodePaiement('Ligne')} className="p-4 rounded-2xl border flex flex-col items-center gap-2 font-black text-[10px] transition-all bg-white text-slate-300 border-slate-100 cursor-not-allowed opacity-60">
+                  <button type="button" disabled aria-disabled="true" className="p-4 rounded-2xl border flex flex-col items-center gap-2 font-black text-[10px] transition-all bg-white text-slate-300 border-slate-100 cursor-not-allowed opacity-60">
                     <CreditCard className="w-5 h-5" /> CARTE EN LIGNE
                   </button>
                 </div>

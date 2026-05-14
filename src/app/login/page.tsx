@@ -51,12 +51,8 @@ export default function LoginPage() {
 
       if (error) throw error;
 
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user?.email?.toLowerCase() === process.env.NEXT_PUBLIC_ADMIN_EMAIL?.toLowerCase()) {
-        router.push('/admin');
-      } else {
-        router.push('/');
-      }
+      // La redirection /admin pour les comptes admin est gérée par le middleware serveur
+      router.push('/');
       router.refresh();
     } catch (err: any) {
       setError(err.message || "Erreur lors de la connexion");
