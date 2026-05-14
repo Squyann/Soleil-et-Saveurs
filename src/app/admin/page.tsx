@@ -919,6 +919,7 @@ export default function AdminPage() {
                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-black text-[#FF4500]">g/step</span>
                       </div>
                     )}
+                    <input type="text" placeholder="Provenance (ex: France)" className="w-full bg-slate-50 border-none rounded-lg p-2 text-xs font-black" value={editFormData.provenance || ''} onChange={e => setEditFormData({...editFormData, provenance: e.target.value})} />
                     <input type="text" placeholder="Description" className="w-full bg-slate-50 border-none rounded-lg p-2 text-xs" value={editFormData.description} onChange={e => setEditFormData({...editFormData, description: e.target.value})} />
                     <div className="grid grid-cols-2 gap-2">
                       <div className="relative">
