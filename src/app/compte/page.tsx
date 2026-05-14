@@ -7,7 +7,7 @@ import {
   User, Mail, Phone, MapPin, LogOut, ArrowLeft,
   ShoppingBag, Package, CheckCircle2, Clock, XCircle,
   Loader2, Edit3, Save, X, ChevronRight, Star, Truck,
-  AlertCircle, Plus, Gift, Copy
+  AlertCircle, Plus, Gift, Copy, Shield
 } from 'lucide-react';
 
 // --- TYPES ---
@@ -62,6 +62,7 @@ export default function ComptePage() {
   const [addressSuggestions, setAddressSuggestions] = useState<any[]>([]);
   const [dbProfile, setDbProfile] = useState<DBProfile | null>(null);
   const [referralCopied, setReferralCopied] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const router = useRouter();
 
   // --- INIT ---
@@ -87,6 +88,7 @@ export default function ComptePage() {
       fetchOrders(user.id);
       loadDBProfile(user.id);
       processReferral(user);
+      fetch('/api/is-admin').then(r => r.json()).then(d => setIsAdmin(d.isAdmin === true));
     };
     init();
   }, [router]);
@@ -495,6 +497,25 @@ export default function ComptePage() {
                   </div>
                 )}
               </div>
+
+              {/* PANEL ADMIN */}
+              {isAdmin && (
+                <Link
+                  href="/admin"
+                  className="w-full flex items-center justify-between bg-slate-900 border border-slate-800 p-6 rounded-[2rem] hover:bg-[#FF4500] transition-all group shadow-sm"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center">
+                      <Shield className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="text-left">
+                      <p className="font-black uppercase text-sm text-white">Panel Admin</p>
+                      <p className="text-[10px] text-slate-400 font-bold uppercase">Accès au tableau de bord</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                </Link>
+              )}
 
               {/* DÉCONNEXION */}
               <button
