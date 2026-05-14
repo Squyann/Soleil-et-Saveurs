@@ -56,10 +56,10 @@ export default function AdminPage() {
 
   useEffect(() => {
     async function verifierAcces() {
+      // Le middleware serveur garantit déjà que seul l'admin atteint cette page.
+      // Ce client-side check n'est plus qu'un fallback de session expirée.
       const { data: { user } } = await supabase.auth.getUser();
-      const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL || '';
-      if (!user || user.email?.toLowerCase() !== adminEmail.toLowerCase()) {
-        await supabase.auth.signOut();
+      if (!user) {
         window.location.href = '/admin/login';
         return;
       }

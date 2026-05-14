@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
+const MAX_PANIER_ITEMS = 50;
+const MAX_QTE_PAR_ITEM = 1000;
+const MAX_TEXT_LEN = 250;
+
 export async function POST(req: NextRequest) {
   try {
     const cookieStore = await cookies();
@@ -19,6 +23,10 @@ export async function POST(req: NextRequest) {
     // Récupérer l'utilisateur depuis le JWT — ne jamais faire confiance au body
     const { data: { user } } = await supabase.auth.getUser();
 
+    if (!user) {
+      return NextResponse.json({ error: 'Connexion requise' }, { status: 401 });
+    }
+
     const body = await req.json();
     const { items, metadata } = body;
 
@@ -27,8 +35,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Panier vide' }, { status: 400 });
     }
 
+    if (items.length > MAX_PANIER_ITEMS) {
+      return NextResponse.json({ error: 'Panier trop volumineux' }, { status: 400 });
+    }
+
     if (!metadata?.nom || !metadata?.telephone || !metadata?.adresse) {
       return NextResponse.json({ error: 'Informations de livraison manquantes' }, { status: 400 });
+    }
+
+    // Limites de longueur pour éviter les abus de stockage / logs
+    if (
+      String(metadata.nom).length > MAX_TEXT_LEN ||
+      String(metadata.telephone).length > MAX_TEXT_LEN ||
+      String(metadata.adresse).length > MAX_TEXT_LEN
+    ) {
+      return NextResponse.json({ error: 'Champs trop longs' }, { status: 400 });
     }
 
     // --- 2. VÉRIFICATION ADRESSE ---
@@ -65,8 +86,16 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: `Produit introuvable : ${item.id}` }, { status: 400 });
       }
 
+      const qte = Number(item.quantite);
+      if (!Number.isFinite(qte) || qte <= 0 || qte > MAX_QTE_PAR_ITEM) {
+        return NextResponse.json(
+          { error: `Quantité invalide pour : ${productEnBase.name}` },
+          { status: 400 }
+        );
+      }
+
       // Vérification du stock
-      if (productEnBase.stock !== null && productEnBase.stock < item.quantite) {
+      if (productEnBase.stock !== null && productEnBase.stock < qte) {
         return NextResponse.json(
           { error: `Stock insuffisant pour : ${productEnBase.name}` },
           { status: 400 }
@@ -74,13 +103,13 @@ export async function POST(req: NextRequest) {
       }
 
       const prixUnitaire = parseFloat(productEnBase.price);
-      totalProduits += prixUnitaire * item.quantite;
+      totalProduits += prixUnitaire * qte;
 
       produitsVerifies.push({
         id: productEnBase.id,
         name: productEnBase.name,
         price: prixUnitaire,
-        quantite: item.quantite,
+        quantite: qte,
       });
     }
 
@@ -93,7 +122,7 @@ export async function POST(req: NextRequest) {
     const { data: commande, error: insertError } = await supabase
       .from('commandes')
       .insert({
-        user_id: user?.id || null, // Toujours depuis le JWT, jamais depuis le body
+        user_id: user.id, // Toujours depuis le JWT, jamais depuis le body
         contenu_panier: produitsVerifies,
         total: totalFinal,
         statut: 'En attente', // Cohérent avec PanierDrawer et la DB
