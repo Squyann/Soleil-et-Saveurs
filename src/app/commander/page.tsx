@@ -219,7 +219,7 @@ export default function CommanderPage() {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {filteredProducts.map((product) => {
               const currentQty = quantities[product.id] || 1;
               const qteEffective = product.unite === 'g' ? currentQty / 1000 : currentQty;
@@ -244,12 +244,12 @@ export default function CommanderPage() {
               const totalItemsRecus = currentQty + produitsOfferts;
 
               return (
-                <div 
+                <div
                   key={product.id}
-                  className="bg-white rounded-[2.5rem] p-6 border border-slate-50 shadow-sm hover:shadow-[0_20px_50px_rgb(0,0,0,0.06)] transition-all flex flex-col group relative overflow-hidden"
+                  className="bg-white rounded-[2rem] p-4 border border-slate-50 shadow-sm hover:shadow-[0_20px_50px_rgb(0,0,0,0.06)] transition-all flex flex-col group relative overflow-hidden"
                 >
                   {/* BADGES PROMO ET X+Y */}
-                  <div className="absolute top-6 left-6 z-10 flex flex-col gap-2">
+                  <div className="absolute top-4 left-4 z-10 flex flex-col gap-1.5">
                     {product.promotion > 0 && (
                       <div className="bg-[#FF4500] text-white text-[10px] font-black px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1 animate-pulse">
                         <Tag className="w-3 h-3" /> -{product.promotion}%
@@ -269,7 +269,7 @@ export default function CommanderPage() {
                   </div>
 
                   {/* IMAGE */}
-                  <div className="h-64 bg-slate-50 rounded-[2rem] mb-6 overflow-hidden flex items-center justify-center relative">
+                  <div className="h-44 bg-slate-50 rounded-[1.5rem] mb-4 overflow-hidden flex items-center justify-center relative">
                     {product.image_url ? (
                       <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-all duration-700" />
                     ) : (
@@ -283,19 +283,19 @@ export default function CommanderPage() {
                   </div>
 
                   <div className="flex justify-between items-start mb-1">
-                    <h3 className="text-xl font-black uppercase tracking-tight text-slate-800">{product.name}</h3>
+                    <h3 className="text-base font-black uppercase tracking-tight text-slate-800">{product.name}</h3>
                     {product.provenance && (
                       <span className="text-[10px] font-bold text-[#FF4500] bg-orange-50 px-2 py-0.5 rounded-md uppercase">{product.provenance}</span>
                     )}
                   </div>
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">
                     {product.unite === 'g'
                       ? `Vendu au gramme · ${product.price.toFixed(2)}€/kg`
                       : `Vendu ${product.unite === 'kg' ? 'au' : 'à la'} ${product.unite || 'pièce'}`}
                   </p>
 
                   {/* SECTION QUANTITÉ ET PRIX DYNAMIQUE */}
-                  <div className="bg-slate-50 rounded-3xl p-4 mb-6 border border-slate-100/50">
+                  <div className="bg-slate-50 rounded-2xl p-3 mb-4 border border-slate-100/50">
                     <div className="flex items-center justify-between mb-3">
                       <div>
                         <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Quantité</span>
@@ -324,7 +324,7 @@ export default function CommanderPage() {
                         <div>
                             <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1">Total produit</p>
                             <div className="flex items-baseline gap-2">
-                                <span className={`text-2xl font-black ${prixDegressifActif ? 'text-blue-600' : 'text-slate-900'}`}>{totalPrice.toFixed(2)}€</span>
+                                <span className={`text-xl font-black ${prixDegressifActif ? 'text-blue-600' : 'text-slate-900'}`}>{totalPrice.toFixed(2)}€</span>
                                 {(product.promotion > 0 || prixDegressifActif) && (
                                     <span className="text-xs line-through text-slate-300 font-bold italic">{(product.price * qteEffective).toFixed(2)}€</span>
                                 )}
@@ -359,10 +359,10 @@ export default function CommanderPage() {
                   </div>
 
                   {/* BOUTON ACTION FINAL */}
-                  <button 
+                  <button
                     disabled={product.stock <= 0}
                     onClick={() => ajouterAuPanier(product)}
-                    className={`w-full py-4 rounded-[1.5rem] font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 transition-all ${
+                    className={`w-full py-3 rounded-[1.25rem] font-black uppercase tracking-widest text-xs flex items-center justify-center gap-2 transition-all ${
                       product.stock > 0 
                       ? 'bg-slate-900 text-white hover:bg-[#FF4500] shadow-xl active:scale-95' 
                       : 'bg-slate-100 text-slate-300 cursor-not-allowed'
