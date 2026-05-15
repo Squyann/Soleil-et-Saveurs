@@ -269,7 +269,7 @@ export default function CommanderPage() {
                   </div>
 
                   {/* IMAGE */}
-                  <div className="h-36 sm:h-56 bg-slate-50 rounded-xl sm:rounded-[1.5rem] mb-2 sm:mb-4 overflow-hidden flex items-center justify-center relative">
+                  <div className="h-28 sm:h-48 bg-slate-50 rounded-xl sm:rounded-[1.5rem] mb-2 sm:mb-4 overflow-hidden flex items-center justify-center relative">
                     {product.image_url ? (
                       <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-all duration-700" />
                     ) : (
