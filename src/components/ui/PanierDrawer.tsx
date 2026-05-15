@@ -50,7 +50,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
   const [methodePaiement, setMethodePaiement] = useState<'Espèces' | 'Ligne'>('Espèces');
   const [chargement, setChargement] = useState(false);
   const [distanceValide, setDistanceValide] = useState<boolean | null>(null);
-  const [dbProfile, setDbProfile] = useState<{ loyalty_points: number; has_referral_discount: boolean } | null>(null);
+  const [dbProfile, setDbProfile] = useState<{ loyalty_points: number; has_referral_discount: boolean; referral_pending: boolean } | null>(null);
   const [applyLoyalty, setApplyLoyalty] = useState(false);
   const [applyReferral, setApplyReferral] = useState(false);
   const [creneaux, setCreneaux] = useState<string[]>([]);
@@ -85,7 +85,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
 
         const { data: prof } = await supabase
           .from('profiles')
-          .select('loyalty_points, has_referral_discount')
+          .select('loyalty_points, has_referral_discount, referral_pending')
           .eq('user_id', currentUser.id)
           .single();
         if (prof) setDbProfile(prof);
@@ -265,6 +265,11 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
         : (dbProfile?.loyalty_points ?? 0) + pointsGagnes;
       const profileUpdate: Record<string, any> = { loyalty_points: Math.max(0, newPoints) };
       if (applyReferral) profileUpdate.has_referral_discount = false;
+      // Première commande du parrainé → on active son bon -10%
+      if (dbProfile?.referral_pending) {
+        profileUpdate.has_referral_discount = true;
+        profileUpdate.referral_pending = false;
+      }
 
       await supabase
         .from('profiles')
@@ -447,7 +452,17 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
               </div>
 
               {/* REMISES DISPONIBLES */}
-              {user && ((dbProfile?.loyalty_points ?? 0) >= 100 || dbProfile?.has_referral_discount) && (
+              {user && dbProfile?.referral_pending && (
+                <div className="flex items-start gap-3 p-4 bg-amber-50 border border-amber-100 rounded-2xl">
+                  <Gift className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-black text-[11px] text-amber-700 uppercase">Bon parrainage -10% en attente</p>
+                    <p className="text-[9px] text-amber-600 font-bold uppercase mt-0.5">Validez cette commande pour débloquer votre bon</p>
+                  </div>
+                </div>
+              )}
+
+              {user && ((dbProfile?.loyalty_points ?? 0) >= 100 || (dbProfile?.has_referral_discount && !dbProfile?.referral_pending)) && (
                 <div className="space-y-2">
                   <h3 className="font-black uppercase text-xs tracking-widest text-slate-900">Remises disponibles</h3>
                   {(dbProfile?.loyalty_points ?? 0) >= 100 && (
@@ -465,7 +480,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
                       <span className="font-black text-xs text-green-600 shrink-0">-{(sousTotalFinal * 0.1).toFixed(2)}€</span>
                     </label>
                   )}
-                  {dbProfile?.has_referral_discount && (
+                  {dbProfile?.has_referral_discount && !dbProfile?.referral_pending && (
                     <label className="flex items-center gap-3 p-4 bg-white border border-slate-100 rounded-2xl cursor-pointer hover:border-green-200 transition-all">
                       <input
                         type="checkbox"

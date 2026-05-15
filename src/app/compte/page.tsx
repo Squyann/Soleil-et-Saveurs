@@ -114,6 +114,11 @@ export default function ComptePage() {
 
     if (success) {
       await supabase.auth.updateUser({ data: { referral_processed: true } });
+      // Le bon du parrainé est en attente : il s'activera après sa première commande
+      await supabase
+        .from('profiles')
+        .update({ has_referral_discount: false, referral_pending: true })
+        .eq('user_id', currentUser.id);
       await loadDBProfile(currentUser.id);
     }
   };
