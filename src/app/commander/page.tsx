@@ -116,7 +116,7 @@ export default function CommanderPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#FDFCF9] text-slate-900 pb-20 pt-24 px-4 md:px-10">
+    <main className="min-h-screen bg-[#FDFCF9] text-slate-900 pb-20 pt-24 px-2 md:px-10">
       
       <PanierDrawer isOpen={isPanierOpen} onClose={() => setIsPanierOpen(false)} />
 
@@ -282,10 +282,10 @@ export default function CommanderPage() {
                     )}
                   </div>
 
-                  <div className="flex justify-between items-start mb-1">
+                  <div className="flex justify-between items-start mb-1 gap-1">
                     <h3 className="text-[9px] sm:text-base font-black uppercase tracking-tight text-slate-800 truncate">{product.name}</h3>
                     {product.provenance && (
-                      <span className="hidden sm:inline text-[10px] font-bold text-[#FF4500] bg-orange-50 px-2 py-0.5 rounded-md uppercase">{product.provenance}</span>
+                      <span className="text-[8px] sm:text-[10px] font-bold text-[#FF4500] bg-orange-50 px-1.5 py-0.5 rounded-md uppercase shrink-0">{product.provenance}</span>
                     )}
                   </div>
                   <p className="hidden sm:block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">
@@ -294,72 +294,41 @@ export default function CommanderPage() {
                       : `Vendu ${product.unite === 'kg' ? 'au' : 'à la'} ${product.unite || 'pièce'}`}
                   </p>
 
-                  {/* PRIX MOBILE — visible uniquement sur mobile */}
-                  <p className="sm:hidden text-[10px] font-black text-slate-900 mb-1.5">
-                    {product.price.toFixed(2)}€<span className="text-slate-400 font-bold">/{product.unite === 'g' ? 'kg' : product.unite || 'pcs'}</span>
-                  </p>
-
-                  {/* SECTION QUANTITÉ ET PRIX DYNAMIQUE — cachée sur mobile */}
-                  <div className="hidden sm:block bg-slate-50 rounded-2xl p-3 mb-4 border border-slate-100/50">
-                    <div className="flex items-center justify-between mb-3">
-                      <div>
-                        <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Quantité</span>
-                        {product.unite === 'g' && (
-                          <p className="text-[9px] text-slate-300 font-bold mt-0.5">pas : {formatGramLabel(getPasG(product))}</p>
-                        )}
-                      </div>
-                      <div className="flex items-center bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-                          <button
-                            onClick={() => handleQtyChange(product.id, String(currentQty - getStep(product)), product)}
-                            disabled={currentQty <= getMin(product)}
-                            className="px-3 py-2 hover:bg-slate-50 text-slate-900 font-bold transition-colors disabled:text-slate-300 disabled:cursor-not-allowed"
-                          >-</button>
-                          <span className="w-20 text-center font-black text-sm px-1">
-                            {product.unite === 'g' ? formatGramLabel(currentQty) : currentQty}
-                          </span>
-                          <button
-                            onClick={() => handleQtyChange(product.id, String(currentQty + getStep(product)), product)}
-                            disabled={currentQty >= product.stock}
-                            className="px-3 py-2 hover:bg-slate-50 text-slate-900 font-bold transition-colors disabled:text-slate-300 disabled:cursor-not-allowed"
-                          >+</button>
+                  {/* SECTION QUANTITÉ ET PRIX DYNAMIQUE */}
+                  <div className="bg-slate-50 rounded-xl sm:rounded-2xl p-2 sm:p-3 mb-2 sm:mb-4 border border-slate-100/50">
+                    {/* Sélecteur quantité */}
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="hidden sm:block text-[10px] font-black uppercase text-slate-400 tracking-widest">Quantité</span>
+                      <div className="flex items-center bg-white rounded-lg sm:rounded-xl shadow-sm border border-slate-100 overflow-hidden w-full sm:w-auto">
+                        <button
+                          onClick={() => handleQtyChange(product.id, String(currentQty - getStep(product)), product)}
+                          disabled={currentQty <= getMin(product)}
+                          className="px-2 sm:px-3 py-1.5 sm:py-2 hover:bg-slate-50 text-slate-900 font-bold transition-colors disabled:text-slate-300 disabled:cursor-not-allowed text-sm"
+                        >-</button>
+                        <span className="flex-1 sm:w-16 text-center font-black text-[10px] sm:text-sm px-1">
+                          {product.unite === 'g' ? formatGramLabel(currentQty) : currentQty}
+                        </span>
+                        <button
+                          onClick={() => handleQtyChange(product.id, String(currentQty + getStep(product)), product)}
+                          disabled={currentQty >= product.stock}
+                          className="px-2 sm:px-3 py-1.5 sm:py-2 hover:bg-slate-50 text-slate-900 font-bold transition-colors disabled:text-slate-300 disabled:cursor-not-allowed text-sm"
+                        >+</button>
                       </div>
                     </div>
 
-                    <div className="flex justify-between items-end">
-                        <div>
-                            <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1">Total produit</p>
-                            <div className="flex items-baseline gap-2">
-                                <span className={`text-xl font-black ${prixDegressifActif ? 'text-blue-600' : 'text-slate-900'}`}>{totalPrice.toFixed(2)}€</span>
-                                {(product.promotion > 0 || prixDegressifActif) && (
-                                    <span className="text-xs line-through text-slate-300 font-bold italic">{(product.price * qteEffective).toFixed(2)}€</span>
-                                )}
-                            </div>
-                            {/* Indication seuil pas encore atteint */}
-                            {product.seuil_promo_qte > 0 && product.prix_promo > 0 && !prixDegressifActif && (
-                              <p className="text-[9px] font-bold text-blue-500 mt-1">
-                                encore {product.unite === 'g'
-                                  ? `${((product.seuil_promo_qte - qteEffective) * 1000).toFixed(0)}g`
-                                  : `${(product.seuil_promo_qte - qteEffective).toFixed(product.unite === 'kg' ? 1 : 0)} ${product.unite}`
-                                } pour {product.prix_promo.toFixed(2)}€/{product.unite === 'g' ? 'kg' : product.unite}
-                              </p>
-                            )}
+                    {/* Prix */}
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-baseline gap-1.5">
+                        <span className={`text-sm sm:text-xl font-black ${prixDegressifActif ? 'text-blue-600' : 'text-slate-900'}`}>{totalPrice.toFixed(2)}€</span>
+                        {(product.promotion > 0 || prixDegressifActif) && (
+                          <span className="text-[9px] sm:text-xs line-through text-slate-300 font-bold italic">{(product.price * qteEffective).toFixed(2)}€</span>
+                        )}
+                      </div>
+                      {totalEconomy > 0 && (
+                        <div className={`hidden sm:flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black ${prixDegressifActif ? 'text-blue-600 bg-blue-50' : 'text-green-600 bg-green-50'}`}>
+                          <TrendingDown className="w-3 h-3" />-{totalEconomy.toFixed(2)}€
                         </div>
-
-                        {/* AFFICHAGE DES ÉCONOMIES ET CADEAUX */}
-                        <div className="flex flex-col items-end gap-1">
-                          {totalEconomy > 0 && (
-                              <div className={`flex items-center gap-1 px-3 py-1 rounded-full ${prixDegressifActif ? 'text-blue-600 bg-blue-50' : 'text-green-600 bg-green-50'}`}>
-                                  <TrendingDown className="w-3 h-3" />
-                                  <span className="text-[10px] font-black">-{totalEconomy.toFixed(2)}€</span>
-                              </div>
-                          )}
-                          {produitsOfferts > 0 && (
-                              <div className="flex items-center gap-1 text-[#FF4500] bg-orange-50 px-3 py-1 rounded-full animate-bounce">
-                                  <Gift className="w-3 h-3" />
-                                  <span className="text-[10px] font-black">+{produitsOfferts} OFFERT(S)</span>
-                              </div>
-                          )}
-                        </div>
+                      )}
                     </div>
                   </div>
 
