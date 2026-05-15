@@ -288,7 +288,7 @@ export default function CommanderPage() {
                       <span className="text-[8px] sm:text-[10px] font-bold text-[#FF4500] bg-orange-50 px-1.5 py-0.5 rounded-md uppercase shrink-0">{product.provenance}</span>
                     )}
                   </div>
-                  <p className="hidden sm:block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">
+                  <p className="text-[8px] sm:text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 sm:mb-3">
                     {product.unite === 'g'
                       ? `Vendu au gramme · ${product.price.toFixed(2)}€/kg`
                       : `Vendu ${product.unite === 'kg' ? 'au' : 'à la'} ${product.unite || 'pièce'}`}
