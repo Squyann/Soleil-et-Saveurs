@@ -265,9 +265,15 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
         : (dbProfile?.loyalty_points ?? 0) + pointsGagnes;
       const profileUpdate: Record<string, any> = { loyalty_points: Math.max(0, newPoints) };
       if (applyReferral) profileUpdate.has_referral_discount = false;
-      // Première commande du parrainé → on active son bon -10%
+      // Première commande du parrainé → déclenche le parrainage (parrain + parrainé reçoivent leur bon)
       if (dbProfile?.referral_pending) {
-        profileUpdate.has_referral_discount = true;
+        const meta = user?.user_metadata || {};
+        if (meta.referral_code_used) {
+          await supabase.rpc('process_referral', {
+            p_referral_code: meta.referral_code_used,
+            p_new_user_id: user.id,
+          });
+        }
         profileUpdate.referral_pending = false;
       }
 

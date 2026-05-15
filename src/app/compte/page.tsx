@@ -107,20 +107,14 @@ export default function ComptePage() {
     const meta = currentUser.user_metadata || {};
     if (!meta.referral_code_used || meta.referral_processed === true) return;
 
-    const { data: success } = await supabase.rpc('process_referral', {
-      p_referral_code: meta.referral_code_used,
-      p_new_user_id: currentUser.id,
-    });
-
-    if (success) {
-      await supabase.auth.updateUser({ data: { referral_processed: true } });
-      // Le bon du parrainé est en attente : il s'activera après sa première commande
-      await supabase
-        .from('profiles')
-        .update({ has_referral_discount: false, referral_pending: true })
-        .eq('user_id', currentUser.id);
-      await loadDBProfile(currentUser.id);
-    }
+    // On ne déclenche pas le RPC ici — parrain et parrainé reçoivent leur bon
+    // uniquement après la première commande du parrainé (géré dans PanierDrawer)
+    await supabase.auth.updateUser({ data: { referral_processed: true } });
+    await supabase
+      .from('profiles')
+      .update({ referral_pending: true })
+      .eq('user_id', currentUser.id);
+    await loadDBProfile(currentUser.id);
   };
 
   // --- COMMANDES SUPABASE ---
