@@ -248,22 +248,25 @@ export default function CommanderPage() {
                   key={product.id}
                   className="bg-white rounded-xl sm:rounded-[2rem] p-2 sm:p-4 border border-slate-50 shadow-sm hover:shadow-[0_20px_50px_rgb(0,0,0,0.06)] transition-all flex flex-col group relative overflow-hidden"
                 >
-                  {/* BADGES PROMO ET X+Y — cachés sur mobile */}
-                  <div className="absolute top-2 left-2 sm:top-4 sm:left-4 z-10 hidden sm:flex flex-col gap-1.5">
+                  {/* BADGES PROMO ET X+Y */}
+                  <div className="absolute top-2 left-2 sm:top-4 sm:left-4 z-10 flex flex-col gap-1">
                     {product.promotion > 0 && (
-                      <div className="bg-[#FF4500] text-white text-[10px] font-black px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1 animate-pulse">
-                        <Tag className="w-3 h-3" /> -{product.promotion}%
+                      <div className="bg-[#FF4500] text-white text-[8px] sm:text-[10px] font-black px-2 py-1 sm:px-3 sm:py-1.5 rounded-full shadow-lg flex items-center gap-1">
+                        <Tag className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> -{product.promotion}%
                       </div>
                     )}
                     {product.seuil_achat > 0 && (
-                      <div className="bg-slate-900 text-white text-[10px] font-black px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1 border border-slate-700">
-                        <span>🎁</span> {product.seuil_achat} ACHETÉS = {product.quantite_offerte} OFFERT(S)
+                      <div className="bg-slate-900 text-white text-[8px] sm:text-[10px] font-black px-2 py-1 sm:px-3 sm:py-1.5 rounded-full shadow-lg flex items-center gap-1 border border-slate-700">
+                        <span>🎁</span>
+                        <span className="hidden sm:inline">{product.seuil_achat} ACHETÉS = {product.quantite_offerte} OFFERT(S)</span>
+                        <span className="sm:hidden">{product.seuil_achat}+{product.quantite_offerte}</span>
                       </div>
                     )}
                     {product.seuil_promo_qte > 0 && product.prix_promo > 0 && (
-                      <div className="bg-blue-600 text-white text-[10px] font-black px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1">
-                        <TrendingDown className="w-3 h-3" />
-                        {`À partir de ${product.seuil_promo_qte}${product.unite === 'g' ? 'kg' : product.unite === 'pièce' ? ' pcs' : ` ${product.unite}`} : ${product.prix_promo.toFixed(2)}€`}
+                      <div className="bg-blue-600 text-white text-[8px] sm:text-[10px] font-black px-2 py-1 sm:px-3 sm:py-1.5 rounded-full shadow-lg flex items-center gap-1">
+                        <TrendingDown className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                        <span className="hidden sm:inline">{`À partir de ${product.seuil_promo_qte}${product.unite === 'g' ? 'kg' : product.unite === 'pièce' ? ' pcs' : ` ${product.unite}`} : ${product.prix_promo.toFixed(2)}€`}</span>
+                        <span className="sm:hidden">{product.prix_promo.toFixed(2)}€/{product.unite === 'g' ? 'kg' : product.unite}</span>
                       </div>
                     )}
                   </div>
