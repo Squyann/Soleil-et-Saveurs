@@ -68,11 +68,12 @@ export default function RootLayout({
         <nav className="fixed top-0 left-0 right-0 z-[100] bg-white/95 backdrop-blur-md border-b border-slate-100 h-14 shadow-sm">
           <div className="max-w-7xl mx-auto h-full px-4 md:px-8 flex items-center justify-between">
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-2 group">
-              <div className="w-8 h-8 bg-[#FF4500] rounded-lg flex items-center justify-center text-white font-black text-xs transition-transform group-hover:scale-110 shadow-sm">S</div>
-              <span className="font-black tracking-tighter text-lg uppercase text-slate-900">
-                SOLEIL<span className="text-[#FF4500]">SAVEURS</span>
-              </span>
+            <Link href="/" className="flex items-center group">
+              <img
+                src="/logo.svg"
+                alt="Soleil et Saveurs"
+                className="h-9 w-auto transition-opacity group-hover:opacity-80"
+              />
             </Link>
 
             {/* Actions */}
