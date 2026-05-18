@@ -53,7 +53,7 @@ export default function LivraisonPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FDFCF9] text-slate-900 pb-20">
+    <div className="min-h-screen bg-[#EDE3D5] text-slate-900 pb-20">
       {/* Navbar Minimaliste */}
       <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-100 px-6 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-[#FF4500] transition-colors">

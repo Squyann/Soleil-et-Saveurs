@@ -157,19 +157,19 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FDFCF9] flex flex-col md:flex-row-reverse">
+    <div className="min-h-screen bg-[#EDE3D5] flex flex-col md:flex-row-reverse">
       
       {/* SECTION VISUELLE */}
-      <div className="hidden md:flex md:w-1/2 bg-slate-900 relative overflow-hidden items-center justify-center p-12">
+      <div className="hidden md:flex md:w-1/2 bg-[#3D2B1F] relative overflow-hidden items-center justify-center p-12">
         <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-[#FF4500] rounded-full blur-[150px] opacity-10" />
         <div className="relative z-10 max-w-lg space-y-8 text-center md:text-left">
           <h2 className="text-6xl font-black text-white leading-none tracking-tighter uppercase">Soleil  <br /><span className="text-[#FF4500]">& Saveurs.</span></h2>
           <div className="space-y-4">
-            <div className="bg-white/5 p-6 rounded-3xl border border-white/10 backdrop-blur-sm flex gap-4 items-center">
+            <div className="bg-[#F5EAE0]/5 p-6 rounded-3xl border border-white/10 backdrop-blur-sm flex gap-4 items-center">
               <Gift className="w-8 h-8 text-[#FF4500]" />
               <p className="text-slate-300 text-xs font-black uppercase tracking-widest">-10% sur votre 1ère commande</p>
             </div>
-            <div className="bg-white/5 p-6 rounded-3xl border border-white/10 backdrop-blur-sm flex gap-4 items-center">
+            <div className="bg-[#F5EAE0]/5 p-6 rounded-3xl border border-white/10 backdrop-blur-sm flex gap-4 items-center">
               <ShieldCheck className="w-8 h-8 text-green-400" />
               <p className="text-slate-300 text-xs font-black uppercase tracking-widest">Produits 100% locaux du 78</p>
             </div>
@@ -198,12 +198,12 @@ export default function SignupPage() {
               <div className="space-y-1">
                 <label className="text-[10px] font-black text-slate-400 uppercase ml-4">Nom</label>
                 <input type="text" required placeholder="NOM" value={lastName} onChange={(e) => setLastName(e.target.value)}
-                  className="w-full bg-white border border-slate-100 p-3 rounded-2xl font-bold text-sm uppercase outline-none focus:border-[#FF4500]" />
+                  className="w-full bg-[#F5EAE0] border border-[#D5C9B8] p-3 rounded-2xl font-bold text-sm uppercase outline-none focus:border-[#FF4500]" />
               </div>
               <div className="space-y-1">
                 <label className="text-[10px] font-black text-slate-400 uppercase ml-4">Prénom</label>
                 <input type="text" required placeholder="PRÉNOM" value={firstName} onChange={(e) => setFirstName(e.target.value)}
-                  className="w-full bg-white border border-slate-100 p-3 rounded-2xl font-bold text-sm uppercase outline-none focus:border-[#FF4500]" />
+                  className="w-full bg-[#F5EAE0] border border-[#D5C9B8] p-3 rounded-2xl font-bold text-sm uppercase outline-none focus:border-[#FF4500]" />
               </div>
             </div>
 
@@ -215,7 +215,7 @@ export default function SignupPage() {
                 <div className="relative">
                   <Calendar className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 ${birthDate && !isAdult ? 'text-red-500' : 'text-slate-300'}`} />
                   <input type="date" required value={birthDate} onChange={(e) => setBirthDate(e.target.value)}
-                    className={`w-full bg-white border p-3 pl-10 rounded-2xl font-bold text-sm outline-none transition-all ${birthDate && !isAdult ? 'border-red-200 bg-red-50' : 'border-slate-100 focus:border-[#FF4500]'}`} />
+                    className={`w-full bg-[#F5EAE0] border p-3 pl-10 rounded-2xl font-bold text-sm outline-none transition-all ${birthDate && !isAdult ? 'border-red-200 bg-red-50' : 'border-[#D5C9B8] focus:border-[#FF4500]'}`} />
                 </div>
               </div>
               <div className="space-y-1">
@@ -223,7 +223,7 @@ export default function SignupPage() {
                 <div className="relative">
                   <Phone className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 ${phone && !isPhoneValid ? 'text-red-500' : 'text-slate-300'}`} />
                   <input type="tel" required placeholder="06XXXXXXXX" value={phone} onChange={(e) => setPhone(e.target.value)}
-                    className="w-full bg-white border border-slate-100 p-3 pl-10 rounded-2xl font-bold text-sm outline-none focus:border-[#FF4500]" />
+                    className="w-full bg-[#F5EAE0] border border-[#D5C9B8] p-3 pl-10 rounded-2xl font-bold text-sm outline-none focus:border-[#FF4500]" />
                 </div>
               </div>
             </div>
@@ -233,13 +233,13 @@ export default function SignupPage() {
               <div className="relative">
                 <MapPin className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 ${address && !isEligibleZone ? 'text-red-500' : 'text-slate-300'}`} />
                 <input type="text" required placeholder="Tapez votre adresse..." value={address} onChange={(e) => { setAddress(e.target.value); setAddressCoords(null); }}
-                  className={`w-full bg-white border p-3 pl-10 rounded-2xl font-bold text-sm outline-none transition-all uppercase ${address && isEligibleZone ? 'border-green-200 bg-green-50' : 'border-slate-100 focus:border-[#FF4500]'}`} />
+                  className={`w-full bg-[#F5EAE0] border p-3 pl-10 rounded-2xl font-bold text-sm outline-none transition-all uppercase ${address && isEligibleZone ? 'border-green-200 bg-green-50' : 'border-[#D5C9B8] focus:border-[#FF4500]'}`} />
               </div>
               {suggestions.length > 0 && (
-                <div className="absolute z-50 w-full bg-white border border-slate-100 rounded-2xl shadow-2xl mt-1 overflow-hidden">
+                <div className="absolute z-50 w-full bg-[#F5EAE0] border border-[#D5C9B8] rounded-2xl shadow-2xl mt-1 overflow-hidden">
                   {suggestions.map((s: any) => (
                     <button key={s.properties.id} type="button" onClick={() => { setAddress(s.properties.label); setSuggestions([]); const [lon, lat] = s.geometry.coordinates; setAddressCoords({ lat, lon }); }}
-                      className="w-full p-3 text-left text-[10px] font-black hover:bg-slate-50 border-b border-slate-50 last:border-0 flex items-center gap-2 uppercase tracking-tight">
+                      className="w-full p-3 text-left text-[10px] font-black hover:bg-[#EDE3D5] border-b border-slate-50 last:border-0 flex items-center gap-2 uppercase tracking-tight">
                       <MapPin className="w-3 h-3 text-[#FF4500]" /> {s.properties.label}
                     </button>
                   ))}
@@ -252,7 +252,7 @@ export default function SignupPage() {
               <div className="relative">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
                 <input type="email" required placeholder="votre@email.com" value={email} onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-white border border-slate-100 p-3 pl-10 rounded-2xl font-bold text-sm outline-none focus:border-[#FF4500]" />
+                  className="w-full bg-[#F5EAE0] border border-[#D5C9B8] p-3 pl-10 rounded-2xl font-bold text-sm outline-none focus:border-[#FF4500]" />
               </div>
             </div>
 
@@ -261,7 +261,7 @@ export default function SignupPage() {
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
                 <input type="password" required placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-white border border-slate-100 p-3 pl-10 rounded-2xl font-bold text-sm outline-none focus:border-[#FF4500]" />
+                  className="w-full bg-[#F5EAE0] border border-[#D5C9B8] p-3 pl-10 rounded-2xl font-bold text-sm outline-none focus:border-[#FF4500]" />
               </div>
               <div className="flex gap-1 px-4 pt-1">
                 <div className={`h-1 flex-1 rounded-full transition-all ${passwordStrength() >= 1 ? (passwordStrength() === 1 ? 'bg-red-400' : passwordStrength() === 2 ? 'bg-orange-400' : 'bg-green-400') : 'bg-slate-100'}`} />
@@ -281,7 +281,7 @@ export default function SignupPage() {
                   placeholder="EX: ABC12345"
                   value={referralCodeInput}
                   onChange={(e) => setReferralCodeInput(e.target.value.toUpperCase())}
-                  className="w-full bg-white border border-slate-100 p-3 pl-10 rounded-2xl font-bold text-sm uppercase outline-none focus:border-[#FF4500] tracking-widest"
+                  className="w-full bg-[#F5EAE0] border border-[#D5C9B8] p-3 pl-10 rounded-2xl font-bold text-sm uppercase outline-none focus:border-[#FF4500] tracking-widest"
                 />
               </div>
               <p className="text-[9px] text-slate-400 font-bold ml-4">Vous et votre parrain obtiendrez -10% sur votre prochaine commande</p>
@@ -289,7 +289,7 @@ export default function SignupPage() {
 
             <button type="submit"
               disabled={loading || !isEligibleZone || !isPhoneValid || !isAdult || password.length < 8}
-              className="w-full bg-[#FF4500] text-white p-5 rounded-3xl font-black uppercase text-sm tracking-widest hover:bg-slate-900 transition-all shadow-xl disabled:bg-slate-200 mt-4 flex items-center justify-center gap-3 active:scale-95"
+              className="w-full bg-[#FF4500] text-white p-5 rounded-3xl font-black uppercase text-sm tracking-widest hover:bg-[#3D2B1F] transition-all shadow-xl disabled:bg-slate-200 mt-4 flex items-center justify-center gap-3 active:scale-95"
             >
               {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Rejoindre Soleil Saveurs <ArrowRight className="w-5 h-5" /></>}
             </button>

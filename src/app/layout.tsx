@@ -63,9 +63,9 @@ export default function RootLayout({
 
   return (
     <html lang="fr">
-      <body className={`${inter.className} bg-[#FDFCF9] antialiased`}>
+      <body className={`${inter.className} bg-[#EDE3D5] antialiased`}>
         {/* NAVBAR */}
-        <nav className="fixed top-0 left-0 right-0 z-[100] bg-white/95 backdrop-blur-md border-b border-slate-100 h-14 shadow-sm">
+        <nav className="fixed top-0 left-0 right-0 z-[100] bg-[#F5EAE0]/95 backdrop-blur-md border-b border-[#D5C9B8] h-14 shadow-sm">
           <div className="max-w-7xl mx-auto h-full px-4 md:px-8 flex items-center justify-between">
             {/* Logo */}
             <Link href="/" className="flex items-center group">
@@ -79,27 +79,27 @@ export default function RootLayout({
             {/* Actions */}
             <div className="flex items-center gap-1 md:gap-3">
               {/* Panier */}
-              <button 
-                onClick={() => setIsPanierOpen(true)} 
-                className="p-2 hover:bg-slate-50 rounded-full relative transition-colors group"
+              <button
+                onClick={() => setIsPanierOpen(true)}
+                className="p-2 hover:bg-[#EAD9C8] rounded-full relative transition-colors group"
               >
-                <ShoppingCart className="w-5 h-5 text-slate-700 group-hover:text-[#FF4500]" />
+                <ShoppingCart className="w-5 h-5 text-[#5C4030] group-hover:text-[#FF4500]" />
                 {nombreArticles > 0 && (
-                  <span className="absolute top-1 right-1 w-4 h-4 bg-[#FF4500] text-white text-[9px] flex items-center justify-center rounded-full font-bold border-2 border-white animate-in zoom-in">
+                  <span className="absolute top-1 right-1 w-4 h-4 bg-[#FF4500] text-white text-[9px] flex items-center justify-center rounded-full font-bold border-2 border-[#F5EAE0] animate-in zoom-in">
                     {nombreArticles > 99 ? '99+' : nombreArticles}
                   </span>
                 )}
               </button>
 
               {/* Compte */}
-              <Link href={user ? "/compte" : "/login"} className="p-2 hover:bg-slate-50 rounded-full transition-colors group">
-                <User className="w-5 h-5 text-slate-700 group-hover:text-slate-900" />
+              <Link href={user ? "/compte" : "/login"} className="p-2 hover:bg-[#EAD9C8] rounded-full transition-colors group">
+                <User className="w-5 h-5 text-[#5C4030] group-hover:text-[#3D2B1F]" />
               </Link>
 
-              {/* CORRECTION : Bouton Aide visible sur desktop ET mobile dans la navbar */}
+              {/* Bouton Aide */}
               <Link
                 href="/aide"
-                className="flex items-center gap-1.5 bg-slate-900 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-[#FF4500] transition-all shadow-sm"
+                className="flex items-center gap-1.5 bg-[#3D2B1F] text-[#F5EAE0] px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-[#FF4500] transition-all shadow-sm"
               >
                 <HelpCircle className="w-3.5 h-3.5" />
                 <span className="hidden md:inline">Aide</span>
@@ -108,10 +108,10 @@ export default function RootLayout({
           </div>
         </nav>
 
-        {/* Bouton aide flottant mobile uniquement (en plus de celui dans la navbar) */}
-        <Link 
-          href="/aide" 
-          className="md:hidden fixed bottom-24 right-6 z-50 bg-white text-slate-900 p-4 rounded-full shadow-2xl border border-slate-100 flex items-center justify-center animate-bounce"
+        {/* Bouton aide flottant mobile */}
+        <Link
+          href="/aide"
+          className="md:hidden fixed bottom-24 right-6 z-50 bg-[#F5EAE0] text-[#3D2B1F] p-4 rounded-full shadow-2xl border border-[#D5C9B8] flex items-center justify-center animate-bounce"
         >
           <HelpCircle className="w-6 h-6 text-[#FF4500]" />
         </Link>
@@ -122,16 +122,16 @@ export default function RootLayout({
           {children}
         </main>
 
-        <footer className="bg-white border-t border-slate-100 py-12 px-4 mt-20">
+        <footer className="bg-[#DDD0BF] border-t border-[#C9BBAA] py-12 px-4 mt-20">
           <div className="max-w-7xl mx-auto flex flex-col items-center gap-6">
             <div className="flex flex-wrap justify-center gap-6 mb-2">
-               <Link href="/aide" className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-[#FF4500]">Support</Link>
-               <Link href="/livraison" className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-[#FF4500]">Livraison</Link>
-               <Link href="/mentions" className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-[#FF4500]">Mentions légales</Link>
-               <Link href="/cgv" className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-[#FF4500]">CGV</Link>
-               <Link href="/rgpd" className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-[#FF4500]">Confidentialité</Link>
+               <Link href="/aide" className="text-[10px] font-black uppercase tracking-widest text-[#9A7D68] hover:text-[#FF4500]">Support</Link>
+               <Link href="/livraison" className="text-[10px] font-black uppercase tracking-widest text-[#9A7D68] hover:text-[#FF4500]">Livraison</Link>
+               <Link href="/mentions" className="text-[10px] font-black uppercase tracking-widest text-[#9A7D68] hover:text-[#FF4500]">Mentions légales</Link>
+               <Link href="/cgv" className="text-[10px] font-black uppercase tracking-widest text-[#9A7D68] hover:text-[#FF4500]">CGV</Link>
+               <Link href="/rgpd" className="text-[10px] font-black uppercase tracking-widest text-[#9A7D68] hover:text-[#FF4500]">Confidentialité</Link>
             </div>
-            <p className="text-[9px] font-black uppercase tracking-[0.4em] text-slate-300">
+            <p className="text-[9px] font-black uppercase tracking-[0.4em] text-[#B8A898]">
               © 2026 Soleil Saveurs — Plaisir (78)
             </p>
           </div>
