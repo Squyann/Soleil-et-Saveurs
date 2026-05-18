@@ -319,16 +319,16 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
 
   return (
     <div className="fixed inset-0 z-[110] flex justify-end">
-      <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-md" onClick={onClose} />
+      <div className="absolute inset-0 bg-[#3D2B1F]/40 backdrop-blur-md" onClick={onClose} />
       
-      <div className="relative w-full max-w-md bg-[#FDFCF9] h-full flex flex-col shadow-2xl animate-in slide-in-from-right duration-300">
+      <div className="relative w-full max-w-md bg-[#EDE3D5] h-full flex flex-col shadow-2xl animate-in slide-in-from-right duration-300">
         
-        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white">
+        <div className="p-6 border-b border-[#D5C9B8] flex justify-between items-center bg-[#F5EAE0]">
           <div>
             <h2 className="text-2xl font-black uppercase tracking-tighter text-slate-900">Mon Panier</h2>
             <p className="text-[10px] font-bold text-[#FF4500] uppercase tracking-[0.2em]">Soleil Saveurs Direct</p>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-slate-50 rounded-full transition-colors">
+          <button onClick={onClose} className="p-2 hover:bg-[#EDE3D5] rounded-full transition-colors">
             <X className="w-6 h-6 text-slate-400" />
           </button>
         </div>
@@ -337,7 +337,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
           <div className="space-y-4">
             {(panier || []).length === 0 ? (
               <div className="text-center py-20">
-                <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="w-20 h-20 bg-[#EDE3D5] rounded-full flex items-center justify-center mx-auto mb-4">
                   <ShoppingBag className="w-8 h-8 text-slate-200" />
                 </div>
                 <p className="font-bold text-slate-400 uppercase text-sm tracking-widest">Le panier est vide</p>
@@ -349,8 +349,8 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
                 const prixDegressifActif = item.seuil_promo_qte > 0 && item.prix_promo > 0 && qteEffective >= item.seuil_promo_qte;
 
                 return (
-                  <div key={item.id} className="flex gap-4 items-center bg-white p-4 rounded-3xl border border-slate-50 shadow-sm">
-                    <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center overflow-hidden">
+                  <div key={item.id} className="flex gap-4 items-center bg-white p-4 rounded-3xl border border-[#DDD0BF] shadow-sm">
+                    <div className="w-14 h-14 bg-[#EDE3D5] rounded-2xl flex items-center justify-center overflow-hidden">
                       {item.image_url ? (
                         <img src={item.image_url} alt="" className="w-full h-full object-cover" />
                       ) : (
@@ -375,16 +375,16 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
                           </span>
                         )}
                         {item.seuil_promo_qte > 0 && item.prix_promo > 0 && !prixDegressifActif && (
-                          <span className="bg-slate-100 text-slate-500 text-[8px] font-bold px-1.5 py-0.5 rounded-full">
+                          <span className="bg-[#DDD0BF] text-slate-500 text-[8px] font-bold px-1.5 py-0.5 rounded-full">
                             -{item.seuil_promo_qte}{item.unite === 'g' ? 'kg' : item.unite === 'pièce' ? ' pcs' : ` ${item.unite}`}: {item.prix_promo.toFixed(2)}€
                           </span>
                         )}
                       </div>
 
                       <div className="flex items-center gap-3 mt-2">
-                         <button onClick={() => updateQuantity(item.id, -1, item.unite)} className="w-6 h-6 border border-slate-100 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-50">-</button>
+                         <button onClick={() => updateQuantity(item.id, -1, item.unite)} className="w-6 h-6 border border-[#D5C9B8] rounded-full flex items-center justify-center text-slate-400 hover:bg-[#EDE3D5]">-</button>
                          <span className="text-xs font-bold">{item.unite === 'g' ? (item.quantite < 1000 ? `${item.quantite}g` : `${(item.quantite/1000).toString().replace('.',',')}kg`) : `${item.quantite}${item.unite ? ` ${item.unite}` : ''}`}</span>
-                         <button onClick={() => updateQuantity(item.id, 1, item.unite)} disabled={item.stock != null && item.quantite >= item.stock} className="w-6 h-6 border border-slate-100 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed">+</button>
+                         <button onClick={() => updateQuantity(item.id, 1, item.unite)} disabled={item.stock != null && item.quantite >= item.stock} className="w-6 h-6 border border-[#D5C9B8] rounded-full flex items-center justify-center text-slate-400 hover:bg-[#EDE3D5] disabled:opacity-30 disabled:cursor-not-allowed">+</button>
                       </div>
                     </div>
                     <div className="text-right">
@@ -400,7 +400,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
           </div>
 
           {(panier || []).length > 0 && (
-            <div className="space-y-5 pt-6 border-t border-slate-100">
+            <div className="space-y-5 pt-6 border-t border-[#D5C9B8]">
               <div className="flex items-center justify-between">
                 <h3 className="font-black uppercase text-sm tracking-widest text-slate-900">Infos de livraison</h3>
                 {user && <span className="text-[9px] bg-blue-50 text-blue-600 px-2 py-1 rounded-full font-bold uppercase">Profil connecté</span>}
@@ -409,12 +409,12 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
               <div className="space-y-3">
                 <div className="relative group">
                   <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
-                  <input type="text" placeholder="NOM COMPLET" value={nom} onChange={(e)=>setNom(e.target.value)} className="w-full bg-white border border-slate-100 p-4 pl-12 rounded-2xl font-bold text-xs uppercase focus:border-[#FF4500] outline-none transition-all" />
+                  <input type="text" placeholder="NOM COMPLET" value={nom} onChange={(e)=>setNom(e.target.value)} className="w-full bg-white border border-[#D5C9B8] p-4 pl-12 rounded-2xl font-bold text-xs uppercase focus:border-[#FF4500] outline-none transition-all" />
                 </div>
                 
                 <div className="relative group">
                   <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
-                  <input type="tel" placeholder="TÉLÉPHONE" value={telephone} onChange={(e)=>setTelephone(e.target.value)} className="w-full bg-white border border-slate-100 p-4 pl-12 rounded-2xl font-bold text-xs uppercase focus:border-[#FF4500] outline-none transition-all" />
+                  <input type="tel" placeholder="TÉLÉPHONE" value={telephone} onChange={(e)=>setTelephone(e.target.value)} className="w-full bg-white border border-[#D5C9B8] p-4 pl-12 rounded-2xl font-bold text-xs uppercase focus:border-[#FF4500] outline-none transition-all" />
                 </div>
 
                 <div className="relative group">
@@ -424,12 +424,12 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
                     placeholder="ADRESSE (DANS LE 78)" 
                     value={adresse} 
                     onChange={(e) => handleAdresseChange(e.target.value)}
-                    className="w-full bg-white border border-slate-100 p-4 pl-12 rounded-2xl font-bold text-xs uppercase focus:border-[#FF4500] outline-none transition-all" 
+                    className="w-full bg-white border border-[#D5C9B8] p-4 pl-12 rounded-2xl font-bold text-xs uppercase focus:border-[#FF4500] outline-none transition-all" 
                   />
                   {(suggestions || []).length > 0 && (
-                    <div className="absolute z-50 top-full left-0 right-0 bg-white border border-slate-100 shadow-xl rounded-2xl mt-2 overflow-hidden">
+                    <div className="absolute z-50 top-full left-0 right-0 bg-white border border-[#D5C9B8] shadow-xl rounded-2xl mt-2 overflow-hidden">
                       {suggestions.map((s, i) => (
-                        <button key={i} onClick={() => selectionnerAdresse(s)} className="w-full p-3 text-left text-[10px] font-bold uppercase border-b border-slate-50 hover:bg-slate-50">
+                        <button key={i} onClick={() => selectionnerAdresse(s)} className="w-full p-3 text-left text-[10px] font-bold uppercase border-b border-[#DDD0BF] hover:bg-[#EDE3D5]">
                           {s.properties.label}
                         </button>
                       ))}
@@ -466,7 +466,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
                 <div className="space-y-2">
                   <h3 className="font-black uppercase text-xs tracking-widest text-slate-900">Remises disponibles</h3>
                   {(dbProfile?.loyalty_points ?? 0) >= 100 && (
-                    <label className="flex items-center gap-3 p-4 bg-white border border-slate-100 rounded-2xl cursor-pointer hover:border-green-200 transition-all">
+                    <label className="flex items-center gap-3 p-4 bg-white border border-[#D5C9B8] rounded-2xl cursor-pointer hover:border-green-200 transition-all">
                       <input
                         type="checkbox"
                         checked={applyLoyalty}
@@ -481,7 +481,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
                     </label>
                   )}
                   {dbProfile?.has_referral_discount && !dbProfile?.referral_pending && (
-                    <label className="flex items-center gap-3 p-4 bg-white border border-slate-100 rounded-2xl cursor-pointer hover:border-green-200 transition-all">
+                    <label className="flex items-center gap-3 p-4 bg-white border border-[#D5C9B8] rounded-2xl cursor-pointer hover:border-green-200 transition-all">
                       <input
                         type="checkbox"
                         checked={applyReferral}
@@ -500,10 +500,10 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
 
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
-                  <button onClick={()=>setMethodePaiement('Espèces')} className={`p-4 rounded-2xl border flex flex-col items-center gap-2 font-black text-[10px] transition-all ${methodePaiement === 'Espèces' ? 'bg-slate-900 text-white border-slate-900 shadow-lg' : 'bg-white text-slate-400 border-slate-100'}`}>
+                  <button onClick={()=>setMethodePaiement('Espèces')} className={`p-4 rounded-2xl border flex flex-col items-center gap-2 font-black text-[10px] transition-all ${methodePaiement === 'Espèces' ? 'bg-[#3D2B1F] text-white border-slate-900 shadow-lg' : 'bg-white text-slate-400 border-[#D5C9B8]'}`}>
                     <Banknote className="w-5 h-5" /> ESPÈCES
                   </button>
-                  <button type="button" disabled aria-disabled="true" className="p-4 rounded-2xl border flex flex-col items-center gap-2 font-black text-[10px] transition-all bg-white text-slate-300 border-slate-100 cursor-not-allowed opacity-60">
+                  <button type="button" disabled aria-disabled="true" className="p-4 rounded-2xl border flex flex-col items-center gap-2 font-black text-[10px] transition-all bg-white text-slate-300 border-[#D5C9B8] cursor-not-allowed opacity-60">
                     <CreditCard className="w-5 h-5" /> CARTE EN LIGNE
                   </button>
                 </div>
@@ -520,7 +520,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
           )}
         </div>
 
-        <div className="p-6 bg-white border-t border-slate-100 space-y-4">
+        <div className="p-6 bg-white border-t border-[#D5C9B8] space-y-4">
           <div className="space-y-1">
             <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-widest">
               <span>Sous-total</span>
@@ -568,8 +568,8 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
                     onClick={() => setSelectedCreneau(creneau)}
                     className={`w-full p-3 rounded-2xl border text-left flex items-center gap-3 transition-all font-bold text-[11px] uppercase tracking-wide ${
                       selectedCreneau === creneau
-                        ? 'bg-slate-900 text-white border-slate-900 shadow-md'
-                        : 'bg-white text-slate-600 border-slate-100 hover:border-slate-300'
+                        ? 'bg-[#3D2B1F] text-white border-slate-900 shadow-md'
+                        : 'bg-white text-slate-600 border-[#D5C9B8] hover:border-slate-300'
                     }`}
                   >
                     <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
@@ -601,7 +601,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
           <button
             disabled={chargement || methodePaiement === 'Ligne' || !!minimumNonAtteint || (user && (!(panier || []).length || !distanceValide || !nom || !telephone || (creneaux.length > 0 && !selectedCreneau)))}
             onClick={envoyerCommande}
-            className={`w-full ${!user ? 'bg-blue-600' : 'bg-slate-900'} disabled:bg-slate-100 disabled:text-slate-300 text-white p-5 rounded-2xl font-black uppercase text-sm tracking-widest hover:opacity-90 transition-all shadow-xl flex items-center justify-center gap-3`}
+            className={`w-full ${!user ? 'bg-blue-600' : 'bg-[#3D2B1F]'} disabled:bg-[#DDD0BF] disabled:text-slate-300 text-white p-5 rounded-2xl font-black uppercase text-sm tracking-widest hover:opacity-90 transition-all shadow-xl flex items-center justify-center gap-3`}
           >
             {chargement ? (
               <Loader2 className="w-5 h-5 animate-spin" />

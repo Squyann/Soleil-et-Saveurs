@@ -15,7 +15,7 @@ export default function MentionsLegales() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#FDFCF9]">
+    <div className="min-h-screen bg-[#EDE3D5]">
 
       {/* Hero */}
       <section className="bg-slate-900 pt-10 pb-16 px-6 relative overflow-hidden">

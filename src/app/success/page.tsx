@@ -12,7 +12,7 @@ export default function SuccessPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#FDFCF9] flex items-center justify-center p-6">
+    <div className="min-h-screen bg-[#EDE3D5] flex items-center justify-center p-6">
       <div className="max-w-md w-full bg-white rounded-[40px] p-10 shadow-xl border border-slate-50 text-center space-y-8 animate-in fade-in zoom-in duration-500">
         
         {/* Icône de succès animée */}

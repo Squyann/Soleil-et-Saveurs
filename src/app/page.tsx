@@ -101,7 +101,7 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-[#FDFCF9] text-slate-900 font-sans selection:bg-[#FF4500]/10 pb-10 overflow-x-hidden">
+    <main className="min-h-screen bg-[#EDE3D5] text-slate-900 font-sans selection:bg-[#FF4500]/10 pb-10 overflow-x-hidden">
 
       {/* Pop-up de succès d'éligibilité */}
       {showResult && (

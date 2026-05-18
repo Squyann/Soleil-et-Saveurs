@@ -188,7 +188,7 @@ export default function AidePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FDFCF9] pb-20">
+    <div className="min-h-screen bg-[#EDE3D5] pb-20">
       {/* Header */}
       <div className="bg-white border-b border-slate-100 sticky top-14 z-40 px-6 py-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between">

@@ -50,10 +50,10 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FDFCF9] flex flex-col md:flex-row">
+    <div className="min-h-screen bg-[#EDE3D5] flex flex-col md:flex-row">
 
       {/* GAUCHE — visuel */}
-      <div className="hidden md:flex md:w-1/2 bg-slate-900 relative overflow-hidden items-center justify-center p-12">
+      <div className="hidden md:flex md:w-1/2 bg-[#3D2B1F] relative overflow-hidden items-center justify-center p-12">
         <div className="absolute top-[-10%] right-[-10%] w-96 h-96 bg-[#FF4500] rounded-full blur-[120px] opacity-20" />
         <div className="absolute bottom-[-10%] left-[-10%] w-96 h-96 bg-orange-500 rounded-full blur-[120px] opacity-10" />
         <div className="relative z-10 max-w-lg">
@@ -65,7 +65,7 @@ export default function ResetPasswordPage() {
             <span className="text-[#FF4500]">MOT DE PASSE.</span>
           </h1>
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center shrink-0 border border-white/10">
+            <div className="w-12 h-12 bg-[#F5EAE0]/5 rounded-2xl flex items-center justify-center shrink-0 border border-white/10">
               <ShieldCheck className="w-6 h-6 text-[#FF4500]" />
             </div>
             <div>
@@ -127,7 +127,7 @@ export default function ResetPasswordPage() {
                       placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full bg-white border border-slate-100 p-4 pl-12 pr-12 rounded-2xl font-bold text-sm focus:border-[#FF4500] focus:ring-4 focus:ring-[#FF4500]/5 outline-none transition-all shadow-sm"
+                      className="w-full bg-[#F5EAE0] border border-[#D5C9B8] p-4 pl-12 pr-12 rounded-2xl font-bold text-sm focus:border-[#FF4500] focus:ring-4 focus:ring-[#FF4500]/5 outline-none transition-all shadow-sm"
                     />
                     <button type="button" onClick={() => setShowPassword(v => !v)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-600 transition-colors">
                       {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -145,7 +145,7 @@ export default function ResetPasswordPage() {
                       placeholder="••••••••"
                       value={confirm}
                       onChange={(e) => setConfirm(e.target.value)}
-                      className="w-full bg-white border border-slate-100 p-4 pl-12 pr-12 rounded-2xl font-bold text-sm focus:border-[#FF4500] focus:ring-4 focus:ring-[#FF4500]/5 outline-none transition-all shadow-sm"
+                      className="w-full bg-[#F5EAE0] border border-[#D5C9B8] p-4 pl-12 pr-12 rounded-2xl font-bold text-sm focus:border-[#FF4500] focus:ring-4 focus:ring-[#FF4500]/5 outline-none transition-all shadow-sm"
                     />
                     <button type="button" onClick={() => setShowConfirm(v => !v)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-600 transition-colors">
                       {showConfirm ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -156,7 +156,7 @@ export default function ResetPasswordPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-slate-900 text-white p-5 rounded-2xl font-black uppercase text-sm tracking-widest hover:bg-[#FF4500] transition-all shadow-xl shadow-slate-200 flex items-center justify-center gap-3 group disabled:bg-slate-200"
+                  className="w-full bg-[#3D2B1F] text-white p-5 rounded-2xl font-black uppercase text-sm tracking-widest hover:bg-[#FF4500] transition-all shadow-xl shadow-slate-200 flex items-center justify-center gap-3 group disabled:bg-slate-200"
                 >
                   {loading ? (
                     <Loader2 className="w-5 h-5 animate-spin" />

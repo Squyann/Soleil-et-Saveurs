@@ -198,7 +198,7 @@ export default function ComptePage() {
   // --- LOADING ---
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#FDFCF9] flex items-center justify-center">
+      <div className="min-h-screen bg-[#EDE3D5] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 bg-[#FF4500] rounded-2xl flex items-center justify-center animate-pulse">
             <span className="text-white font-black text-lg">S</span>
@@ -239,10 +239,10 @@ export default function ComptePage() {
  
 
   return (
-    <div className="min-h-screen bg-[#FDFCF9] text-slate-900 pb-20">
+    <div className="min-h-screen bg-[#EDE3D5] text-slate-900 pb-20">
 
       {/* HERO HEADER */}
-      <div className="bg-slate-900 pt-20 pb-32 px-4 md:px-8 relative overflow-hidden">
+      <div className="bg-[#3D2B1F] pt-20 pb-32 px-4 md:px-8 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#FF4500]/10 blur-[120px] rounded-full pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-blue-500/5 blur-[100px] rounded-full pointer-events-none" />
 
@@ -297,7 +297,7 @@ export default function ComptePage() {
       <div className="max-w-5xl mx-auto px-4 md:px-8 -mt-16 relative z-10">
 
         {/* TABS */}
-        <div className="flex gap-2 mb-8 bg-white p-1.5 rounded-2xl shadow-xl shadow-slate-200/60 border border-slate-100 w-fit">
+        <div className="flex gap-2 mb-8 bg-white p-1.5 rounded-2xl shadow-xl shadow-slate-200/60 border border-[#D5C9B8] w-fit">
           {([
             { id: 'profil',     label: 'Mon Profil',  icon: User },
             { id: 'commandes', label: 'Commandes',   icon: ShoppingBag },
@@ -308,8 +308,8 @@ export default function ComptePage() {
               onClick={() => setActiveTab(id)}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-[11px] uppercase tracking-tight transition-all ${
                 activeTab === id
-                  ? 'bg-slate-900 text-white shadow-md'
-                  : 'text-slate-400 hover:text-slate-700 hover:bg-slate-50'
+                  ? 'bg-[#3D2B1F] text-white shadow-md'
+                  : 'text-slate-400 hover:text-slate-700 hover:bg-[#EDE3D5]'
               }`}
             >
               <Icon className="w-3.5 h-3.5" />
@@ -323,7 +323,7 @@ export default function ComptePage() {
           <div className="grid md:grid-cols-2 gap-6">
 
             {/* INFOS PERSONNELLES */}
-            <div className="bg-white rounded-[2rem] p-8 border border-slate-100 shadow-xl shadow-slate-100/50">
+            <div className="bg-white rounded-[2rem] p-8 border border-[#D5C9B8] shadow-xl shadow-slate-100/50">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="font-black uppercase tracking-tight text-slate-900">Informations</h2>
                 {!isEditing ? (
@@ -337,14 +337,14 @@ export default function ComptePage() {
                   <div className="flex gap-2">
                     <button
                       onClick={() => { setIsEditing(false); setEditForm(profile!); setAddressSuggestions([]); }}
-                      className="p-2 hover:bg-slate-50 rounded-xl transition-colors text-slate-400"
+                      className="p-2 hover:bg-[#EDE3D5] rounded-xl transition-colors text-slate-400"
                     >
                       <X className="w-4 h-4" />
                     </button>
                     <button
                       onClick={handleSave}
                       disabled={saveLoading}
-                      className="flex items-center gap-1.5 bg-[#FF4500] text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase hover:bg-slate-900 transition-all disabled:opacity-50"
+                      className="flex items-center gap-1.5 bg-[#FF4500] text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase hover:bg-[#3D2B1F] transition-all disabled:opacity-50"
                     >
                       {saveLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
                       Sauver
@@ -376,10 +376,10 @@ export default function ComptePage() {
                         type="text"
                         value={editForm.last_name || ''}
                         onChange={e => setEditForm(f => ({ ...f, last_name: e.target.value }))}
-                        className="w-full bg-slate-50 border border-slate-100 p-3 rounded-xl font-bold text-sm focus:border-[#FF4500] outline-none transition-all uppercase"
+                        className="w-full bg-[#EDE3D5] border border-[#D5C9B8] p-3 rounded-xl font-bold text-sm focus:border-[#FF4500] outline-none transition-all uppercase"
                       />
                     ) : (
-                      <div className="bg-slate-50 p-3 rounded-xl font-bold text-sm uppercase text-slate-700">
+                      <div className="bg-[#EDE3D5] p-3 rounded-xl font-bold text-sm uppercase text-slate-700">
                         {profile?.last_name || '—'}
                       </div>
                     )}
@@ -391,10 +391,10 @@ export default function ComptePage() {
                         type="text"
                         value={editForm.first_name || ''}
                         onChange={e => setEditForm(f => ({ ...f, first_name: e.target.value }))}
-                        className="w-full bg-slate-50 border border-slate-100 p-3 rounded-xl font-bold text-sm focus:border-[#FF4500] outline-none transition-all uppercase"
+                        className="w-full bg-[#EDE3D5] border border-[#D5C9B8] p-3 rounded-xl font-bold text-sm focus:border-[#FF4500] outline-none transition-all uppercase"
                       />
                     ) : (
-                      <div className="bg-slate-50 p-3 rounded-xl font-bold text-sm uppercase text-slate-700">
+                      <div className="bg-[#EDE3D5] p-3 rounded-xl font-bold text-sm uppercase text-slate-700">
                         {profile?.first_name || '—'}
                       </div>
                     )}
@@ -406,9 +406,9 @@ export default function ComptePage() {
                   <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Email</label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
-                    <div className="bg-slate-50 p-3 pl-10 rounded-xl font-bold text-sm text-slate-400 flex items-center justify-between">
+                    <div className="bg-[#EDE3D5] p-3 pl-10 rounded-xl font-bold text-sm text-slate-400 flex items-center justify-between">
                       <span>{profile?.email}</span>
-                      <span className="text-[8px] font-black uppercase bg-slate-100 px-2 py-0.5 rounded-full text-slate-400">Non modifiable</span>
+                      <span className="text-[8px] font-black uppercase bg-[#DDD0BF] px-2 py-0.5 rounded-full text-slate-400">Non modifiable</span>
                     </div>
                   </div>
                 </div>
@@ -424,13 +424,13 @@ export default function ComptePage() {
                         value={editForm.phone || ''}
                         onChange={e => setEditForm(f => ({ ...f, phone: e.target.value }))}
                         placeholder="06XXXXXXXX"
-                        className="w-full bg-slate-50 border border-slate-100 p-3 pl-10 rounded-xl font-bold text-sm focus:border-[#FF4500] outline-none transition-all"
+                        className="w-full bg-[#EDE3D5] border border-[#D5C9B8] p-3 pl-10 rounded-xl font-bold text-sm focus:border-[#FF4500] outline-none transition-all"
                       />
                     </div>
                   ) : (
                     <div className="relative">
                       <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
-                      <div className="bg-slate-50 p-3 pl-10 rounded-xl font-bold text-sm text-slate-700">
+                      <div className="bg-[#EDE3D5] p-3 pl-10 rounded-xl font-bold text-sm text-slate-700">
                         {profile?.phone || '—'}
                       </div>
                     </div>
@@ -443,7 +443,7 @@ export default function ComptePage() {
             <div className="space-y-4">
 
               {/* CARTE FIDÉLITÉ */}
-              <div className="bg-slate-900 rounded-[2rem] p-6 relative overflow-hidden shadow-xl">
+              <div className="bg-[#3D2B1F] rounded-[2rem] p-6 relative overflow-hidden shadow-xl">
                 <div className="absolute top-0 right-0 w-48 h-48 bg-[#FF4500]/20 blur-[60px] rounded-full pointer-events-none" />
                 <div className="relative z-10">
                   <div className="flex items-center gap-2 mb-3">
@@ -473,13 +473,13 @@ export default function ComptePage() {
               </div>
 
               {/* CARTE PARRAINAGE */}
-              <div className="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-sm">
+              <div className="bg-white rounded-[2rem] p-6 border border-[#D5C9B8] shadow-sm">
                 <div className="flex items-center gap-2 mb-2">
                   <Gift className="w-5 h-5 text-[#FF4500]" />
                   <p className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Parrainage</p>
                 </div>
                 <p className="text-[10px] text-slate-400 font-bold mb-3 uppercase">Partagez votre code — vous gagnez tous les deux -10%</p>
-                <div className="flex items-center gap-2 bg-slate-50 rounded-xl p-3 border border-slate-100">
+                <div className="flex items-center gap-2 bg-[#EDE3D5] rounded-xl p-3 border border-[#D5C9B8]">
                   <p className="font-black text-lg text-slate-900 tracking-[0.2em] flex-1">{dbProfile?.referral_code ?? '—'}</p>
                   <button
                     onClick={() => {
@@ -489,7 +489,7 @@ export default function ComptePage() {
                         setTimeout(() => setReferralCopied(false), 2000);
                       }
                     }}
-                    className="flex items-center gap-1 bg-[#FF4500] text-white px-3 py-1.5 rounded-lg text-[9px] font-black uppercase hover:bg-slate-900 transition-all"
+                    className="flex items-center gap-1 bg-[#FF4500] text-white px-3 py-1.5 rounded-lg text-[9px] font-black uppercase hover:bg-[#3D2B1F] transition-all"
                   >
                     <Copy className="w-3 h-3" />
                     {referralCopied ? 'Copié !' : 'Copier'}
@@ -507,7 +507,7 @@ export default function ComptePage() {
               {isAdmin && (
                 <Link
                   href="/admin"
-                  className="w-full flex items-center justify-between bg-slate-900 border border-slate-800 p-6 rounded-[2rem] hover:bg-[#FF4500] transition-all group shadow-sm"
+                  className="w-full flex items-center justify-between bg-[#3D2B1F] border border-slate-800 p-6 rounded-[2rem] hover:bg-[#FF4500] transition-all group shadow-sm"
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center">
@@ -525,7 +525,7 @@ export default function ComptePage() {
               {/* DÉCONNEXION */}
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center justify-between bg-white border border-slate-100 p-6 rounded-[2rem] hover:border-red-100 hover:bg-red-50/30 transition-all group shadow-sm"
+                className="w-full flex items-center justify-between bg-white border border-[#D5C9B8] p-6 rounded-[2rem] hover:border-red-100 hover:bg-red-50/30 transition-all group shadow-sm"
               >
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center">
@@ -550,14 +550,14 @@ export default function ComptePage() {
                 <Loader2 className="w-8 h-8 text-[#FF4500] animate-spin" />
               </div>
             ) : orders.length === 0 ? (
-              <div className="bg-white rounded-[2.5rem] p-16 text-center border border-slate-100 shadow-sm">
-                <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="bg-white rounded-[2.5rem] p-16 text-center border border-[#D5C9B8] shadow-sm">
+                <div className="w-20 h-20 bg-[#EDE3D5] rounded-full flex items-center justify-center mx-auto mb-4">
                   <Package className="w-8 h-8 text-slate-200" />
                 </div>
                 <p className="font-black uppercase text-sm text-slate-400 tracking-widest mb-6">Aucune commande pour l'instant</p>
                 <Link
                   href="/commander"
-                  className="inline-flex items-center gap-2 bg-[#FF4500] text-white px-6 py-3 rounded-xl font-black uppercase text-[11px] hover:bg-slate-900 transition-all"
+                  className="inline-flex items-center gap-2 bg-[#FF4500] text-white px-6 py-3 rounded-xl font-black uppercase text-[11px] hover:bg-[#3D2B1F] transition-all"
                 >
                   Voir la récolte du jour <ChevronRight className="w-4 h-4" />
                 </Link>
@@ -576,10 +576,10 @@ export default function ComptePage() {
                 const StatusIcon = statusCfg.icon;
                 
                 return (
-                  <div key={order.id} className="bg-white rounded-[2rem] p-6 md:p-8 border border-slate-50 shadow-xl shadow-slate-100/50 hover:shadow-slate-200/60 transition-all">
+                  <div key={order.id} className="bg-white rounded-[2rem] p-6 md:p-8 border border-[#DDD0BF] shadow-xl shadow-slate-100/50 hover:shadow-slate-200/60 transition-all">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center shrink-0">
+                        <div className="w-12 h-12 bg-[#EDE3D5] rounded-2xl flex items-center justify-center shrink-0">
                           <Truck className="w-5 h-5 text-slate-400" />
                         </div>
                         <div>
@@ -602,8 +602,8 @@ export default function ComptePage() {
                     </div>
 
                     {/* ARTICLES (Via description_commande) */}
-                    <div className="border-t border-slate-50 pt-4">
-                      <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-100/50">
+                    <div className="border-t border-[#DDD0BF] pt-4">
+                      <div className="bg-[#EDE3D5]/50 p-4 rounded-2xl border border-[#D5C9B8]/50">
                         <p className="text-[11px] font-bold text-slate-600 leading-relaxed uppercase tracking-tight">
                           {order.description_commande || "Détail indisponible"}
                         </p>
@@ -612,7 +612,7 @@ export default function ComptePage() {
 
                     {/* TIMELINE SUIVI */}
                     {!statusKey.includes('annule') && (
-                      <div className="mt-5 pt-4 border-t border-slate-50">
+                      <div className="mt-5 pt-4 border-t border-[#DDD0BF]">
                         <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-3">Suivi de commande</p>
                         <div className="flex items-center">
                           {([
@@ -626,13 +626,13 @@ export default function ComptePage() {
                             return (
                               <React.Fragment key={step.key}>
                                 <div className="flex flex-col items-center gap-1 shrink-0">
-                                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-black transition-all ${done ? (step.key === 'livree' ? 'bg-green-500 text-white' : 'bg-[#FF4500] text-white') : 'bg-slate-100 text-slate-300'}`}>
+                                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-black transition-all ${done ? (step.key === 'livree' ? 'bg-green-500 text-white' : 'bg-[#FF4500] text-white') : 'bg-[#DDD0BF] text-slate-300'}`}>
                                     {done ? '✓' : idx + 1}
                                   </div>
                                   <span className={`text-[8px] font-black uppercase tracking-tight text-center ${done ? 'text-slate-600' : 'text-slate-300'}`}>{step.label}</span>
                                 </div>
                                 {!isLast && (
-                                  <div className={`flex-1 h-0.5 mb-3 mx-1 transition-all ${arr[idx + 1].order <= currentOrder ? 'bg-[#FF4500]' : 'bg-slate-100'}`} />
+                                  <div className={`flex-1 h-0.5 mb-3 mx-1 transition-all ${arr[idx + 1].order <= currentOrder ? 'bg-[#FF4500]' : 'bg-[#DDD0BF]'}`} />
                                 )}
                               </React.Fragment>
                             );
@@ -642,10 +642,10 @@ export default function ComptePage() {
                     )}
 
                     {/* BOUTON : COMMANDER À NOUVEAU */}
-                    <div className="mt-6 pt-4 border-t border-slate-50">
+                    <div className="mt-6 pt-4 border-t border-[#DDD0BF]">
                       <button
                         onClick={() => commanderANouveau((order as any).contenu_panier)}
-                        className="w-full py-4 bg-[#FF4500] text-white rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-slate-900 transition-all shadow-lg shadow-orange-900/10 active:scale-95"
+                        className="w-full py-4 bg-[#FF4500] text-white rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[#3D2B1F] transition-all shadow-lg shadow-orange-900/10 active:scale-95"
                       >
                         <ShoppingBag className="w-4 h-4" />
                         Commander à nouveau
@@ -672,7 +672,7 @@ export default function ComptePage() {
           <div className="grid md:grid-cols-2 gap-6">
 
             {/* ADRESSE PRINCIPALE */}
-            <div className="bg-white rounded-[2rem] p-8 border border-slate-100 shadow-xl shadow-slate-100/50">
+            <div className="bg-white rounded-[2rem] p-8 border border-[#D5C9B8] shadow-xl shadow-slate-100/50">
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h2 className="font-black uppercase tracking-tight text-slate-900">Adresse principale</h2>
@@ -687,13 +687,13 @@ export default function ComptePage() {
                   </button>
                 ) : (
                   <div className="flex gap-2">
-                    <button onClick={() => { setIsEditing(false); setEditForm(profile!); setAddressSuggestions([]); }} className="p-2 hover:bg-slate-50 rounded-xl text-slate-400">
+                    <button onClick={() => { setIsEditing(false); setEditForm(profile!); setAddressSuggestions([]); }} className="p-2 hover:bg-[#EDE3D5] rounded-xl text-slate-400">
                       <X className="w-4 h-4" />
                     </button>
                     <button
                       onClick={handleSave}
                       disabled={saveLoading}
-                      className="flex items-center gap-1.5 bg-[#FF4500] text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase hover:bg-slate-900 transition-all disabled:opacity-50"
+                      className="flex items-center gap-1.5 bg-[#FF4500] text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase hover:bg-[#3D2B1F] transition-all disabled:opacity-50"
                     >
                       {saveLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
                       Sauver
@@ -713,16 +713,16 @@ export default function ComptePage() {
                         value={editForm.address || ''}
                         onChange={e => handleAddressInput(e.target.value)}
                         placeholder="Tapez votre adresse..."
-                        className="w-full bg-slate-50 border border-slate-100 p-3 pl-10 rounded-xl font-bold text-sm focus:border-[#FF4500] outline-none transition-all"
+                        className="w-full bg-[#EDE3D5] border border-[#D5C9B8] p-3 pl-10 rounded-xl font-bold text-sm focus:border-[#FF4500] outline-none transition-all"
                       />
                     </div>
                     {addressSuggestions.length > 0 && (
-                      <div className="absolute z-50 w-full bg-white border border-slate-100 rounded-2xl shadow-2xl mt-1 overflow-hidden">
+                      <div className="absolute z-50 w-full bg-white border border-[#D5C9B8] rounded-2xl shadow-2xl mt-1 overflow-hidden">
                         {addressSuggestions.map((s, i) => (
                           <button
                             key={i}
                             onClick={() => { setEditForm(f => ({ ...f, address: s.properties.label })); setAddressSuggestions([]); }}
-                            className="w-full p-3 text-left text-[10px] font-black uppercase border-b border-slate-50 hover:bg-slate-50 flex items-center gap-2"
+                            className="w-full p-3 text-left text-[10px] font-black uppercase border-b border-[#DDD0BF] hover:bg-[#EDE3D5] flex items-center gap-2"
                           >
                             <MapPin className="w-3 h-3 text-[#FF4500] shrink-0" />
                             {s.properties.label}
@@ -751,7 +751,7 @@ export default function ComptePage() {
             </div>
 
             {/* CTA COMMANDER */}
-            <div className="bg-slate-900 rounded-[2rem] p-8 relative overflow-hidden shadow-xl flex flex-col justify-between">
+            <div className="bg-[#3D2B1F] rounded-[2rem] p-8 relative overflow-hidden shadow-xl flex flex-col justify-between">
               <div className="absolute bottom-0 right-0 w-56 h-56 bg-[#FF4500]/15 blur-[80px] rounded-full pointer-events-none" />
               <div className="relative z-10">
                 <Truck className="w-8 h-8 text-[#FF4500] mb-4" />

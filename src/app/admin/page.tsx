@@ -464,7 +464,7 @@ export default function AdminPage() {
   const nbNonLus = messages.filter(m => !m.lu).length;
 
   return (
-  <div className="min-h-screen bg-[#FDFCF9] text-slate-900 pb-20 font-sans">
+  <div className="min-h-screen bg-[#EDE3D5] text-slate-900 pb-20 font-sans">
     <header className="bg-white border-b border-slate-100 sticky top-0 z-50 px-6 py-4">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
         <Link href="/" className="text-xl font-black uppercase tracking-tighter italic">
@@ -647,7 +647,7 @@ export default function AdminPage() {
             <h2 className="font-black text-2xl mb-8 text-slate-900 italic uppercase tracking-tighter">Gestion des stocks & Promos</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {produitsFiltres.map(p => (
-                <div key={p.id} className="p-6 bg-[#FDFCF9] rounded-[2.5rem] border border-slate-100 flex flex-col items-center relative transition-all hover:shadow-md group">
+                <div key={p.id} className="p-6 bg-[#EDE3D5] rounded-[2.5rem] border border-slate-100 flex flex-col items-center relative transition-all hover:shadow-md group">
                   {(p.promotion > 0 || p.seuil_achat > 0) && (
                     <div className="absolute top-4 right-4 bg-[#FF4500] text-white text-[9px] font-black px-2.5 py-1 rounded-full uppercase z-10 shadow-sm animate-pulse">
                       {p.promotion > 0 ? `-${p.promotion}%` : `${p.seuil_achat}+${p.quantite_offerte}`}
