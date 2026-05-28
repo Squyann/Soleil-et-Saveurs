@@ -290,12 +290,20 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
       setCodePromoId(data.id);
       setCodeStatut('valid');
       setCodePromo(code);
+      setApplyLoyalty(false);
+      setApplyReferral(false);
     } else {
       setRemiseCode(0);
       setCodePromoId(null);
       setCodeStatut('invalid');
     }
   };
+
+  const panierAPromosProduit = (panier || []).some(item =>
+    (item.promotion > 0) ||
+    (item.seuil_achat > 0 && item.quantite_offerte > 0) ||
+    (item.seuil_promo_qte > 0 && item.prix_promo > 0)
+  );
 
   const sousTotalFinal = (panier || []).reduce((acc, item) => acc + calculerPrixLigne(item), 0);
   const economie = calculerEconomieTotale();
@@ -568,12 +576,25 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
               {user && ((dbProfile?.loyalty_points ?? 0) >= 100 || (dbProfile?.has_referral_discount && !dbProfile?.referral_pending)) && (
                 <div className="space-y-2">
                   <h3 className="font-black uppercase text-xs tracking-widest text-slate-900">Remises disponibles</h3>
+                  {panierAPromosProduit && (
+                    <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-100 rounded-xl">
+                      <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                      <p className="text-[10px] font-black text-amber-700 uppercase leading-relaxed">Vos produits bénéficient déjà de promotions — les remises ne sont pas cumulables.</p>
+                    </div>
+                  )}
                   {(dbProfile?.loyalty_points ?? 0) >= 100 && (
-                    <label className="flex items-center gap-3 p-4 bg-white border border-[#D5C9B8] rounded-2xl cursor-pointer hover:border-green-200 transition-all">
+                    <label className={`flex items-center gap-3 p-4 bg-white border border-[#D5C9B8] rounded-2xl transition-all ${panierAPromosProduit || codeStatut === 'valid' || applyReferral ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-green-200'}`}>
                       <input
                         type="checkbox"
                         checked={applyLoyalty}
-                        onChange={(e) => setApplyLoyalty(e.target.checked)}
+                        disabled={panierAPromosProduit || codeStatut === 'valid' || applyReferral}
+                        onChange={(e) => {
+                          setApplyLoyalty(e.target.checked);
+                          if (e.target.checked) {
+                            setApplyReferral(false);
+                            setCodePromo(''); setCodeStatut('idle'); setRemiseCode(0); setCodePromoId(null);
+                          }
+                        }}
                         className="w-4 h-4 accent-[#FF4500] shrink-0"
                       />
                       <div className="flex-1">
@@ -584,11 +605,18 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
                     </label>
                   )}
                   {dbProfile?.has_referral_discount && !dbProfile?.referral_pending && (
-                    <label className="flex items-center gap-3 p-4 bg-white border border-[#D5C9B8] rounded-2xl cursor-pointer hover:border-green-200 transition-all">
+                    <label className={`flex items-center gap-3 p-4 bg-white border border-[#D5C9B8] rounded-2xl transition-all ${panierAPromosProduit || codeStatut === 'valid' || applyLoyalty ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-green-200'}`}>
                       <input
                         type="checkbox"
                         checked={applyReferral}
-                        onChange={(e) => setApplyReferral(e.target.checked)}
+                        disabled={panierAPromosProduit || codeStatut === 'valid' || applyLoyalty}
+                        onChange={(e) => {
+                          setApplyReferral(e.target.checked);
+                          if (e.target.checked) {
+                            setApplyLoyalty(false);
+                            setCodePromo(''); setCodeStatut('idle'); setRemiseCode(0); setCodePromoId(null);
+                          }
+                        }}
                         className="w-4 h-4 accent-[#FF4500] shrink-0"
                       />
                       <div className="flex-1">
@@ -612,10 +640,11 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
                       placeholder="VOTRE CODE"
                       value={codePromo}
                       onChange={(e) => { setCodePromo(e.target.value.toUpperCase()); setCodeStatut('idle'); setRemiseCode(0); setCodePromoId(null); }}
-                      disabled={codeStatut === 'valid' || codeStatut === 'used'}
+                      disabled={codeStatut === 'valid' || codeStatut === 'used' || panierAPromosProduit || applyLoyalty || applyReferral}
                       className={`w-full bg-white border p-4 pl-12 rounded-2xl font-bold text-xs uppercase outline-none transition-all ${
                         codeStatut === 'valid' ? 'border-green-400 bg-green-50 text-green-700' :
                         codeStatut === 'invalid' || codeStatut === 'used' ? 'border-red-300' :
+                        panierAPromosProduit || applyLoyalty || applyReferral ? 'border-[#D5C9B8] opacity-50 cursor-not-allowed' :
                         'border-[#D5C9B8] focus:border-[#FF4500]'
                       }`}
                     />
@@ -630,7 +659,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
                   ) : (
                     <button
                       onClick={validerCodePromo}
-                      disabled={codeStatut === 'loading' || !codePromo.trim()}
+                      disabled={codeStatut === 'loading' || !codePromo.trim() || panierAPromosProduit || applyLoyalty || applyReferral}
                       className="px-4 py-2 rounded-2xl bg-[#3D2B1F] text-white text-[10px] font-black uppercase tracking-widest disabled:opacity-40 hover:opacity-90 transition-all"
                     >
                       {codeStatut === 'loading' ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Appliquer'}
