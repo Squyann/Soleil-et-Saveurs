@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { X, Trash2, ShoppingBag, MapPin, CreditCard, Banknote, Phone, User, Loader2, CheckCircle2, AlertCircle, LogIn, Gift, TrendingDown, Calendar, Tag, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, Trash2, ShoppingBag, MapPin, CreditCard, Banknote, Phone, User, Loader2, CheckCircle2, AlertCircle, LogIn, Gift, TrendingDown, Calendar, Tag, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 
@@ -58,6 +58,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
   const [exceptionsLiv, setExceptionsLiv] = useState<{ date: string; ferme: boolean }[]>([]);
   const [commandesParDate, setCommandesParDate] = useState<Record<string, number>>({});
   const [moisCal, setMoisCal] = useState<{ annee: number; mois: number }>({ annee: new Date().getFullYear(), mois: new Date().getMonth() });
+  const [calOpen, setCalOpen] = useState(false);
   const [codePromo, setCodePromo] = useState('');
   const [codeStatut, setCodeStatut] = useState<'idle' | 'loading' | 'valid' | 'invalid' | 'used'>('idle');
   const [remiseCode, setRemiseCode] = useState(0);
@@ -720,75 +721,83 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
           
           {/* CALENDRIER DE LIVRAISON */}
           {configCal !== null && (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-blue-500" />
-                <h3 className="font-black uppercase text-xs tracking-widest text-slate-900">Date de livraison</h3>
-                <span className="text-[9px] bg-red-50 text-red-500 px-2 py-0.5 rounded-full font-bold uppercase">Requis</span>
-              </div>
-
-              <div className="bg-white border border-[#D5C9B8] rounded-2xl overflow-hidden">
-                {/* Header mois */}
-                <div className="flex items-center justify-between px-4 py-3 border-b border-[#D5C9B8] bg-[#F5EAE0]">
-                  <button type="button" onClick={() => setMoisCal(prev => { const d = new Date(prev.annee, prev.mois - 1); return { annee: d.getFullYear(), mois: d.getMonth() }; })} className="w-7 h-7 rounded-lg hover:bg-[#EDE3D5] flex items-center justify-center transition-colors">
-                    <ChevronLeft className="w-4 h-4 text-slate-500" />
-                  </button>
-                  <span className="text-xs font-black uppercase tracking-widest text-slate-900">
-                    {new Date(moisCal.annee, moisCal.mois).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }).toUpperCase()}
+            <div className="space-y-2">
+              <button
+                type="button"
+                onClick={() => setCalOpen(o => !o)}
+                className="w-full flex items-center gap-2 p-3 bg-white border border-[#D5C9B8] rounded-2xl hover:border-slate-300 transition-all"
+              >
+                <Calendar className="w-4 h-4 text-blue-500 shrink-0" />
+                <span className="font-black uppercase text-xs tracking-widest text-slate-900">Date de livraison</span>
+                {dateLivraison ? (
+                  <span className="text-[9px] bg-green-50 text-green-600 px-2 py-0.5 rounded-full font-bold uppercase truncate">
+                    {new Date(dateLivraison + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })}
                   </span>
-                  <button type="button" onClick={() => setMoisCal(prev => { const d = new Date(prev.annee, prev.mois + 1); return { annee: d.getFullYear(), mois: d.getMonth() }; })} className="w-7 h-7 rounded-lg hover:bg-[#EDE3D5] flex items-center justify-center transition-colors">
-                    <ChevronRight className="w-4 h-4 text-slate-500" />
-                  </button>
-                </div>
+                ) : (
+                  <span className="text-[9px] bg-red-50 text-red-500 px-2 py-0.5 rounded-full font-bold uppercase">Requis</span>
+                )}
+                <ChevronDown className={`w-4 h-4 text-slate-400 ml-auto shrink-0 transition-transform duration-200 ${calOpen ? 'rotate-180' : ''}`} />
+              </button>
 
-                {/* Entêtes jours */}
-                <div className="grid grid-cols-7 border-b border-[#D5C9B8]">
-                  {['L','M','M','J','V','S','D'].map((j, i) => (
-                    <div key={i} className="text-center text-[9px] font-black text-slate-300 uppercase py-2">{j}</div>
-                  ))}
-                </div>
-
-                {/* Jours */}
-                <div className="grid grid-cols-7 p-2 gap-1">
-                  {joursDuMois(moisCal.annee, moisCal.mois).map((date, i) => {
-                    if (!date) return <div key={`e-${i}`} />;
-                    const dateStr = fmtDate(date);
-                    const auj = new Date(); auj.setHours(0,0,0,0);
-                    const demain = new Date(auj); demain.setDate(auj.getDate() + 1);
-                    const passe = date < demain;
-                    const dispo = !passe && isDisponible(date);
-                    const plein = dispo && isPlein(date);
-                    const selec = dateStr === dateLivraison;
-                    return (
-                      <button
-                        key={dateStr}
-                        type="button"
-                        disabled={!dispo || plein}
-                        onClick={() => setDateLivraison(selec ? null : dateStr)}
-                        className={`aspect-square rounded-xl text-[11px] font-black transition-all flex items-center justify-center
-                          ${selec ? 'bg-[#3D2B1F] text-white shadow-md' :
-                            passe || !dispo ? 'text-slate-200 cursor-not-allowed' :
-                            plein ? 'bg-orange-50 text-orange-300 cursor-not-allowed border border-orange-100' :
-                            'hover:bg-[#EDE3D5] text-slate-700 cursor-pointer'}`}
-                      >
-                        {date.getDate()}
+              {calOpen && (
+                <div className="space-y-2">
+                  <div className="bg-white border border-[#D5C9B8] rounded-2xl overflow-hidden">
+                    {/* Header mois */}
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-[#D5C9B8] bg-[#F5EAE0]">
+                      <button type="button" onClick={() => setMoisCal(prev => { const d = new Date(prev.annee, prev.mois - 1); return { annee: d.getFullYear(), mois: d.getMonth() }; })} className="w-7 h-7 rounded-lg hover:bg-[#EDE3D5] flex items-center justify-center transition-colors">
+                        <ChevronLeft className="w-4 h-4 text-slate-500" />
                       </button>
-                    );
-                  })}
-                </div>
-              </div>
+                      <span className="text-xs font-black uppercase tracking-widest text-slate-900">
+                        {new Date(moisCal.annee, moisCal.mois).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }).toUpperCase()}
+                      </span>
+                      <button type="button" onClick={() => setMoisCal(prev => { const d = new Date(prev.annee, prev.mois + 1); return { annee: d.getFullYear(), mois: d.getMonth() }; })} className="w-7 h-7 rounded-lg hover:bg-[#EDE3D5] flex items-center justify-center transition-colors">
+                        <ChevronRight className="w-4 h-4 text-slate-500" />
+                      </button>
+                    </div>
 
-              {dateLivraison ? (
-                <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-100 rounded-xl">
-                  <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
-                  <p className="text-[10px] font-black text-green-700 uppercase">
-                    Livraison le {new Date(dateLivraison + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
-                  </p>
+                    {/* Entêtes jours */}
+                    <div className="grid grid-cols-7 border-b border-[#D5C9B8]">
+                      {['L','M','M','J','V','S','D'].map((j, i) => (
+                        <div key={i} className="text-center text-[9px] font-black text-slate-300 uppercase py-2">{j}</div>
+                      ))}
+                    </div>
+
+                    {/* Jours */}
+                    <div className="grid grid-cols-7 p-2 gap-1">
+                      {joursDuMois(moisCal.annee, moisCal.mois).map((date, i) => {
+                        if (!date) return <div key={`e-${i}`} />;
+                        const dateStr = fmtDate(date);
+                        const auj = new Date(); auj.setHours(0,0,0,0);
+                        const demain = new Date(auj); demain.setDate(auj.getDate() + 1);
+                        const passe = date < demain;
+                        const dispo = !passe && isDisponible(date);
+                        const plein = dispo && isPlein(date);
+                        const selec = dateStr === dateLivraison;
+                        return (
+                          <button
+                            key={dateStr}
+                            type="button"
+                            disabled={!dispo || plein}
+                            onClick={() => { setDateLivraison(selec ? null : dateStr); if (!selec) setCalOpen(false); }}
+                            className={`aspect-square rounded-xl text-[11px] font-black transition-all flex items-center justify-center
+                              ${selec ? 'bg-[#3D2B1F] text-white shadow-md' :
+                                passe || !dispo ? 'text-slate-200 cursor-not-allowed' :
+                                plein ? 'bg-orange-50 text-orange-300 cursor-not-allowed border border-orange-100' :
+                                'hover:bg-[#EDE3D5] text-slate-700 cursor-pointer'}`}
+                          >
+                            {date.getDate()}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {!dateLivraison && (
+                    <p className="text-[9px] font-bold text-amber-600 uppercase tracking-wide pl-1">
+                      Veuillez sélectionner une date de livraison
+                    </p>
+                  )}
                 </div>
-              ) : (
-                <p className="text-[9px] font-bold text-amber-600 uppercase tracking-wide pl-1">
-                  Veuillez sélectionner une date de livraison
-                </p>
               )}
             </div>
           )}
