@@ -8,7 +8,7 @@ import {
   RefreshCcw, Printer, Phone, MessageSquare,
   Trash2, Plus, Truck, CheckCircle2, Clock, Mail, Save, Edit3, X,
   Inbox, Send, Eye, EyeOff, ChevronDown, ChevronUp,
-  BarChart2, Calendar, TrendingUp, ToggleLeft, ToggleRight, Tag, Loader2
+  BarChart2, Calendar, TrendingUp, ToggleLeft, ToggleRight, Tag, Loader2, ChevronLeft, ChevronRight
 } from 'lucide-react';
 
 interface StatsType {
@@ -23,7 +23,7 @@ export default function AdminPage() {
   const [messages, setMessages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [recherche, setRecherche] = useState('');
-  const [onglet, setOnglet] = useState<'commandes' | 'stock' | 'catalogue' | 'messages' | 'stats' | 'creneaux' | 'promos'>('commandes');
+  const [onglet, setOnglet] = useState<'commandes' | 'stock' | 'catalogue' | 'messages' | 'stats' | 'calendrier' | 'promos'>('commandes');
   const [filtreStatut, setFiltreStatut] = useState<'Toutes' | 'À préparer' | 'livrée'>('Toutes');
   const [uploading, setUploading] = useState(false);
   const [erreurNomProduit, setErreurNomProduit] = useState('');
@@ -44,8 +44,11 @@ export default function AdminPage() {
   const [reponseOuvert, setReponseOuvert] = useState<string | null>(null);
   const [reponseTexte, setReponseTexte] = useState('');
   const [envoiEnCours, setEnvoiEnCours] = useState(false);
-  const [creneaux, setCreneaux] = useState<any[]>([]);
-  const [nouveauCreneau, setNouveauCreneau] = useState('');
+  const [configCal, setConfigCal] = useState<{ jours_semaine: number[]; max_commandes_par_jour: number }>({ jours_semaine: [], max_commandes_par_jour: 10 });
+  const [exceptions, setExceptions] = useState<any[]>([]);
+  const [moisAdmin, setMoisAdmin] = useState<{ annee: number; mois: number }>({ annee: new Date().getFullYear(), mois: new Date().getMonth() });
+  const [selectedDateAdmin, setSelectedDateAdmin] = useState<string | null>(null);
+  const [savingCal, setSavingCal] = useState(false);
   const [codesPromo, setCodesPromo] = useState<any[]>([]);
   const [nouveauCode, setNouveauCode] = useState('');
   const [nouveauReductionPct, setNouveauReductionPct] = useState(10);
@@ -79,8 +82,10 @@ export default function AdminPage() {
       const { data: cmds } = await supabase.from('commandes').select('*').order('created_at', { ascending: false });
       const { data: prods } = await supabase.from('products').select('*').order('name', { ascending: true });
       const { data: msgs } = await supabase.from('messages').select('*').order('created_at', { ascending: false });
-      const { data: cren } = await supabase.from('creneaux').select('*').order('created_at', { ascending: true });
-      if (cren) setCreneaux(cren);
+      const { data: cfgCal } = await supabase.from('config_calendrier').select('jours_semaine, max_commandes_par_jour').single();
+      if (cfgCal) setConfigCal(cfgCal);
+      const { data: excs } = await supabase.from('dates_livraison_exceptions').select('*').order('date', { ascending: true });
+      if (excs) setExceptions(excs);
       const { data: codes } = await supabase.from('codes_promo').select('*').order('created_at', { ascending: false });
       if (codes) setCodesPromo(codes);
 
@@ -274,20 +279,35 @@ export default function AdminPage() {
     }
   }
 
-  async function ajouterCreneau() {
-    if (!nouveauCreneau.trim()) return;
-    const { data } = await supabase.from('creneaux').insert([{ label: nouveauCreneau.trim() }]).select().single();
-    if (data) { setCreneaux(prev => [...prev, data]); setNouveauCreneau(''); }
+  const fmtDateAdmin = (d: Date): string =>
+    `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+
+  const joursDuMoisAdmin = (annee: number, mois: number): (Date | null)[] => {
+    const premier = new Date(annee, mois, 1);
+    const dernier = new Date(annee, mois + 1, 0);
+    const jours: (Date | null)[] = [];
+    const offset = (premier.getDay() + 6) % 7;
+    for (let i = 0; i < offset; i++) jours.push(null);
+    for (let j = 1; j <= dernier.getDate(); j++) jours.push(new Date(annee, mois, j));
+    return jours;
+  };
+
+  async function sauvegarderConfigCal() {
+    setSavingCal(true);
+    await supabase.from('config_calendrier').upsert({ id: 1, ...configCal, updated_at: new Date().toISOString() });
+    setSavingCal(false);
   }
 
-  async function toggleCreneau(id: string, actif: boolean) {
-    await supabase.from('creneaux').update({ actif: !actif }).eq('id', id);
-    setCreneaux(prev => prev.map(c => c.id === id ? { ...c, actif: !actif } : c));
-  }
-
-  async function supprimerCreneau(id: string) {
-    await supabase.from('creneaux').delete().eq('id', id);
-    setCreneaux(prev => prev.filter(c => c.id !== id));
+  async function toggleExceptionDate(dateStr: string) {
+    const existing = exceptions.find(e => e.date === dateStr);
+    if (existing) {
+      await supabase.from('dates_livraison_exceptions').delete().eq('date', dateStr);
+      setExceptions(prev => prev.filter(e => e.date !== dateStr));
+    } else {
+      const isRecurring = configCal.jours_semaine.includes(new Date(dateStr + 'T12:00:00').getDay());
+      const { data } = await supabase.from('dates_livraison_exceptions').insert({ date: dateStr, ferme: isRecurring }).select().single();
+      if (data) setExceptions(prev => [...prev, data]);
+    }
   }
 
   async function ajouterCodePromo() {
@@ -421,7 +441,7 @@ export default function AdminPage() {
                 <h3>Mode de livraison</h3>
                 <p>${isRetrait ? '📍 Retrait au centre' : '🚚 Livraison à domicile'}</p>
                 <p style="font-weight: normal; color: #4A5568; font-size: 13px; margin-top: 5px;">${cmd.adresse_livraison}</p>
-                ${cmd.creneau_livraison ? `<p style="font-weight: bold; color: #FF4500; font-size: 13px; margin-top: 8px;">🕐 Créneau : ${cmd.creneau_livraison}</p>` : ''}
+                ${cmd.date_livraison ? `<p style="font-weight: bold; color: #FF4500; font-size: 13px; margin-top: 8px;">📅 Livraison le : ${new Date(cmd.date_livraison + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</p>` : ''}
               </div>
             </div>
             <table>
@@ -515,8 +535,8 @@ export default function AdminPage() {
           <button onClick={() => setOnglet('stats')} className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${onglet === 'stats' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}>
             <BarChart2 className="w-3 h-3" /> Stats
           </button>
-          <button onClick={() => setOnglet('creneaux')} className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${onglet === 'creneaux' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}>
-            <Calendar className="w-3 h-3" /> Créneaux
+          <button onClick={() => setOnglet('calendrier')} className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${onglet === 'calendrier' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}>
+            <Calendar className="w-3 h-3" /> Calendrier
           </button>
           <button onClick={() => setOnglet('promos')} className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${onglet === 'promos' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}>
             <Tag className="w-3 h-3" /> Codes Promo
@@ -603,9 +623,9 @@ export default function AdminPage() {
                         <p className="text-xs font-bold text-slate-400 uppercase flex items-center gap-1">
                           <Truck className="w-3 h-3" /> {cmd.adresse_livraison}
                         </p>
-                        {cmd.creneau_livraison && (
+                        {cmd.date_livraison && (
                           <p className="text-[10px] font-black text-blue-500 uppercase flex items-center gap-1 mt-0.5">
-                            <Calendar className="w-3 h-3" /> {cmd.creneau_livraison}
+                            <Calendar className="w-3 h-3" /> {new Date(cmd.date_livraison + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
                           </p>
                         )}
                       </div>
@@ -1276,68 +1296,171 @@ export default function AdminPage() {
         );
       })()}
 
-      {/* --- SECTION CRÉNEAUX --- */}
-      {onglet === 'creneaux' && (
-        <div className="space-y-8 animate-in fade-in duration-500 max-w-2xl mx-auto">
-          <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm">
-            <h3 className="font-black uppercase text-sm tracking-widest text-slate-900 mb-2">Ajouter un créneau</h3>
-            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-6">Ex : "Lundi 14h–18h", "Mercredi matin 9h–12h"</p>
-            <div className="flex gap-3">
-              <input
-                type="text"
-                placeholder="Lundi 14h–18h"
-                value={nouveauCreneau}
-                onChange={e => setNouveauCreneau(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && ajouterCreneau()}
-                className="flex-1 p-4 bg-slate-100 rounded-2xl font-black text-sm border-none focus:ring-2 focus:ring-[#FF4500] outline-none"
-              />
-              <button
-                onClick={ajouterCreneau}
-                disabled={!nouveauCreneau.trim()}
-                className="flex items-center gap-2 bg-slate-900 text-white px-6 py-4 rounded-2xl font-black text-[10px] uppercase hover:bg-[#FF4500] transition-all disabled:opacity-30"
-              >
-                <Plus className="w-4 h-4" /> Ajouter
+      {/* --- SECTION CALENDRIER --- */}
+      {onglet === 'calendrier' && (() => {
+        const JOURS_SEM = [
+          { label: 'Lun', v: 1 }, { label: 'Mar', v: 2 }, { label: 'Mer', v: 3 },
+          { label: 'Jeu', v: 4 }, { label: 'Ven', v: 5 }, { label: 'Sam', v: 6 }, { label: 'Dim', v: 0 },
+        ];
+        const cmdParDate: Record<string, any[]> = {};
+        commandes.forEach(cmd => {
+          if (cmd.date_livraison) {
+            if (!cmdParDate[cmd.date_livraison]) cmdParDate[cmd.date_livraison] = [];
+            cmdParDate[cmd.date_livraison].push(cmd);
+          }
+        });
+        return (
+          <div className="space-y-8 animate-in fade-in duration-500">
+            {/* Config récurrence */}
+            <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm space-y-6">
+              <div>
+                <p className="text-[10px] font-black uppercase text-[#FF4500] tracking-widest mb-1">Configuration</p>
+                <h2 className="text-3xl font-black uppercase italic tracking-tighter">Calendrier <span className="text-[#FF4500]">Livraisons</span></h2>
+              </div>
+
+              <div className="space-y-3">
+                <h3 className="font-black text-sm uppercase tracking-widest text-slate-900">Jours de livraison récurrents</h3>
+                <div className="flex flex-wrap gap-2">
+                  {JOURS_SEM.map(({ label, v }) => (
+                    <button
+                      key={v}
+                      onClick={() => setConfigCal(prev => ({
+                        ...prev,
+                        jours_semaine: prev.jours_semaine.includes(v)
+                          ? prev.jours_semaine.filter(j => j !== v)
+                          : [...prev.jours_semaine, v]
+                      }))}
+                      className={`px-4 py-2 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${
+                        configCal.jours_semaine.includes(v)
+                          ? 'bg-[#3D2B1F] text-white shadow-md'
+                          : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-4">
+                <label className="font-black text-sm uppercase tracking-widest text-slate-900">Max commandes / jour</label>
+                <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2">
+                  <button onClick={() => setConfigCal(p => ({ ...p, max_commandes_par_jour: Math.max(1, p.max_commandes_par_jour - 1) }))} className="w-6 h-6 flex items-center justify-center font-black text-slate-400 hover:text-slate-900">−</button>
+                  <span className="font-black text-lg text-slate-900 w-8 text-center">{configCal.max_commandes_par_jour}</span>
+                  <button onClick={() => setConfigCal(p => ({ ...p, max_commandes_par_jour: p.max_commandes_par_jour + 1 }))} className="w-6 h-6 flex items-center justify-center font-black text-slate-400 hover:text-slate-900">+</button>
+                </div>
+              </div>
+
+              <button onClick={sauvegarderConfigCal} disabled={savingCal} className="flex items-center gap-2 px-6 py-3 bg-[#3D2B1F] text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:opacity-90 disabled:opacity-40 transition-all">
+                {savingCal ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                Sauvegarder la configuration
               </button>
             </div>
-          </div>
 
-          <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm">
-            <h3 className="font-black uppercase text-sm tracking-widest text-slate-900 mb-6">Créneaux configurés</h3>
-            {creneaux.length === 0 ? (
-              <div className="text-center py-12">
-                <Calendar className="w-10 h-10 text-slate-200 mx-auto mb-3" />
-                <p className="text-slate-300 font-bold text-xs uppercase">Aucun créneau défini</p>
+            {/* Calendrier visuel */}
+            <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="font-black text-sm uppercase tracking-widest text-slate-900">Aperçu du calendrier</h3>
+                <p className="text-[10px] text-slate-400 font-bold uppercase">Cliquer sur un jour pour bloquer / débloquer</p>
               </div>
-            ) : (
-              <div className="space-y-3">
-                {creneaux.map(c => (
-                  <div key={c.id} className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${c.actif ? 'bg-green-50 border-green-100' : 'bg-slate-50 border-slate-100'}`}>
-                    <div className="flex items-center gap-3">
-                      <button onClick={() => toggleCreneau(c.id, c.actif)} className="shrink-0">
-                        {c.actif
-                          ? <ToggleRight className="w-7 h-7 text-green-500" />
-                          : <ToggleLeft className="w-7 h-7 text-slate-300" />}
-                      </button>
-                      <div>
-                        <p className="font-black text-sm text-slate-900">{c.label}</p>
-                        <p className={`text-[9px] font-black uppercase tracking-widest ${c.actif ? 'text-green-600' : 'text-slate-400'}`}>{c.actif ? 'Affiché aux clients' : 'Masqué'}</p>
-                      </div>
-                    </div>
-                    <button onClick={() => supprimerCreneau(c.id)} className="w-8 h-8 bg-white border border-slate-100 rounded-xl flex items-center justify-center text-slate-300 hover:text-red-500 hover:border-red-200 transition-all">
-                      <Trash2 className="w-3.5 h-3.5" />
+
+              {/* Navigation mois */}
+              <div className="flex items-center justify-between mb-4">
+                <button onClick={() => setMoisAdmin(prev => { const d = new Date(prev.annee, prev.mois - 1); return { annee: d.getFullYear(), mois: d.getMonth() }; })} className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-all">
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <span className="font-black text-sm uppercase tracking-widest">
+                  {new Date(moisAdmin.annee, moisAdmin.mois).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }).toUpperCase()}
+                </span>
+                <button onClick={() => setMoisAdmin(prev => { const d = new Date(prev.annee, prev.mois + 1); return { annee: d.getFullYear(), mois: d.getMonth() }; })} className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-all">
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Entêtes */}
+              <div className="grid grid-cols-7 mb-2">
+                {['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'].map((j, i) => (
+                  <div key={i} className="text-center text-[9px] font-black text-slate-300 uppercase py-2">{j}</div>
+                ))}
+              </div>
+
+              {/* Grille jours */}
+              <div className="grid grid-cols-7 gap-1">
+                {joursDuMoisAdmin(moisAdmin.annee, moisAdmin.mois).map((date, i) => {
+                  if (!date) return <div key={`e-${i}`} className="aspect-square" />;
+                  const dateStr = fmtDateAdmin(date);
+                  const exc = exceptions.find(e => e.date === dateStr);
+                  const isRecurring = configCal.jours_semaine.includes(date.getDay());
+                  const isAvail = exc ? !exc.ferme : isRecurring;
+                  const cmds = cmdParDate[dateStr] || [];
+                  const isFull = cmds.length >= configCal.max_commandes_par_jour;
+                  const isSelected = selectedDateAdmin === dateStr;
+                  return (
+                    <button
+                      key={dateStr}
+                      onClick={() => { toggleExceptionDate(dateStr); setSelectedDateAdmin(isSelected ? null : dateStr); }}
+                      className={`aspect-square rounded-xl flex flex-col items-center justify-center transition-all border ${
+                        isSelected ? 'ring-2 ring-[#FF4500]' : ''
+                      } ${
+                        exc
+                          ? exc.ferme ? 'bg-red-50 border-red-200 text-red-500' : 'bg-blue-50 border-blue-200 text-blue-600'
+                          : isAvail
+                          ? isFull ? 'bg-orange-50 border-orange-200 text-orange-500' : 'bg-green-50 border-green-200 text-green-700'
+                          : 'bg-slate-50 border-slate-100 text-slate-300'
+                      }`}
+                    >
+                      <span className="text-[11px] font-black">{date.getDate()}</span>
+                      {cmds.length > 0 && (
+                        <span className="text-[8px] font-black">{cmds.length}/{configCal.max_commandes_par_jour}</span>
+                      )}
                     </button>
+                  );
+                })}
+              </div>
+
+              {/* Légende */}
+              <div className="flex flex-wrap gap-3 mt-4">
+                {[
+                  { color: 'bg-green-100 text-green-700', label: 'Disponible (récurrent)' },
+                  { color: 'bg-blue-100 text-blue-600', label: 'Ouvert (exception)' },
+                  { color: 'bg-red-100 text-red-500', label: 'Bloqué (exception)' },
+                  { color: 'bg-orange-100 text-orange-500', label: 'Complet' },
+                  { color: 'bg-slate-100 text-slate-400', label: 'Indisponible' },
+                ].map(({ color, label }) => (
+                  <div key={label} className="flex items-center gap-1.5">
+                    <div className={`w-3 h-3 rounded-sm ${color}`} />
+                    <span className="text-[9px] font-bold text-slate-400 uppercase">{label}</span>
                   </div>
                 ))}
               </div>
+            </div>
+
+            {/* Commandes du jour sélectionné */}
+            {selectedDateAdmin && cmdParDate[selectedDateAdmin] && cmdParDate[selectedDateAdmin].length > 0 && (
+              <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm">
+                <h3 className="font-black text-sm uppercase tracking-widest text-slate-900 mb-4">
+                  Commandes du {new Date(selectedDateAdmin + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
+                  <span className="ml-2 text-[10px] bg-[#FF4500] text-white px-2 py-0.5 rounded-full">{cmdParDate[selectedDateAdmin].length}</span>
+                </h3>
+                <div className="space-y-3">
+                  {cmdParDate[selectedDateAdmin].map(cmd => (
+                    <div key={cmd.id} className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                      <div>
+                        <p className="font-black text-sm text-slate-900">{cmd.nom_client}</p>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase">{cmd.adresse_livraison}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-black text-sm text-[#FF4500]">{parseFloat(cmd.total).toFixed(2)}€</p>
+                        <p className="text-[9px] text-slate-400 font-bold uppercase">{cmd.statut}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             )}
           </div>
-
-          <div className="bg-amber-50 border border-amber-100 rounded-3xl p-6">
-            <p className="text-[10px] font-black text-amber-700 uppercase tracking-widest mb-1">Comment ça marche</p>
-            <p className="text-xs text-amber-600 font-medium leading-relaxed">Les créneaux actifs sont affichés dans le panier du client sous forme de bannière informative. Le flux de commande reste inchangé — c'est une information, pas une contrainte.</p>
-          </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* --- SECTION CODES PROMO --- */}
       {onglet === 'promos' && (
