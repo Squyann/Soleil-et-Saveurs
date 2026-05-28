@@ -8,7 +8,7 @@ import {
   RefreshCcw, Printer, Phone, MessageSquare,
   Trash2, Plus, Truck, CheckCircle2, Clock, Mail, Save, Edit3, X,
   Inbox, Send, Eye, EyeOff, ChevronDown, ChevronUp,
-  BarChart2, Calendar, TrendingUp, ToggleLeft, ToggleRight
+  BarChart2, Calendar, TrendingUp, ToggleLeft, ToggleRight, Tag, Loader2
 } from 'lucide-react';
 
 interface StatsType {
@@ -23,7 +23,7 @@ export default function AdminPage() {
   const [messages, setMessages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [recherche, setRecherche] = useState('');
-  const [onglet, setOnglet] = useState<'commandes' | 'stock' | 'catalogue' | 'messages' | 'stats' | 'creneaux'>('commandes');
+  const [onglet, setOnglet] = useState<'commandes' | 'stock' | 'catalogue' | 'messages' | 'stats' | 'creneaux' | 'promos'>('commandes');
   const [filtreStatut, setFiltreStatut] = useState<'Toutes' | 'À préparer' | 'livrée'>('Toutes');
   const [uploading, setUploading] = useState(false);
   const [erreurNomProduit, setErreurNomProduit] = useState('');
@@ -46,6 +46,10 @@ export default function AdminPage() {
   const [envoiEnCours, setEnvoiEnCours] = useState(false);
   const [creneaux, setCreneaux] = useState<any[]>([]);
   const [nouveauCreneau, setNouveauCreneau] = useState('');
+  const [codesPromo, setCodesPromo] = useState<any[]>([]);
+  const [nouveauCode, setNouveauCode] = useState('');
+  const [nouveauReductionPct, setNouveauReductionPct] = useState(10);
+  const [savingCode, setSavingCode] = useState(false);
 
   const [nouveauProd, setNouveauProd] = useState({
     name: '', price: 0, category: 'Légumes', image_url: '', stock: 0,
@@ -77,6 +81,8 @@ export default function AdminPage() {
       const { data: msgs } = await supabase.from('messages').select('*').order('created_at', { ascending: false });
       const { data: cren } = await supabase.from('creneaux').select('*').order('created_at', { ascending: true });
       if (cren) setCreneaux(cren);
+      const { data: codes } = await supabase.from('codes_promo').select('*').order('created_at', { ascending: false });
+      if (codes) setCodesPromo(codes);
 
       if (msgs) setMessages(msgs);
 
@@ -284,6 +290,29 @@ export default function AdminPage() {
     setCreneaux(prev => prev.filter(c => c.id !== id));
   }
 
+  async function ajouterCodePromo() {
+    const code = nouveauCode.trim().toUpperCase();
+    if (!code || nouveauReductionPct < 1 || nouveauReductionPct > 100) return;
+    setSavingCode(true);
+    const { data } = await supabase
+      .from('codes_promo')
+      .insert([{ code, reduction_pct: nouveauReductionPct }])
+      .select()
+      .single();
+    if (data) { setCodesPromo(prev => [data, ...prev]); setNouveauCode(''); setNouveauReductionPct(10); }
+    setSavingCode(false);
+  }
+
+  async function toggleCodePromo(id: string, actif: boolean) {
+    await supabase.from('codes_promo').update({ actif: !actif }).eq('id', id);
+    setCodesPromo(prev => prev.map(c => c.id === id ? { ...c, actif: !actif } : c));
+  }
+
+  async function supprimerCodePromo(id: string) {
+    await supabase.from('codes_promo').delete().eq('id', id);
+    setCodesPromo(prev => prev.filter(c => c.id !== id));
+  }
+
   const calculerBesoinStock = () => {
     const stockMap: { [key: string]: { quantite: number } } = {};
     commandes.filter(cmd => cmd.statut !== 'livrée').forEach(cmd => {
@@ -488,6 +517,9 @@ export default function AdminPage() {
           </button>
           <button onClick={() => setOnglet('creneaux')} className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${onglet === 'creneaux' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}>
             <Calendar className="w-3 h-3" /> Créneaux
+          </button>
+          <button onClick={() => setOnglet('promos')} className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${onglet === 'promos' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}>
+            <Tag className="w-3 h-3" /> Codes Promo
           </button>
         </nav>
 
@@ -1303,6 +1335,96 @@ export default function AdminPage() {
           <div className="bg-amber-50 border border-amber-100 rounded-3xl p-6">
             <p className="text-[10px] font-black text-amber-700 uppercase tracking-widest mb-1">Comment ça marche</p>
             <p className="text-xs text-amber-600 font-medium leading-relaxed">Les créneaux actifs sont affichés dans le panier du client sous forme de bannière informative. Le flux de commande reste inchangé — c'est une information, pas une contrainte.</p>
+          </div>
+        </div>
+      )}
+
+      {/* --- SECTION CODES PROMO --- */}
+      {onglet === 'promos' && (
+        <div className="space-y-8 animate-in fade-in duration-500">
+          <div>
+            <p className="text-[10px] font-black uppercase text-[#FF4500] tracking-widest mb-1">Gestion</p>
+            <h2 className="text-3xl font-black uppercase italic tracking-tighter">Codes <span className="text-[#FF4500]">Promo</span></h2>
+          </div>
+
+          {/* Créer un code */}
+          <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm space-y-4">
+            <h3 className="font-black uppercase text-sm tracking-widest text-slate-900">Créer un code</h3>
+            <div className="flex flex-col md:flex-row gap-3">
+              <div className="relative flex-1">
+                <Tag className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
+                <input
+                  type="text"
+                  placeholder="CODE (ex: ETE2026)"
+                  value={nouveauCode}
+                  onChange={e => setNouveauCode(e.target.value.toUpperCase())}
+                  onKeyDown={e => e.key === 'Enter' && ajouterCodePromo()}
+                  className="w-full border border-slate-200 rounded-2xl p-4 pl-12 text-sm font-bold uppercase focus:ring-2 focus:ring-[#FF4500] outline-none"
+                />
+              </div>
+              <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-2xl px-4">
+                <input
+                  type="number"
+                  min={1}
+                  max={100}
+                  value={nouveauReductionPct}
+                  onChange={e => setNouveauReductionPct(Math.min(100, Math.max(1, parseInt(e.target.value) || 1)))}
+                  className="w-16 bg-transparent text-center font-black text-lg outline-none"
+                />
+                <span className="font-black text-slate-400 text-sm">%</span>
+              </div>
+              <button
+                onClick={ajouterCodePromo}
+                disabled={savingCode || !nouveauCode.trim()}
+                className="flex items-center gap-2 px-6 py-4 bg-[#3D2B1F] text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:opacity-90 disabled:opacity-40 transition-all"
+              >
+                {savingCode ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                Créer
+              </button>
+            </div>
+          </div>
+
+          {/* Liste des codes */}
+          <div className="space-y-3">
+            {codesPromo.length === 0 ? (
+              <div className="bg-white rounded-3xl p-10 border border-slate-100 text-center">
+                <Tag className="w-8 h-8 text-slate-200 mx-auto mb-3" />
+                <p className="text-sm font-black text-slate-300 uppercase tracking-widest">Aucun code promo créé</p>
+              </div>
+            ) : (
+              codesPromo.map(c => (
+                <div key={c.id} className={`flex items-center justify-between p-5 rounded-2xl border transition-all ${c.actif ? 'bg-white border-slate-100 shadow-sm' : 'bg-slate-50 border-slate-100 opacity-60'}`}>
+                  <div className="flex items-center gap-4">
+                    <button onClick={() => toggleCodePromo(c.id, c.actif)}>
+                      {c.actif
+                        ? <ToggleRight className="w-7 h-7 text-green-500" />
+                        : <ToggleLeft className="w-7 h-7 text-slate-300" />}
+                    </button>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-black text-sm text-slate-900 tracking-widest">{c.code}</span>
+                        <span className="px-2 py-0.5 bg-[#FF4500]/10 text-[#FF4500] text-[10px] font-black rounded-full uppercase">-{c.reduction_pct}%</span>
+                        {!c.actif && <span className="px-2 py-0.5 bg-slate-100 text-slate-400 text-[10px] font-black rounded-full uppercase">Désactivé</span>}
+                      </div>
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">
+                        Utilisé {c.usage_count} fois · Créé le {new Date(c.created_at).toLocaleDateString('fr-FR')}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => supprimerCodePromo(c.id)}
+                    className="w-8 h-8 bg-white border border-slate-100 rounded-xl flex items-center justify-center text-slate-300 hover:text-red-500 hover:border-red-200 transition-all"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+
+          <div className="bg-amber-50 border border-amber-100 rounded-3xl p-6">
+            <p className="text-[10px] font-black text-amber-700 uppercase tracking-widest mb-1">Comment ça marche</p>
+            <p className="text-xs text-amber-600 font-medium leading-relaxed">Créez des codes promo et envoyez-les à vos clients par email. Lors de la commande, le client saisit son code dans le panier — la réduction est appliquée immédiatement sur le sous-total. Vous pouvez désactiver un code à tout moment sans le supprimer.</p>
           </div>
         </div>
       )}
