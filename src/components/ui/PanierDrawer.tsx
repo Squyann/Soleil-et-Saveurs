@@ -214,18 +214,27 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
     const code = codePromo.trim().toUpperCase();
     if (!code) return;
     setCodeStatut('loading');
+
+    // Récupérer l'utilisateur courant directement (ne pas dépendre du state React qui peut être null)
+    let currentUserId: string | null = user?.id ?? null;
+    if (!currentUserId) {
+      const { data: { user: supabaseUser } } = await supabase.auth.getUser();
+      currentUserId = supabaseUser?.id ?? null;
+    }
+
     const { data } = await supabase
       .from('codes_promo')
       .select('id, reduction_pct')
       .eq('code', code)
       .eq('actif', true)
       .maybeSingle();
+
     if (data) {
-      if (user) {
+      if (currentUserId) {
         const { data: dejaUtilise } = await supabase
           .from('codes_promo_utilisations')
           .select('id')
-          .eq('user_id', user.id)
+          .eq('user_id', currentUserId)
           .eq('code_promo_id', data.id)
           .maybeSingle();
         if (dejaUtilise) {
