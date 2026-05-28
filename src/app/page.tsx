@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { 
   ArrowRight, Zap, MapPin, ShoppingCart, Truck, 
-  User, HelpCircle, Search, X, CheckCircle2, Star, Clock, ShieldCheck, Navigation, Loader2, AlertCircle
+  User, HelpCircle, Search, X, CheckCircle2, Clock, ShieldCheck, Navigation, Loader2, AlertCircle
 } from 'lucide-react';
 
 // --- CONFIGURATION DES VILLES (MISES À JOUR) ET CALCUL DE DISTANCE ---
@@ -316,7 +316,6 @@ export default function Home() {
             { label: "Fraîcheur", val: "100%", desc: "Zéro frigo" },
             { label: "Maturité", val: "Optim.", desc: "Sur l'arbre" },
             { label: "Circuit", val: "Ultra", desc: "Zéro interm." },
-            { label: "Avis", val: "4.9/5", desc: "Note Google" },
           ].map((stat, i) => (
             <div key={i} className="flex flex-col items-start relative z-10 group">
               <p className="text-4xl md:text-5xl font-black text-white leading-none tracking-tighter mb-2 group-hover:text-[#FF4500] transition-colors duration-300">
@@ -325,64 +324,6 @@ export default function Home() {
               <p className="text-[10px] font-black uppercase text-[#FF4500] tracking-widest mb-1">{stat.label}</p>
               <div className="h-px w-8 bg-white/10 mb-1" />
               <p className="text-[10px] text-slate-500 font-bold uppercase">{stat.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* AVIS */}
-      <section className="max-w-6xl mx-auto px-4 md:px-8 py-16">
-        <div className="flex items-center justify-between mb-12">
-          <div>
-            <p className="text-[10px] font-black uppercase text-[#FF4500] tracking-widest mb-2">Ce qu'ils en pensent</p>
-            <h3 className="text-3xl font-black uppercase italic tracking-tighter">Ils nous font <span className="text-[#FF4500]">confiance</span></h3>
-          </div>
-          <div className="hidden md:flex items-center gap-1">
-            {[...Array(5)].map((_, i) => (
-              <Star key={i} className="w-5 h-5 fill-[#FF4500] text-[#FF4500]" />
-            ))}
-            <span className="ml-2 text-sm font-black text-slate-900">4.9</span>
-            <span className="text-xs text-slate-400 font-bold ml-1">/ 5</span>
-          </div>
-        </div>
-        <div className="grid md:grid-cols-3 gap-6">
-          {[
-            { name: "Marie L.", city: "Chatou", text: "Les tomates ont enfin du goût ! On sent qu'elles n'ont pas voyagé.", stars: 5 },
-            { name: "Thomas B.", city: "Plaisir", text: "Le concept du 'cueilli le matin' est bluffant. Fraîcheur imbattable.", stars: 5 },
-            { name: "Sophie D.", city: "Croissy", text: "Livraison ponctuelle et livreur adorable. Je recommande !", stars: 5 },
-          ].map((avis, i) => (
-            <div
-              key={i}
-              className={`relative p-8 rounded-[2rem] border transition-all duration-500 hover:-translate-y-1 group ${
-                i === 1
-                  ? 'bg-[#FF4500] border-transparent shadow-2xl shadow-[#FF4500]/25'
-                  : 'bg-white border-slate-100 shadow-xl shadow-slate-100/60 hover:shadow-slate-200'
-              }`}
-            >
-              <span className={`absolute top-6 right-8 text-7xl font-black leading-none select-none pointer-events-none ${i === 1 ? 'text-white/10' : 'text-slate-900/5'}`}>
-                "
-              </span>
-              <div className="flex gap-1 mb-5">
-                {[...Array(avis.stars)].map((_, j) => (
-                  <Star key={j} className={`w-3.5 h-3.5 fill-current ${i === 1 ? 'text-white' : 'text-[#FF4500]'}`} />
-                ))}
-              </div>
-              <p className={`text-[15px] font-semibold italic leading-relaxed mb-8 ${i === 1 ? 'text-white' : 'text-slate-600'}`}>
-                "{avis.text}"
-              </p>
-              <div className="flex items-center gap-3">
-                <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-black ${i === 1 ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-700'}`}>
-                  {avis.name.charAt(0)}
-                </div>
-                <div>
-                  <p className={`text-xs font-black uppercase tracking-wider ${i === 1 ? 'text-white' : 'text-slate-900'}`}>
-                    {avis.name}
-                  </p>
-                  <p className={`text-[10px] font-black uppercase tracking-widest ${i === 1 ? 'text-white/60' : 'text-[#FF4500]'}`}>
-                    {avis.city}
-                  </p>
-                </div>
-              </div>
             </div>
           ))}
         </div>
