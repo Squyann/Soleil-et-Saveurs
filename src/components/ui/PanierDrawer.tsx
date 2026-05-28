@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { X, Trash2, ShoppingBag, MapPin, CreditCard, Banknote, Phone, User, Loader2, CheckCircle2, AlertCircle, LogIn, Gift, TrendingDown, Calendar } from 'lucide-react';
+import { X, Trash2, ShoppingBag, MapPin, CreditCard, Banknote, Phone, User, Loader2, CheckCircle2, AlertCircle, LogIn, Gift, TrendingDown, Calendar, Tag } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 
@@ -55,6 +55,10 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
   const [applyReferral, setApplyReferral] = useState(false);
   const [creneaux, setCreneaux] = useState<string[]>([]);
   const [selectedCreneau, setSelectedCreneau] = useState<string>('');
+  const [codePromo, setCodePromo] = useState('');
+  const [codeStatut, setCodeStatut] = useState<'idle' | 'loading' | 'valid' | 'invalid'>('idle');
+  const [remiseCode, setRemiseCode] = useState(0);
+  const [codePromoId, setCodePromoId] = useState<string | null>(null);
 
   const router = useRouter();
 
@@ -96,6 +100,10 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
       setApplyLoyalty(false);
       setApplyReferral(false);
       setSelectedCreneau('');
+      setCodePromo('');
+      setCodeStatut('idle');
+      setRemiseCode(0);
+      setCodePromoId(null);
       fetchUserData();
       supabase.from('creneaux').select('label').eq('actif', true).then(({ data }) => {
         if (data) setCreneaux(data.map((c: any) => c.label));
@@ -202,11 +210,34 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
     setDistanceValide(minDist <= 5);
   };
 
+  const validerCodePromo = async () => {
+    const code = codePromo.trim().toUpperCase();
+    if (!code) return;
+    setCodeStatut('loading');
+    const { data } = await supabase
+      .from('codes_promo')
+      .select('id, reduction_pct')
+      .eq('code', code)
+      .eq('actif', true)
+      .maybeSingle();
+    if (data) {
+      setRemiseCode(data.reduction_pct);
+      setCodePromoId(data.id);
+      setCodeStatut('valid');
+      setCodePromo(code);
+    } else {
+      setRemiseCode(0);
+      setCodePromoId(null);
+      setCodeStatut('invalid');
+    }
+  };
+
   const sousTotalFinal = (panier || []).reduce((acc, item) => acc + calculerPrixLigne(item), 0);
   const economie = calculerEconomieTotale();
   const remisePct = (applyLoyalty ? 10 : 0) + (applyReferral ? 10 : 0);
   const remiseMontant = sousTotalFinal * remisePct / 100;
-  const totalApresRemise = sousTotalFinal - remiseMontant;
+  const remiseCodeMontant = codeStatut === 'valid' ? Math.round(sousTotalFinal * remiseCode / 100 * 100) / 100 : 0;
+  const totalApresRemise = sousTotalFinal - remiseMontant - remiseCodeMontant;
   const fraisLivraison = totalApresRemise === 0 || totalApresRemise < 10 ? 0
     : totalApresRemise >= 30 ? 0
     : Math.round(2.50 * (30 - totalApresRemise) / 20 * 100) / 100;
@@ -254,9 +285,15 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
           contenu_panier: panier,
           email_client: user.email,
           creneau_livraison: selectedCreneau || null,
+          code_promo: codeStatut === 'valid' ? codePromo : null,
+          remise_code_pct: codeStatut === 'valid' ? remiseCode : null,
         }]);
 
       if (error) throw error;
+
+      if (codeStatut === 'valid' && codePromoId) {
+        supabase.rpc('increment_code_promo_usage', { code_id: codePromoId }).catch(() => {});
+      }
 
       // Mise à jour des points de fidélité et remises
       const pointsGagnes = Math.floor(totalApresRemise);
@@ -498,6 +535,56 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
                 </div>
               )}
 
+              {/* CODE PROMO */}
+              <div className="space-y-2">
+                <h3 className="font-black uppercase text-xs tracking-widest text-slate-900">Code promo</h3>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Tag className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
+                    <input
+                      type="text"
+                      placeholder="VOTRE CODE"
+                      value={codePromo}
+                      onChange={(e) => { setCodePromo(e.target.value.toUpperCase()); setCodeStatut('idle'); setRemiseCode(0); setCodePromoId(null); }}
+                      disabled={codeStatut === 'valid'}
+                      className={`w-full bg-white border p-4 pl-12 rounded-2xl font-bold text-xs uppercase outline-none transition-all ${
+                        codeStatut === 'valid' ? 'border-green-400 bg-green-50 text-green-700' :
+                        codeStatut === 'invalid' ? 'border-red-300' :
+                        'border-[#D5C9B8] focus:border-[#FF4500]'
+                      }`}
+                    />
+                  </div>
+                  {codeStatut === 'valid' ? (
+                    <button
+                      onClick={() => { setCodePromo(''); setCodeStatut('idle'); setRemiseCode(0); setCodePromoId(null); }}
+                      className="px-4 py-2 rounded-2xl border border-slate-200 bg-white text-[10px] font-black uppercase text-slate-400 hover:text-red-500 hover:border-red-200 transition-all"
+                    >
+                      Retirer
+                    </button>
+                  ) : (
+                    <button
+                      onClick={validerCodePromo}
+                      disabled={codeStatut === 'loading' || !codePromo.trim()}
+                      className="px-4 py-2 rounded-2xl bg-[#3D2B1F] text-white text-[10px] font-black uppercase tracking-widest disabled:opacity-40 hover:opacity-90 transition-all"
+                    >
+                      {codeStatut === 'loading' ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Appliquer'}
+                    </button>
+                  )}
+                </div>
+                {codeStatut === 'valid' && (
+                  <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-100 rounded-xl">
+                    <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
+                    <p className="text-[10px] font-black text-green-700 uppercase">Code valide — -{remiseCode}% appliqué !</p>
+                  </div>
+                )}
+                {codeStatut === 'invalid' && (
+                  <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-100 rounded-xl">
+                    <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
+                    <p className="text-[10px] font-black text-red-600 uppercase">Code invalide ou expiré.</p>
+                  </div>
+                )}
+              </div>
+
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
                   <button onClick={()=>setMethodePaiement('Espèces')} className={`p-4 rounded-2xl border flex flex-col items-center gap-2 font-black text-[10px] transition-all ${methodePaiement === 'Espèces' ? 'bg-[#3D2B1F] text-white border-slate-900 shadow-lg' : 'bg-white text-slate-400 border-[#D5C9B8]'}`}>
@@ -538,6 +625,13 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
               <div className="flex justify-between text-[10px] font-black text-green-600 uppercase tracking-widest">
                 <span className="flex items-center gap-1"><TrendingDown className="w-3 h-3" /> Remise -{remisePct}%</span>
                 <span>-{remiseMontant.toFixed(2)}€</span>
+              </div>
+            )}
+
+            {remiseCodeMontant > 0 && (
+              <div className="flex justify-between text-[10px] font-black text-green-600 uppercase tracking-widest">
+                <span className="flex items-center gap-1"><Tag className="w-3 h-3" /> Code promo -{remiseCode}%</span>
+                <span>-{remiseCodeMontant.toFixed(2)}€</span>
               </div>
             )}
 
