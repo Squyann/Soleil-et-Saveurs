@@ -292,7 +292,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
       if (error) throw error;
 
       if (codeStatut === 'valid' && codePromoId) {
-        supabase.rpc('increment_code_promo_usage', { code_id: codePromoId }).catch(() => {});
+        void supabase.rpc('increment_code_promo_usage', { code_id: codePromoId });
       }
 
       // Mise à jour des points de fidélité et remises
