@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { X, Trash2, ShoppingBag, MapPin, CreditCard, Banknote, Phone, User, Loader2, CheckCircle2, AlertCircle, LogIn, Gift, TrendingDown, Calendar, Tag } from 'lucide-react';
+import { X, Trash2, ShoppingBag, MapPin, CreditCard, Banknote, Phone, User, Loader2, CheckCircle2, AlertCircle, LogIn, Gift, TrendingDown, Calendar, Tag, ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 
@@ -53,8 +53,11 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
   const [dbProfile, setDbProfile] = useState<{ loyalty_points: number; has_referral_discount: boolean; referral_pending: boolean } | null>(null);
   const [applyLoyalty, setApplyLoyalty] = useState(false);
   const [applyReferral, setApplyReferral] = useState(false);
-  const [creneaux, setCreneaux] = useState<string[]>([]);
-  const [selectedCreneau, setSelectedCreneau] = useState<string>('');
+  const [dateLivraison, setDateLivraison] = useState<string | null>(null);
+  const [configCal, setConfigCal] = useState<{ jours_semaine: number[]; max_commandes_par_jour: number } | null>(null);
+  const [exceptionsLiv, setExceptionsLiv] = useState<{ date: string; ferme: boolean }[]>([]);
+  const [commandesParDate, setCommandesParDate] = useState<Record<string, number>>({});
+  const [moisCal, setMoisCal] = useState<{ annee: number; mois: number }>({ annee: new Date().getFullYear(), mois: new Date().getMonth() });
   const [codePromo, setCodePromo] = useState('');
   const [codeStatut, setCodeStatut] = useState<'idle' | 'loading' | 'valid' | 'invalid' | 'used'>('idle');
   const [remiseCode, setRemiseCode] = useState(0);
@@ -99,14 +102,29 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
     if (isOpen) {
       setApplyLoyalty(false);
       setApplyReferral(false);
-      setSelectedCreneau('');
+      setDateLivraison(null);
       setCodePromo('');
       setCodeStatut('idle');
       setRemiseCode(0);
       setCodePromoId(null);
       fetchUserData();
-      supabase.from('creneaux').select('label').eq('actif', true).then(({ data }) => {
-        if (data) setCreneaux(data.map((c: any) => c.label));
+      // Charger la config calendrier
+      supabase.from('config_calendrier').select('jours_semaine, max_commandes_par_jour').single().then(({ data }) => {
+        if (data) setConfigCal(data);
+      });
+      supabase.from('dates_livraison_exceptions').select('date, ferme').then(({ data }) => {
+        if (data) setExceptionsLiv(data);
+      });
+      // Compter les commandes par date (60 prochains jours)
+      const today = new Date();
+      const fin = new Date(); fin.setDate(today.getDate() + 60);
+      const fmtD = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      supabase.from('commandes').select('date_livraison').gte('date_livraison', fmtD(today)).lte('date_livraison', fmtD(fin)).then(({ data }) => {
+        if (data) {
+          const counts: Record<string, number> = {};
+          data.forEach((c: any) => { if (c.date_livraison) counts[c.date_livraison] = (counts[c.date_livraison] ?? 0) + 1; });
+          setCommandesParDate(counts);
+        }
       });
     }
   }, [isOpen, user]);
@@ -210,6 +228,31 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
     setDistanceValide(minDist <= 5);
   };
 
+  const fmtDate = (d: Date): string =>
+    `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+
+  const joursDuMois = (annee: number, mois: number): (Date | null)[] => {
+    const premier = new Date(annee, mois, 1);
+    const dernier = new Date(annee, mois + 1, 0);
+    const jours: (Date | null)[] = [];
+    const offset = (premier.getDay() + 6) % 7;
+    for (let i = 0; i < offset; i++) jours.push(null);
+    for (let j = 1; j <= dernier.getDate(); j++) jours.push(new Date(annee, mois, j));
+    return jours;
+  };
+
+  const isDisponible = (date: Date): boolean => {
+    if (!configCal) return false;
+    const exc = exceptionsLiv.find(e => e.date === fmtDate(date));
+    if (exc) return !exc.ferme;
+    return configCal.jours_semaine.includes(date.getDay());
+  };
+
+  const isPlein = (date: Date): boolean => {
+    if (!configCal) return false;
+    return (commandesParDate[fmtDate(date)] ?? 0) >= configCal.max_commandes_par_jour;
+  };
+
   const validerCodePromo = async () => {
     const code = codePromo.trim().toUpperCase();
     if (!code) return;
@@ -273,7 +316,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
     }
 
     if (!nom || !telephone || !adresse || !distanceValide) return;
-    if (creneaux.length > 0 && !selectedCreneau) return;
+    if (!dateLivraison) return;
     setChargement(true);
 
     try {
@@ -305,7 +348,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
           description_commande: desc,
           contenu_panier: panier,
           email_client: user.email,
-          creneau_livraison: selectedCreneau || null,
+          date_livraison: dateLivraison || null,
           code_promo: codeStatut === 'valid' ? codePromo : null,
           remise_code_pct: codeStatut === 'valid' ? remiseCode : null,
         }]);
@@ -352,7 +395,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
               unite: item.unite || '',
               prix_ligne: calculerPrixLigne(item),
             })),
-            creneau_livraison: selectedCreneau || null,
+            date_livraison: dateLivraison || null,
             remise_pct: remisePct,
             remise_montant: remiseMontant,
             frais_livraison: fraisLivraison,
@@ -675,37 +718,76 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
             </div>
           </div>
           
-          {creneaux.length > 0 && (
-            <div className="space-y-2">
+          {/* CALENDRIER DE LIVRAISON */}
+          {configCal !== null && (
+            <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-blue-500" />
-                <h3 className="font-black uppercase text-xs tracking-widest text-slate-900">Créneau de livraison</h3>
+                <h3 className="font-black uppercase text-xs tracking-widest text-slate-900">Date de livraison</h3>
                 <span className="text-[9px] bg-red-50 text-red-500 px-2 py-0.5 rounded-full font-bold uppercase">Requis</span>
               </div>
-              <div className="grid grid-cols-1 gap-2">
-                {creneaux.map((creneau) => (
-                  <button
-                    key={creneau}
-                    type="button"
-                    onClick={() => setSelectedCreneau(creneau)}
-                    className={`w-full p-3 rounded-2xl border text-left flex items-center gap-3 transition-all font-bold text-[11px] uppercase tracking-wide ${
-                      selectedCreneau === creneau
-                        ? 'bg-[#3D2B1F] text-white border-slate-900 shadow-md'
-                        : 'bg-white text-slate-600 border-[#D5C9B8] hover:border-slate-300'
-                    }`}
-                  >
-                    <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                      selectedCreneau === creneau ? 'border-white' : 'border-slate-300'
-                    }`}>
-                      {selectedCreneau === creneau && <span className="w-2 h-2 bg-white rounded-full" />}
-                    </span>
-                    {creneau}
+
+              <div className="bg-white border border-[#D5C9B8] rounded-2xl overflow-hidden">
+                {/* Header mois */}
+                <div className="flex items-center justify-between px-4 py-3 border-b border-[#D5C9B8] bg-[#F5EAE0]">
+                  <button type="button" onClick={() => setMoisCal(prev => { const d = new Date(prev.annee, prev.mois - 1); return { annee: d.getFullYear(), mois: d.getMonth() }; })} className="w-7 h-7 rounded-lg hover:bg-[#EDE3D5] flex items-center justify-center transition-colors">
+                    <ChevronLeft className="w-4 h-4 text-slate-500" />
                   </button>
-                ))}
+                  <span className="text-xs font-black uppercase tracking-widest text-slate-900">
+                    {new Date(moisCal.annee, moisCal.mois).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }).toUpperCase()}
+                  </span>
+                  <button type="button" onClick={() => setMoisCal(prev => { const d = new Date(prev.annee, prev.mois + 1); return { annee: d.getFullYear(), mois: d.getMonth() }; })} className="w-7 h-7 rounded-lg hover:bg-[#EDE3D5] flex items-center justify-center transition-colors">
+                    <ChevronRight className="w-4 h-4 text-slate-500" />
+                  </button>
+                </div>
+
+                {/* Entêtes jours */}
+                <div className="grid grid-cols-7 border-b border-[#D5C9B8]">
+                  {['L','M','M','J','V','S','D'].map((j, i) => (
+                    <div key={i} className="text-center text-[9px] font-black text-slate-300 uppercase py-2">{j}</div>
+                  ))}
+                </div>
+
+                {/* Jours */}
+                <div className="grid grid-cols-7 p-2 gap-1">
+                  {joursDuMois(moisCal.annee, moisCal.mois).map((date, i) => {
+                    if (!date) return <div key={`e-${i}`} />;
+                    const dateStr = fmtDate(date);
+                    const auj = new Date(); auj.setHours(0,0,0,0);
+                    const demain = new Date(auj); demain.setDate(auj.getDate() + 1);
+                    const passe = date < demain;
+                    const dispo = !passe && isDisponible(date);
+                    const plein = dispo && isPlein(date);
+                    const selec = dateStr === dateLivraison;
+                    return (
+                      <button
+                        key={dateStr}
+                        type="button"
+                        disabled={!dispo || plein}
+                        onClick={() => setDateLivraison(selec ? null : dateStr)}
+                        className={`aspect-square rounded-xl text-[11px] font-black transition-all flex items-center justify-center
+                          ${selec ? 'bg-[#3D2B1F] text-white shadow-md' :
+                            passe || !dispo ? 'text-slate-200 cursor-not-allowed' :
+                            plein ? 'bg-orange-50 text-orange-300 cursor-not-allowed border border-orange-100' :
+                            'hover:bg-[#EDE3D5] text-slate-700 cursor-pointer'}`}
+                      >
+                        {date.getDate()}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-              {creneaux.length > 0 && !selectedCreneau && (
+
+              {dateLivraison ? (
+                <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-100 rounded-xl">
+                  <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
+                  <p className="text-[10px] font-black text-green-700 uppercase">
+                    Livraison le {new Date(dateLivraison + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
+                  </p>
+                </div>
+              ) : (
                 <p className="text-[9px] font-bold text-amber-600 uppercase tracking-wide pl-1">
-                  Veuillez sélectionner un créneau pour valider
+                  Veuillez sélectionner une date de livraison
                 </p>
               )}
             </div>
@@ -721,7 +803,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
           )}
 
           <button
-            disabled={chargement || methodePaiement === 'Ligne' || !!minimumNonAtteint || (user && (!(panier || []).length || !distanceValide || !nom || !telephone || (creneaux.length > 0 && !selectedCreneau)))}
+            disabled={chargement || methodePaiement === 'Ligne' || !!minimumNonAtteint || (user && (!(panier || []).length || !distanceValide || !nom || !telephone || !dateLivraison))}
             onClick={envoyerCommande}
             className={`w-full ${!user ? 'bg-blue-600' : 'bg-[#3D2B1F]'} disabled:bg-[#DDD0BF] disabled:text-slate-300 text-white p-5 rounded-2xl font-black uppercase text-sm tracking-widest hover:opacity-90 transition-all shadow-xl flex items-center justify-center gap-3`}
           >
