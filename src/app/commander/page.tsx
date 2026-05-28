@@ -16,6 +16,7 @@ export default function CommanderPage() {
   // NOUVEAU : État pour gérer les quantités saisies par le client avant l'ajout
   const [quantities, setQuantities] = useState<{ [key: string]: number }>({});
   const [search, setSearch] = useState('');
+  const [infoProduct, setInfoProduct] = useState<any | null>(null);
 
   useEffect(() => {
     fetchProducts();
@@ -116,6 +117,7 @@ export default function CommanderPage() {
   };
 
   return (
+    <>
     <main className="min-h-screen bg-[#EDE3D5] text-slate-900 pb-20 pt-24 px-2 md:px-10">
       
       <PanierDrawer isOpen={isPanierOpen} onClose={() => setIsPanierOpen(false)} />
@@ -283,6 +285,15 @@ export default function CommanderPage() {
                         <span className="bg-white px-4 py-2 rounded-xl font-black text-xs uppercase tracking-[0.2em] shadow-sm">Épuisé</span>
                       </div>
                     )}
+                    {product.description && (
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); setInfoProduct(product); }}
+                        className="absolute top-2 right-2 w-6 h-6 sm:w-7 sm:h-7 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-md hover:bg-white transition-all z-10"
+                      >
+                        <Info className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-600" />
+                      </button>
+                    )}
                   </div>
 
                   <div className="flex justify-between items-start mb-1 gap-1">
@@ -374,5 +385,35 @@ export default function CommanderPage() {
         )}
       </div>
     </main>
+
+    {/* MODAL DESCRIPTION PRODUIT */}
+    {infoProduct && (
+      <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-4" onClick={() => setInfoProduct(null)}>
+        <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+        <div
+          className="relative bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden animate-in slide-in-from-bottom duration-300"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {infoProduct.image_url && (
+            <div className="h-44 overflow-hidden">
+              <img src={infoProduct.image_url} alt={infoProduct.name} className="w-full h-full object-cover" />
+            </div>
+          )}
+          <div className="p-6">
+            <div className="flex items-start justify-between mb-2">
+              <h3 className="font-black uppercase text-base tracking-tight text-slate-900 leading-tight">{infoProduct.name}</h3>
+              <button type="button" onClick={() => setInfoProduct(null)} className="p-1.5 hover:bg-slate-100 rounded-xl transition-colors ml-3 shrink-0">
+                <X className="w-5 h-5 text-slate-400" />
+              </button>
+            </div>
+            {infoProduct.provenance && (
+              <span className="inline-block text-[10px] font-bold text-[#FF4500] bg-orange-50 px-2 py-0.5 rounded-md uppercase mb-3">{infoProduct.provenance}</span>
+            )}
+            <p className="text-sm text-slate-600 leading-relaxed">{infoProduct.description}</p>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }
