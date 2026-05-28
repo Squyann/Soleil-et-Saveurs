@@ -56,7 +56,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
   const [creneaux, setCreneaux] = useState<string[]>([]);
   const [selectedCreneau, setSelectedCreneau] = useState<string>('');
   const [codePromo, setCodePromo] = useState('');
-  const [codeStatut, setCodeStatut] = useState<'idle' | 'loading' | 'valid' | 'invalid'>('idle');
+  const [codeStatut, setCodeStatut] = useState<'idle' | 'loading' | 'valid' | 'invalid' | 'used'>('idle');
   const [remiseCode, setRemiseCode] = useState(0);
   const [codePromoId, setCodePromoId] = useState<string | null>(null);
 
@@ -214,13 +214,34 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
     const code = codePromo.trim().toUpperCase();
     if (!code) return;
     setCodeStatut('loading');
+
+    // Récupérer l'utilisateur courant directement (ne pas dépendre du state React qui peut être null)
+    let currentUserId: string | null = user?.id ?? null;
+    if (!currentUserId) {
+      const { data: { user: supabaseUser } } = await supabase.auth.getUser();
+      currentUserId = supabaseUser?.id ?? null;
+    }
+
     const { data } = await supabase
       .from('codes_promo')
       .select('id, reduction_pct')
       .eq('code', code)
       .eq('actif', true)
       .maybeSingle();
+
     if (data) {
+      if (currentUserId) {
+        const { data: dejaUtilise } = await supabase
+          .from('codes_promo_utilisations')
+          .select('id')
+          .eq('user_id', currentUserId)
+          .eq('code_promo_id', data.id)
+          .maybeSingle();
+        if (dejaUtilise) {
+          setCodeStatut('used');
+          return;
+        }
+      }
       setRemiseCode(data.reduction_pct);
       setCodePromoId(data.id);
       setCodeStatut('valid');
@@ -291,8 +312,9 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
 
       if (error) throw error;
 
-      if (codeStatut === 'valid' && codePromoId) {
-        supabase.rpc('increment_code_promo_usage', { code_id: codePromoId }).catch(() => {});
+      if (codeStatut === 'valid' && codePromoId && user) {
+        void supabase.rpc('increment_code_promo_usage', { code_id: codePromoId });
+        void supabase.from('codes_promo_utilisations').insert({ user_id: user.id, code_promo_id: codePromoId });
       }
 
       // Mise à jour des points de fidélité et remises
@@ -546,10 +568,10 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
                       placeholder="VOTRE CODE"
                       value={codePromo}
                       onChange={(e) => { setCodePromo(e.target.value.toUpperCase()); setCodeStatut('idle'); setRemiseCode(0); setCodePromoId(null); }}
-                      disabled={codeStatut === 'valid'}
+                      disabled={codeStatut === 'valid' || codeStatut === 'used'}
                       className={`w-full bg-white border p-4 pl-12 rounded-2xl font-bold text-xs uppercase outline-none transition-all ${
                         codeStatut === 'valid' ? 'border-green-400 bg-green-50 text-green-700' :
-                        codeStatut === 'invalid' ? 'border-red-300' :
+                        codeStatut === 'invalid' || codeStatut === 'used' ? 'border-red-300' :
                         'border-[#D5C9B8] focus:border-[#FF4500]'
                       }`}
                     />
@@ -581,6 +603,12 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
                   <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-100 rounded-xl">
                     <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
                     <p className="text-[10px] font-black text-red-600 uppercase">Code invalide ou expiré.</p>
+                  </div>
+                )}
+                {codeStatut === 'used' && (
+                  <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-100 rounded-xl">
+                    <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
+                    <p className="text-[10px] font-black text-red-600 uppercase">Vous avez déjà utilisé ce code promo.</p>
                   </div>
                 )}
               </div>
