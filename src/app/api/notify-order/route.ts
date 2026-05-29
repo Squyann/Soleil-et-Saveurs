@@ -32,7 +32,7 @@ async function sendEmail(to: string, subject: string, html: string, apiKey: stri
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from, to, subject, html }),
+    body: JSON.stringify({ from, to, subject, html, reply_to: 'soleiletsaveurs.livraison@gmail.com' }),
   });
   if (!res.ok) {
     const detail = await res.text();
