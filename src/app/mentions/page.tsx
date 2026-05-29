@@ -66,11 +66,11 @@ export default function MentionsLegales() {
             <div className="space-y-2 text-slate-600 font-medium text-sm leading-relaxed">
               <p>Le site <strong className="text-slate-900">Soleil Saveurs</strong> est édité par une entreprise individuelle :</p>
               <div className="bg-slate-50 rounded-2xl p-5 mt-4 space-y-2 border border-slate-100">
-                <p><span className="text-slate-400 text-xs uppercase font-black tracking-widest mr-2">Responsable</span> [Prénom Nom]</p>
-                <p><span className="text-slate-400 text-xs uppercase font-black tracking-widest mr-2">Siège social</span> Plaisir (78370), Yvelines, France</p>
-                <p><span className="text-slate-400 text-xs uppercase font-black tracking-widest mr-2">SIRET</span> [Numéro SIRET]</p>
+                <p><span className="text-slate-400 text-xs uppercase font-black tracking-widest mr-2">Responsable</span> Mohammed Boulila</p>
+                <p><span className="text-slate-400 text-xs uppercase font-black tracking-widest mr-2">Siège social</span> 6-8 AVENUE HENRIETTE, 93170 BAGNOLET</p>
+                <p><span className="text-slate-400 text-xs uppercase font-black tracking-widest mr-2">SIRET</span> 821 324 324 00028</p>
                 <p><span className="text-slate-400 text-xs uppercase font-black tracking-widest mr-2">Email</span> soleiletsaveurs.livraison@gmail.com</p>
-                <p><span className="text-slate-400 text-xs uppercase font-black tracking-widest mr-2">Téléphone</span> [+33 6 XX XX XX XX]</p>
+                <p><span className="text-slate-400 text-xs uppercase font-black tracking-widest mr-2">Téléphone</span> 07 59 72 00 83</p>
                 <p><span className="text-slate-400 text-xs uppercase font-black tracking-widest mr-2">Statut TVA</span> TVA non applicable — Art. 293 B du CGI (micro-entreprise)</p>
               </div>
             </div>
@@ -81,7 +81,7 @@ export default function MentionsLegales() {
               2. Directeur de publication
             </h2>
             <p className="text-slate-600 font-medium text-sm leading-relaxed">
-              Le directeur de la publication du site est <strong className="text-slate-900">[Prénom Nom]</strong>, en sa qualité de responsable de l'entreprise individuelle Soleil Saveurs.
+              Le directeur de la publication du site est <strong className="text-slate-900">Mohammed Boulila</strong>, en sa qualité de responsable de l'entreprise individuelle Soleil Saveurs.
             </p>
           </section>
 
@@ -92,9 +92,9 @@ export default function MentionsLegales() {
             <div className="space-y-4 text-slate-600 font-medium text-sm leading-relaxed">
               <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100 space-y-1">
                 <p className="font-black text-slate-900 text-xs uppercase tracking-widest mb-2">Hébergeur du site</p>
-                <p><strong>Vercel Inc.</strong></p>
-                <p>440 N Barranca Ave #4133, Covina, CA 91723, États-Unis</p>
-                <p>Site : <a href="https://vercel.com" className="text-[#FF4500] hover:underline">vercel.com</a></p>
+                <p><strong>Hostinger International Ltd</strong></p>
+                <p>61 Lordou Vironos Street, 6023 Larnaca, Chypre</p>
+                <p>Site : <a href="https://www.hostinger.fr" className="text-[#FF4500] hover:underline">hostinger.fr</a></p>
               </div>
               <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100 space-y-1">
                 <p className="font-black text-slate-900 text-xs uppercase tracking-widest mb-2">Stockage des données</p>
@@ -192,7 +192,7 @@ export default function MentionsLegales() {
 
       <footer className="py-16 border-t border-slate-100 text-center">
         <p className="text-[9px] font-black uppercase tracking-[0.4em] text-slate-300">
-          © 2026 Soleil Saveurs — Plaisir (78)
+          © 2026 Soleil Saveurs — Bagnolet (93)
         </p>
       </footer>
     </div>

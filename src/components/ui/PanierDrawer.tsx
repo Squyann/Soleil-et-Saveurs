@@ -415,6 +415,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
 
       alert("Commande reçue ! Nous vous contactons sur WhatsApp.");
       localStorage.removeItem('mon-panier');
+      window.dispatchEvent(new Event('panier-updated'));
       window.dispatchEvent(new Event('storage'));
       setPanier([]);
       onClose();

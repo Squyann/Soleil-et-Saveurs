@@ -9,6 +9,7 @@ export default function SuccessPage() {
   useEffect(() => {
     localStorage.removeItem('mon-panier');
     // On prévient le reste de l'app que le panier est vide
+    window.dispatchEvent(new Event('panier-updated'));
     window.dispatchEvent(new Event('storage'));
   }, []);
 
