@@ -91,6 +91,7 @@ export async function POST(req: NextRequest) {
         to: commande.email_client,
         subject: `🎉 Votre commande Soleil et Saveurs a été livrée !`,
         html,
+        reply_to: 'soleiletsaveurs.livraison@gmail.com',
       }),
     });
 
