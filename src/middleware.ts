@@ -30,9 +30,7 @@ export async function middleware(request: NextRequest) {
     !request.nextUrl.pathname.startsWith('/admin/login');
 
   if (isAdminRoute) {
-    const adminEmail = process.env.ADMIN_EMAIL;
-    const isAdmin =
-      user && adminEmail && user.email?.toLowerCase() === adminEmail.toLowerCase();
+    const isAdmin = user && (user.app_metadata?.role === 'admin');
 
     if (!isAdmin) {
       const loginUrl = request.nextUrl.clone();
