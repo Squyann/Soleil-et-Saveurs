@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Inter } from 'next/font/google';
 import Link from 'next/link';
-import { ShoppingCart, User, HelpCircle } from 'lucide-react';
+import { ShoppingCart, User, HelpCircle, Store } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import PanierDrawer from '@/components/ui/PanierDrawer';
 import './globals.css';
@@ -79,6 +79,17 @@ export default function RootLayout({
               />
             </Link>
 
+            {/* Nav centrale (desktop) */}
+            <div className="hidden md:flex items-center gap-1">
+              <Link
+                href="/commander"
+                className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-[11px] font-black uppercase tracking-widest text-[#5C4030] hover:bg-[#EAD9C8] hover:text-[#FF4500] transition-all"
+              >
+                <Store className="w-4 h-4" />
+                Boutique
+              </Link>
+            </div>
+
             {/* Actions */}
             <div className="flex items-center gap-1 md:gap-3">
               {/* Panier */}
@@ -95,8 +106,11 @@ export default function RootLayout({
               </button>
 
               {/* Compte */}
-              <Link href={user ? "/compte" : "/login"} className="p-2 hover:bg-[#EAD9C8] rounded-full transition-colors group">
+              <Link href={user ? "/compte" : "/login"} className="flex items-center gap-1.5 p-2 md:px-3 hover:bg-[#EAD9C8] rounded-lg transition-colors group">
                 <User className="w-5 h-5 text-[#5C4030] group-hover:text-[#3D2B1F]" />
+                <span className="hidden md:inline text-[11px] font-black uppercase tracking-widest text-[#5C4030] group-hover:text-[#3D2B1F]">
+                  {user ? 'Mon compte' : 'Connexion'}
+                </span>
               </Link>
 
               {/* Bouton Aide */}

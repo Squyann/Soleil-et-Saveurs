@@ -93,11 +93,7 @@ export default function Home() {
   };
 
   const handleActionClick = (path: string) => {
-    if (!user) {
-      router.push('/login');
-    } else {
-      router.push(path);
-    }
+    router.push(path);
   };
 
   return (
@@ -119,7 +115,7 @@ export default function Home() {
                 onClick={() => handleActionClick('/commander')} 
                 className="w-full bg-[#FF4500] text-white py-4 rounded-xl font-bold hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-orange-200"
               >
-                {user ? "Voir la récolte du jour" : "Se connecter pour commander"}
+                Voir la récolte du jour
               </button>
               <button onClick={() => setShowResult(false)} className="w-full text-slate-400 text-xs font-bold uppercase tracking-widest hover:text-slate-600 transition-colors">
                 Fermer
