@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/api-auth';
 
 function escapeHtml(str: string): string {
   return String(str ?? '')
@@ -43,11 +42,13 @@ async function sendEmail(to: string, subject: string, html: string, apiKey: stri
 }
 
 export async function POST(req: NextRequest) {
-  const { error } = await requireAuth();
-  if (error) return error;
-
   try {
     const { commande: raw } = await req.json();
+
+    // Validation minimale — empêche les appels sans payload valide
+    if (!raw?.nom || !Array.isArray(raw?.panier) || raw.panier.length === 0) {
+      return NextResponse.json({ error: 'Payload invalide' }, { status: 400 });
+    }
     const commande = {
       ...raw,
       nom: escapeHtml(raw.nom),
