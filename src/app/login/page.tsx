@@ -45,16 +45,14 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) throw error;
 
-      // Redirige directement vers l'espace concerné (plus de passage par l'accueil)
-      const isAdmin = data.user?.app_metadata?.role === 'admin';
-      router.push(isAdmin ? '/admin' : '/compte');
+      router.push('/');
       router.refresh();
     } catch (err: any) {
       setError(err.message || "Erreur lors de la connexion");
