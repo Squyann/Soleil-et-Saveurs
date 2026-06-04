@@ -411,7 +411,14 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
             total: totalFinal,
           },
         }),
-      }).catch(err => console.error('Notification admin échouée:', err));
+      }).then(async r => {
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok) {
+          console.error('[notify-order] HTTP', r.status, data);
+        } else {
+          console.log('[notify-order] résultat:', data);
+        }
+      }).catch(err => console.error('[notify-order] réseau:', err));
 
       alert("Commande reçue ! Nous vous contactons sur WhatsApp.");
       localStorage.removeItem('mon-panier');
