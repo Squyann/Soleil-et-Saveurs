@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -28,8 +28,6 @@ export async function proxy(request: NextRequest) {
     const { data } = await supabase.auth.getUser();
     user = data.user;
   } catch {
-    // Token invalide/expiré — on traite comme non connecté
-    // et on supprime les cookies corrompus
     const response = NextResponse.redirect(
       new URL('/admin/login', request.url)
     );
@@ -48,7 +46,7 @@ export async function proxy(request: NextRequest) {
     !request.nextUrl.pathname.startsWith('/admin/login');
 
   if (isAdminRoute) {
-    const isAdmin = user && (user.app_metadata?.role === 'admin');
+    const isAdmin = user && user.app_metadata?.role === 'admin';
 
     if (!isAdmin) {
       const loginUrl = request.nextUrl.clone();
