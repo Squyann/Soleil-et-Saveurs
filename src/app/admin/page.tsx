@@ -1,6 +1,15 @@
 'use client';
 export const dynamic = 'force-dynamic';
 import React, { useEffect, useState } from 'react';
+
+function escapeHtml(str: unknown): string {
+  return String(str ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import {
@@ -434,13 +443,13 @@ export default function AdminPage() {
             <div class="info-grid">
               <div class="info-box">
                 <h3>Client</h3>
-                <p>${cmd.nom_client}</p>
-                <p style="font-weight: normal; margin-top: 4px;">Tél: ${cmd.telephone_client || 'Non renseigné'}</p>
+                <p>${escapeHtml(cmd.nom_client)}</p>
+                <p style="font-weight: normal; margin-top: 4px;">Tél: ${escapeHtml(cmd.telephone_client) || 'Non renseigné'}</p>
               </div>
               <div class="info-box">
                 <h3>Mode de livraison</h3>
                 <p>${isRetrait ? '📍 Retrait au centre' : '🚚 Livraison à domicile'}</p>
-                <p style="font-weight: normal; color: #4A5568; font-size: 13px; margin-top: 5px;">${cmd.adresse_livraison}</p>
+                <p style="font-weight: normal; color: #4A5568; font-size: 13px; margin-top: 5px;">${escapeHtml(cmd.adresse_livraison)}</p>
                 ${cmd.date_livraison ? `<p style="font-weight: bold; color: #FF4500; font-size: 13px; margin-top: 8px;">📅 Livraison le : ${new Date(cmd.date_livraison + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</p>` : ''}
               </div>
             </div>
@@ -468,7 +477,7 @@ export default function AdminPage() {
                   const prixAffiche = isGram ? `${prixUnit.toFixed(2)}€/kg` : `${prixUnit.toFixed(2)}€`;
                   return `
                   <tr>
-                    <td style="font-weight: bold;">${nomProduit}</td>
+                    <td style="font-weight: bold;">${escapeHtml(nomProduit)}</td>
                     <td class="text-right">${qteAffiche}</td>
                     <td class="text-right">${prixAffiche}</td>
                     <td class="text-right" style="font-weight: bold;">${totalLigne.toFixed(2)}€</td>

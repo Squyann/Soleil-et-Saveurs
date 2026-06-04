@@ -14,9 +14,8 @@ async function getSupabaseServerClient() {
 export async function requireAdmin() {
   const supabase = await getSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
-  const adminEmail = process.env.ADMIN_EMAIL;
 
-  if (!user || !adminEmail || user.email?.toLowerCase() !== adminEmail.toLowerCase()) {
+  if (!user || user.app_metadata?.role !== 'admin') {
     return { user: null, error: NextResponse.json({ error: 'Non autorisé' }, { status: 401 }) };
   }
 
