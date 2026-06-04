@@ -28,7 +28,7 @@ function buildLignesHTML(panier: any[]) {
     </tr>`).join('');
 }
 
-async function sendEmail(to: string, subject: string, html: string, apiKey: string, from: string) {
+async function sendEmail(to: string, subject: string, html: string, apiKey: string, from: string): Promise<{ ok: boolean; detail?: string }> {
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
@@ -36,8 +36,10 @@ async function sendEmail(to: string, subject: string, html: string, apiKey: stri
   });
   if (!res.ok) {
     const detail = await res.text();
-    console.error(`[notify-order] Resend error (to=${to}):`, detail);
+    console.error(`[notify-order] Resend error (to=${to}) status=${res.status}:`, detail);
+    return { ok: false, detail };
   }
+  return { ok: true };
 }
 
 export async function POST(req: NextRequest) {
@@ -161,13 +163,18 @@ export async function POST(req: NextRequest) {
 
     const from = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
 
-    await sendEmail(adminEmail, `🛒 Commande de ${commande.nom} — ${Number(commande.total).toFixed(2)}€`, adminHtml, process.env.RESEND_API_KEY, from);
+    const adminResult = await sendEmail(adminEmail, `🛒 Commande de ${commande.nom} — ${Number(commande.total).toFixed(2)}€`, adminHtml, process.env.RESEND_API_KEY, from);
+    let clientResult = { ok: true, detail: 'no email_client' };
 
     if (commande.email_client) {
-      await sendEmail(commande.email_client, `✅ Commande confirmée — Soleil et Saveurs`, clientHtml, process.env.RESEND_API_KEY, from);
+      clientResult = await sendEmail(commande.email_client, `✅ Commande confirmée — Soleil et Saveurs`, clientHtml, process.env.RESEND_API_KEY, from);
     }
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({
+      ok: true,
+      admin_email: { sent: adminResult.ok, error: adminResult.detail },
+      client_email: { sent: clientResult.ok, error: clientResult.detail },
+    });
   } catch (err) {
     console.error('[notify-order] Unexpected error:', err);
     return NextResponse.json({ error: 'Notification failed' }, { status: 500 });
