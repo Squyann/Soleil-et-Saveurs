@@ -61,6 +61,11 @@ export default function RootLayout({
 
   return (
     <html lang="fr">
+      <head>
+        <title>Soleil et Saveurs</title>
+        <link rel="icon" href="/logo.svg" type="image/svg+xml" />
+        <link rel="shortcut icon" href="/logo.svg" />
+      </head>
       <body className={`${inter.className} bg-[#EDE3D5] antialiased`}>
         {/* NAVBAR */}
         <nav className="fixed top-0 left-0 right-0 z-[100] bg-[#F5EAE0]/95 backdrop-blur-md border-b border-[#D5C9B8] h-14 shadow-sm">
