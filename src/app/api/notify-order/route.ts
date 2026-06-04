@@ -165,7 +165,7 @@ export async function POST(req: NextRequest) {
     const from = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
 
     const adminResult = await sendEmail(adminEmail, `🛒 Commande de ${commande.nom} — ${Number(commande.total).toFixed(2)}€`, adminHtml, process.env.RESEND_API_KEY, from);
-    let clientResult = { ok: true, detail: 'no email_client' };
+    let clientResult: { ok: boolean; detail?: string } = { ok: true, detail: 'no email_client' };
 
     if (commande.email_client) {
       clientResult = await sendEmail(commande.email_client, `✅ Commande confirmée — Soleil et Saveurs`, clientHtml, process.env.RESEND_API_KEY, from);
