@@ -1,16 +1,16 @@
 'use client';
 export const dynamic = 'force-dynamic';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
-import { 
-  Mail, 
-  Lock, 
-  ArrowRight, 
-  Loader2, 
-  ChevronLeft, 
-  ShieldCheck, 
-  Leaf, 
+import {
+  Mail,
+  Lock,
+  ArrowRight,
+  Loader2,
+  ChevronLeft,
+  ShieldCheck,
+  Leaf,
   Truck,
   CheckCircle2
 } from 'lucide-react';
@@ -24,6 +24,13 @@ export default function LoginPage() {
   const [resetSent, setResetSent] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
   const router = useRouter();
+
+  // Si l'utilisateur est déjà connecté, on ne lui montre pas la page de login
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) router.replace('/');
+    });
+  }, [router]);
 
   const handleForgotPassword = async () => {
     if (!email) {
