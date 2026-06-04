@@ -25,9 +25,7 @@ export default function RootLayout({
       try {
         const items = JSON.parse(saved);
         // Accepte quantite ou quantity selon le format stocké
-        const total = Array.isArray(items)
-          ? items.reduce((acc: number, item: any) => acc + (item.quantite || item.quantity || 1), 0)
-          : 0;
+        const total = Array.isArray(items) ? items.length : 0;
         setNombreArticles(total);
       } catch {
         setNombreArticles(0);

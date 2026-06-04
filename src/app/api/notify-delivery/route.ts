@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdmin } from '@/lib/api-auth';
 
 function escapeHtml(str: string): string {
   return String(str ?? '')
@@ -17,15 +16,12 @@ function getSiteUrl() {
 }
 
 export async function POST(req: NextRequest) {
-  const { error } = await requireAdmin();
-  if (error) return error;
-
   try {
     const { commande: raw } = await req.json();
     const commande = {
       ...raw,
       nom: escapeHtml(raw.nom),
-      adresse: escapeHtml(raw.adresse),
+      adresse: escapeHtml(raw.adresse ?? ''),
       email_client: escapeHtml(raw.email_client),
     };
 
@@ -91,6 +87,7 @@ export async function POST(req: NextRequest) {
         to: commande.email_client,
         subject: `🎉 Votre commande Soleil et Saveurs a été livrée !`,
         html,
+        reply_to: 'soleiletsaveurs.livraison@gmail.com',
       }),
     });
 

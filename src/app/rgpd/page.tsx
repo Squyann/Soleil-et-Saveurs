@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import React from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Shield } from 'lucide-react';
@@ -76,8 +77,8 @@ export default function RGPDPage() {
             </h2>
             <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100 space-y-2 text-slate-600 font-medium">
               <p><span className="text-slate-400 text-xs uppercase font-black tracking-widest mr-2">Entité</span> Soleil Saveurs (entreprise individuelle)</p>
-              <p><span className="text-slate-400 text-xs uppercase font-black tracking-widest mr-2">Responsable</span> [Prénom Nom]</p>
-              <p><span className="text-slate-400 text-xs uppercase font-black tracking-widest mr-2">Adresse</span> Plaisir (78370), Yvelines, France</p>
+              <p><span className="text-slate-400 text-xs uppercase font-black tracking-widest mr-2">Responsable</span> Mohammed Boulila</p>
+              <p><span className="text-slate-400 text-xs uppercase font-black tracking-widest mr-2">Adresse</span> 6-8 AVENUE HENRIETTE, 93170 BAGNOLET</p>
               <p><span className="text-slate-400 text-xs uppercase font-black tracking-widest mr-2">Email</span> soleiletsaveurs.livraison@gmail.com</p>
             </div>
           </section>
@@ -325,7 +326,7 @@ export default function RGPDPage() {
             </p>
             <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100 space-y-2 text-slate-600 font-medium">
               <p><span className="text-slate-400 text-xs uppercase font-black tracking-widest mr-2">Email</span> soleiletsaveurs.livraison@gmail.com</p>
-              <p><span className="text-slate-400 text-xs uppercase font-black tracking-widest mr-2">WhatsApp</span> [+33 6 XX XX XX XX]</p>
+              <p><span className="text-slate-400 text-xs uppercase font-black tracking-widest mr-2">WhatsApp</span> 07 59 72 00 83</p>
             </div>
             <p className="text-slate-600 font-medium leading-relaxed mt-4">
               Si vous estimez que vos droits ne sont pas respectés, vous pouvez introduire une réclamation auprès de la <strong className="text-slate-900">CNIL</strong> :

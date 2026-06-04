@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/api-auth';
 
 function escapeHtml(str: string): string {
   return String(str ?? '')
@@ -28,24 +27,28 @@ function buildLignesHTML(panier: any[]) {
     </tr>`).join('');
 }
 
-async function sendEmail(to: string, subject: string, html: string, apiKey: string, from: string) {
+async function sendEmail(to: string, subject: string, html: string, apiKey: string, from: string): Promise<{ ok: boolean; detail?: string }> {
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from, to, subject, html }),
+    body: JSON.stringify({ from, to, subject, html, reply_to: 'soleiletsaveurs.livraison@gmail.com' }),
   });
   if (!res.ok) {
     const detail = await res.text();
-    console.error(`[notify-order] Resend error (to=${to}):`, detail);
+    console.error(`[notify-order] Resend error (to=${to}) status=${res.status}:`, detail);
+    return { ok: false, detail };
   }
+  return { ok: true };
 }
 
 export async function POST(req: NextRequest) {
-  const { error } = await requireAuth();
-  if (error) return error;
-
   try {
     const { commande: raw } = await req.json();
+
+    // Validation minimale — empêche les appels sans payload valide
+    if (!raw?.nom || !Array.isArray(raw?.panier) || raw.panier.length === 0) {
+      return NextResponse.json({ error: 'Payload invalide' }, { status: 400 });
+    }
     const commande = {
       ...raw,
       nom: escapeHtml(raw.nom),
@@ -54,6 +57,7 @@ export async function POST(req: NextRequest) {
       email_client: escapeHtml(raw.email_client),
       methode_paiement: escapeHtml(raw.methode_paiement),
       creneau_livraison: raw.creneau_livraison ? escapeHtml(raw.creneau_livraison) : null,
+      date_livraison: raw.date_livraison || null,
       panier: (raw.panier || []).map((item: any) => ({
         ...item,
         name: escapeHtml(item.name),
@@ -108,7 +112,8 @@ export async function POST(req: NextRequest) {
         <tr><td style="padding:10px 16px;color:#64748b;font-size:13px;font-weight:600;">Téléphone</td><td style="padding:10px 16px;font-size:14px;">${commande.telephone}</td></tr>
         <tr style="background:white;"><td style="padding:10px 16px;color:#64748b;font-size:13px;font-weight:600;">Adresse</td><td style="padding:10px 16px;font-size:14px;">${commande.adresse}</td></tr>
         <tr><td style="padding:10px 16px;color:#64748b;font-size:13px;font-weight:600;">Paiement</td><td style="padding:10px 16px;font-size:14px;">${commande.methode_paiement}</td></tr>
-        ${commande.creneau_livraison ? `<tr style="background:white;"><td style="padding:10px 16px;color:#64748b;font-size:13px;font-weight:600;">Créneau</td><td style="padding:10px 16px;font-size:14px;font-weight:800;color:#FF4500;">🕐 ${commande.creneau_livraison}</td></tr>` : ''}
+        ${commande.date_livraison ? `<tr style="background:white;"><td style="padding:10px 16px;color:#64748b;font-size:13px;font-weight:600;">📅 Date</td><td style="padding:10px 16px;font-size:14px;font-weight:800;color:#FF4500;">${new Date(commande.date_livraison + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</td></tr>` : ''}
+        ${commande.creneau_livraison ? `<tr><td style="padding:10px 16px;color:#64748b;font-size:13px;font-weight:600;">Créneau</td><td style="padding:10px 16px;font-size:14px;font-weight:800;color:#FF4500;">🕐 ${commande.creneau_livraison}</td></tr>` : ''}
       </table>
       <h2 style="margin:28px 0 16px;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:2px;color:#94a3b8;">Détail de la commande</h2>
       ${tableCommande}
@@ -140,6 +145,7 @@ export async function POST(req: NextRequest) {
       ${tableCommande}
       <div style="margin-top:24px;padding:16px;background:#f9f8f6;border-radius:12px;">
         <p style="margin:0;font-size:13px;color:#64748b;font-weight:600;">📍 Livraison à : <strong style="color:#1e293b;">${commande.adresse}</strong></p>
+        ${commande.date_livraison ? `<p style="margin:8px 0 0;font-size:13px;color:#64748b;font-weight:600;">📅 Date de livraison : <strong style="color:#FF4500;">${new Date(commande.date_livraison + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</strong></p>` : ''}
         <p style="margin:8px 0 0;font-size:13px;color:#64748b;font-weight:600;">💳 Paiement : <strong style="color:#1e293b;">${commande.methode_paiement}</strong></p>
         ${commande.creneau_livraison ? `<p style="margin:8px 0 0;font-size:13px;color:#64748b;font-weight:600;">🕐 Créneau : <strong style="color:#FF4500;">${commande.creneau_livraison}</strong></p>` : ''}
       </div>
@@ -161,13 +167,18 @@ export async function POST(req: NextRequest) {
 
     const from = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
 
-    await sendEmail(adminEmail, `🛒 Commande de ${commande.nom} — ${Number(commande.total).toFixed(2)}€`, adminHtml, process.env.RESEND_API_KEY, from);
+    const adminResult = await sendEmail(adminEmail, `🛒 Commande de ${commande.nom} — ${Number(commande.total).toFixed(2)}€`, adminHtml, process.env.RESEND_API_KEY, from);
+    let clientResult: { ok: boolean; detail?: string } = { ok: true, detail: 'no email_client' };
 
     if (commande.email_client) {
-      await sendEmail(commande.email_client, `✅ Commande confirmée — Soleil et Saveurs`, clientHtml, process.env.RESEND_API_KEY, from);
+      clientResult = await sendEmail(commande.email_client, `✅ Commande confirmée — Soleil et Saveurs`, clientHtml, process.env.RESEND_API_KEY, from);
     }
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({
+      ok: true,
+      admin_email: { sent: adminResult.ok, error: adminResult.detail },
+      client_email: { sent: clientResult.ok, error: clientResult.detail },
+    });
   } catch (err) {
     console.error('[notify-order] Unexpected error:', err);
     return NextResponse.json({ error: 'Notification failed' }, { status: 500 });

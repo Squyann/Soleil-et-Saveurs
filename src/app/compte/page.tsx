@@ -1,4 +1,5 @@
 'use client';
+export const dynamic = 'force-dynamic';
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
@@ -210,32 +211,24 @@ export default function ComptePage() {
   }
 
   const commanderANouveau = (contenu: any) => {
-  // 1. Sécurité : si contenu est vide ou n'est pas un tableau, on arrête
-  if (!contenu || !Array.isArray(contenu)) {
-    alert("Impossible de récupérer les articles de cette commande.");
-    return;
-  }
-
-  try {
-    // 2. Récupérer l'existant (vérifie bien que c'est 'soleilsaveurs_cart')
-    const panierLocal = localStorage.getItem('mon-panier');
-    const panierActuel = panierLocal ? JSON.parse(panierLocal) : [];
-
-    // 3. Fusionner (on ajoute les anciens articles au panier actuel)
-    const nouveauPanier = [...panierActuel, ...contenu];
-
-    // 4. Sauvegarder
-    localStorage.setItem('mon-panier', JSON.stringify(nouveauPanier));
-
-    // 5. Mise à jour en temps réel et redirection
-    window.dispatchEvent(new Event('storage'));
-    window.location.href = '/';
-    
-  } catch (error) {
-    console.error("Erreur panier:", error);
-    alert("Une erreur est survenue lors de l'ajout au panier.");
-  }
- };
+    if (!contenu || !Array.isArray(contenu)) {
+      alert("Impossible de récupérer les articles de cette commande.");
+      return;
+    }
+    try {
+      const panierLocal = localStorage.getItem('mon-panier');
+      const panierActuel = panierLocal ? JSON.parse(panierLocal) : [];
+      const nouveauPanier = [...panierActuel, ...contenu];
+      localStorage.setItem('mon-panier', JSON.stringify(nouveauPanier));
+      // Met à jour le badge immédiatement (même onglet)
+      window.dispatchEvent(new Event('panier-updated'));
+      // Navigation sans rechargement complet — préserve la session
+      router.push('/commander');
+    } catch (error) {
+      console.error("Erreur panier:", error);
+      alert("Une erreur est survenue lors de l'ajout au panier.");
+    }
+  };
  
 
   return (

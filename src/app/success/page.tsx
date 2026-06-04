@@ -1,4 +1,5 @@
 'use client';
+export const dynamic = 'force-dynamic';
 import React, { useEffect } from 'react';
 import { CheckCircle2, ShoppingBag, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
@@ -8,6 +9,7 @@ export default function SuccessPage() {
   useEffect(() => {
     localStorage.removeItem('mon-panier');
     // On prévient le reste de l'app que le panier est vide
+    window.dispatchEvent(new Event('panier-updated'));
     window.dispatchEvent(new Event('storage'));
   }, []);
 
