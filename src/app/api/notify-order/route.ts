@@ -57,6 +57,7 @@ export async function POST(req: NextRequest) {
       email_client: escapeHtml(raw.email_client),
       methode_paiement: escapeHtml(raw.methode_paiement),
       creneau_livraison: raw.creneau_livraison ? escapeHtml(raw.creneau_livraison) : null,
+      date_livraison: raw.date_livraison || null,
       panier: (raw.panier || []).map((item: any) => ({
         ...item,
         name: escapeHtml(item.name),
@@ -111,7 +112,8 @@ export async function POST(req: NextRequest) {
         <tr><td style="padding:10px 16px;color:#64748b;font-size:13px;font-weight:600;">Téléphone</td><td style="padding:10px 16px;font-size:14px;">${commande.telephone}</td></tr>
         <tr style="background:white;"><td style="padding:10px 16px;color:#64748b;font-size:13px;font-weight:600;">Adresse</td><td style="padding:10px 16px;font-size:14px;">${commande.adresse}</td></tr>
         <tr><td style="padding:10px 16px;color:#64748b;font-size:13px;font-weight:600;">Paiement</td><td style="padding:10px 16px;font-size:14px;">${commande.methode_paiement}</td></tr>
-        ${commande.creneau_livraison ? `<tr style="background:white;"><td style="padding:10px 16px;color:#64748b;font-size:13px;font-weight:600;">Créneau</td><td style="padding:10px 16px;font-size:14px;font-weight:800;color:#FF4500;">🕐 ${commande.creneau_livraison}</td></tr>` : ''}
+        ${commande.date_livraison ? `<tr style="background:white;"><td style="padding:10px 16px;color:#64748b;font-size:13px;font-weight:600;">📅 Date</td><td style="padding:10px 16px;font-size:14px;font-weight:800;color:#FF4500;">${new Date(commande.date_livraison + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</td></tr>` : ''}
+        ${commande.creneau_livraison ? `<tr><td style="padding:10px 16px;color:#64748b;font-size:13px;font-weight:600;">Créneau</td><td style="padding:10px 16px;font-size:14px;font-weight:800;color:#FF4500;">🕐 ${commande.creneau_livraison}</td></tr>` : ''}
       </table>
       <h2 style="margin:28px 0 16px;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:2px;color:#94a3b8;">Détail de la commande</h2>
       ${tableCommande}
@@ -143,6 +145,7 @@ export async function POST(req: NextRequest) {
       ${tableCommande}
       <div style="margin-top:24px;padding:16px;background:#f9f8f6;border-radius:12px;">
         <p style="margin:0;font-size:13px;color:#64748b;font-weight:600;">📍 Livraison à : <strong style="color:#1e293b;">${commande.adresse}</strong></p>
+        ${commande.date_livraison ? `<p style="margin:8px 0 0;font-size:13px;color:#64748b;font-weight:600;">📅 Date de livraison : <strong style="color:#FF4500;">${new Date(commande.date_livraison + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</strong></p>` : ''}
         <p style="margin:8px 0 0;font-size:13px;color:#64748b;font-weight:600;">💳 Paiement : <strong style="color:#1e293b;">${commande.methode_paiement}</strong></p>
         ${commande.creneau_livraison ? `<p style="margin:8px 0 0;font-size:13px;color:#64748b;font-weight:600;">🕐 Créneau : <strong style="color:#FF4500;">${commande.creneau_livraison}</strong></p>` : ''}
       </div>
