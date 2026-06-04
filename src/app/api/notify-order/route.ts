@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/api-auth';
 
 function escapeHtml(str: string): string {
   return String(str ?? '')
@@ -42,6 +43,9 @@ async function sendEmail(to: string, subject: string, html: string, apiKey: stri
 }
 
 export async function POST(req: NextRequest) {
+  const { error: authError } = await requireAuth();
+  if (authError) return authError;
+
   try {
     const { commande: raw } = await req.json();
 

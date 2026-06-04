@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/api-auth';
 
 function escapeHtml(str: string): string {
   return String(str ?? '')
@@ -16,6 +17,9 @@ function getSiteUrl() {
 }
 
 export async function POST(req: NextRequest) {
+  const { error: authError } = await requireAdmin();
+  if (authError) return authError;
+
   try {
     const { commande: raw } = await req.json();
     const commande = {
