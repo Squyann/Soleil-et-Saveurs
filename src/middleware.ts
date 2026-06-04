@@ -23,7 +23,25 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  const { data: { user } } = await supabase.auth.getUser();
+  let user = null;
+  try {
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  } catch {
+    // Token invalide/expiré — on traite comme non connecté
+    // et on supprime les cookies corrompus
+    const response = NextResponse.redirect(
+      new URL('/admin/login', request.url)
+    );
+    request.cookies.getAll().forEach(({ name }) => {
+      if (name.startsWith('sb-')) response.cookies.delete(name);
+    });
+    const isAdminRoute =
+      request.nextUrl.pathname.startsWith('/admin') &&
+      !request.nextUrl.pathname.startsWith('/admin/login');
+    if (isAdminRoute) return response;
+    return NextResponse.next({ request });
+  }
 
   const isAdminRoute =
     request.nextUrl.pathname.startsWith('/admin') &&
