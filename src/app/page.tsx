@@ -132,9 +132,9 @@ export default function Home() {
             <span className="w-1.5 h-1.5 rounded-full bg-[#FF4500] animate-pulse"></span>
             Récolte ultra-locale 78
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
             <div className="z-10">
-              <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter leading-[0.95] mb-6 text-slate-900">
+              <h1 className="text-5xl lg:text-7xl font-extrabold tracking-tighter leading-[0.95] mb-6 text-slate-900">
                 Le goût du soleil,<br />
                 <span className="text-[#FF4500]">livré chez vous.</span>
               </h1>
@@ -327,7 +327,7 @@ export default function Home() {
 
       {/* Map Interactive */}
       <section className="max-w-6xl mx-auto px-4 md:px-8 py-10">
-        <div className="bg-white rounded-[3rem] overflow-hidden shadow-2xl shadow-slate-200 border border-slate-50 grid md:grid-cols-2">
+        <div className="bg-white rounded-[3rem] overflow-hidden shadow-2xl shadow-slate-200 border border-slate-50 grid lg:grid-cols-2">
           <div className="p-10 md:p-14 flex flex-col justify-center">
             <h3 className="text-4xl font-black uppercase italic tracking-tighter mb-6 text-slate-900 leading-[0.9]">ZONE DE <br/><span className="text-[#FF4500]">FRAÎCHEUR</span></h3>
             <p className="text-sm text-slate-500 mb-8 font-semibold italic leading-relaxed">Rayon de 5km autour de nos points de récolte. L'ultra-local est notre priorité.</p>
