@@ -1,16 +1,13 @@
 'use client';
 export const dynamic = 'force-dynamic';
 import React, { useState, useEffect } from 'react';
-import { ShoppingCart, Star, ArrowLeft, Plus, Info, Tag, CheckCircle2, TrendingDown, Gift, Search, X } from 'lucide-react';
+import { Star, ArrowLeft, Plus, Info, Tag, CheckCircle2, TrendingDown, Gift, Search, X } from 'lucide-react';
 import Link from 'next/link';
-import PanierDrawer from '@/components/ui/PanierDrawer';
 import { supabase } from '@/lib/supabase';
 
 export default function CommanderPage() {
   const [products, setProducts] = useState<any[]>([]);
   const [filter, setFilter] = useState('all');
-  const [isPanierOpen, setIsPanierOpen] = useState(false);
-  const [nombreArticles, setNombreArticles] = useState(0);
   const [loading, setLoading] = useState(true);
   const [showToast, setShowToast] = useState(false);
   
@@ -21,7 +18,6 @@ export default function CommanderPage() {
 
   useEffect(() => {
     fetchProducts();
-    updateBadgeCount();
   }, []);
 
   async function fetchProducts() {
@@ -46,13 +42,6 @@ export default function CommanderPage() {
     }
   }
 
-  const updateBadgeCount = () => {
-    const panier = JSON.parse(localStorage.getItem('mon-panier') || '[]');
-    setNombreArticles(panier.reduce((acc: number, item: any) => {
-      if (item.unite === 'g' || item.unite === 'kg') return acc + 1;
-      return acc + Math.round(item.quantite || 1);
-    }, 0));
-  };
 
   const getPasG = (product: any) => product.pas_g || 100;
   const getStep = (product: any) => product.unite === 'kg' ? 0.5 : product.unite === 'g' ? getPasG(product) : 1;
@@ -110,7 +99,7 @@ export default function CommanderPage() {
     }
 
     localStorage.setItem('mon-panier', JSON.stringify(panierActuel));
-    updateBadgeCount();
+    window.dispatchEvent(new Event('panier-updated'));
     
     setShowToast(true);
     setTimeout(() => setShowToast(false), 2000);
@@ -121,8 +110,6 @@ export default function CommanderPage() {
     <>
     <main className="min-h-screen bg-[#EDE3D5] text-slate-900 pb-20 pt-24 px-2 md:px-10">
       
-      <PanierDrawer isOpen={isPanierOpen} onClose={() => setIsPanierOpen(false)} />
-
       {showToast && (
         <div className="fixed top-28 left-1/2 -translate-x-1/2 z-[100] bg-[#3D2B1F] text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-300">
           <CheckCircle2 className="w-5 h-5 text-[#FF4500]" />
@@ -130,20 +117,6 @@ export default function CommanderPage() {
         </div>
       )}
 
-      <button 
-        onClick={() => setIsPanierOpen(true)}
-        className="fixed bottom-8 right-8 z-50 bg-[#3D2B1F] text-white p-4 rounded-full shadow-2xl hover:bg-[#FF4500] hover:scale-110 transition-all flex items-center gap-3 active:scale-95 group"
-      >
-        <div className="relative">
-          <ShoppingCart className="w-6 h-6" />
-          {nombreArticles > 0 && (
-            <span className="absolute -top-3 -right-3 bg-[#FF4500] text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold border-2 border-white shadow-lg">
-              {nombreArticles}
-            </span>
-          )}
-        </div>
-        <span className="font-bold text-sm pr-2 hidden md:inline">Mon Panier</span>
-      </button>
 
       <div className="max-w-7xl mx-auto">
         
