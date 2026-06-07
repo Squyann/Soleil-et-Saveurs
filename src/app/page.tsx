@@ -1,5 +1,4 @@
 'use client';
-export const dynamic = 'force-dynamic';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -43,11 +42,11 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    const initSession = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-    };
-    initSession();
+    // onAuthStateChange se déclenche immédiatement avec la session courante
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => subscription.unsubscribe();
   }, []);
 
   const handleAddressChange = async (val: string) => {
