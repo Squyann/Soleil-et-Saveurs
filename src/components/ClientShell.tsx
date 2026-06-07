@@ -68,9 +68,9 @@ export default function ClientShell({ children }: { children: React.ReactNode })
               )}
             </button>
 
-            <Link href={user ? '/compte' : '/login'} className="flex items-center gap-1.5 p-2 md:px-3 hover:bg-[#EAD9C8] rounded-lg transition-colors group">
+            <Link href={user ? '/compte' : '/login'} className="flex items-center gap-1.5 p-2 md:px-3 hover:bg-[#EAD9C8] rounded-lg transition-colors group" suppressHydrationWarning>
               <User className="w-5 h-5 text-[#5C4030] group-hover:text-[#3D2B1F]" />
-              <span className="hidden md:inline text-[11px] font-black uppercase tracking-widest text-[#5C4030] group-hover:text-[#3D2B1F]">
+              <span className="hidden md:inline text-[11px] font-black uppercase tracking-widest text-[#5C4030] group-hover:text-[#3D2B1F]" suppressHydrationWarning>
                 {user ? 'Mon compte' : 'Connexion'}
               </span>
             </Link>

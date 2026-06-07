@@ -196,7 +196,7 @@ export default function Home() {
             </div>
 
             <div className="relative aspect-[4/5] md:aspect-[3/4] max-w-[420px] mx-auto md:ml-auto w-full rounded-[2.5rem] overflow-hidden shadow-2xl bg-slate-100 border-8 border-white">
-              <video id="hero-video" autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover">
+              <video id="hero-video" autoPlay loop playsInline className="absolute inset-0 w-full h-full object-cover" suppressHydrationWarning ref={(el) => { if (el) { el.muted = true; } }}>
                 <source src="/video.mp4" type="video/mp4" />
               </video>
               <div className="absolute bottom-6 left-6 right-6 p-4 bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 flex items-center justify-between">
@@ -343,13 +343,14 @@ export default function Home() {
             <Link href="/livraison" className="text-xs font-black text-[#FF4500] underline underline-offset-8 decoration-2 hover:text-[#e63e00] transition-colors uppercase tracking-widest">Voir les détails de livraison</Link>
           </div>
           <div className="h-[450px] w-full grayscale contrast-[1.1] hover:grayscale-0 transition-all duration-1000">
-            <iframe 
-              src="https://www.google.com/maps/embed?pb=!1m12!1m8!1m3!1d84030.82565651523!2d2.0125!3d48.855!3m2!1i1024!2i768!4f13.1!2m1!1sYvelines%20Chatou%20Plaisir!5e0!3m2!1sfr!2sfr!4v1710000000000!5m2!1sfr!2sfr" 
-              width="100%" 
-              height="100%" 
-              style={{ border: 0 }} 
-              allowFullScreen={true} 
-              loading="lazy" 
+            <iframe
+              src="https://www.google.com/maps/embed?pb=!1m12!1m8!1m3!1d84030.82565651523!2d2.0125!3d48.855!3m2!1i1024!2i768!4f13.1!2m1!1sYvelines%20Chatou%20Plaisir!5e0!3m2!1sfr!2sfr!4v1710000000000!5m2!1sfr!2sfr"
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              allowFullScreen={true}
+              loading="lazy"
+              suppressHydrationWarning
             ></iframe>
           </div>
         </div>
