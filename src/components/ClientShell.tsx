@@ -1,11 +1,11 @@
 'use client';
-import React, { useState, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ShoppingCart, User, HelpCircle, Store } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import dynamic from 'next/dynamic';
 
-// Chargement différé — ne bloque pas l'hydratation initiale
-const PanierDrawer = lazy(() => import('@/components/ui/PanierDrawer'));
+const PanierDrawer = dynamic(() => import('@/components/ui/PanierDrawer'), { ssr: false });
 
 export default function ClientShell({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<any>(null);
@@ -88,9 +88,7 @@ export default function ClientShell({ children }: { children: React.ReactNode })
         <HelpCircle className="w-6 h-6 text-[#FF4500]" />
       </Link>
 
-      <Suspense fallback={null}>
-        <PanierDrawer isOpen={isPanierOpen} onClose={() => setIsPanierOpen(false)} />
-      </Suspense>
+      <PanierDrawer isOpen={isPanierOpen} onClose={() => setIsPanierOpen(false)} />
 
       <main className="mt-14">
         {children}

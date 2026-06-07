@@ -19,6 +19,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fr">
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+      </head>
       <body className={`${inter.className} bg-[#EDE3D5] antialiased overflow-x-hidden`}>
         <ClientShell>{children}</ClientShell>
       </body>
