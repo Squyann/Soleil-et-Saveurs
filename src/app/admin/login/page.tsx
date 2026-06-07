@@ -1,5 +1,4 @@
 'use client';
-export const dynamic = 'force-dynamic';
 import React, { useState } from 'react';
 import { supabase } from '@/lib/supabase'; // On importe Supabase
 import { Lock } from 'lucide-react';
