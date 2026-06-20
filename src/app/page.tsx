@@ -215,16 +215,11 @@ export default function Home() {
 
       {/* Bento Services */}
       <section className="max-w-6xl mx-auto px-4 md:px-8 py-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-[#0F172A] rounded-[2rem] p-8 text-white min-h-[180px] flex flex-col justify-center shadow-xl shadow-slate-200">
-            <Zap className="w-8 h-8 text-[#FF4500] mb-4" />
-            <h3 className="text-2xl font-black mb-1 uppercase italic tracking-tighter">Zéro Stock.</h3>
-            <p className="text-slate-400 text-sm font-medium">L'arbre est notre seul entrepôt.</p>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Link href="/livraison" className="bg-white border border-slate-100 rounded-[2rem] p-8 shadow-xl shadow-slate-100 min-h-[180px] flex flex-col justify-center hover:border-[#FF4500]/20 transition-all group">
             <Truck className="w-8 h-8 text-[#FF4500] mb-4 group-hover:translate-x-3 transition-transform" />
-            <h3 className="text-2xl font-black mb-1 uppercase italic tracking-tighter">Livraison J+0</h3>
-            <p className="text-slate-500 text-sm font-medium">Récolté le matin, chez vous le soir.</p>
+            <h3 className="text-2xl font-black mb-1 uppercase italic tracking-tighter">Livraison Express</h3>
+            <p className="text-slate-500 text-sm font-medium">Reçu le matin, chez vous le lendemain.</p>
           </Link>
           <div className="bg-[#FFF5F1] rounded-[2rem] p-8 min-h-[180px] flex flex-col justify-center border border-orange-100 shadow-xl shadow-orange-50">
             <MapPin className="w-8 h-8 text-[#FF4500] mb-4" />
