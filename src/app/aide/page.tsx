@@ -51,14 +51,6 @@ const FAQ_CATEGORIES = [
         q: "Pourquoi certains fruits ne sont pas disponibles toute l'année ?",
         a: "C'est notre promesse 'Zéro Frigo'. Si ce n'est pas la saison dans les Yvelines ou chez nos partenaires directs, nous ne le vendons pas — point. Pas de fraises importées en décembre, pas de tomates sous serre en janvier. Vous mangez ce que la terre donne vraiment."
       },
-      {
-        q: "Comment garantissez-vous que les produits sont récoltés le matin ?",
-        a: "Chaque bon de livraison mentionne l'heure de récolte pour les produits ultra-frais (salades, petits fruits, herbes aromatiques). Nos agriculteurs partenaires signent une charte de traçabilité que nous mettons à disposition sur demande."
-      },
-      {
-        q: "D'où viennent exactement vos producteurs ?",
-        a: "Tous nos producteurs sont situés dans un rayon de 50km autour de nos zones de livraison, principalement dans les Yvelines (78), l'Essonne (91) et le Val-d'Oise (95). Nous visitons chaque exploitation avant tout partenariat."
-      }
     ]
   },
   {
