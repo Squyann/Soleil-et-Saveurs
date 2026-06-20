@@ -118,8 +118,8 @@ export default function LivraisonPage() {
             <div className="w-14 h-14 bg-orange-50 rounded-2xl flex items-center justify-center mb-4 text-[#FF4500]">
               <Clock className="w-7 h-7" />
             </div>
-            <h3 className="font-black uppercase text-sm mb-2">Flux Tendu J+0</h3>
-            <p className="text-[11px] text-slate-500 font-medium leading-relaxed italic">Commandé avant minuit, récolté à 5h, chez vous pour le dîner.</p>
+            <h3 className="font-black uppercase text-sm mb-2">Flux Tendu</h3>
+            <p className="text-[11px] text-slate-500 font-medium leading-relaxed italic">Commande avant minuit, dans votre assiette le lendemain.</p>
           </div>
           <div className="bg-white p-8 rounded-[32px] shadow-xl border border-slate-100 flex flex-col items-center text-center">
             <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center mb-4 text-blue-500">
