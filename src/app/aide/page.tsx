@@ -49,7 +49,7 @@ const FAQ_CATEGORIES = [
       },
       {
         q: "Pourquoi certains fruits ne sont pas disponibles toute l'année ?",
-        a: "C'est notre promesse 'Zéro Frigo'. Si ce n'est pas la saison dans les Yvelines ou chez nos partenaires directs, nous ne le vendons pas — point. Pas de fraises importées en décembre, pas de tomates sous serre en janvier. Vous mangez ce que la terre donne vraiment."
+        a: "Nous ne vendons uniquement des produits de saison. Pas de fraises importées en décembre, pas de tomates sous serre en janvier. Vous mangez ce que la terre donne vraiment."
       },
     ]
   },
