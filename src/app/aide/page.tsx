@@ -387,7 +387,7 @@ export default function AidePage() {
           </div>
         </div>
         <p className="text-[9px] font-black uppercase tracking-[0.5em] text-slate-200 pb-10">
-          © 2026 SOLEIL SAVEURS — TOUS DROITS RÉSERVÉS
+          © 2026 SOLEIL ET SAVEURS — TOUS DROITS RÉSERVÉS
         </p>
       </footer>
     </div>

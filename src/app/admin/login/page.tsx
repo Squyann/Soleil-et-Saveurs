@@ -75,7 +75,7 @@ export default function AdminLogin() {
         </form>
 
         <p className="text-center mt-10 text-[9px] font-bold text-slate-300 uppercase tracking-widest">
-          &copy;  SOLEIL SAVEURS - PANNEAU DE CONTRÔLE
+          &copy;  SOLEIL ET SAVEURS - PANNEAU DE CONTRÔLE
         </p>
       </div>
     </div>

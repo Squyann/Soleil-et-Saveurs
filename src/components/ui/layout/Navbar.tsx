@@ -11,7 +11,7 @@ export default function Navbar() {
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <div className="flex items-center gap-2 font-bold text-orange-600 text-xl">
           <Sun className="w-6 h-6" />
-          <span>Soleil & Saveurs</span>
+          <span>Soleil et Saveurs</span>
         </div>
         
         <div className="relative p-2 bg-orange-50 rounded-full text-orange-700">
