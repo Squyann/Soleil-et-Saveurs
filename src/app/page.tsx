@@ -137,10 +137,6 @@ export default function Home() {
                 Le goût du soleil,<br />
                 <span className="text-[#FF4500]">livré chez vous.</span>
               </h1>
-              <p className="text-base md:text-lg text-slate-500 max-w-md mb-8 leading-relaxed font-medium">
-                Circuit court réinventé : cueillis à maturité le matin, dans votre cuisine le soir.
-              </p>
-              
               <div className="flex flex-col gap-4 max-w-md">
                 <button 
                   onClick={() => handleActionClick('/commander')} 
