@@ -18,7 +18,7 @@ const FAQ_CATEGORIES = [
     questions: [
       {
         q: "Quels sont vos délais exacts de livraison ?",
-        a: "Nous fonctionnons en flux tendu : commandez avant 23h59, nos agriculteurs récoltent dès 5h du matin, et vous êtes livré entre 16h et 20h le soir même. Aucun produit ne passe la nuit en entrepôt — c'est notre engagement."
+        a: "Nous fonctionnons en flux tendu : commandez avant 23h59, nos agriculteurs récoltent dès 5h du matin, et vous êtes livré entre 12h et 18h le soir même. Aucun produit ne passe la nuit en entrepôt — c'est notre engagement."
       },
       {
         q: "Quelles villes du 78 desservez-vous ?",
@@ -34,7 +34,7 @@ const FAQ_CATEGORIES = [
       },
       {
         q: "Puis-je choisir un créneau horaire précis ?",
-        a: "Pour le moment, la livraison se fait entre 16h et 20h. Nous travaillons sur des créneaux personnalisables pour les prochains mois. En attendant, notre équipe peut noter une préférence horaire dans les commentaires de commande."
+        a: "Pour le moment, la livraison se fait entre 12h et 18h. Nous travaillons sur des créneaux personnalisables pour les prochains mois. En attendant, notre équipe peut noter une préférence horaire dans les commentaires de commande."
       }
     ]
   },
