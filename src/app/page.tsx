@@ -246,7 +246,7 @@ export default function Home() {
               {
                 icon: <Clock className="w-7 h-7" />,
                 step: "01",
-                title: "Récolte à 5h",
+                title: "Récoltée à maturité",
                 desc: "Nos agriculteurs partenaires cueillent vos fruits et légumes à l'aube, au pic de leur maturité.",
                 tag: "L'aube",
                 bg: "bg-[#FFF5F1]",
@@ -265,7 +265,7 @@ export default function Home() {
                 icon: <Truck className="w-7 h-7" />,
                 step: "03",
                 title: "Livré à 17h",
-                desc: "Directement à votre porte, sans jamais passer par un frigo. De l'arbre à l'assiette.",
+                desc: "Directement à votre porte, sans perdre aucune fraîcheur !",
                 tag: "Le soir",
                 bg: "bg-[#0F172A]",
                 border: "border-transparent",
