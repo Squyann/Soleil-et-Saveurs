@@ -59,7 +59,7 @@ export default function LivraisonPage() {
         <Link href="/" className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-[#FF4500] transition-colors">
           <ArrowLeft className="w-4 h-4" /> Retour Boutique
         </Link>
-        <span className="text-[10px] font-black uppercase tracking-tighter text-slate-900 italic">Soleil Saveurs — Logistique</span>
+        <span className="text-[10px] font-black uppercase tracking-tighter text-slate-900 italic">Soleil et Saveurs — Logistique</span>
       </nav>
 
       {/* Hero Section - Testeur d'éligibilité */}
