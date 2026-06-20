@@ -149,7 +149,7 @@ export default function LivraisonPage() {
             </h2>
             <p className="text-slate-500 font-medium leading-relaxed italic">
               Parce que la saveur d'une fraise ou d'une salade décline à chaque kilomètre parcouru. 
-              En limitant nos livraisons à un rayon de 5km autour de nos points stratégiques dans les <span className="text-slate-900 font-bold">Yvelines (78)</span>, nous garantissons un produit qui n'a jamais vu la couleur d'un réfrigérateur industriel.
+              En limitant nos livraisons à un rayon de 5km autour de nos points stratégiques dans les <span className="text-slate-900 font-bold">Yvelines (78)</span>, nous garantissons un produit qui n'a perdu aucune fraîcheur.
             </p>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
