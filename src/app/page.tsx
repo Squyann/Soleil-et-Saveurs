@@ -366,7 +366,7 @@ export default function Home() {
       </section>
 
       <footer className="text-center py-6 opacity-30 text-[8px] font-black uppercase tracking-[0.4em] italic">
-        © Soleil & Saveurs 2026 — De l'arbre à l'assiette.
+        © Soleil et Saveurs 2026 — De l'arbre à l'assiette.
       </footer>
     </main>
   );

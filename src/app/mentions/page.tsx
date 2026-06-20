@@ -63,9 +63,9 @@ export default function MentionsLegales() {
               1. Éditeur du site
             </h2>
             <div className="space-y-2 text-slate-600 font-medium text-sm leading-relaxed">
-              <p>Le site <strong className="text-slate-900">Soleil Saveurs</strong> est édité par une entreprise individuelle :</p>
+              <p>Le site <strong className="text-slate-900">Soleil et Saveurs</strong> est édité par une entreprise individuelle :</p>
               <div className="bg-slate-50 rounded-2xl p-5 mt-4 space-y-2 border border-slate-100">
-                <p><span className="text-slate-400 text-xs uppercase font-black tracking-widest mr-2">Responsable</span> Mohammed Boulila</p>
+                <p><span className="text-slate-400 text-xs uppercase font-black tracking-widest mr-2">Responsable</span> Khaled Boulila</p>
                 <p><span className="text-slate-400 text-xs uppercase font-black tracking-widest mr-2">Siège social</span> 6-8 AVENUE HENRIETTE, 93170 BAGNOLET</p>
                 <p><span className="text-slate-400 text-xs uppercase font-black tracking-widest mr-2">SIRET</span> 821 324 324 00028</p>
                 <p><span className="text-slate-400 text-xs uppercase font-black tracking-widest mr-2">Email</span> soleiletsaveurs.livraison@gmail.com</p>
@@ -80,7 +80,7 @@ export default function MentionsLegales() {
               2. Directeur de publication
             </h2>
             <p className="text-slate-600 font-medium text-sm leading-relaxed">
-              Le directeur de la publication du site est <strong className="text-slate-900">Mohammed Boulila</strong>, en sa qualité de responsable de l'entreprise individuelle Soleil Saveurs.
+              Le directeur de la publication du site est <strong className="text-slate-900">Khaled Boulila</strong>, en sa qualité de responsable de l'entreprise individuelle Soleil et Saveurs.
             </p>
           </section>
 
@@ -109,8 +109,8 @@ export default function MentionsLegales() {
               4. Propriété intellectuelle
             </h2>
             <p className="text-slate-600 font-medium text-sm leading-relaxed">
-              L'ensemble des éléments constituant le site Soleil Saveurs (logo, textes, photographies, structure, design) sont protégés par la législation française et internationale sur le droit d'auteur et la propriété intellectuelle.
-              Toute reproduction, représentation, modification ou exploitation, totale ou partielle, est strictement interdite sans l'autorisation écrite préalable de Soleil Saveurs.
+              L'ensemble des éléments constituant le site Soleil et Saveurs (logo, textes, photographies, structure, design) sont protégés par la législation française et internationale sur le droit d'auteur et la propriété intellectuelle.
+              Toute reproduction, représentation, modification ou exploitation, totale ou partielle, est strictement interdite sans l'autorisation écrite préalable de Soleil et Saveurs.
             </p>
           </section>
 
@@ -119,9 +119,9 @@ export default function MentionsLegales() {
               5. Responsabilité
             </h2>
             <p className="text-slate-600 font-medium text-sm leading-relaxed">
-              Soleil Saveurs s'efforce d'assurer l'exactitude et la mise à jour des informations publiées sur ce site, et se réserve le droit de corriger le contenu à tout moment sans préavis.
-              Soleil Saveurs ne saurait être tenu responsable de l'utilisation faite de ces informations, ni des dommages directs ou indirects qui pourraient en découler.
-              Les liens hypertextes vers d'autres sites sont fournis à titre indicatif ; Soleil Saveurs n'exerce aucun contrôle sur ces sites tiers.
+              Soleil et Saveurs s'efforce d'assurer l'exactitude et la mise à jour des informations publiées sur ce site, et se réserve le droit de corriger le contenu à tout moment sans préavis.
+              Soleil et Saveurs ne saurait être tenu responsable de l'utilisation faite de ces informations, ni des dommages directs ou indirects qui pourraient en découler.
+              Les liens hypertextes vers d'autres sites sont fournis à titre indicatif ; Soleil et Saveurs n'exerce aucun contrôle sur ces sites tiers.
             </p>
           </section>
 
@@ -191,7 +191,7 @@ export default function MentionsLegales() {
 
       <footer className="py-16 border-t border-slate-100 text-center">
         <p className="text-[9px] font-black uppercase tracking-[0.4em] text-slate-300">
-          © 2026 Soleil Saveurs — Bagnolet (93)
+          © 2026 Soleil et Saveurs — Bagnolet (93)
         </p>
       </footer>
     </div>

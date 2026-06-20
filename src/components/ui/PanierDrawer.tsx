@@ -439,7 +439,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
         <div className="p-6 border-b border-[#D5C9B8] flex justify-between items-center bg-[#F5EAE0]">
           <div>
             <h2 className="text-2xl font-black uppercase tracking-tighter text-slate-900">Mon Panier</h2>
-            <p className="text-[10px] font-bold text-[#FF4500] uppercase tracking-[0.2em]">Soleil Saveurs Direct</p>
+            <p className="text-[10px] font-bold text-[#FF4500] uppercase tracking-[0.2em]">Soleil et Saveurs Direct</p>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-[#EDE3D5] rounded-full transition-colors">
             <X className="w-6 h-6 text-slate-400" />

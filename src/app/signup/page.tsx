@@ -291,7 +291,7 @@ export default function SignupPage() {
               disabled={loading || !isEligibleZone || !isPhoneValid || !isAdult || password.length < 8}
               className="w-full bg-[#FF4500] text-white p-5 rounded-3xl font-black uppercase text-sm tracking-widest hover:bg-[#3D2B1F] transition-all shadow-xl disabled:bg-slate-200 mt-4 flex items-center justify-center gap-3 active:scale-95"
             >
-              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Rejoindre Soleil Saveurs <ArrowRight className="w-5 h-5" /></>}
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Rejoindre Soleil et Saveurs <ArrowRight className="w-5 h-5" /></>}
             </button>
           </form>
 

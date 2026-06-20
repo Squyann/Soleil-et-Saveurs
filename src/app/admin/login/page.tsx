@@ -37,7 +37,7 @@ export default function AdminLogin() {
           <h1 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900">
             ADMIN<span className="text-[#FF4500]">ISTRATION</span>
           </h1>
-          <p className="text-[10px] font-black text-slate-400 mt-3 uppercase tracking-[0.3em]">Accès sécurisé Soleil Saveurs</p>
+          <p className="text-[10px] font-black text-slate-400 mt-3 uppercase tracking-[0.3em]">Accès sécurisé Soleil et Saveurs</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-5">
@@ -75,7 +75,7 @@ export default function AdminLogin() {
         </form>
 
         <p className="text-center mt-10 text-[9px] font-bold text-slate-300 uppercase tracking-widest">
-          &copy;  SOLEIL SAVEURS - PANNEAU DE CONTRÔLE
+          &copy;  SOLEIL ET SAVEURS - PANNEAU DE CONTRÔLE
         </p>
       </div>
     </div>

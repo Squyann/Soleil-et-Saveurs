@@ -66,10 +66,10 @@ export default function CGVPage() {
               1. Objet
             </h2>
             <p className="text-slate-600 font-medium leading-relaxed">
-              Les présentes Conditions Générales de Vente (CGV) régissent contractuellement toute relation commerciale entre <strong className="text-slate-900">Soleil Saveurs</strong> (ci-après « le Vendeur ») et toute personne physique effectuant un achat sur le site <strong className="text-slate-900">soleil-saveurs.fr</strong> (ci-après « le Client »).
+              Les présentes Conditions Générales de Vente (CGV) régissent contractuellement toute relation commerciale entre <strong className="text-slate-900">Soleil et Saveurs</strong> (ci-après « le Vendeur ») et toute personne physique effectuant un achat sur le site <strong className="text-slate-900">soleil-saveurs.fr</strong> (ci-après « le Client »).
             </p>
             <p className="text-slate-600 font-medium leading-relaxed mt-3">
-              Le Client reconnaît avoir pris connaissance des présentes CGV et les accepter sans réserve avant toute commande. Soleil Saveurs se réserve le droit de modifier les présentes CGV à tout moment ; les CGV applicables sont celles en vigueur à la date de la commande.
+              Le Client reconnaît avoir pris connaissance des présentes CGV et les accepter sans réserve avant toute commande. Soleil et Saveurs se réserve le droit de modifier les présentes CGV à tout moment ; les CGV applicables sont celles en vigueur à la date de la commande.
             </p>
           </section>
 
@@ -78,7 +78,7 @@ export default function CGVPage() {
               2. Produits & disponibilité
             </h2>
             <p className="text-slate-600 font-medium leading-relaxed mb-4">
-              Soleil Saveurs commercialise des produits frais issus de l'agriculture locale (fruits, légumes, épicerie) provenant principalement des Yvelines (78). Les produits proposés sont ceux figurant au catalogue en ligne au moment de la consultation, dans la limite des stocks disponibles.
+              Soleil et Saveurs commercialise des produits frais issus de l'agriculture locale (fruits, légumes, épicerie) provenant principalement des Yvelines (78). Les produits proposés sont ceux figurant au catalogue en ligne au moment de la consultation, dans la limite des stocks disponibles.
             </p>
             <div className="bg-orange-50 border border-orange-100 rounded-2xl p-5 space-y-2">
               <p className="font-black text-xs uppercase text-[#FF4500] tracking-widest mb-2">Spécificités produits frais</p>
@@ -107,7 +107,7 @@ export default function CGVPage() {
               </div>
             </div>
             <p className="text-slate-600 font-medium leading-relaxed mt-4">
-              Soleil Saveurs se réserve le droit de modifier ses prix à tout moment. Les prix applicables sont ceux affichés au moment de la validation de la commande.
+              Soleil et Saveurs se réserve le droit de modifier ses prix à tout moment. Les prix applicables sont ceux affichés au moment de la validation de la commande.
             </p>
           </section>
 
@@ -147,7 +147,7 @@ export default function CGVPage() {
             </h2>
             <div className="space-y-4 text-slate-600 font-medium leading-relaxed">
               <p>
-                Soleil Saveurs livre uniquement dans les communes des Yvelines (78) situées à moins de 5 km de ses points de distribution. La liste des villes éligibles est disponible sur la <Link href="/livraison" className="text-[#FF4500] hover:underline font-bold">page Livraison</Link>.
+                Soleil et Saveurs livre uniquement dans les communes des Yvelines (78) situées à moins de 5 km de ses points de distribution. La liste des villes éligibles est disponible sur la <Link href="/livraison" className="text-[#FF4500] hover:underline font-bold">page Livraison</Link>.
               </p>
               <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100 grid sm:grid-cols-3 gap-4 text-center">
                 <div>
@@ -167,7 +167,7 @@ export default function CGVPage() {
                 </div>
               </div>
               <p>
-                En cas d'impossibilité de livraison (adresse incorrecte, absence du Client, zone non couverte), Soleil Saveurs contactera le Client pour convenir d'une nouvelle modalité. Les produits frais non livrés ne peuvent être restitués.
+                En cas d'impossibilité de livraison (adresse incorrecte, absence du Client, zone non couverte), Soleil et Saveurs contactera le Client pour convenir d'une nouvelle modalité. Les produits frais non livrés ne peuvent être restitués.
               </p>
             </div>
           </section>
@@ -191,7 +191,7 @@ export default function CGVPage() {
             <div className="bg-amber-50 border border-amber-100 rounded-2xl p-5 mb-4">
               <p className="font-black text-xs uppercase text-amber-700 tracking-widest mb-2">Produits périssables — exception légale</p>
               <p className="text-amber-700 font-medium text-sm leading-relaxed">
-                Conformément à l'article L. 221-28, 3° du Code de la consommation, <strong>le droit de rétractation ne s'applique pas aux produits susceptibles de se détériorer ou de se périmer rapidement</strong>, ce qui est le cas de la totalité des produits frais proposés par Soleil Saveurs.
+                Conformément à l'article L. 221-28, 3° du Code de la consommation, <strong>le droit de rétractation ne s'applique pas aux produits susceptibles de se détériorer ou de se périmer rapidement</strong>, ce qui est le cas de la totalité des produits frais proposés par Soleil et Saveurs.
               </p>
             </div>
             <p className="text-slate-600 font-medium leading-relaxed">
@@ -204,7 +204,7 @@ export default function CGVPage() {
               8. Conformité & réclamations
             </h2>
             <p className="text-slate-600 font-medium leading-relaxed mb-4">
-              Soleil Saveurs s'engage à livrer des produits conformes à la commande et aux normes de qualité en vigueur. En cas de problème (produit abîmé, erreur de livraison), le Client dispose de <strong className="text-slate-900">24h après réception</strong> pour nous le signaler avec photo à l'appui.
+              Soleil et Saveurs s'engage à livrer des produits conformes à la commande et aux normes de qualité en vigueur. En cas de problème (produit abîmé, erreur de livraison), le Client dispose de <strong className="text-slate-900">24h après réception</strong> pour nous le signaler avec photo à l'appui.
             </p>
             <p className="text-slate-600 font-medium leading-relaxed">
               Contact : <strong className="text-slate-900">soleiletsaveurs.livraison@gmail.com</strong> ou via WhatsApp au <strong className="text-slate-900">07 59 72 00 83</strong>.
@@ -216,8 +216,8 @@ export default function CGVPage() {
               9. Responsabilité
             </h2>
             <p className="text-slate-600 font-medium leading-relaxed">
-              Soleil Saveurs ne saurait être tenu responsable de dommages indirects liés à l'utilisation du site ou à une défaillance temporaire de service. Sa responsabilité ne peut excéder le montant de la commande concernée.
-              En cas de force majeure (intempéries, indisponibilité des récoltes), Soleil Saveurs informera le Client dans les meilleurs délais.
+              Soleil et Saveurs ne saurait être tenu responsable de dommages indirects liés à l'utilisation du site ou à une défaillance temporaire de service. Sa responsabilité ne peut excéder le montant de la commande concernée.
+              En cas de force majeure (intempéries, indisponibilité des récoltes), Soleil et Saveurs informera le Client dans les meilleurs délais.
             </p>
           </section>
 
@@ -236,7 +236,7 @@ export default function CGVPage() {
               11. Litiges & médiation
             </h2>
             <p className="text-slate-600 font-medium leading-relaxed mb-4">
-              Les présentes CGV sont soumises au droit français. En cas de litige, le Client s'adressera en priorité à Soleil Saveurs pour trouver une solution amiable.
+              Les présentes CGV sont soumises au droit français. En cas de litige, le Client s'adressera en priorité à Soleil et Saveurs pour trouver une solution amiable.
             </p>
             <p className="text-slate-600 font-medium leading-relaxed mb-4">
               À défaut de résolution amiable, le Client peut recourir gratuitement à la médiation de la consommation conformément aux articles L. 616-1 et R. 616-1 du Code de la consommation.
@@ -276,7 +276,7 @@ export default function CGVPage() {
 
       <footer className="py-16 border-t border-slate-100 text-center">
         <p className="text-[9px] font-black uppercase tracking-[0.4em] text-slate-300">
-          © 2026 Soleil Saveurs — Plaisir (78)
+          © 2026 Soleil et Saveurs — Plaisir (78)
         </p>
       </footer>
     </div>

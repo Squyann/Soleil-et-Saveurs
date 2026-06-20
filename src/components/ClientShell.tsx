@@ -103,7 +103,7 @@ export default function ClientShell({ children }: { children: React.ReactNode })
             <Link href="/cgv" className="text-[10px] font-black uppercase tracking-widest text-[#9A7D68] hover:text-[#FF4500]">CGV</Link>
             <Link href="/rgpd" className="text-[10px] font-black uppercase tracking-widest text-[#9A7D68] hover:text-[#FF4500]">Confidentialité</Link>
           </div>
-          <p className="text-[9px] font-black uppercase tracking-[0.4em] text-[#B8A898]">© 2026 Soleil Saveurs</p>
+          <p className="text-[9px] font-black uppercase tracking-[0.4em] text-[#B8A898]">© 2026 Soleil et Saveurs</p>
         </div>
       </footer>
     </>

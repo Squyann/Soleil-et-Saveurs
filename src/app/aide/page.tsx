@@ -208,7 +208,7 @@ export default function AidePage() {
         <h1 className="text-5xl md:text-8xl font-black text-white uppercase tracking-tighter mb-4 relative italic">
           AIDE<span className="text-[#FF4500]">&</span>INFOS
         </h1>
-        <p className="text-slate-400 text-sm md:text-base font-bold uppercase tracking-[0.2em] mb-12">Soleil Saveurs — Votre Service Client Local</p>
+        <p className="text-slate-400 text-sm md:text-base font-bold uppercase tracking-[0.2em] mb-12">Soleil et Saveurs — Votre Service Client Local</p>
 
         <div className="max-w-2xl mx-auto relative group">
           <div className="absolute left-6 top-1/2 -translate-y-1/2">
@@ -371,7 +371,7 @@ export default function AidePage() {
       <footer className="mt-32 pt-20 border-t border-slate-100 text-center px-6">
         <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-12 text-left mb-20">
           <div>
-            <h5 className="font-black uppercase text-xs mb-4">Soleil Saveurs</h5>
+            <h5 className="font-black uppercase text-xs mb-4">Soleil et Saveurs</h5>
             <p className="text-[11px] text-slate-400 font-medium leading-relaxed italic">Le circuit-court réinventé dans les Yvelines.</p>
           </div>
           <div>
@@ -387,7 +387,7 @@ export default function AidePage() {
           </div>
         </div>
         <p className="text-[9px] font-black uppercase tracking-[0.5em] text-slate-200 pb-10">
-          © 2026 SOLEIL SAVEURS — TOUS DROITS RÉSERVÉS
+          © 2026 SOLEIL ET SAVEURS — TOUS DROITS RÉSERVÉS
         </p>
       </footer>
     </div>

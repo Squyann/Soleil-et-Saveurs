@@ -153,9 +153,9 @@ export default function AdminPage() {
     setMessages(prev => prev.map(m => m.id === msg.id ? { ...m, lu: true } : m));
 
     // Ouvrir le client mail avec la réponse pré-remplie
-    const sujet = encodeURIComponent(`Réponse à votre message — Soleil Saveurs`);
+    const sujet = encodeURIComponent(`Réponse à votre message — Soleil et Saveurs`);
     const corps = encodeURIComponent(
-      `Bonjour ${msg.nom},\n\n${reponseTexte}\n\nCordialement,\nL'équipe Soleil Saveurs`
+      `Bonjour ${msg.nom},\n\n${reponseTexte}\n\nCordialement,\nL'équipe Soleil et Saveurs`
     );
     window.open(`mailto:${msg.email}?subject=${sujet}&body=${corps}`, '_blank');
 
@@ -243,7 +243,7 @@ export default function AdminPage() {
   }
 
   const envoyerWhatsApp = (cmd: any) => {
-    const message = `Bonjour ${cmd.nom_client}, c'est Soleil Saveurs pour votre commande #${cmd.id}...`;
+    const message = `Bonjour ${cmd.nom_client}, c'est Soleil et Saveurs pour votre commande #${cmd.id}...`;
     const rel = cmd.telephone_client?.replace(/\s+/g, '');
     window.open(`https://wa.me/${rel}?text=${encodeURIComponent(message)}`, '_blank');
   };
@@ -427,7 +427,7 @@ export default function AdminPage() {
           <body>
             <div class="header">
               <div class="brand">
-                <h1>Soleil Saveurs<span>.</span></h1>
+                <h1>Soleil et Saveurs<span>.</span></h1>
                 <p>Produits Frais</p>
                 <div style="font-size: 11px; color: #718096; margin-top: 10px; font-weight: normal; text-transform: none;">
                   Livraison Yvelines (78)
@@ -506,7 +506,7 @@ export default function AdminPage() {
               </div>
             </div>
             <div class="footer-note">
-              Merci d'avoir choisi le circuit court avec Soleil Saveurs.<br/>
+              Merci d'avoir choisi le circuit court avec Soleil et Saveurs.<br/>
               <em>TVA non applicable, art. 293 B du CGI</em><br/>
               Ce document fait office de bon de livraison et de facture.
             </div>

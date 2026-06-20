@@ -44,7 +44,7 @@ export default function RGPDPage() {
         <div className="max-w-5xl mx-auto flex items-start gap-3">
           <Shield className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
           <p className="text-blue-700 font-bold text-xs leading-relaxed">
-            Soleil Saveurs s'engage à protéger votre vie privée. Nous ne collectons que les données strictement nécessaires à la réalisation de vos commandes et n'en faisons aucun usage commercial.
+            Soleil et Saveurs s'engage à protéger votre vie privée. Nous ne collectons que les données strictement nécessaires à la réalisation de vos commandes et n'en faisons aucun usage commercial.
           </p>
         </div>
       </div>
@@ -75,8 +75,8 @@ export default function RGPDPage() {
               1. Responsable du traitement
             </h2>
             <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100 space-y-2 text-slate-600 font-medium">
-              <p><span className="text-slate-400 text-xs uppercase font-black tracking-widest mr-2">Entité</span> Soleil Saveurs (entreprise individuelle)</p>
-              <p><span className="text-slate-400 text-xs uppercase font-black tracking-widest mr-2">Responsable</span> Mohammed Boulila</p>
+              <p><span className="text-slate-400 text-xs uppercase font-black tracking-widest mr-2">Entité</span> Soleil et Saveurs (entreprise individuelle)</p>
+              <p><span className="text-slate-400 text-xs uppercase font-black tracking-widest mr-2">Responsable</span> Khaled Boulila</p>
               <p><span className="text-slate-400 text-xs uppercase font-black tracking-widest mr-2">Adresse</span> 6-8 AVENUE HENRIETTE, 93170 BAGNOLET</p>
               <p><span className="text-slate-400 text-xs uppercase font-black tracking-widest mr-2">Email</span> soleiletsaveurs.livraison@gmail.com</p>
             </div>
@@ -196,7 +196,7 @@ export default function RGPDPage() {
               5. Destinataires des données
             </h2>
             <p className="text-slate-600 font-medium leading-relaxed mb-5">
-              Vos données sont accessibles uniquement à Soleil Saveurs et à nos sous-traitants techniques, dans la stricte mesure nécessaire au service :
+              Vos données sont accessibles uniquement à Soleil et Saveurs et à nos sous-traitants techniques, dans la stricte mesure nécessaire au service :
             </p>
             <div className="space-y-3">
               <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm flex items-start gap-4">
@@ -312,7 +312,7 @@ export default function RGPDPage() {
               9. Mineurs
             </h2>
             <p className="text-slate-600 font-medium leading-relaxed">
-              Le site Soleil Saveurs est destiné à un public adulte. Nous ne collectons pas sciemment de données personnelles concernant des enfants de moins de 16 ans. Si vous pensez qu'un mineur nous a transmis ses données, contactez-nous afin que nous procédions à leur suppression.
+              Le site Soleil et Saveurs est destiné à un public adulte. Nous ne collectons pas sciemment de données personnelles concernant des enfants de moins de 16 ans. Si vous pensez qu'un mineur nous a transmis ses données, contactez-nous afin que nous procédions à leur suppression.
             </p>
           </section>
 
@@ -367,7 +367,7 @@ export default function RGPDPage() {
 
       <footer className="py-16 border-t border-slate-100 text-center">
         <p className="text-[9px] font-black uppercase tracking-[0.4em] text-slate-300">
-          © 2026 Soleil Saveurs — Conforme RGPD (UE) 2016/679
+          © 2026 Soleil et Saveurs — Conforme RGPD (UE) 2016/679
         </p>
       </footer>
     </div>
