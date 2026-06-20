@@ -303,7 +303,7 @@ export default function Home() {
           <div className="absolute -top-20 -right-20 w-72 h-72 bg-[#FF4500]/10 blur-[80px] rounded-full pointer-events-none" />
           <div className="absolute -bottom-10 -left-10 w-48 h-48 bg-blue-500/10 blur-[60px] rounded-full pointer-events-none" />
           {[
-            { label: "Fraîcheur", val: "100%", desc: "Zéro frigo" },
+            { label: "Fraîcheur", val: "100%", desc: "" },
             { label: "Maturité", val: "Optim.", desc: "Sur l'arbre" },
             { label: "Circuit", val: "Ultra", desc: "Zéro interm." },
           ].map((stat, i) => (
