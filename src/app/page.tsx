@@ -137,10 +137,6 @@ export default function Home() {
                 Le goût du soleil,<br />
                 <span className="text-[#FF4500]">livré chez vous.</span>
               </h1>
-              <p className="text-base md:text-lg text-slate-500 max-w-md mb-8 leading-relaxed font-medium">
-                Circuit court réinventé : cueillis à maturité le matin, dans votre cuisine le soir.
-              </p>
-              
               <div className="flex flex-col gap-4 max-w-md">
                 <button 
                   onClick={() => handleActionClick('/commander')} 
@@ -215,16 +211,11 @@ export default function Home() {
 
       {/* Bento Services */}
       <section className="max-w-6xl mx-auto px-4 md:px-8 py-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-[#0F172A] rounded-[2rem] p-8 text-white min-h-[180px] flex flex-col justify-center shadow-xl shadow-slate-200">
-            <Zap className="w-8 h-8 text-[#FF4500] mb-4" />
-            <h3 className="text-2xl font-black mb-1 uppercase italic tracking-tighter">Zéro Stock.</h3>
-            <p className="text-slate-400 text-sm font-medium">L'arbre est notre seul entrepôt.</p>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Link href="/livraison" className="bg-white border border-slate-100 rounded-[2rem] p-8 shadow-xl shadow-slate-100 min-h-[180px] flex flex-col justify-center hover:border-[#FF4500]/20 transition-all group">
             <Truck className="w-8 h-8 text-[#FF4500] mb-4 group-hover:translate-x-3 transition-transform" />
-            <h3 className="text-2xl font-black mb-1 uppercase italic tracking-tighter">Livraison J+0</h3>
-            <p className="text-slate-500 text-sm font-medium">Récolté le matin, chez vous le soir.</p>
+            <h3 className="text-2xl font-black mb-1 uppercase italic tracking-tighter">Livraison Express</h3>
+            <p className="text-slate-500 text-sm font-medium">Reçu le matin, chez vous le lendemain.</p>
           </Link>
           <div className="bg-[#FFF5F1] rounded-[2rem] p-8 min-h-[180px] flex flex-col justify-center border border-orange-100 shadow-xl shadow-orange-50">
             <MapPin className="w-8 h-8 text-[#FF4500] mb-4" />
@@ -251,7 +242,7 @@ export default function Home() {
               {
                 icon: <Clock className="w-7 h-7" />,
                 step: "01",
-                title: "Récolte à 5h",
+                title: "Récoltée à maturité",
                 desc: "Nos agriculteurs partenaires cueillent vos fruits et légumes à l'aube, au pic de leur maturité.",
                 tag: "L'aube",
                 bg: "bg-[#FFF5F1]",
@@ -270,7 +261,7 @@ export default function Home() {
                 icon: <Truck className="w-7 h-7" />,
                 step: "03",
                 title: "Livré à 17h",
-                desc: "Directement à votre porte, sans jamais passer par un frigo. De l'arbre à l'assiette.",
+                desc: "Directement à votre porte, sans perdre aucune fraîcheur !",
                 tag: "Le soir",
                 bg: "bg-[#0F172A]",
                 border: "border-transparent",
@@ -308,7 +299,7 @@ export default function Home() {
           <div className="absolute -top-20 -right-20 w-72 h-72 bg-[#FF4500]/10 blur-[80px] rounded-full pointer-events-none" />
           <div className="absolute -bottom-10 -left-10 w-48 h-48 bg-blue-500/10 blur-[60px] rounded-full pointer-events-none" />
           {[
-            { label: "Fraîcheur", val: "100%", desc: "Zéro frigo" },
+            { label: "Fraîcheur", val: "100%", desc: "" },
             { label: "Maturité", val: "Optim.", desc: "Sur l'arbre" },
             { label: "Circuit", val: "Ultra", desc: "Zéro interm." },
           ].map((stat, i) => (
