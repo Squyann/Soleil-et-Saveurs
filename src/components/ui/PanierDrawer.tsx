@@ -336,6 +336,31 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
     
     // --- ENREGISTREMENT DANS SUPABASE POUR LE MODE ESPÈCES ---
     try {
+      // On réserve l'utilisation du code promo avant de créer la commande :
+      // la contrainte unique (user_id, code_promo_id) bloque toute réutilisation,
+      // même en cas de double soumission ou de validation simultanée dans deux onglets.
+      if (codeStatut === 'valid' && codePromoId) {
+        const { error: utilisationError } = await supabase
+          .from('codes_promo_utilisations')
+          .insert({ user_id: user.id, code_promo_id: codePromoId });
+
+        if (utilisationError) {
+          if (utilisationError.code === '23505') {
+            setCodeStatut('used');
+            setRemiseCode(0);
+            setCodePromoId(null);
+            alert("Vous avez déjà utilisé ce code promo.");
+          } else {
+            console.error(utilisationError);
+            alert("Erreur lors de l'application du code promo.");
+          }
+          setChargement(false);
+          return;
+        }
+
+        void supabase.rpc('increment_code_promo_usage', { code_id: codePromoId });
+      }
+
       const desc = panier.map(item => `${item.quantite}x ${item.name}`).join(', ');
 
       const { error } = await supabase
@@ -357,11 +382,6 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
         }]);
 
       if (error) throw error;
-
-      if (codeStatut === 'valid' && codePromoId && user) {
-        void supabase.rpc('increment_code_promo_usage', { code_id: codePromoId });
-        void supabase.from('codes_promo_utilisations').insert({ user_id: user.id, code_promo_id: codePromoId });
-      }
 
       // Mise à jour des points de fidélité et remises
       const pointsGagnes = Math.floor(totalApresRemise);
