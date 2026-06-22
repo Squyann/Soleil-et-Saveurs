@@ -343,16 +343,22 @@ export default function AdminPage() {
   }
 
   const calculerBesoinStock = () => {
-    const stockMap: { [key: string]: { quantite: number } } = {};
+    const stockMap: { [key: string]: { quantite: number; unite: string } } = {};
     commandes.filter(cmd => cmd.statut !== 'livrée').forEach(cmd => {
       cmd.contenu_panier?.forEach((item: any) => {
         const nom = item.name || item.nom;
         const qte = Number(item.quantity || item.quantite || 0);
+        const unite = item.unite || '';
         if (stockMap[nom]) stockMap[nom].quantite += qte;
-        else stockMap[nom] = { quantite: qte };
+        else stockMap[nom] = { quantite: qte, unite };
       });
     });
-    return Object.entries(stockMap);
+    return Object.entries(stockMap).map(([nom, data]) => {
+      if (data.unite === 'g' && data.quantite >= 1000) {
+        return [nom, { quantite: parseFloat((data.quantite / 1000).toFixed(2)), unite: 'kg' }] as const;
+      }
+      return [nom, data] as const;
+    });
   };
 
   const produitsFiltres = produits.filter(p => p.name?.toLowerCase().includes(recherche.toLowerCase()));
