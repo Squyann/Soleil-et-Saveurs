@@ -63,6 +63,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
   const [codeStatut, setCodeStatut] = useState<'idle' | 'loading' | 'valid' | 'invalid' | 'used'>('idle');
   const [remiseCode, setRemiseCode] = useState(0);
   const [codePromoId, setCodePromoId] = useState<string | null>(null);
+  const [commentaireClient, setCommentaireClient] = useState('');
 
   const router = useRouter();
 
@@ -374,6 +375,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
           methode_paiement: 'Espèces',
           statut: 'En attente',
           description_commande: desc,
+          commentaire_client: commentaireClient.trim() || null,
           contenu_panier: panier,
           email_client: user.email,
           date_livraison: dateLivraison || null,
@@ -439,6 +441,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
       window.dispatchEvent(new Event('panier-updated'));
       window.dispatchEvent(new Event('storage'));
       setPanier([]);
+      setCommentaireClient('');
       onClose();
     } catch (err) {
       console.error(err);
@@ -700,6 +703,19 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
                     <p className="text-[10px] font-black text-red-600 uppercase">Vous avez déjà utilisé ce code promo.</p>
                   </div>
                 )}
+              </div>
+
+              {/* COMMENTAIRE CLIENT */}
+              <div className="space-y-2">
+                <h3 className="font-black uppercase text-xs tracking-widest text-slate-900">Commentaire (optionnel)</h3>
+                <textarea
+                  value={commentaireClient}
+                  onChange={(e) => setCommentaireClient(e.target.value)}
+                  placeholder="Une précision pour le livreur ?"
+                  maxLength={250}
+                  rows={2}
+                  className="w-full bg-white border border-[#D5C9B8] p-4 rounded-2xl font-medium text-xs outline-none focus:border-[#FF4500] transition-all resize-none"
+                />
               </div>
 
               <div className="space-y-3">

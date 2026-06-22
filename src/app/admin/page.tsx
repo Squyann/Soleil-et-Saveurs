@@ -673,10 +673,10 @@ export default function AdminPage() {
                       ))}
                     </div>
 
-                    {cmd.description_commande && (
+                    {cmd.commentaire_client && (
                       <div className="mt-4 p-3 bg-white border-l-4 border-[#FF4500] rounded-r-xl shadow-sm">
                         <p className="text-[9px] font-black text-[#FF4500] uppercase tracking-widest mb-1">Note du client :</p>
-                        <p className="text-xs text-slate-700 italic font-medium">"{cmd.description_commande}"</p>
+                        <p className="text-xs text-slate-700 italic font-medium">"{cmd.commentaire_client}"</p>
                       </div>
                     )}
                   </div>
