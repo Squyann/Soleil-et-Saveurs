@@ -34,7 +34,7 @@ const FAQ_CATEGORIES = [
       },
       {
         q: "Puis-je choisir un créneau horaire précis ?",
-        a: "Pour le moment, la livraison se fait entre 12h et 18h. Nous travaillons sur des créneaux personnalisables pour les prochains mois. En attendant, notre équipe peut noter une préférence horaire dans les commentaires de commande."
+        a: "Pour le moment, la livraison se fait entre 15h et 20h. Nous travaillons sur des créneaux personnalisables pour les prochains mois. En attendant, notre équipe peut noter une préférence horaire dans les commentaires de commande."
       }
     ]
   },
