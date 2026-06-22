@@ -343,16 +343,22 @@ export default function AdminPage() {
   }
 
   const calculerBesoinStock = () => {
-    const stockMap: { [key: string]: { quantite: number } } = {};
+    const stockMap: { [key: string]: { quantite: number; unite: string } } = {};
     commandes.filter(cmd => cmd.statut !== 'livrée').forEach(cmd => {
       cmd.contenu_panier?.forEach((item: any) => {
         const nom = item.name || item.nom;
         const qte = Number(item.quantity || item.quantite || 0);
+        const unite = item.unite || '';
         if (stockMap[nom]) stockMap[nom].quantite += qte;
-        else stockMap[nom] = { quantite: qte };
+        else stockMap[nom] = { quantite: qte, unite };
       });
     });
-    return Object.entries(stockMap);
+    return Object.entries(stockMap).map(([nom, data]) => {
+      if (data.unite === 'g' && data.quantite >= 1000) {
+        return [nom, { quantite: parseFloat((data.quantite / 1000).toFixed(2)), unite: 'kg' }] as const;
+      }
+      return [nom, data] as const;
+    });
   };
 
   const produitsFiltres = produits.filter(p => p.name?.toLowerCase().includes(recherche.toLowerCase()));
@@ -667,10 +673,10 @@ export default function AdminPage() {
                       ))}
                     </div>
 
-                    {cmd.description_commande && (
+                    {cmd.commentaire_client && (
                       <div className="mt-4 p-3 bg-white border-l-4 border-[#FF4500] rounded-r-xl shadow-sm">
                         <p className="text-[9px] font-black text-[#FF4500] uppercase tracking-widest mb-1">Note du client :</p>
-                        <p className="text-xs text-slate-700 italic font-medium">"{cmd.description_commande}"</p>
+                        <p className="text-xs text-slate-700 italic font-medium">"{cmd.commentaire_client}"</p>
                       </div>
                     )}
                   </div>
