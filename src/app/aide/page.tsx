@@ -44,12 +44,8 @@ const FAQ_CATEGORIES = [
     title: "Qualité & Agriculture",
     questions: [
       {
-        q: "Vos produits sont-ils tous biologiques ?",
-        a: "Nous privilégions l'agriculture raisonnée et ultra-locale. Une partie de nos producteurs est certifiée Agriculture Biologique (AB), les autres pratiquent une culture sans pesticides de synthèse mais n'ont pas encore obtenu le label officiel. Dans tous les cas, chaque produit est récolté à maturité et jamais stocké en chambre froide."
-      },
-      {
         q: "Pourquoi certains fruits ne sont pas disponibles toute l'année ?",
-        a: "Nous ne vendons uniquement des produits de saison. Pas de fraises importées en décembre, pas de tomates sous serre en janvier. Vous mangez ce que la terre donne vraiment."
+        a: "C'est notre promesse. Si ce n'est pas la saison chez nos partenaires, nous ne le vendons pas. Pas de fraises importées en décembre, pas de tomates sous serre en janvier. Vous mangez ce que la terre donne vraiment."
       },
     ]
   },
