@@ -18,7 +18,7 @@ const FAQ_CATEGORIES = [
     questions: [
       {
         q: "Quels sont vos délais exacts de livraison ?",
-        a: "Nous fonctionnons en flux tendu : commandez avant 23h59, nos agriculteurs récoltent dès 5h du matin, et vous êtes livré entre 12h et 18h le soir même. Aucun produit ne passe la nuit en entrepôt — c'est notre engagement."
+        a: "Commandez avant 23h59, et vous êtes livré entre 15h et 20h le soir même."
       },
       {
         q: "Quelles villes du 78 desservez-vous ?",
@@ -34,7 +34,7 @@ const FAQ_CATEGORIES = [
       },
       {
         q: "Puis-je choisir un créneau horaire précis ?",
-        a: "Pour le moment, la livraison se fait entre 12h et 18h. Nous travaillons sur des créneaux personnalisables pour les prochains mois. En attendant, notre équipe peut noter une préférence horaire dans les commentaires de commande."
+        a: "Pour le moment, la livraison se fait entre 15h et 20h. Nous travaillons sur des créneaux personnalisables pour les prochains mois. En attendant, notre équipe peut noter une préférence horaire dans les commentaires de commande."
       }
     ]
   },
@@ -44,12 +44,8 @@ const FAQ_CATEGORIES = [
     title: "Qualité & Agriculture",
     questions: [
       {
-        q: "Vos produits sont-ils tous biologiques ?",
-        a: "Nous privilégions l'agriculture raisonnée et ultra-locale. Une partie de nos producteurs est certifiée Agriculture Biologique (AB), les autres pratiquent une culture sans pesticides de synthèse mais n'ont pas encore obtenu le label officiel. Dans tous les cas, chaque produit est récolté à maturité et jamais stocké en chambre froide."
-      },
-      {
         q: "Pourquoi certains fruits ne sont pas disponibles toute l'année ?",
-        a: "Nous ne vendons uniquement des produits de saison. Pas de fraises importées en décembre, pas de tomates sous serre en janvier. Vous mangez ce que la terre donne vraiment."
+        a: "C'est notre promesse. Si ce n'est pas la saison chez nos partenaires, nous ne le vendons pas. Pas de fraises importées en décembre, pas de tomates sous serre en janvier. Vous mangez ce que la terre donne vraiment."
       },
     ]
   },
