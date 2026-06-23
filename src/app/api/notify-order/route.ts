@@ -43,7 +43,7 @@ async function sendEmail(to: string, subject: string, html: string, apiKey: stri
 }
 
 export async function POST(req: NextRequest) {
-  const { error: authError } = await requireAuth();
+  const { user, error: authError } = await requireAuth();
   if (authError) return authError;
 
   try {
@@ -58,7 +58,10 @@ export async function POST(req: NextRequest) {
       nom: escapeHtml(raw.nom),
       telephone: escapeHtml(raw.telephone),
       adresse: escapeHtml(raw.adresse),
-      email_client: escapeHtml(raw.email_client),
+      // L'email de destination du client vient toujours du compte authentifié,
+      // jamais du corps de la requête — sinon n'importe quel utilisateur connecté
+      // pourrait faire envoyer un email à une adresse arbitraire de son choix.
+      email_client: escapeHtml(user!.email ?? ''),
       methode_paiement: escapeHtml(raw.methode_paiement),
       creneau_livraison: raw.creneau_livraison ? escapeHtml(raw.creneau_livraison) : null,
       date_livraison: raw.date_livraison || null,

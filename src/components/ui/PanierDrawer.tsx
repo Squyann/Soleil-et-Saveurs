@@ -337,6 +337,20 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
     
     // --- ENREGISTREMENT DANS SUPABASE POUR LE MODE ESPÈCES ---
     try {
+      // On décrémente le stock avant de créer la commande : la fonction
+      // verrouille chaque produit et échoue si la quantité demandée dépasse
+      // le stock réel, ce qui évite la survente en cas de commandes simultanées.
+      const { error: stockError } = await supabase.rpc('decrementer_stock_panier', {
+        p_items: panier.map(item => ({ id: item.id, quantite: item.quantite })),
+      });
+
+      if (stockError) {
+        console.error(stockError);
+        alert("Un ou plusieurs produits ne sont plus disponibles en quantité suffisante.");
+        setChargement(false);
+        return;
+      }
+
       // On réserve l'utilisation du code promo avant de créer la commande :
       // la contrainte unique (user_id, code_promo_id) bloque toute réutilisation,
       // même en cas de double soumission ou de validation simultanée dans deux onglets.
@@ -385,23 +399,15 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
 
       if (error) throw error;
 
-      // Mise à jour des points de fidélité et remises
+      // Mise à jour des points de fidélité et remises — la fonction relit
+      // l'état réel du profil côté serveur avant de l'appliquer, le client
+      // ne peut plus s'attribuer des points ou une remise arbitraires.
       const pointsGagnes = Math.floor(totalApresRemise);
-      const newPoints = applyLoyalty
-        ? pointsGagnes
-        : (dbProfile?.loyalty_points ?? 0) + pointsGagnes;
-      const profileUpdate: Record<string, any> = { loyalty_points: Math.max(0, newPoints) };
-      if (applyReferral) profileUpdate.has_referral_discount = false;
-      // Première commande du parrainé → on active son bon -10%
-      if (dbProfile?.referral_pending) {
-        profileUpdate.has_referral_discount = true;
-        profileUpdate.referral_pending = false;
-      }
-
-      await supabase
-        .from('profiles')
-        .update(profileUpdate)
-        .eq('user_id', user.id);
+      await supabase.rpc('appliquer_recompenses_commande', {
+        p_points_gagnes: pointsGagnes,
+        p_consommer_loyalty: applyLoyalty,
+        p_consommer_referral: applyReferral,
+      });
 
       // Notifications email — non bloquant
       fetch('/api/notify-order', {
