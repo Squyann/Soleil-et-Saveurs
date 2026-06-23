@@ -15,6 +15,8 @@ export default function CommanderPage() {
   const [quantities, setQuantities] = useState<{ [key: string]: number }>({});
   const [search, setSearch] = useState('');
   const [infoProduct, setInfoProduct] = useState<any | null>(null);
+  const [variantsByProduct, setVariantsByProduct] = useState<{ [productId: string]: any[] }>({});
+  const [selectedVariant, setSelectedVariant] = useState<{ [productId: string]: string }>({});
 
   useEffect(() => {
     fetchProducts();
@@ -35,12 +37,41 @@ export default function CommanderPage() {
         data.forEach(p => initialQty[p.id] = p.unite === 'kg' ? 0.5 : p.unite === 'g' ? (p.pas_g || 100) : 1);
         setQuantities(initialQty);
       }
+
+      const { data: variantesData } = await supabase
+        .from('product_variants')
+        .select('*')
+        .order('ordre', { ascending: true });
+      if (variantesData) {
+        const grouped: { [productId: string]: any[] } = {};
+        variantesData.forEach((v: any) => {
+          if (!grouped[v.product_id]) grouped[v.product_id] = [];
+          grouped[v.product_id].push(v);
+        });
+        setVariantsByProduct(grouped);
+        const initialSelected: { [productId: string]: string } = {};
+        Object.entries(grouped).forEach(([productId, vs]) => {
+          if (vs.length > 0) initialSelected[productId] = vs[0].id;
+        });
+        setSelectedVariant(initialSelected);
+      }
     } catch (error) {
       console.error("Erreur lors de la récupération des produits:", error);
     } finally {
       setLoading(false);
     }
   }
+
+  const getVariants = (product: any) => variantsByProduct[product.id] || [];
+  const getSelectedVariant = (product: any) => {
+    const vs = getVariants(product);
+    if (vs.length === 0) return null;
+    return vs.find(v => v.id === selectedVariant[product.id]) || vs[0];
+  };
+  const getEffectiveStock = (product: any) => {
+    const variant = getSelectedVariant(product);
+    return variant ? variant.stock : product.stock;
+  };
 
 
   const getPasG = (product: any) => product.pas_g || 100;
@@ -51,7 +82,7 @@ export default function CommanderPage() {
   const handleQtyChange = (id: string, val: string, product: any) => {
     const step = getStep(product);
     const min  = getMin(product);
-    const max  = product.stock;
+    const max  = getEffectiveStock(product);
     const num  = Math.min(max, Math.max(min, parseFloat(val) || min));
     const rounded = Math.round(num / step) * step;
     setQuantities(prev => ({ ...prev, [id]: parseFloat(rounded.toFixed(2)) }));
@@ -80,21 +111,28 @@ export default function CommanderPage() {
       qteFinale = qteSaisie + produitsGratuits;
     }
 
+    const variant = getSelectedVariant(product);
+    const variantId = variant ? variant.id : null;
+
     const panierActuel = JSON.parse(localStorage.getItem('mon-panier') || '[]');
-    const index = panierActuel.findIndex((item: any) => item.id === product.id);
-    
-    const prixUnitairePromo = product.promotion > 0 
-      ? product.price * (1 - product.promotion / 100) 
+    const index = panierActuel.findIndex((item: any) => item.id === product.id && (item.variant_id ?? null) === variantId);
+
+    const prixUnitairePromo = product.promotion > 0
+      ? product.price * (1 - product.promotion / 100)
       : product.price;
 
     if (index >= 0) {
       panierActuel[index].quantite += qteFinale;
     } else {
-      panierActuel.push({ 
-        ...product, 
-        price: prixUnitairePromo, 
+      panierActuel.push({
+        ...product,
+        name: variant ? `${product.name} – ${variant.nom}` : product.name,
+        stock: variant ? variant.stock : product.stock,
+        variant_id: variantId,
+        variant_nom: variant ? variant.nom : null,
+        price: prixUnitairePromo,
         originalPrice: product.price,
-        quantite: qteFinale 
+        quantite: qteFinale
       });
     }
 
@@ -219,6 +257,9 @@ export default function CommanderPage() {
                 : 0;
               const totalItemsRecus = currentQty + produitsOfferts;
 
+              const productVariants = getVariants(product);
+              const effectiveStock = getEffectiveStock(product);
+
               return (
                 <div
                   key={product.id}
@@ -254,7 +295,7 @@ export default function CommanderPage() {
                     ) : (
                       <span className="text-6xl grayscale opacity-20">🧺</span>
                     )}
-                    {product.stock <= 0 && (
+                    {effectiveStock <= 0 && (
                       <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] flex items-center justify-center">
                         <span className="bg-white px-4 py-2 rounded-xl font-black text-xs uppercase tracking-[0.2em] shadow-sm">Épuisé</span>
                       </div>
@@ -282,6 +323,24 @@ export default function CommanderPage() {
                       : `Vendu ${product.unite === 'kg' ? 'au' : 'à la'} ${product.unite || 'pièce'}`}
                   </p>
 
+                  {/* SÉLECTEUR DE VARIÉTÉ */}
+                  {productVariants.length > 0 && (
+                    <select
+                      value={selectedVariant[product.id] || ''}
+                      onChange={(e) => {
+                        setSelectedVariant(prev => ({ ...prev, [product.id]: e.target.value }));
+                        setQuantities(prev => ({ ...prev, [product.id]: getMin(product) }));
+                      }}
+                      className="w-full mb-2 sm:mb-3 p-2 text-[10px] sm:text-xs font-bold border border-[#D5C9B8] bg-white rounded-lg sm:rounded-xl focus:outline-none focus:border-[#FF4500]"
+                    >
+                      {productVariants.map((v) => (
+                        <option key={v.id} value={v.id} disabled={v.stock <= 0}>
+                          {v.nom}{v.stock <= 0 ? ' (épuisé)' : ''}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+
                   {/* SECTION QUANTITÉ ET PRIX DYNAMIQUE */}
                   <div className="bg-[#EDE3D5] rounded-xl sm:rounded-2xl p-2 sm:p-3 mb-2 sm:mb-4 border border-[#D5C9B8]/50">
                     {/* Sélecteur quantité */}
@@ -298,7 +357,7 @@ export default function CommanderPage() {
                         </span>
                         <button
                           onClick={() => handleQtyChange(product.id, String(currentQty + getStep(product)), product)}
-                          disabled={currentQty >= product.stock}
+                          disabled={currentQty >= effectiveStock}
                           className="px-2 sm:px-3 py-1.5 sm:py-2 hover:bg-[#EDE3D5] text-slate-900 font-bold transition-colors disabled:text-slate-300 disabled:cursor-not-allowed text-sm"
                         >+</button>
                       </div>
@@ -322,15 +381,15 @@ export default function CommanderPage() {
 
                   {/* BOUTON ACTION FINAL */}
                   <button
-                    disabled={product.stock <= 0}
+                    disabled={effectiveStock <= 0}
                     onClick={() => ajouterAuPanier(product)}
                     className={`w-full py-2 sm:py-3 rounded-xl sm:rounded-[1.25rem] font-black uppercase tracking-widest text-xs flex items-center justify-center gap-2 transition-all ${
-                      product.stock > 0
+                      effectiveStock > 0
                       ? 'bg-[#3D2B1F] text-white hover:bg-[#FF4500] shadow-xl active:scale-95'
                       : 'bg-[#DDD0BF] text-slate-300 cursor-not-allowed'
                     }`}
                   >
-                    {product.stock > 0 ? (
+                    {effectiveStock > 0 ? (
                         <>
                             <ShoppingCart className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                             <span className="hidden sm:inline">Ajouter {product.unite === 'g' ? formatGramLabel(totalItemsRecus) : totalItemsRecus} au panier</span>
@@ -344,7 +403,7 @@ export default function CommanderPage() {
                     )}
                   </button>
 
-                  {product.stock > 0 && product.stock < (product.unite === 'g' ? 500 : 5) && (
+                  {effectiveStock > 0 && effectiveStock < (product.unite === 'g' ? 500 : 5) && (
                     <div className="hidden sm:flex mt-4 items-center justify-center gap-2">
                       <span className="w-1.5 h-1.5 bg-[#FF4500] rounded-full animate-pulse" />
                       <p className="text-[9px] font-black uppercase tracking-widest text-[#FF4500]">

@@ -186,9 +186,9 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
     return () => window.removeEventListener('storage', loadPanier);
   }, [isOpen]);
 
-  const updateQuantity = (id: number, delta: number, unite?: string) => {
+  const updateQuantity = (id: number, delta: number, unite?: string, variantId?: string | null) => {
     const nouveauPanier = (panier || []).map(item => {
-      if (item.id === id) {
+      if (item.id === id && (item.variant_id ?? null) === (variantId ?? null)) {
         if (delta === 0) return { ...item, quantite: 0 };
         const step = item.unite === 'kg' ? 0.5 : item.unite === 'g' ? (item.pas_g || 100) : 1;
         const actualDelta = delta > 0 ? step : -step;
@@ -341,7 +341,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
       // verrouille chaque produit et échoue si la quantité demandée dépasse
       // le stock réel, ce qui évite la survente en cas de commandes simultanées.
       const { error: stockError } = await supabase.rpc('decrementer_stock_panier', {
-        p_items: panier.map(item => ({ id: item.id, quantite: item.quantite })),
+        p_items: panier.map(item => ({ id: item.id, quantite: item.quantite, variant_id: item.variant_id ?? null })),
       });
 
       if (stockError) {
@@ -524,14 +524,14 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
                       </div>
 
                       <div className="flex items-center gap-3 mt-2">
-                         <button onClick={() => updateQuantity(item.id, -1, item.unite)} className="w-6 h-6 border border-[#D5C9B8] rounded-full flex items-center justify-center text-slate-400 hover:bg-[#EDE3D5]">-</button>
+                         <button onClick={() => updateQuantity(item.id, -1, item.unite, item.variant_id)} className="w-6 h-6 border border-[#D5C9B8] rounded-full flex items-center justify-center text-slate-400 hover:bg-[#EDE3D5]">-</button>
                          <span className="text-xs font-bold">{item.unite === 'g' ? (item.quantite < 1000 ? `${item.quantite}g` : `${(item.quantite/1000).toString().replace('.',',')}kg`) : `${item.quantite}${item.unite ? ` ${item.unite}` : ''}`}</span>
-                         <button onClick={() => updateQuantity(item.id, 1, item.unite)} disabled={item.stock != null && item.quantite >= item.stock} className="w-6 h-6 border border-[#D5C9B8] rounded-full flex items-center justify-center text-slate-400 hover:bg-[#EDE3D5] disabled:opacity-30 disabled:cursor-not-allowed">+</button>
+                         <button onClick={() => updateQuantity(item.id, 1, item.unite, item.variant_id)} disabled={item.stock != null && item.quantite >= item.stock} className="w-6 h-6 border border-[#D5C9B8] rounded-full flex items-center justify-center text-slate-400 hover:bg-[#EDE3D5] disabled:opacity-30 disabled:cursor-not-allowed">+</button>
                       </div>
                     </div>
                     <div className="text-right">
                       <p className="font-black text-sm">{calculerPrixLigne(item).toFixed(2)}€</p>
-                      <button onClick={() => updateQuantity(item.id, 0, item.unite)} className="text-slate-300 hover:text-red-500 transition-colors mt-1">
+                      <button onClick={() => updateQuantity(item.id, 0, item.unite, item.variant_id)} className="text-slate-300 hover:text-red-500 transition-colors mt-1">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
