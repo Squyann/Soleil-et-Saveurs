@@ -82,7 +82,7 @@ export default function CGVPage() {
             </p>
             <div className="bg-orange-50 border border-orange-100 rounded-2xl p-5 space-y-2">
               <p className="font-black text-xs uppercase text-[#FF4500] tracking-widest mb-2">Spécificités produits frais</p>
-              <p className="text-slate-600 font-medium leading-relaxed">Les produits étant frais et périssables, leur disponibilité peut varier quotidiennement en fonction des récoltes. En cas d'indisponibilité d'un produit après validation de la commande, le Client sera contacté et proposera un avoir ou une substitution.</p>
+              <p className="text-slate-600 font-medium leading-relaxed">Les produits étant frais et périssables, leur disponibilité peut varier quotidiennement en fonction des récoltes. En cas d'indisponibilité d'un produit après validation de la commande, le Client sera contacté et un avoir ou une substitution lui sera proposé.</p>
             </div>
             <p className="text-slate-600 font-medium leading-relaxed mt-4">
               Les photographies des produits sont présentées à titre illustratif. L'aspect visuel exact peut légèrement varier selon les saisons et les variétés disponibles.
