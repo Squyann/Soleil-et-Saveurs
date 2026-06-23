@@ -39,6 +39,11 @@ export default function AdminPage() {
   const [adminEmail, setAdminEmail] = useState('');
   const [promoProdId, setPromoProdId] = useState<string | null>(null);
   const [stats, setStats] = useState<StatsType>({ total: 0, aPreparer: 0, caTotal: 0 });
+
+  const [variantes, setVariantes] = useState<any[]>([]);
+  const [varianteProdId, setVarianteProdId] = useState<string | null>(null);
+  const [nouvelleVarianteNom, setNouvelleVarianteNom] = useState('');
+  const [nouvelleVarianteStock, setNouvelleVarianteStock] = useState(0);
   
   const [editingProdId, setEditingProdId] = useState<string | null>(null);
   const [editFormData, setEditFormData] = useState<any>(null);
@@ -97,6 +102,8 @@ export default function AdminPage() {
       if (excs) setExceptions(excs);
       const { data: codes } = await supabase.from('codes_promo').select('*').order('created_at', { ascending: false });
       if (codes) setCodesPromo(codes);
+      const { data: variantesData } = await supabase.from('product_variants').select('*').order('ordre', { ascending: true });
+      if (variantesData) setVariantes(variantesData);
 
       if (msgs) setMessages(msgs);
 
@@ -284,6 +291,29 @@ export default function AdminPage() {
   async function supprimerProduit(id: string) {
     if (confirm("Supprimer ?")) {
       await supabase.from('products').delete().eq('id', id);
+      fetchData();
+    }
+  }
+
+  async function ajouterVariante(productId: string) {
+    if (!nouvelleVarianteNom.trim()) return;
+    const ordre = variantes.filter(v => v.product_id === productId).length;
+    await supabase.from('product_variants').insert([{
+      product_id: productId, nom: nouvelleVarianteNom.trim(), stock: nouvelleVarianteStock, ordre,
+    }]);
+    setNouvelleVarianteNom('');
+    setNouvelleVarianteStock(0);
+    fetchData();
+  }
+
+  async function ajusterStockVariante(id: string, actuel: number, delta: number) {
+    await supabase.from('product_variants').update({ stock: Math.max(0, actuel + delta) }).eq('id', id);
+    fetchData();
+  }
+
+  async function supprimerVariante(id: string) {
+    if (confirm("Supprimer cette variété ?")) {
+      await supabase.from('product_variants').delete().eq('id', id);
       fetchData();
     }
   }
@@ -814,6 +844,30 @@ export default function AdminPage() {
                             <button onClick={() => { setPourcentage(0); setSeuilAchat(0); setQteOfferte(0); setSeuilPromoQte(0); setPrixPromo(0); appliquerPromo(p.id); }} className="px-3 bg-red-100 text-red-500 rounded-lg"><Trash2 className="w-4 h-4" /></button>
                           )}
                         </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="w-full mt-2">
+                    <button onClick={() => { setVarianteProdId(varianteProdId === p.id ? null : p.id); setNouvelleVarianteNom(''); setNouvelleVarianteStock(0); }} className={`w-full text-[9px] font-black uppercase tracking-widest py-3 rounded-xl transition-all ${variantes.some(v => v.product_id === p.id) ? 'bg-blue-500/10 text-blue-600 border border-blue-500/20' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}>
+                      {variantes.some(v => v.product_id === p.id) ? `🥗 ${variantes.filter(v => v.product_id === p.id).length} Variété(s)` : 'Ajouter des variétés'}
+                    </button>
+                    {varianteProdId === p.id && (
+                      <div className="mt-3 p-4 bg-white rounded-2xl border border-slate-200 shadow-2xl flex flex-col gap-3 animate-in zoom-in-95 duration-200 z-20">
+                        {variantes.filter(v => v.product_id === p.id).map(v => (
+                          <div key={v.id} className="flex items-center gap-2 bg-slate-50 rounded-xl p-2">
+                            <span className="flex-1 text-xs font-bold text-slate-700 truncate">{v.nom}</span>
+                            <button onClick={() => ajusterStockVariante(v.id, v.stock, -1)} className="w-7 h-7 flex items-center justify-center bg-white text-slate-400 rounded-lg font-black hover:bg-red-50 hover:text-red-500">-</button>
+                            <span className="w-10 text-center font-black text-sm">{v.stock}</span>
+                            <button onClick={() => ajusterStockVariante(v.id, v.stock, 1)} className="w-7 h-7 flex items-center justify-center bg-slate-900 text-white rounded-lg font-black hover:bg-[#FF4500]">+</button>
+                            <button onClick={() => supprimerVariante(v.id)} className="w-7 h-7 flex items-center justify-center text-red-400 hover:text-red-600"><Trash2 className="w-3.5 h-3.5" /></button>
+                          </div>
+                        ))}
+                        <div className="border-t border-slate-50 pt-2 flex gap-2">
+                          <input type="text" placeholder="Ex: Batavia" value={nouvelleVarianteNom} onChange={(e) => setNouvelleVarianteNom(e.target.value)} className="flex-1 p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg" />
+                          <input type="number" min="0" placeholder="Stock" value={nouvelleVarianteStock} onChange={(e) => setNouvelleVarianteStock(parseFloat(e.target.value) || 0)} className="w-20 p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg text-center" />
+                        </div>
+                        <button onClick={() => ajouterVariante(p.id)} className="bg-slate-900 text-white text-[9px] font-black py-3 rounded-lg shadow-md hover:bg-[#FF4500]">AJOUTER LA VARIÉTÉ</button>
                       </div>
                     )}
                   </div>
