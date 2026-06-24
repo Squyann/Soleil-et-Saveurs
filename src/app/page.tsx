@@ -260,7 +260,7 @@ export default function Home() {
               {
                 icon: <Truck className="w-7 h-7" />,
                 step: "03",
-                title: "Livré à 17h",
+                title: "Livré à 15h",
                 desc: "Directement à votre porte, sans perdre aucune fraîcheur !",
                 tag: "Le soir",
                 bg: "bg-[#0F172A]",
