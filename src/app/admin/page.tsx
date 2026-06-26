@@ -401,7 +401,7 @@ export default function AdminPage() {
     if (!a.date_livraison && !b.date_livraison) return 0;
     if (!a.date_livraison) return 1;
     if (!b.date_livraison) return -1;
-    return a.date_livraison.localeCompare(b.date_livraison);
+    return b.date_livraison.localeCompare(a.date_livraison);
   });
 
   const imprimerBon = (cmd: any) => {
