@@ -68,10 +68,7 @@ export default function CommanderPage() {
     if (vs.length === 0) return null;
     return vs.find(v => v.id === selectedVariant[product.id]) || vs[0];
   };
-  const getEffectiveStock = (product: any) => {
-    const variant = getSelectedVariant(product);
-    return variant ? variant.stock : product.stock;
-  };
+  const getEffectiveStock = (product: any) => product.stock;
 
 
   const getPasG = (product: any) => product.pas_g || 100;
@@ -127,7 +124,7 @@ export default function CommanderPage() {
       panierActuel.push({
         ...product,
         name: variant ? `${product.name} – ${variant.nom}` : product.name,
-        stock: variant ? variant.stock : product.stock,
+        stock: product.stock,
         variant_id: variantId,
         variant_nom: variant ? variant.nom : null,
         price: prixUnitairePromo,
@@ -334,9 +331,7 @@ export default function CommanderPage() {
                       className="w-full mb-2 sm:mb-3 p-2 text-[10px] sm:text-xs font-bold border border-[#D5C9B8] bg-white rounded-lg sm:rounded-xl focus:outline-none focus:border-[#FF4500]"
                     >
                       {productVariants.map((v) => (
-                        <option key={v.id} value={v.id} disabled={v.stock <= 0}>
-                          {v.nom}{v.stock <= 0 ? ' (épuisé)' : ''}
-                        </option>
+                        <option key={v.id} value={v.id}>{v.nom}</option>
                       ))}
                     </select>
                   )}

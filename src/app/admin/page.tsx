@@ -43,7 +43,6 @@ export default function AdminPage() {
   const [variantes, setVariantes] = useState<any[]>([]);
   const [varianteProdId, setVarianteProdId] = useState<string | null>(null);
   const [nouvelleVarianteNom, setNouvelleVarianteNom] = useState('');
-  const [nouvelleVarianteStock, setNouvelleVarianteStock] = useState(0);
   
   const [editingProdId, setEditingProdId] = useState<string | null>(null);
   const [editFormData, setEditFormData] = useState<any>(null);
@@ -299,15 +298,9 @@ export default function AdminPage() {
     if (!nouvelleVarianteNom.trim()) return;
     const ordre = variantes.filter(v => v.product_id === productId).length;
     await supabase.from('product_variants').insert([{
-      product_id: productId, nom: nouvelleVarianteNom.trim(), stock: nouvelleVarianteStock, ordre,
+      product_id: productId, nom: nouvelleVarianteNom.trim(), ordre,
     }]);
     setNouvelleVarianteNom('');
-    setNouvelleVarianteStock(0);
-    fetchData();
-  }
-
-  async function ajusterStockVariante(id: string, actuel: number, delta: number) {
-    await supabase.from('product_variants').update({ stock: Math.max(0, actuel + delta) }).eq('id', id);
     fetchData();
   }
 
@@ -854,7 +847,7 @@ export default function AdminPage() {
                   </div>
 
                   <div className="w-full mt-2">
-                    <button onClick={() => { setVarianteProdId(varianteProdId === p.id ? null : p.id); setNouvelleVarianteNom(''); setNouvelleVarianteStock(0); }} className={`w-full text-[9px] font-black uppercase tracking-widest py-3 rounded-xl transition-all ${variantes.some(v => v.product_id === p.id) ? 'bg-blue-500/10 text-blue-600 border border-blue-500/20' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}>
+                    <button onClick={() => { setVarianteProdId(varianteProdId === p.id ? null : p.id); setNouvelleVarianteNom(''); }} className={`w-full text-[9px] font-black uppercase tracking-widest py-3 rounded-xl transition-all ${variantes.some(v => v.product_id === p.id) ? 'bg-blue-500/10 text-blue-600 border border-blue-500/20' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}>
                       {variantes.some(v => v.product_id === p.id) ? `🥗 ${variantes.filter(v => v.product_id === p.id).length} Variété(s)` : 'Ajouter des variétés'}
                     </button>
                     {varianteProdId === p.id && (
@@ -862,15 +855,11 @@ export default function AdminPage() {
                         {variantes.filter(v => v.product_id === p.id).map(v => (
                           <div key={v.id} className="flex items-center gap-2 bg-slate-50 rounded-xl p-2">
                             <span className="flex-1 text-xs font-bold text-slate-700 truncate">{v.nom}</span>
-                            <button onClick={() => ajusterStockVariante(v.id, v.stock, -1)} className="w-7 h-7 flex items-center justify-center bg-white text-slate-400 rounded-lg font-black hover:bg-red-50 hover:text-red-500">-</button>
-                            <span className="w-10 text-center font-black text-sm">{v.stock}</span>
-                            <button onClick={() => ajusterStockVariante(v.id, v.stock, 1)} className="w-7 h-7 flex items-center justify-center bg-slate-900 text-white rounded-lg font-black hover:bg-[#FF4500]">+</button>
                             <button onClick={() => supprimerVariante(v.id)} className="w-7 h-7 flex items-center justify-center text-red-400 hover:text-red-600"><Trash2 className="w-3.5 h-3.5" /></button>
                           </div>
                         ))}
                         <div className="border-t border-slate-50 pt-2 flex gap-2">
                           <input type="text" placeholder="Ex: Batavia" value={nouvelleVarianteNom} onChange={(e) => setNouvelleVarianteNom(e.target.value)} className="flex-1 p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg" />
-                          <input type="number" min="0" placeholder="Stock" value={nouvelleVarianteStock} onChange={(e) => setNouvelleVarianteStock(parseFloat(e.target.value) || 0)} className="w-20 p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg text-center" />
                         </div>
                         <button onClick={() => ajouterVariante(p.id)} className="bg-slate-900 text-white text-[9px] font-black py-3 rounded-lg shadow-md hover:bg-[#FF4500]">AJOUTER LA VARIÉTÉ</button>
                       </div>
