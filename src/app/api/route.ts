@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
 
     const { data: products, error: dbError } = await supabase
       .from('products')
-      .select('id, name, price, stock')
+      .select('id, name, price, stock, actif')
       .in('id', ids);
 
     if (dbError || !products) {
@@ -84,6 +84,13 @@ export async function POST(req: NextRequest) {
 
       if (!productEnBase) {
         return NextResponse.json({ error: `Produit introuvable : ${item.id}` }, { status: 400 });
+      }
+
+      if (productEnBase.actif === false) {
+        return NextResponse.json(
+          { error: `Produit indisponible : ${productEnBase.name}` },
+          { status: 400 }
+        );
       }
 
       const qte = Number(item.quantite);

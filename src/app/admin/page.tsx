@@ -287,6 +287,11 @@ export default function AdminPage() {
     fetchData();
   }
 
+  async function basculerActif(id: string, actuel: boolean) {
+    await supabase.from('products').update({ actif: !actuel }).eq('id', id);
+    fetchData();
+  }
+
   async function supprimerProduit(id: string) {
     if (confirm("Supprimer ?")) {
       await supabase.from('products').delete().eq('id', id);
@@ -742,10 +747,15 @@ export default function AdminPage() {
             <h2 className="font-black text-2xl mb-8 text-slate-900 italic uppercase tracking-tighter">Gestion des stocks & Promos</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {produitsFiltres.map(p => (
-                <div key={p.id} className="p-6 bg-[#EDE3D5] rounded-[2.5rem] border border-slate-100 flex flex-col items-center relative transition-all hover:shadow-md group">
+                <div key={p.id} className={`p-6 bg-[#EDE3D5] rounded-[2.5rem] border border-slate-100 flex flex-col items-center relative transition-all hover:shadow-md group ${p.actif === false ? 'opacity-60 grayscale' : ''}`}>
                   {(p.promotion > 0 || p.seuil_achat > 0) && (
                     <div className="absolute top-4 right-4 bg-[#FF4500] text-white text-[9px] font-black px-2.5 py-1 rounded-full uppercase z-10 shadow-sm animate-pulse">
                       {p.promotion > 0 ? `-${p.promotion}%` : `${p.seuil_achat}+${p.quantite_offerte}`}
+                    </div>
+                  )}
+                  {p.actif === false && (
+                    <div className="absolute top-4 left-4 bg-slate-900 text-white text-[9px] font-black px-2.5 py-1 rounded-full uppercase z-10 shadow-sm">
+                      Désactivé
                     </div>
                   )}
                   <div className="w-24 h-24 bg-white rounded-3xl overflow-hidden mb-4 shadow-sm border border-slate-50 flex items-center justify-center">
@@ -765,6 +775,10 @@ export default function AdminPage() {
                     </div>
                     <button onClick={() => ajusterStock(p.id, p.stock, 1)} className="w-10 h-10 flex items-center justify-center bg-slate-900 text-white rounded-xl font-black shadow-lg hover:bg-[#FF4500] transition-all">+</button>
                   </div>
+
+                  <button onClick={() => basculerActif(p.id, p.actif !== false)} className={`w-full mt-2 text-[9px] font-black uppercase tracking-widest py-3 rounded-xl transition-all ${p.actif === false ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 hover:bg-emerald-500/20' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}>
+                    {p.actif === false ? '✅ Activer l\'article' : '🚫 Désactiver l\'article'}
+                  </button>
 
                   <div className="w-full mt-2">
                     <button onClick={() => { setPromoProdId(promoProdId === p.id ? null : p.id); setPourcentage(0); setSeuilAchat(0); setQteOfferte(0); setSeuilPromoQte(0); setPrixPromo(0); }} className={`w-full text-[9px] font-black uppercase tracking-widest py-3 rounded-xl transition-all ${(p.promotion > 0 || p.seuil_achat > 0 || p.seuil_promo_qte > 0) ? 'bg-[#FF4500]/10 text-[#FF4500] border border-[#FF4500]/20' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}>
