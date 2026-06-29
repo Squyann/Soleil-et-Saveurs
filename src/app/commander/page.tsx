@@ -86,6 +86,7 @@ export default function CommanderPage() {
   };
 
   const filteredProducts = products
+    .filter(p => p.actif !== false)
     .filter(p => filter === 'all' || p.category?.toLowerCase() === filter.toLowerCase())
     .filter(p => {
       const q = search.trim().toLowerCase();
