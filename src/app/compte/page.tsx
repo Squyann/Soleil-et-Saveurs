@@ -8,7 +8,7 @@ import {
   User, Mail, Phone, MapPin, LogOut, ArrowLeft,
   ShoppingBag, Package, CheckCircle2, Clock, XCircle,
   Loader2, Edit3, Save, X, ChevronRight, Star, Truck,
-  AlertCircle, Plus, Gift, Copy, Shield
+  AlertCircle, Plus, Gift, Copy, Shield, Trash2, AlertTriangle
 } from 'lucide-react';
 
 // --- TYPES ---
@@ -64,6 +64,9 @@ export default function ComptePage() {
   const [dbProfile, setDbProfile] = useState<DBProfile | null>(null);
   const [referralCopied, setReferralCopied] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const router = useRouter();
 
   // --- INIT ---
@@ -182,6 +185,21 @@ export default function ComptePage() {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     router.push('/');
+  };
+
+  // --- SUPPRESSION DU COMPTE ---
+  const handleDeleteAccount = async () => {
+    setDeleteLoading(true);
+    setDeleteError(null);
+    try {
+      const { error } = await supabase.rpc('supprimer_mon_compte');
+      if (error) throw error;
+      await supabase.auth.signOut();
+      router.push('/');
+    } catch (err: any) {
+      setDeleteError(err.message || 'Erreur lors de la suppression du compte');
+      setDeleteLoading(false);
+    }
   };
 
   // --- FORMATAGE ---
@@ -527,6 +545,23 @@ export default function ComptePage() {
                 </div>
                 <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-red-400 group-hover:translate-x-1 transition-all" />
               </button>
+
+              {/* SUPPRESSION DU COMPTE */}
+              <button
+                onClick={() => { setShowDeleteConfirm(true); setDeleteError(null); }}
+                className="w-full flex items-center justify-between bg-white border border-red-100 p-6 rounded-[2rem] hover:border-red-200 hover:bg-red-50/40 transition-all group shadow-sm"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center">
+                    <Trash2 className="w-5 h-5 text-red-500" />
+                  </div>
+                  <div className="text-left">
+                    <p className="font-black uppercase text-sm text-red-600">Supprimer mon compte</p>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase">Action définitive et irréversible</p>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-red-300 group-hover:text-red-500 group-hover:translate-x-1 transition-all" />
+              </button>
             </div>
           </div>
         )}
@@ -760,6 +795,48 @@ export default function ComptePage() {
           </div>
         )}
       </div>
+
+      {/* MODAL CONFIRMATION SUPPRESSION COMPTE */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-[2rem] p-8 max-w-md w-full shadow-2xl border border-[#D5C9B8] animate-in zoom-in-95 duration-200">
+            <div className="flex flex-col items-center text-center">
+              <div className="w-14 h-14 bg-red-50 rounded-2xl flex items-center justify-center mb-4">
+                <AlertTriangle className="w-7 h-7 text-red-500" />
+              </div>
+              <h3 className="font-black uppercase text-lg text-slate-900 tracking-tight mb-2">Supprimer votre compte ?</h3>
+              <p className="text-xs font-bold text-slate-500 leading-relaxed mb-6">
+                Cette action est <span className="text-red-600">définitive</span>. Votre compte, votre profil et vos points de fidélité seront supprimés. Vous ne pourrez pas récupérer ces données.
+              </p>
+
+              {deleteError && (
+                <div className="flex items-center gap-2 p-3 bg-red-50 rounded-xl text-red-600 mb-4 w-full">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <p className="text-[10px] font-black uppercase text-left">{deleteError}</p>
+                </div>
+              )}
+
+              <div className="flex gap-3 w-full">
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  disabled={deleteLoading}
+                  className="flex-1 py-3.5 bg-[#EDE3D5] text-slate-600 rounded-xl font-black text-[11px] uppercase tracking-widest hover:bg-[#DDD0BF] transition-all disabled:opacity-50"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={handleDeleteAccount}
+                  disabled={deleteLoading}
+                  className="flex-1 py-3.5 bg-red-600 text-white rounded-xl font-black text-[11px] uppercase tracking-widest hover:bg-red-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {deleteLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                  Supprimer
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
