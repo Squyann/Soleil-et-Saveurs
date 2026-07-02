@@ -8,7 +8,7 @@ import {
   User, Mail, Phone, MapPin, LogOut, ArrowLeft,
   ShoppingBag, Package, CheckCircle2, Clock, XCircle,
   Loader2, Edit3, Save, X, ChevronRight, Star, Truck,
-  AlertCircle, Plus, Gift, Copy, Shield
+  AlertCircle, Plus, Gift, Copy, Shield, Trash2, AlertTriangle, FileText
 } from 'lucide-react';
 
 // --- TYPES ---
@@ -64,6 +64,9 @@ export default function ComptePage() {
   const [dbProfile, setDbProfile] = useState<DBProfile | null>(null);
   const [referralCopied, setReferralCopied] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const router = useRouter();
 
   // --- INIT ---
@@ -182,6 +185,167 @@ export default function ComptePage() {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     router.push('/');
+  };
+
+  // --- SUPPRESSION DU COMPTE ---
+  const handleDeleteAccount = async () => {
+    setDeleteLoading(true);
+    setDeleteError(null);
+    try {
+      const { error } = await supabase.rpc('supprimer_mon_compte');
+      if (error) throw error;
+      await supabase.auth.signOut();
+      router.push('/');
+    } catch (err: any) {
+      setDeleteError(err.message || 'Erreur lors de la suppression du compte');
+      setDeleteLoading(false);
+    }
+  };
+
+  // --- FACTURE ---
+  const escapeHtml = (str: any) =>
+    String(str ?? '').replace(/[&<>"']/g, (c) => (
+      { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string
+    ));
+
+  const imprimerFacture = (order: any) => {
+    const isRetrait = order.adresse_livraison?.includes('Retrait');
+    const dateCmd = new Date(order.created_at).toLocaleDateString('fr-FR');
+    const refFacture = `INV-${new Date(order.created_at).getFullYear()}-${String(order.id).slice(-4).toUpperCase()}`;
+    const items = order.contenu_panier || [];
+
+    const sousTotalProduits = items.reduce((acc: number, item: any) => {
+      const qte = parseFloat(item.quantite || item.quantity || 0);
+      const qteEffective = item.unite === 'g' ? qte / 1000 : qte;
+      let prixUnit = parseFloat(item.price || item.prix || 0);
+      if (item.promotion && item.promotion > 0) prixUnit *= (1 - item.promotion / 100);
+      const seuil = item.seuil_achat || 0;
+      const offert = item.quantite_offerte || 0;
+      if (seuil > 0 && offert > 0) {
+        const tailleLot = seuil + offert;
+        const nbLots = Math.floor(qteEffective / tailleLot);
+        const reste = qteEffective % tailleLot;
+        return acc + (nbLots * seuil + Math.min(reste, seuil)) * prixUnit;
+      }
+      return acc + qteEffective * prixUnit;
+    }, 0);
+
+    let fraisLivraison = 0;
+    if (!isRetrait && sousTotalProduits > 0) {
+      fraisLivraison = sousTotalProduits >= 30 ? 0
+        : Math.round(2.50 * (30 - sousTotalProduits) / 20 * 100) / 100;
+    }
+
+    const totalFinal = parseFloat(order.total);
+    const totalHT = sousTotalProduits / 1.055;
+    const montantTVA = sousTotalProduits - totalHT;
+
+    const fenetre = window.open('', '', 'height=800,width=900');
+    if (!fenetre) return;
+    fenetre.document.write(`
+      <html>
+        <head>
+          <title>Facture ${refFacture}</title>
+          <style>
+            body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #2D3748; padding: 50px; line-height: 1.5; }
+            .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 60px; }
+            .brand h1 { font-size: 28px; font-weight: 900; margin: 0; letter-spacing: -1px; color: #16423C; }
+            .brand h1 span { color: #6A9C89; }
+            .brand p { font-size: 12px; color: #718096; margin: 5px 0 0 0; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+            .invoice-details { text-align: right; }
+            .invoice-details h2 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 5px 0; color: #718096; }
+            .invoice-details p { font-size: 16px; font-weight: 800; margin: 0; color: #1A202C; }
+            .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 50px; }
+            .info-box h3 { font-size: 11px; text-transform: uppercase; color: #A0AEC0; margin-bottom: 10px; letter-spacing: 1px; border-bottom: 1px solid #EDF2F7; padding-bottom: 5px; }
+            .info-box p { font-size: 14px; margin: 0; font-weight: 600; }
+            table { width: 100%; border-collapse: collapse; margin-bottom: 40px; }
+            th { text-align: left; padding: 15px 10px; background: #F7FAFC; font-size: 11px; text-transform: uppercase; color: #718096; border-top: 2px solid #16423C; }
+            td { padding: 15px 10px; border-bottom: 1px solid #EDF2F7; font-size: 14px; }
+            .text-right { text-align: right; }
+            .totals-area { display: flex; justify-content: flex-end; }
+            .totals-table { width: 280px; }
+            .totals-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 14px; }
+            .totals-row.grand-total { border-top: 2px solid #16423C; margin-top: 10px; padding-top: 15px; font-size: 20px; font-weight: 900; color: #16423C; }
+            .footer-note { margin-top: 100px; text-align: center; font-size: 11px; color: #A0AEC0; border-top: 1px solid #EDF2F7; padding-top: 20px; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="brand">
+              <h1>Soleil et Saveurs<span>.</span></h1>
+              <p>Produits Frais</p>
+              <div style="font-size: 11px; color: #718096; margin-top: 10px; font-weight: normal; text-transform: none;">Livraison Yvelines (78)</div>
+            </div>
+            <div class="invoice-details">
+              <h2>Référence Facture</h2>
+              <p>${refFacture}</p>
+              <h2 style="margin-top: 15px;">Date de commande</h2>
+              <p>${dateCmd}</p>
+            </div>
+          </div>
+          <div class="info-grid">
+            <div class="info-box">
+              <h3>Client</h3>
+              <p>${escapeHtml(order.nom_client || `${profile?.first_name || ''} ${profile?.last_name || ''}`)}</p>
+              <p style="font-weight: normal; margin-top: 4px;">${escapeHtml(profile?.email || '')}</p>
+            </div>
+            <div class="info-box">
+              <h3>Mode de livraison</h3>
+              <p>${isRetrait ? '📍 Retrait au centre' : '🚚 Livraison à domicile'}</p>
+              <p style="font-weight: normal; color: #4A5568; font-size: 13px; margin-top: 5px;">${escapeHtml(order.adresse_livraison)}</p>
+              ${order.date_livraison ? `<p style="font-weight: bold; color: #FF4500; font-size: 13px; margin-top: 8px;">📅 Livraison le : ${new Date(order.date_livraison + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</p>` : ''}
+            </div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Description des articles</th>
+                <th class="text-right">Quantité</th>
+                <th class="text-right">Prix Unit. TTC</th>
+                <th class="text-right">Total TTC</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${items.map((i: any) => {
+                const nomProduit = i.nom || i.name || 'Produit inconnu';
+                const qte = parseFloat(i.quantite || i.quantity || 0);
+                const unite = i.unite || 'unité(s)';
+                const isGram = unite === 'g';
+                const qteEffective = isGram ? qte / 1000 : qte;
+                const prixUnit = parseFloat(i.prixUnitaire || i.price || 0);
+                const totalLigne = i.prixTotalLigne ? parseFloat(i.prixTotalLigne) : qteEffective * prixUnit;
+                const qteAffiche = isGram
+                  ? (qte < 1000 ? `${qte}g` : `${(qte / 1000).toFixed(2).replace('.', ',')} kg`)
+                  : `${qte} ${unite}`;
+                const prixAffiche = isGram ? `${prixUnit.toFixed(2)}€/kg` : `${prixUnit.toFixed(2)}€`;
+                return `
+                  <tr>
+                    <td style="font-weight: bold;">${escapeHtml(nomProduit)}</td>
+                    <td class="text-right">${qteAffiche}</td>
+                    <td class="text-right">${prixAffiche}</td>
+                    <td class="text-right" style="font-weight: bold;">${totalLigne.toFixed(2)}€</td>
+                  </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+          <div class="totals-area">
+            <div class="totals-table">
+              <div class="totals-row"><span>Sous-total HT (5.5%)</span><span>${totalHT.toFixed(2)}€</span></div>
+              <div class="totals-row"><span>TVA (5.5%)</span><span>${montantTVA.toFixed(2)}€</span></div>
+              <div class="totals-row"><span>Frais de livraison</span><span style="font-weight: bold;">${fraisLivraison === 0 ? 'OFFERT' : fraisLivraison.toFixed(2) + '€'}</span></div>
+              <div class="totals-row grand-total"><span>TOTAL PAYÉ</span><span>${totalFinal.toFixed(2)}€</span></div>
+            </div>
+          </div>
+          <div class="footer-note">
+            Merci d'avoir choisi le circuit court avec Soleil et Saveurs.<br/>
+            <em>TVA non applicable, art. 293 B du CGI</em><br/>
+            Ce document fait office de bon de livraison et de facture.
+          </div>
+        </body>
+      </html>
+    `);
+    fenetre.document.close();
+    setTimeout(() => fenetre.print(), 500);
   };
 
   // --- FORMATAGE ---
@@ -527,6 +691,23 @@ export default function ComptePage() {
                 </div>
                 <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-red-400 group-hover:translate-x-1 transition-all" />
               </button>
+
+              {/* SUPPRESSION DU COMPTE */}
+              <button
+                onClick={() => { setShowDeleteConfirm(true); setDeleteError(null); }}
+                className="w-full flex items-center justify-between bg-white border border-red-100 p-6 rounded-[2rem] hover:border-red-200 hover:bg-red-50/40 transition-all group shadow-sm"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center">
+                    <Trash2 className="w-5 h-5 text-red-500" />
+                  </div>
+                  <div className="text-left">
+                    <p className="font-black uppercase text-sm text-red-600">Supprimer mon compte</p>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase">Action définitive et irréversible</p>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-red-300 group-hover:text-red-500 group-hover:translate-x-1 transition-all" />
+              </button>
             </div>
           </div>
         )}
@@ -630,11 +811,18 @@ export default function ComptePage() {
                       </div>
                     )}
 
-                    {/* BOUTON : COMMANDER À NOUVEAU */}
-                    <div className="mt-6 pt-4 border-t border-[#DDD0BF]">
+                    {/* BOUTONS : FACTURE + COMMANDER À NOUVEAU */}
+                    <div className="mt-6 pt-4 border-t border-[#DDD0BF] flex flex-col sm:flex-row gap-2">
+                      <button
+                        onClick={() => imprimerFacture(order)}
+                        className="sm:w-auto py-4 px-5 bg-white border border-[#D5C9B8] text-slate-700 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:border-[#FF4500] hover:text-[#FF4500] transition-all active:scale-95"
+                      >
+                        <FileText className="w-4 h-4" />
+                        Facture
+                      </button>
                       <button
                         onClick={() => commanderANouveau((order as any).contenu_panier)}
-                        className="w-full py-4 bg-[#FF4500] text-white rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[#3D2B1F] transition-all shadow-lg shadow-orange-900/10 active:scale-95"
+                        className="flex-1 py-4 bg-[#FF4500] text-white rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[#3D2B1F] transition-all shadow-lg shadow-orange-900/10 active:scale-95"
                       >
                         <ShoppingBag className="w-4 h-4" />
                         Commander à nouveau
@@ -760,6 +948,48 @@ export default function ComptePage() {
           </div>
         )}
       </div>
+
+      {/* MODAL CONFIRMATION SUPPRESSION COMPTE */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-[2rem] p-8 max-w-md w-full shadow-2xl border border-[#D5C9B8] animate-in zoom-in-95 duration-200">
+            <div className="flex flex-col items-center text-center">
+              <div className="w-14 h-14 bg-red-50 rounded-2xl flex items-center justify-center mb-4">
+                <AlertTriangle className="w-7 h-7 text-red-500" />
+              </div>
+              <h3 className="font-black uppercase text-lg text-slate-900 tracking-tight mb-2">Supprimer votre compte ?</h3>
+              <p className="text-xs font-bold text-slate-500 leading-relaxed mb-6">
+                Cette action est <span className="text-red-600">définitive</span>. Votre compte, votre profil et vos points de fidélité seront supprimés. Vous ne pourrez pas récupérer ces données.
+              </p>
+
+              {deleteError && (
+                <div className="flex items-center gap-2 p-3 bg-red-50 rounded-xl text-red-600 mb-4 w-full">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <p className="text-[10px] font-black uppercase text-left">{deleteError}</p>
+                </div>
+              )}
+
+              <div className="flex gap-3 w-full">
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  disabled={deleteLoading}
+                  className="flex-1 py-3.5 bg-[#EDE3D5] text-slate-600 rounded-xl font-black text-[11px] uppercase tracking-widest hover:bg-[#DDD0BF] transition-all disabled:opacity-50"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={handleDeleteAccount}
+                  disabled={deleteLoading}
+                  className="flex-1 py-3.5 bg-red-600 text-white rounded-xl font-black text-[11px] uppercase tracking-widest hover:bg-red-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {deleteLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                  Supprimer
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
