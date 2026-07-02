@@ -11,7 +11,9 @@ import {
   ShieldCheck,
   Leaf,
   Truck,
-  CheckCircle2
+  CheckCircle2,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -22,6 +24,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [resetSent, setResetSent] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
   // Si l'utilisateur est déjà connecté, on ne lui montre pas la page de login
@@ -168,14 +171,17 @@ export default function LoginPage() {
               </div>
               <div className="relative group">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-[#FF4500] transition-colors" />
-                <input 
-                  type="password" 
+                <input
+                  type={showPassword ? 'text' : 'password'}
                   required
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-[#F5EAE0] border border-[#D5C9B8] p-4 pl-12 rounded-2xl font-bold text-sm focus:border-[#FF4500] focus:ring-4 focus:ring-[#FF4500]/5 outline-none transition-all shadow-sm"
+                  className="w-full bg-[#F5EAE0] border border-[#D5C9B8] p-4 pl-12 pr-12 rounded-2xl font-bold text-sm focus:border-[#FF4500] focus:ring-4 focus:ring-[#FF4500]/5 outline-none transition-all shadow-sm"
                 />
+                <button type="button" onClick={() => setShowPassword(v => !v)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-600 transition-colors">
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
               </div>
             </div>
 

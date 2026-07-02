@@ -4,8 +4,8 @@ import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import confetti from 'canvas-confetti';
 import { 
-  Mail, Lock, ArrowRight, Loader2, ChevronLeft, User, Sparkles, Gift, 
-  ShieldCheck, Calendar, Phone, MapPin, AlertCircle 
+  Mail, Lock, ArrowRight, Loader2, ChevronLeft, User, Sparkles, Gift,
+  ShieldCheck, Calendar, Phone, MapPin, AlertCircle, Eye, EyeOff
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -22,6 +22,7 @@ export default function SignupPage() {
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
   // --- LOGIQUE DE CONFETTIS ---
@@ -260,8 +261,11 @@ export default function SignupPage() {
               <label className="text-[10px] font-black text-slate-400 uppercase ml-4">Mot de passe (8+ car.)</label>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
-                <input type="password" required placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-[#F5EAE0] border border-[#D5C9B8] p-3 pl-10 rounded-2xl font-bold text-sm outline-none focus:border-[#FF4500]" />
+                <input type={showPassword ? 'text' : 'password'} required placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)}
+                  className="w-full bg-[#F5EAE0] border border-[#D5C9B8] p-3 pl-10 pr-10 rounded-2xl font-bold text-sm outline-none focus:border-[#FF4500]" />
+                <button type="button" onClick={() => setShowPassword(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-600 transition-colors">
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
               <div className="flex gap-1 px-4 pt-1">
                 <div className={`h-1 flex-1 rounded-full transition-all ${passwordStrength() >= 1 ? (passwordStrength() === 1 ? 'bg-red-400' : passwordStrength() === 2 ? 'bg-orange-400' : 'bg-green-400') : 'bg-slate-100'}`} />

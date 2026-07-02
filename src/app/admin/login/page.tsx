@@ -1,12 +1,13 @@
 'use client';
 import React, { useState } from 'react';
 import { supabase } from '@/lib/supabase'; // On importe Supabase
-import { Lock } from 'lucide-react';
+import { Lock, Eye, EyeOff } from 'lucide-react';
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,14 +56,19 @@ export default function AdminLogin() {
           
           <div>
             <label className="text-[10px] font-black uppercase text-slate-400 ml-4 mb-2 block">Mot de passe</label>
-            <input 
-              type="password" 
-              placeholder="••••••••••••"
-              required
-              className="w-full p-6 bg-slate-100 rounded-[24px] font-black border-none text-sm focus:ring-2 focus:ring-[#FF4500] transition-all placeholder:text-slate-300"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                placeholder="••••••••••••"
+                required
+                className="w-full p-6 pr-14 bg-slate-100 rounded-[24px] font-black border-none text-sm focus:ring-2 focus:ring-[#FF4500] transition-all placeholder:text-slate-300"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <button type="button" onClick={() => setShowPassword(v => !v)} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-600 transition-colors">
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            </div>
           </div>
 
           <button 

@@ -17,7 +17,7 @@ import {
   RefreshCcw, Printer, Phone, MessageSquare,
   Trash2, Plus, Truck, CheckCircle2, Clock, Mail, Save, Edit3, X,
   Inbox, Send, Eye, EyeOff, ChevronDown, ChevronUp,
-  BarChart2, Calendar, TrendingUp, ToggleLeft, ToggleRight, Tag, Loader2, ChevronLeft, ChevronRight
+  BarChart2, Calendar, TrendingUp, ToggleLeft, ToggleRight, Tag, Loader2, ChevronLeft, ChevronRight, AlertTriangle
 } from 'lucide-react';
 
 interface StatsType {
@@ -46,6 +46,10 @@ export default function AdminPage() {
   
   const [editingProdId, setEditingProdId] = useState<string | null>(null);
   const [editFormData, setEditFormData] = useState<any>(null);
+
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [resetConfirmText, setResetConfirmText] = useState('');
+  const [resetLoading, setResetLoading] = useState(false);
 
   const [pourcentage, setPourcentage] = useState(0);
   const [seuilAchat, setSeuilAchat] = useState(0);
@@ -248,11 +252,41 @@ export default function AdminPage() {
     } catch (error: any) { alert(error.message); }
   }
 
+  const normaliserNumeroWhatsApp = (tel: string | null | undefined) => {
+    if (!tel) return '';
+    // On ne garde que les chiffres, puis on convertit au format international
+    // (WhatsApp refuse les numéros locaux commençant par 0).
+    let num = tel.replace(/\D/g, '');
+    if (num.startsWith('00')) num = num.slice(2);        // 0033... -> 33...
+    else if (num.startsWith('0')) num = '33' + num.slice(1); // 06... -> 336...
+    return num;
+  };
+
   const envoyerWhatsApp = (cmd: any) => {
     const message = `Bonjour ${cmd.nom_client}, c'est Soleil et Saveurs pour votre commande #${cmd.id}...`;
-    const rel = cmd.telephone_client?.replace(/\s+/g, '');
+    const rel = normaliserNumeroWhatsApp(cmd.telephone_client);
+    if (!rel) {
+      alert("Ce client n'a pas de numéro de téléphone renseigné.");
+      return;
+    }
     window.open(`https://wa.me/${rel}?text=${encodeURIComponent(message)}`, '_blank');
   };
+
+  async function reinitialiserDonnees() {
+    setResetLoading(true);
+    try {
+      const { error } = await supabase.rpc('admin_reinitialiser_donnees');
+      if (error) throw error;
+      setShowResetConfirm(false);
+      setResetConfirmText('');
+      alert('Données réinitialisées : commandes et comptes clients supprimés.');
+      fetchData();
+    } catch (error: any) {
+      alert('Erreur : ' + (error.message || 'réinitialisation impossible'));
+    } finally {
+      setResetLoading(false);
+    }
+  }
 
   async function handleUpload(e: any, isEditing = false) {
     setUploading(true);
@@ -1369,6 +1403,24 @@ export default function AdminPage() {
                 </div>
               )}
             </div>
+
+            {/* ZONE DE DANGER — RÉINITIALISATION */}
+            <div className="bg-white rounded-3xl p-8 border border-red-100 shadow-sm">
+              <div className="flex items-center gap-2 mb-2">
+                <AlertTriangle className="w-4 h-4 text-red-500" />
+                <h3 className="font-black uppercase text-sm tracking-widest text-red-600">Zone de danger</h3>
+              </div>
+              <p className="text-[11px] text-slate-500 font-bold mb-5 leading-relaxed max-w-xl">
+                Réinitialiser les données supprime <span className="text-red-600">définitivement toutes les commandes et tous les comptes clients</span>. Les produits, promotions et votre compte administrateur sont conservés. Cette action est irréversible.
+              </p>
+              <button
+                onClick={() => { setShowResetConfirm(true); setResetConfirmText(''); }}
+                className="flex items-center gap-2 px-6 py-3 bg-red-50 text-red-600 border border-red-200 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all"
+              >
+                <Trash2 className="w-4 h-4" />
+                Réinitialiser les données
+              </button>
+            </div>
           </div>
         );
       })()}
@@ -1630,6 +1682,50 @@ export default function AdminPage() {
       )}
 
     </main>
+
+    {/* MODAL CONFIRMATION RÉINITIALISATION */}
+    {showResetConfirm && (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in">
+        <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-red-100 animate-in zoom-in-95 duration-200">
+          <div className="flex flex-col items-center text-center">
+            <div className="w-14 h-14 bg-red-50 rounded-2xl flex items-center justify-center mb-4">
+              <AlertTriangle className="w-7 h-7 text-red-500" />
+            </div>
+            <h3 className="font-black uppercase text-lg text-slate-900 tracking-tight mb-2">Réinitialiser les données ?</h3>
+            <p className="text-xs font-bold text-slate-500 leading-relaxed mb-5">
+              Toutes les <span className="text-red-600">commandes</span> et tous les <span className="text-red-600">comptes clients</span> seront supprimés définitivement. Les produits, promos et votre compte admin sont conservés.
+            </p>
+            <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-2 self-start ml-1">
+              Tapez <span className="text-red-600">REINITIALISER</span> pour confirmer
+            </p>
+            <input
+              type="text"
+              value={resetConfirmText}
+              onChange={(e) => setResetConfirmText(e.target.value)}
+              placeholder="REINITIALISER"
+              className="w-full p-3.5 mb-5 text-sm font-black uppercase tracking-widest text-center bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-red-400 outline-none"
+            />
+            <div className="flex gap-3 w-full">
+              <button
+                onClick={() => { setShowResetConfirm(false); setResetConfirmText(''); }}
+                disabled={resetLoading}
+                className="flex-1 py-3.5 bg-slate-100 text-slate-600 rounded-xl font-black text-[11px] uppercase tracking-widest hover:bg-slate-200 transition-all disabled:opacity-50"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={reinitialiserDonnees}
+                disabled={resetLoading || resetConfirmText.trim().toUpperCase() !== 'REINITIALISER'}
+                className="flex-1 py-3.5 bg-red-600 text-white rounded-xl font-black text-[11px] uppercase tracking-widest hover:bg-red-700 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {resetLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                Supprimer
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
   </div>
 );
 }
