@@ -116,12 +116,8 @@ export default function SignupPage() {
 
     try {
       if (cleanReferral) {
-        const { data: refData } = await supabase
-          .from('profiles')
-          .select('user_id')
-          .eq('referral_code', cleanReferral)
-          .maybeSingle();
-        if (!refData) {
+        const { data: refValide } = await supabase.rpc('referral_code_valide', { p_code: cleanReferral });
+        if (!refValide) {
           setError("Code de parrainage invalide.");
           setLoading(false);
           return;

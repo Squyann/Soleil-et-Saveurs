@@ -338,79 +338,29 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
       console.error("Erreur sync profil:", err);
     }
     
-    // --- ENREGISTREMENT DANS SUPABASE POUR LE MODE ESPÈCES ---
+    // --- CRÉATION DE LA COMMANDE CÔTÉ SERVEUR ---
+    // creer_commande recalcule tous les prix, remises et le total à partir de
+    // la base, décrémente le stock, valide/enregistre le code promo et applique
+    // les récompenses — le tout dans une seule transaction. Le client n'envoie
+    // que les produits et quantités choisis (aucun prix n'est plus fait confiance).
+    let totalServeur = totalFinal;
     try {
-      // On décrémente le stock avant de créer la commande : la fonction
-      // verrouille chaque produit et échoue si la quantité demandée dépasse
-      // le stock réel, ce qui évite la survente en cas de commandes simultanées.
-      const { error: stockError } = await supabase.rpc('decrementer_stock_panier', {
+      const { data: result, error } = await supabase.rpc('creer_commande', {
         p_items: panier.map(item => ({ id: item.id, quantite: item.quantite, variant_id: item.variant_id ?? null })),
-      });
-
-      if (stockError) {
-        console.error(stockError);
-        alert("Un ou plusieurs produits ne sont plus disponibles en quantité suffisante.");
-        setChargement(false);
-        return;
-      }
-
-      // On réserve l'utilisation du code promo avant de créer la commande :
-      // la contrainte unique (user_id, code_promo_id) bloque toute réutilisation,
-      // même en cas de double soumission ou de validation simultanée dans deux onglets.
-      if (codeStatut === 'valid' && codePromoId) {
-        const { error: utilisationError } = await supabase
-          .from('codes_promo_utilisations')
-          .insert({ user_id: user.id, code_promo_id: codePromoId });
-
-        if (utilisationError) {
-          if (utilisationError.code === '23505') {
-            setCodeStatut('used');
-            setRemiseCode(0);
-            setCodePromoId(null);
-            alert("Vous avez déjà utilisé ce code promo.");
-          } else {
-            console.error(utilisationError);
-            alert("Erreur lors de l'application du code promo.");
-          }
-          setChargement(false);
-          return;
-        }
-
-        void supabase.rpc('increment_code_promo_usage', { code_id: codePromoId });
-      }
-
-      const desc = panier.map(item => `${item.quantite}x ${item.name}`).join(', ');
-
-      const { error } = await supabase
-        .from('commandes')
-        .insert([{
-          user_id: user.id,
-          nom_client: nom,
-          telephone_client: telephone,
-          adresse_livraison: adresse,
-          total: totalFinal,
-          methode_paiement: 'Espèces',
-          statut: 'En attente',
-          description_commande: desc,
-          commentaire_client: commentaireClient.trim() || null,
-          contenu_panier: panier,
-          email_client: user.email,
+        p_infos: {
+          nom,
+          telephone,
+          adresse,
           date_livraison: dateLivraison || null,
+          commentaire: commentaireClient.trim() || null,
           code_promo: codeStatut === 'valid' ? codePromo : null,
-          remise_code_pct: codeStatut === 'valid' ? remiseCode : null,
-        }]);
+          apply_loyalty: applyLoyalty,
+          apply_referral: applyReferral,
+        },
+      });
 
       if (error) throw error;
-
-      // Mise à jour des points de fidélité et remises — la fonction relit
-      // l'état réel du profil côté serveur avant de l'appliquer, le client
-      // ne peut plus s'attribuer des points ou une remise arbitraires.
-      const pointsGagnes = Math.floor(totalApresRemise);
-      await supabase.rpc('appliquer_recompenses_commande', {
-        p_points_gagnes: pointsGagnes,
-        p_consommer_loyalty: applyLoyalty,
-        p_consommer_referral: applyReferral,
-      });
+      totalServeur = (result as any)?.total ?? totalFinal;
 
       // Notifications email — non bloquant
       fetch('/api/notify-order', {
@@ -433,7 +383,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
             remise_pct: remisePct,
             remise_montant: remiseMontant,
             frais_livraison: fraisLivraison,
-            total: totalFinal,
+            total: totalServeur,
           },
         }),
       }).then(async r => {
@@ -452,9 +402,9 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
       setPanier([]);
       setCommentaireClient('');
       onClose();
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert("Erreur lors de l'envoi de la commande.");
+      alert(err?.message || "Erreur lors de l'envoi de la commande.");
     } finally {
       setChargement(false);
     }
