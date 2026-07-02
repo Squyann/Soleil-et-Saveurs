@@ -167,7 +167,7 @@ export default function AdminPage() {
     const corps = encodeURIComponent(
       `Bonjour ${msg.nom},\n\n${reponseTexte}\n\nCordialement,\nL'équipe Soleil et Saveurs`
     );
-    window.open(`mailto:${msg.email}?subject=${sujet}&body=${corps}`, '_blank');
+    window.open(`mailto:${encodeURIComponent(msg.email)}?subject=${sujet}&body=${corps}`, '_blank');
 
     setReponseTexte('');
     setReponseOuvert(null);
@@ -539,7 +539,7 @@ export default function AdminPage() {
                 ${cmd.contenu_panier.map((i: any) => {
                   const nomProduit = i.nom || i.name || "Produit inconnu";
                   const qte = parseFloat(i.quantite || i.quantity || 0);
-                  const unite = i.unite || "unité(s)";
+                  const unite = escapeHtml(i.unite || "unité(s)");
                   const isGram = unite === 'g';
                   const qteEffective = isGram ? qte / 1000 : qte;
                   const prixUnit = parseFloat(i.prixUnitaire || i.price || 0);
