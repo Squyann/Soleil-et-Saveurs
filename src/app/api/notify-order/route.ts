@@ -17,15 +17,19 @@ function getSiteUrl() {
 }
 
 function buildLignesHTML(panier: any[]) {
-  return panier.map((item: any) => `
+  return panier.map((item: any) => {
+    const qte = Number(item.quantite) || 0;
+    const unite = item.unite === 'kg' ? ' kg' : item.unite === 'g' ? 'g' : 'x';
+    return `
     <tr>
       <td style="padding:10px 12px;border-bottom:1px solid #f0f0f0;">
-        ${item.quantite}${item.unite === 'kg' ? ' kg' : item.unite === 'g' ? 'g' : 'x'} ${item.name}
+        ${qte}${unite} ${escapeHtml(item.name)}
       </td>
       <td style="padding:10px 12px;border-bottom:1px solid #f0f0f0;text-align:right;font-weight:bold;">
-        ${Number(item.prix_ligne).toFixed(2)}€
+        ${(Number(item.prix_ligne) || 0).toFixed(2)}€
       </td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
 }
 
 async function sendEmail(to: string, subject: string, html: string, apiKey: string, from: string): Promise<{ ok: boolean; detail?: string }> {
