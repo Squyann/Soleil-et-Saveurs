@@ -207,10 +207,10 @@ export default function RGPDPage() {
                 </div>
               </div>
               <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm flex items-start gap-4">
-                <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center flex-shrink-0 font-black text-xs text-slate-900">VL</div>
+                <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center flex-shrink-0 font-black text-xs text-slate-900">HO</div>
                 <div>
-                  <p className="font-black text-xs uppercase text-slate-900 mb-1">Vercel Inc.</p>
-                  <p className="text-slate-500 font-medium text-xs">Hébergement du site web. Logs de requêtes conservés 30 jours.</p>
+                  <p className="font-black text-xs uppercase text-slate-900 mb-1">Hostinger International Ltd</p>
+                  <p className="text-slate-500 font-medium text-xs">Hébergement du site web.</p>
                 </div>
               </div>
             </div>
