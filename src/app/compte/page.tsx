@@ -272,7 +272,18 @@ export default function ComptePage() {
         <body>
           <div class="header">
             <div class="brand">
-              <h1>Soleil et Saveurs<span>.</span></h1>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 60" width="220" height="41" style="display:block;margin-bottom:6px;">
+                <circle cx="28" cy="30" r="9" fill="#F97316"/>
+                <line x1="28" y1="7" x2="28" y2="15" stroke="#F97316" stroke-width="2.5" stroke-linecap="round"/>
+                <line x1="28" y1="45" x2="28" y2="53" stroke="#F97316" stroke-width="2.5" stroke-linecap="round"/>
+                <line x1="5" y1="30" x2="13" y2="30" stroke="#F97316" stroke-width="2.5" stroke-linecap="round"/>
+                <line x1="43" y1="30" x2="51" y2="30" stroke="#F97316" stroke-width="2.5" stroke-linecap="round"/>
+                <line x1="44.3" y1="13.7" x2="38.5" y2="19.5" stroke="#F97316" stroke-width="2.5" stroke-linecap="round"/>
+                <line x1="11.7" y1="46.3" x2="17.5" y2="40.5" stroke="#F97316" stroke-width="2.5" stroke-linecap="round"/>
+                <line x1="11.7" y1="13.7" x2="17.5" y2="19.5" stroke="#F97316" stroke-width="2.5" stroke-linecap="round"/>
+                <line x1="44.3" y1="46.3" x2="38.5" y2="40.5" stroke="#F97316" stroke-width="2.5" stroke-linecap="round"/>
+                <text x="62" y="39" font-family="Georgia, 'Times New Roman', serif" font-size="26" font-weight="400" fill="#4a3b32" letter-spacing="0.3">Soleil et Saveurs</text>
+              </svg>
               <p>Produits Frais</p>
               <div style="font-size: 11px; color: #718096; margin-top: 10px; font-weight: normal; text-transform: none; line-height: 1.6;">
                 Khaled Boulila — Entreprise individuelle<br/>
