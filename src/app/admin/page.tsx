@@ -534,7 +534,10 @@ export default function AdminPage() {
               <div class="brand">
                 <h1>Soleil et Saveurs<span>.</span></h1>
                 <p>Produits Frais</p>
-                <div style="font-size: 11px; color: #718096; margin-top: 10px; font-weight: normal; text-transform: none;">
+                <div style="font-size: 11px; color: #718096; margin-top: 10px; font-weight: normal; text-transform: none; line-height: 1.6;">
+                  Khaled Boulila — Entreprise individuelle<br/>
+                  Siège social : 6-8 Avenue Henriette, 93170 Bagnolet<br/>
+                  SIRET : 821 324 324 00028<br/>
                   Livraison Yvelines (78)
                 </div>
               </div>
