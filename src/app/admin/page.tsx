@@ -464,8 +464,9 @@ export default function AdminPage() {
     }
 
     const totalFinal = parseFloat(cmd.total);
-    const totalHT = sousTotalProduits / 1.055;
-    const montantTVA = sousTotalProduits - totalHT;
+    // Micro-entreprise en franchise de TVA (art. 293 B) : pas de ligne TVA.
+    // La remise est le résidu : sous-total + livraison - remise = total payé.
+    const remiseTotale = Math.round((sousTotalProduits + fraisLivraison - totalFinal) * 100) / 100;
     
     const fenetre = window.open('', '', 'height=800,width=900');
     if (fenetre) {
@@ -575,13 +576,13 @@ export default function AdminPage() {
             <div class="totals-area">
               <div class="totals-table">
                 <div class="totals-row">
-                  <span>Sous-total HT (5.5%)</span>
-                  <span>${totalHT.toFixed(2)}€</span>
+                  <span>Sous-total</span>
+                  <span>${sousTotalProduits.toFixed(2)}€</span>
                 </div>
-                <div class="totals-row">
-                  <span>TVA (5.5%)</span>
-                  <span>${montantTVA.toFixed(2)}€</span>
-                </div>
+                ${remiseTotale >= 0.01 ? `<div class="totals-row">
+                  <span>Remise</span>
+                  <span>-${remiseTotale.toFixed(2)}€</span>
+                </div>` : ''}
                 <div class="totals-row">
                   <span>Frais de livraison</span>
                   <span style="font-weight: bold;">${fraisLivraison === 0 ? 'OFFERT' : fraisLivraison.toFixed(2) + '€'}</span>

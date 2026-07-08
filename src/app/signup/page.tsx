@@ -141,6 +141,7 @@ export default function SignupPage() {
             referral_code_used: cleanReferral || null,
             referral_processed: false,
             accepts_marketing: acceptsMarketing,
+            cgv_accepted_at: new Date().toISOString(),
           },
         },
       });

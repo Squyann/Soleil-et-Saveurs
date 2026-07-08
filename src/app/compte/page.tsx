@@ -271,8 +271,10 @@ export default function ComptePage() {
     }
 
     const totalFinal = parseFloat(order.total);
-    const totalHT = sousTotalProduits / 1.055;
-    const montantTVA = sousTotalProduits - totalHT;
+    // Micro-entreprise en franchise de TVA (art. 293 B) : pas de ligne TVA.
+    // La remise (fidélité / parrainage / code promo) est le résidu qui fait
+    // que sous-total + livraison - remise = total réellement payé.
+    const remiseTotale = Math.round((sousTotalProduits + fraisLivraison - totalFinal) * 100) / 100;
 
     const fenetre = window.open('', '', 'height=800,width=900');
     if (!fenetre) return;
@@ -380,8 +382,8 @@ export default function ComptePage() {
           </table>
           <div class="totals-area">
             <div class="totals-table">
-              <div class="totals-row"><span>Sous-total HT (5.5%)</span><span>${totalHT.toFixed(2)}€</span></div>
-              <div class="totals-row"><span>TVA (5.5%)</span><span>${montantTVA.toFixed(2)}€</span></div>
+              <div class="totals-row"><span>Sous-total</span><span>${sousTotalProduits.toFixed(2)}€</span></div>
+              ${remiseTotale >= 0.01 ? `<div class="totals-row"><span>Remise</span><span>-${remiseTotale.toFixed(2)}€</span></div>` : ''}
               <div class="totals-row"><span>Frais de livraison</span><span style="font-weight: bold;">${fraisLivraison === 0 ? 'OFFERT' : fraisLivraison.toFixed(2) + '€'}</span></div>
               <div class="totals-row grand-total"><span>TOTAL PAYÉ</span><span>${totalFinal.toFixed(2)}€</span></div>
             </div>
@@ -727,7 +729,7 @@ export default function ComptePage() {
 
               {/* MODIFIER LE MOT DE PASSE */}
               <button
-                onClick={() => { setShowPasswordModal(true); setPasswordError(null); setPasswordSuccess(false); setNewPassword(''); setConfirmPassword(''); }}
+                onClick={() => { setShowPasswordModal(true); setPasswordError(null); setPasswordSuccess(false); setNewPassword(''); setConfirmPassword(''); setShowNewPassword(false); }}
                 className="w-full flex items-center justify-between bg-white border border-[#D5C9B8] p-6 rounded-[2rem] hover:border-[#FF4500]/30 hover:bg-orange-50/30 transition-all group shadow-sm"
               >
                 <div className="flex items-center gap-3">
@@ -1012,7 +1014,7 @@ export default function ComptePage() {
                 <Truck className="w-8 h-8 text-[#FF4500] mb-4" />
                 <h3 className="text-xl font-black text-white uppercase tracking-tighter italic mb-2">Livraison J+0</h3>
                 <p className="text-slate-400 text-xs font-bold leading-relaxed mb-6">
-                  Récolté à 5h, chez vous pour le dîner. Gratuit dès 45€.
+                  Récolté à 5h, chez vous pour le dîner. Gratuit dès 30€.
                 </p>
                 <Link
                   href="/commander"
