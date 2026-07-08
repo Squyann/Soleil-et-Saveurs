@@ -24,6 +24,7 @@ export default function SignupPage() {
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [acceptsMarketing, setAcceptsMarketing] = useState(false);
+  const [cgvAccepte, setCgvAccepte] = useState(false);
   const router = useRouter();
 
   // --- LOGIQUE DE CONFETTIS ---
@@ -109,6 +110,7 @@ export default function SignupPage() {
     if (!isAdult) { setError("Vous devez être majeur."); return; }
     if (!isEligibleZone) { setError("Livraison uniquement dans le 78."); return; }
     if (!isPhoneValid) { setError("Téléphone invalide."); return; }
+    if (!cgvAccepte) { setError("Vous devez accepter les CGV et la politique de confidentialité."); return; }
 
     setLoading(true);
     setError(null);
@@ -292,6 +294,21 @@ export default function SignupPage() {
             <label className="flex items-start gap-3 px-1 cursor-pointer">
               <input
                 type="checkbox"
+                checked={cgvAccepte}
+                onChange={(e) => setCgvAccepte(e.target.checked)}
+                className="w-4 h-4 mt-0.5 accent-[#FF4500] shrink-0"
+              />
+              <span className="text-[10px] font-bold text-slate-500 leading-snug">
+                J'ai lu et j'accepte les{' '}
+                <a href="/cgv" target="_blank" className="text-[#FF4500] underline">conditions générales de vente</a>
+                {' '}et la{' '}
+                <a href="/rgpd" target="_blank" className="text-[#FF4500] underline">politique de confidentialité</a>.
+              </span>
+            </label>
+
+            <label className="flex items-start gap-3 px-1 cursor-pointer">
+              <input
+                type="checkbox"
                 checked={acceptsMarketing}
                 onChange={(e) => setAcceptsMarketing(e.target.checked)}
                 className="w-4 h-4 mt-0.5 accent-[#FF4500] shrink-0"
@@ -302,7 +319,7 @@ export default function SignupPage() {
             </label>
 
             <button type="submit"
-              disabled={loading || !isEligibleZone || !isPhoneValid || !isAdult || password.length < 8}
+              disabled={loading || !isEligibleZone || !isPhoneValid || !isAdult || password.length < 8 || !cgvAccepte}
               className="w-full bg-[#FF4500] text-white p-5 rounded-3xl font-black uppercase text-sm tracking-widest hover:bg-[#3D2B1F] transition-all shadow-xl disabled:bg-slate-200 mt-4 flex items-center justify-center gap-3 active:scale-95"
             >
               {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Rejoindre Soleil et Saveurs <ArrowRight className="w-5 h-5" /></>}
