@@ -65,7 +65,6 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
   const [codePromoId, setCodePromoId] = useState<string | null>(null);
   const [commentaireClient, setCommentaireClient] = useState('');
   const [confirmation, setConfirmation] = useState<{ id: number; total: number; date: string | null } | null>(null);
-  const [cgvAccepte, setCgvAccepte] = useState(false);
 
   const router = useRouter();
 
@@ -105,7 +104,6 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
 
     if (isOpen) {
       setConfirmation(null);
-      setCgvAccepte(false);
       setApplyLoyalty(false);
       setApplyReferral(false);
       setDateLivraison(null);
@@ -328,7 +326,6 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
 
     if (!nom || !telephone || !adresse || !distanceValide) return;
     if (!dateLivraison) return;
-    if (!cgvAccepte) return;
     setChargement(true);
 
     try {
@@ -916,26 +913,8 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
             </div>
           )}
 
-          {/* ACCEPTATION DES CGV (obligatoire pour valider la commande) */}
-          {user && (panier || []).length > 0 && (
-            <label className="flex items-start gap-3 px-1 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={cgvAccepte}
-                onChange={(e) => setCgvAccepte(e.target.checked)}
-                className="w-4 h-4 mt-0.5 accent-[#FF4500] shrink-0"
-              />
-              <span className="text-[10px] font-bold text-slate-500 leading-snug">
-                J'ai lu et j'accepte les{' '}
-                <a href="/cgv" target="_blank" className="text-[#FF4500] underline">conditions générales de vente</a>
-                {' '}et la{' '}
-                <a href="/rgpd" target="_blank" className="text-[#FF4500] underline">politique de confidentialité</a>.
-              </span>
-            </label>
-          )}
-
           <button
-            disabled={chargement || methodePaiement === 'Ligne' || !!minimumNonAtteint || (user && (!(panier || []).length || !distanceValide || !nom || !telephone || !dateLivraison || !cgvAccepte))}
+            disabled={chargement || methodePaiement === 'Ligne' || !!minimumNonAtteint || (user && (!(panier || []).length || !distanceValide || !nom || !telephone || !dateLivraison))}
             onClick={envoyerCommande}
             className={`w-full ${!user ? 'bg-blue-600' : 'bg-[#3D2B1F]'} disabled:bg-[#DDD0BF] disabled:text-slate-300 text-white p-5 rounded-2xl font-black uppercase text-sm tracking-widest hover:opacity-90 transition-all shadow-xl flex items-center justify-center gap-3`}
           >
