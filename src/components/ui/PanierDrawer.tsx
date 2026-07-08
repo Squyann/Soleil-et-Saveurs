@@ -526,7 +526,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
                 const prixDegressifActif = item.seuil_promo_qte > 0 && item.prix_promo > 0 && qteEffective >= item.seuil_promo_qte;
 
                 return (
-                  <div key={item.id} className="flex gap-4 items-center bg-white p-4 rounded-3xl border border-[#DDD0BF] shadow-sm">
+                  <div key={`${item.id}-${item.variant_id ?? ''}`} className="flex gap-4 items-center bg-white p-4 rounded-3xl border border-[#DDD0BF] shadow-sm">
                     <div className="w-14 h-14 bg-[#EDE3D5] rounded-2xl flex items-center justify-center overflow-hidden">
                       {item.image_url ? (
                         <img src={item.image_url} alt="" className="w-full h-full object-cover" />
