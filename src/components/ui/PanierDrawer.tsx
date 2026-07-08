@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { X, Trash2, ShoppingBag, MapPin, CreditCard, Banknote, Phone, User, Loader2, CheckCircle2, AlertCircle, LogIn, Gift, TrendingDown, Calendar, Tag, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
+import { X, Trash2, ShoppingBag, MapPin, CreditCard, Banknote, Phone, User, Loader2, CheckCircle2, AlertCircle, LogIn, Gift, TrendingDown, Calendar, Tag, ChevronLeft, ChevronRight, ChevronDown, Mail } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 
@@ -64,6 +64,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
   const [remiseCode, setRemiseCode] = useState(0);
   const [codePromoId, setCodePromoId] = useState<string | null>(null);
   const [commentaireClient, setCommentaireClient] = useState('');
+  const [confirmation, setConfirmation] = useState<{ id: number; total: number; date: string | null } | null>(null);
 
   const router = useRouter();
 
@@ -102,6 +103,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
     };
 
     if (isOpen) {
+      setConfirmation(null);
       setApplyLoyalty(false);
       setApplyReferral(false);
       setDateLivraison(null);
@@ -395,13 +397,16 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
         }
       }).catch(err => console.error('[notify-order] réseau:', err));
 
-      alert("Commande reçue ! Nous vous contactons sur WhatsApp.");
       localStorage.removeItem('mon-panier');
       window.dispatchEvent(new Event('panier-updated'));
       window.dispatchEvent(new Event('storage'));
       setPanier([]);
       setCommentaireClient('');
-      onClose();
+      setConfirmation({
+        id: (result as any)?.id ?? 0,
+        total: totalServeur,
+        date: dateLivraison,
+      });
     } catch (err: any) {
       console.error(err);
       alert(err?.message || "Erreur lors de l'envoi de la commande.");
@@ -414,10 +419,87 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
 
   return (
     <div className="fixed inset-0 z-[110] flex justify-end">
-      <div className="absolute inset-0 bg-[#3D2B1F]/40 backdrop-blur-md" onClick={onClose} />
+      <div className="absolute inset-0 bg-[#3D2B1F]/40 backdrop-blur-md" onClick={confirmation ? undefined : onClose} />
+
+      {/* ÉCRAN DE CONFIRMATION DE COMMANDE */}
+      {confirmation && (
+        <div className="relative w-full max-w-md bg-[#EDE3D5] h-full flex flex-col shadow-2xl animate-in slide-in-from-right duration-300 overflow-y-auto">
+          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+            {/* Coche animée */}
+            <div className="relative w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-8">
+              <div className="absolute inset-0 rounded-full border-4 border-green-500/20 animate-ping" />
+              <CheckCircle2 className="w-14 h-14 text-green-500 animate-in zoom-in duration-500" />
+            </div>
+
+            <p className="text-[10px] font-black text-[#FF4500] uppercase tracking-[0.3em] mb-2">Soleil et Saveurs</p>
+            <h2 className="text-3xl font-black uppercase tracking-tighter text-slate-900 leading-none mb-3">
+              Commande<br />confirmée !
+            </h2>
+            <p className="text-slate-500 font-medium italic mb-8">
+              Merci pour votre confiance, votre régal arrive bientôt.
+            </p>
+
+            {/* Récap */}
+            <div className="w-full bg-white rounded-3xl border border-[#D5C9B8] shadow-sm divide-y divide-[#EDE3D5] mb-6">
+              {confirmation.id > 0 && (
+                <div className="flex items-center justify-between px-5 py-4">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Commande</span>
+                  <span className="font-black text-slate-900">#{String(confirmation.id).slice(-6).toUpperCase()}</span>
+                </div>
+              )}
+              {confirmation.date && (
+                <div className="flex items-center justify-between px-5 py-4">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Livraison</span>
+                  <span className="font-black text-slate-900 text-sm capitalize">
+                    {new Date(confirmation.date + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
+                  </span>
+                </div>
+              )}
+              <div className="flex items-center justify-between px-5 py-4">
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Total</span>
+                <span className="font-black text-xl text-[#FF4500]">{confirmation.total.toFixed(2)}€</span>
+              </div>
+            </div>
+
+            {/* Prochaines étapes */}
+            <div className="w-full bg-white/60 rounded-3xl p-5 space-y-3 text-left mb-2">
+              <div className="flex items-start gap-3">
+                <div className="w-7 h-7 bg-white rounded-full flex items-center justify-center shadow-sm shrink-0">
+                  <Mail className="w-3.5 h-3.5 text-slate-500" />
+                </div>
+                <p className="text-[11px] font-bold text-slate-600 leading-snug">Un récapitulatif vous est envoyé par e-mail.</p>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-7 h-7 bg-white rounded-full flex items-center justify-center shadow-sm shrink-0">
+                  <Phone className="w-3.5 h-3.5 text-green-600" />
+                </div>
+                <p className="text-[11px] font-bold text-slate-600 leading-snug">Nous vous contactons sur WhatsApp pour la livraison.</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Boutons */}
+          <div className="p-6 bg-white border-t border-[#D5C9B8] space-y-3">
+            <button
+              onClick={() => { setConfirmation(null); onClose(); router.push('/compte'); }}
+              className="w-full bg-[#3D2B1F] text-white p-5 rounded-2xl font-black uppercase text-sm tracking-widest hover:bg-[#FF4500] transition-all shadow-xl flex items-center justify-center gap-3 group"
+            >
+              Suivre ma commande
+              <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </button>
+            <button
+              onClick={() => { setConfirmation(null); onClose(); }}
+              className="w-full bg-transparent text-slate-500 p-3 rounded-2xl font-black uppercase text-[11px] tracking-widest hover:text-slate-900 transition-all"
+            >
+              Retour à la boutique
+            </button>
+          </div>
+        </div>
+      )}
       
+      {!confirmation && (
       <div className="relative w-full max-w-md bg-[#EDE3D5] h-full flex flex-col shadow-2xl animate-in slide-in-from-right duration-300">
-        
+
         <div className="p-6 border-b border-[#D5C9B8] flex justify-between items-center bg-[#F5EAE0]">
           <div>
             <h2 className="text-2xl font-black uppercase tracking-tighter text-slate-900">Mon Panier</h2>
@@ -851,6 +933,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
           </button>
         </div>
       </div>
+      )}
     </div>
   );
 }
