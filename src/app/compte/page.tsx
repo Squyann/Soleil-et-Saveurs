@@ -8,7 +8,8 @@ import {
   User, Mail, Phone, MapPin, LogOut, ArrowLeft,
   ShoppingBag, Package, CheckCircle2, Clock, XCircle,
   Loader2, Edit3, Save, X, ChevronRight, Star, Truck,
-  AlertCircle, Plus, Gift, Copy, Shield, Trash2, AlertTriangle, FileText
+  AlertCircle, Plus, Gift, Copy, Shield, Trash2, AlertTriangle, FileText,
+  KeyRound, Lock, Eye, EyeOff
 } from 'lucide-react';
 
 // --- TYPES ---
@@ -67,6 +68,13 @@ export default function ComptePage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
   const router = useRouter();
 
   // --- INIT ---
@@ -185,6 +193,32 @@ export default function ComptePage() {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     router.push('/');
+  };
+
+  // --- MODIFICATION DU MOT DE PASSE ---
+  const handleChangePassword = async () => {
+    setPasswordError(null);
+    if (newPassword.length < 8) {
+      setPasswordError('Le mot de passe doit contenir au moins 8 caractères.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError('Les mots de passe ne correspondent pas.');
+      return;
+    }
+    setPasswordLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      setPasswordSuccess(true);
+      setNewPassword('');
+      setConfirmPassword('');
+      setTimeout(() => { setShowPasswordModal(false); setPasswordSuccess(false); }, 1800);
+    } catch (err: any) {
+      setPasswordError(err.message || 'Erreur lors de la mise à jour du mot de passe');
+    } finally {
+      setPasswordLoading(false);
+    }
   };
 
   // --- SUPPRESSION DU COMPTE ---
@@ -675,6 +709,23 @@ export default function ComptePage() {
                 </Link>
               )}
 
+              {/* MODIFIER LE MOT DE PASSE */}
+              <button
+                onClick={() => { setShowPasswordModal(true); setPasswordError(null); setPasswordSuccess(false); setNewPassword(''); setConfirmPassword(''); }}
+                className="w-full flex items-center justify-between bg-white border border-[#D5C9B8] p-6 rounded-[2rem] hover:border-[#FF4500]/30 hover:bg-orange-50/30 transition-all group shadow-sm"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-[#EDE3D5] rounded-xl flex items-center justify-center">
+                    <KeyRound className="w-5 h-5 text-[#FF4500]" />
+                  </div>
+                  <div className="text-left">
+                    <p className="font-black uppercase text-sm text-slate-700 group-hover:text-[#FF4500] transition-colors">Modifier le mot de passe</p>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase">Sécurisez votre compte</p>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-[#FF4500] group-hover:translate-x-1 transition-all" />
+              </button>
+
               {/* DÉCONNEXION */}
               <button
                 onClick={handleLogout}
@@ -948,6 +999,83 @@ export default function ComptePage() {
           </div>
         )}
       </div>
+
+      {/* MODAL MODIFICATION MOT DE PASSE */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-[2rem] p-8 max-w-md w-full shadow-2xl border border-[#D5C9B8] animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 bg-[#EDE3D5] rounded-2xl flex items-center justify-center">
+                  <KeyRound className="w-5 h-5 text-[#FF4500]" />
+                </div>
+                <h3 className="font-black uppercase text-lg text-slate-900 tracking-tight">Nouveau mot de passe</h3>
+              </div>
+              <button onClick={() => setShowPasswordModal(false)} className="p-2 hover:bg-[#EDE3D5] rounded-xl text-slate-400">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {passwordSuccess ? (
+              <div className="flex flex-col items-center text-center py-6">
+                <div className="w-14 h-14 bg-green-50 rounded-2xl flex items-center justify-center mb-4">
+                  <CheckCircle2 className="w-7 h-7 text-green-500" />
+                </div>
+                <p className="font-black uppercase text-sm text-slate-900">Mot de passe mis à jour !</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {passwordError && (
+                  <div className="flex items-center gap-2 p-3 bg-red-50 rounded-xl text-red-600">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    <p className="text-[10px] font-black uppercase">{passwordError}</p>
+                  </div>
+                )}
+
+                <div className="space-y-1">
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Nouveau mot de passe</label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
+                    <input
+                      type={showNewPassword ? 'text' : 'password'}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="w-full bg-[#EDE3D5] border border-[#D5C9B8] p-3 pl-10 pr-10 rounded-xl font-bold text-sm focus:border-[#FF4500] outline-none transition-all"
+                    />
+                    <button type="button" onClick={() => setShowNewPassword(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-600">
+                      {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Confirmer le mot de passe</label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
+                    <input
+                      type={showNewPassword ? 'text' : 'password'}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="w-full bg-[#EDE3D5] border border-[#D5C9B8] p-3 pl-10 rounded-xl font-bold text-sm focus:border-[#FF4500] outline-none transition-all"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleChangePassword}
+                  disabled={passwordLoading || !newPassword || !confirmPassword}
+                  className="w-full flex items-center justify-center gap-2 bg-[#3D2B1F] text-white p-4 rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-[#FF4500] transition-all disabled:opacity-40 mt-2"
+                >
+                  {passwordLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                  Enregistrer
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* MODAL CONFIRMATION SUPPRESSION COMPTE */}
       {showDeleteConfirm && (
