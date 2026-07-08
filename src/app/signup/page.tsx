@@ -23,6 +23,7 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [acceptsMarketing, setAcceptsMarketing] = useState(false);
   const router = useRouter();
 
   // --- LOGIQUE DE CONFETTIS ---
@@ -137,6 +138,7 @@ export default function SignupPage() {
             address: address,
             referral_code_used: cleanReferral || null,
             referral_processed: false,
+            accepts_marketing: acceptsMarketing,
           },
         },
       });
@@ -286,6 +288,18 @@ export default function SignupPage() {
               </div>
               <p className="text-[9px] text-slate-400 font-bold ml-4">Vous et votre parrain obtiendrez -10% sur votre prochaine commande</p>
             </div>
+
+            <label className="flex items-start gap-3 px-1 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={acceptsMarketing}
+                onChange={(e) => setAcceptsMarketing(e.target.checked)}
+                className="w-4 h-4 mt-0.5 accent-[#FF4500] shrink-0"
+              />
+              <span className="text-[10px] font-bold text-slate-500 leading-snug">
+                Je souhaite recevoir les offres et nouveautés de Soleil et Saveurs par e-mail <span className="text-slate-300 normal-case">(optionnel)</span>
+              </span>
+            </label>
 
             <button type="submit"
               disabled={loading || !isEligibleZone || !isPhoneValid || !isAdult || password.length < 8}
