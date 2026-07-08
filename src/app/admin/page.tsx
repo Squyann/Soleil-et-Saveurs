@@ -288,17 +288,49 @@ export default function AdminPage() {
     }
   }
 
+  // Types d'images acceptés (l'extension du fichier n'est pas fiable, on se
+  // base sur le type MIME et on force une extension sûre côté serveur).
+  const IMAGE_TYPES: Record<string, string> = {
+    'image/jpeg': 'jpg',
+    'image/png': 'png',
+    'image/webp': 'webp',
+    'image/gif': 'gif',
+  };
+  const TAILLE_MAX_IMAGE = 5 * 1024 * 1024; // 5 Mo
+
   async function handleUpload(e: any, isEditing = false) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const ext = IMAGE_TYPES[file.type];
+    if (!ext) {
+      alert("Format non supporté. Utilisez une image JPG, PNG, WEBP ou GIF.");
+      e.target.value = '';
+      return;
+    }
+    if (file.size > TAILLE_MAX_IMAGE) {
+      alert("Image trop lourde (5 Mo maximum).");
+      e.target.value = '';
+      return;
+    }
+
     setUploading(true);
     try {
-      const file = e.target.files[0];
-      const fileName = `${Date.now()}.${file.name.split('.').pop()}`;
-      await supabase.storage.from('produits-images').upload(fileName, file);
+      const fileName = `${Date.now()}-${Math.round(Math.random() * 1e9)}.${ext}`;
+      const { error } = await supabase.storage
+        .from('produits-images')
+        .upload(fileName, file, { contentType: file.type, upsert: false });
+      if (error) throw error;
       const { data } = supabase.storage.from('produits-images').getPublicUrl(fileName);
       if (isEditing) setEditFormData({ ...editFormData, image_url: data.publicUrl });
       else setNouveauProd({ ...nouveauProd, image_url: data.publicUrl });
-    } catch (e) { alert("Erreur upload"); }
-    setUploading(false);
+    } catch (err) {
+      console.error(err);
+      alert("Erreur upload");
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
   }
 
   async function ajouterProduit(e: React.FormEvent) {
