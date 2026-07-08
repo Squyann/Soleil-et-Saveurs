@@ -274,7 +274,12 @@ export default function ComptePage() {
             <div class="brand">
               <h1>Soleil et Saveurs<span>.</span></h1>
               <p>Produits Frais</p>
-              <div style="font-size: 11px; color: #718096; margin-top: 10px; font-weight: normal; text-transform: none;">Livraison Yvelines (78)</div>
+              <div style="font-size: 11px; color: #718096; margin-top: 10px; font-weight: normal; text-transform: none; line-height: 1.6;">
+                Khaled Boulila — Entreprise individuelle<br/>
+                Siège social : 6-8 Avenue Henriette, 93170 Bagnolet<br/>
+                SIRET : 821 324 324 00028<br/>
+                Livraison Yvelines (78)
+              </div>
             </div>
             <div class="invoice-details">
               <h2>Référence Facture</h2>
@@ -812,14 +817,25 @@ export default function ComptePage() {
                     )}
 
                     {/* BOUTONS : FACTURE + COMMANDER À NOUVEAU */}
+                    {/* La facture n'est accessible qu'une fois la commande livrée. */}
                     <div className="mt-6 pt-4 border-t border-[#DDD0BF] flex flex-col sm:flex-row gap-2">
-                      <button
-                        onClick={() => imprimerFacture(order)}
-                        className="sm:w-auto py-4 px-5 bg-white border border-[#D5C9B8] text-slate-700 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:border-[#FF4500] hover:text-[#FF4500] transition-all active:scale-95"
-                      >
-                        <FileText className="w-4 h-4" />
-                        Facture
-                      </button>
+                      {statusKey === 'livree' ? (
+                        <button
+                          onClick={() => imprimerFacture(order)}
+                          className="sm:w-auto py-4 px-5 bg-white border border-[#D5C9B8] text-slate-700 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:border-[#FF4500] hover:text-[#FF4500] transition-all active:scale-95"
+                        >
+                          <FileText className="w-4 h-4" />
+                          Facture
+                        </button>
+                      ) : (
+                        <div
+                          title="Disponible après la livraison"
+                          className="sm:w-auto py-4 px-5 bg-[#EDE3D5] border border-[#D5C9B8] text-slate-400 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 cursor-not-allowed"
+                        >
+                          <FileText className="w-4 h-4" />
+                          Facture après livraison
+                        </div>
+                      )}
                       <button
                         onClick={() => commanderANouveau((order as any).contenu_panier)}
                         className="flex-1 py-4 bg-[#FF4500] text-white rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[#3D2B1F] transition-all shadow-lg shadow-orange-900/10 active:scale-95"
