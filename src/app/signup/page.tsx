@@ -170,7 +170,7 @@ export default function SignupPage() {
             </div>
             <div className="bg-[#F5EAE0]/5 p-6 rounded-3xl border border-white/10 backdrop-blur-sm flex gap-4 items-center">
               <ShieldCheck className="w-8 h-8 text-green-400" />
-              <p className="text-slate-300 text-xs font-black uppercase tracking-widest">Produits 100% locaux du 78</p>
+              <p className="text-slate-300 text-xs font-black uppercase tracking-widest">Produits frais et premium</p>
             </div>
           </div>
         </div>
