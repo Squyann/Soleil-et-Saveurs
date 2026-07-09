@@ -100,24 +100,23 @@ export default function Home() {
 
       {/* Pop-up de succès d'éligibilité */}
       {showResult && (
-        <div
-          onClick={(e) => { if (e.target === e.currentTarget) setShowResult(false); }}
-          className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300"
-        >
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-white rounded-[2.5rem] p-8 max-w-sm w-full shadow-2xl text-center border border-slate-100">
             <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle2 className="w-8 h-8" />
             </div>
-            <h3 className="text-xl font-black uppercase italic mb-2 tracking-tighter">Vous êtes éligible !</h3>
-            <p className="text-sm text-slate-500 mb-6 italic leading-snug">
-              Vous êtes à seulement <span className="text-[#FF4500] font-bold">{distanceAffichee} km</span> de nos champs. Livraison confirmée !
-            </p>
-            <button
-              onClick={() => handleActionClick('/commander')}
-              className="w-full bg-[#FF4500] text-white py-4 rounded-xl font-bold hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-orange-200"
-            >
-              Voir la récolte du jour
-            </button>
+            <h3 className="text-xl font-black uppercase italic mb-6 tracking-tighter">Vous êtes éligible !</h3>
+            <div className="space-y-3">
+              <button
+                onClick={() => handleActionClick('/commander')}
+                className="w-full bg-[#FF4500] text-white py-4 rounded-xl font-bold hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-orange-200"
+              >
+                Voir la récolte du jour
+              </button>
+              <button onClick={() => setShowResult(false)} className="w-full text-slate-400 text-xs font-bold uppercase tracking-widest hover:text-slate-600 transition-colors">
+                Fermer
+              </button>
+            </div>
           </div>
         </div>
       )}
