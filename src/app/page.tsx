@@ -258,9 +258,9 @@ export default function Home() {
               {
                 icon: <Truck className="w-7 h-7" />,
                 step: "03",
-                title: "Livré à 15h",
+                title: "Livré à partir de 15h",
                 desc: "Directement à votre porte, sans perdre aucune fraîcheur !",
-                tag: "Le soir",
+                tag: "",
                 bg: "bg-[#0F172A]",
                 border: "border-transparent",
                 dark: true,
@@ -276,9 +276,11 @@ export default function Home() {
                 <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 transition-transform duration-500 group-hover:scale-110 ${item.dark ? 'bg-white/10 text-[#FF4500]' : 'bg-white border border-slate-100 shadow-md text-[#FF4500]'}`}>
                   {item.icon}
                 </div>
-                <span className={`inline-block text-[9px] font-black uppercase tracking-[0.2em] px-2.5 py-1 rounded-full mb-3 ${item.dark ? 'bg-white/10 text-white/60' : 'bg-[#FF4500]/10 text-[#FF4500]'}`}>
-                  {item.tag}
-                </span>
+                {item.tag && (
+                  <span className={`inline-block text-[9px] font-black uppercase tracking-[0.2em] px-2.5 py-1 rounded-full mb-3 ${item.dark ? 'bg-white/10 text-white/60' : 'bg-[#FF4500]/10 text-[#FF4500]'}`}>
+                    {item.tag}
+                  </span>
+                )}
                 <h4 className={`text-2xl font-black uppercase italic tracking-tighter mb-3 ${item.dark ? 'text-white' : 'text-slate-900'}`}>
                   {item.title}
                 </h4>
