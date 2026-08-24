@@ -491,8 +491,7 @@ export default function AdminPage() {
 
     let fraisLivraison = 0;
     if (!isRetrait && sousTotalProduits > 0) {
-      fraisLivraison = sousTotalProduits >= 30 ? 0
-        : Math.round(2.50 * (30 - sousTotalProduits) / 20 * 100) / 100;
+      fraisLivraison = sousTotalProduits >= 40 ? 0 : 2.50;
     }
 
     const totalFinal = parseFloat(cmd.total);

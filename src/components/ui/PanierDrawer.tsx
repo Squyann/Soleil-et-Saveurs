@@ -308,12 +308,13 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
   const remiseMontant = sousTotalFinal * remisePct / 100;
   const remiseCodeMontant = codeStatut === 'valid' ? Math.round(sousTotalFinal * remiseCode / 100 * 100) / 100 : 0;
   const totalApresRemise = sousTotalFinal - remiseMontant - remiseCodeMontant;
-  // Le seuil de livraison gratuite (30€) s'applique sur le sous-total avant
+  // Le seuil de livraison gratuite (40€) s'applique sur le sous-total avant
   // remise (code promo, fidélité, parrainage) : une remise ne doit pas faire
   // perdre la livraison gratuite à un client qui l'avait déjà au prix plein.
-  const fraisLivraison = sousTotalFinal === 0 || sousTotalFinal < 10 ? 0
-    : sousTotalFinal >= 30 ? 0
-    : Math.round(2.50 * (30 - sousTotalFinal) / 20 * 100) / 100;
+  // En dessous du seuil : frais fixes de 2,50€ (non dégressifs).
+  const fraisLivraison = sousTotalFinal <= 0 ? 0
+    : sousTotalFinal >= 40 ? 0
+    : 2.50;
   const totalFinal = totalApresRemise + fraisLivraison;
   const minimumNonAtteint = user && (panier || []).length > 0 && totalApresRemise < 10;
 
