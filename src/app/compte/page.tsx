@@ -266,8 +266,7 @@ export default function ComptePage() {
 
     let fraisLivraison = 0;
     if (!isRetrait && sousTotalProduits > 0) {
-      fraisLivraison = sousTotalProduits >= 30 ? 0
-        : Math.round(2.50 * (30 - sousTotalProduits) / 20 * 100) / 100;
+      fraisLivraison = sousTotalProduits >= 40 ? 0 : 2.50;
     }
 
     const totalFinal = parseFloat(order.total);
@@ -1014,7 +1013,7 @@ export default function ComptePage() {
                 <Truck className="w-8 h-8 text-[#FF4500] mb-4" />
                 <h3 className="text-xl font-black text-white uppercase tracking-tighter italic mb-2">Livraison J+0</h3>
                 <p className="text-slate-400 text-xs font-bold leading-relaxed mb-6">
-                  Récolté à 5h, chez vous pour le dîner. Gratuit dès 30€.
+                  Récolté à 5h, chez vous pour le dîner. Gratuit dès 40€.
                 </p>
                 <Link
                   href="/commander"
