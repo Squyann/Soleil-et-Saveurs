@@ -18,7 +18,7 @@ const FAQ_CATEGORIES = [
     questions: [
       {
         q: "Quels sont vos délais exacts de livraison ?",
-        a: "Commandez avant 23h59, et vous êtes livré entre 15h et 20h le soir même."
+        a: "Commandez avant 23h59, et vous êtes livré entre 15h et 20h."
       },
       {
         q: "Quelles villes du 78 desservez-vous ?",
