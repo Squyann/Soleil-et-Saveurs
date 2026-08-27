@@ -215,8 +215,8 @@ export default function AidePage() {
       <div className="max-w-7xl mx-auto px-6 -mt-10 relative z-10">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-20">
           {[
-            { icon: <MessageCircle className="text-green-500"/>, label: "WhatsApp", sub: "Réponse < 15min", link: "https://wa.me/33600000000" },
-            { icon: <Phone className="text-blue-500"/>, label: "Téléphone", sub: "9h-19h Non-stop", link: "tel:+33600000000" },
+            { icon: <MessageCircle className="text-green-500"/>, label: "WhatsApp", sub: "Réponse < 15min", link: "https://wa.me/33759720083" },
+            { icon: <Phone className="text-blue-500"/>, label: "Téléphone", sub: "9h-19h Non-stop", link: "tel:+33759720083" },
             { icon: <Star className="text-purple-500"/>, label: "Fidélité", sub: "-10% dès 100 pts", link: "/compte" },
             { icon: <AlertCircle className="text-[#FF4500]"/>, label: "Litige", sub: "Photo & Crédit", link: "mailto:soleiletsaveurs.livraison@gmail.com" }
           ].map((action, i) => (
