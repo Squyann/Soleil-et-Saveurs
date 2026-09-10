@@ -22,7 +22,7 @@ const FAQ_CATEGORIES = [
       },
       {
         q: "Quelles villes du 78 desservez-vous ?",
-        a: "Nous livrons actuellement dans un rayon de 5km autour de nos points relais : Chatou, Croissy-sur-Seine, Mareil-sur-Mauldre, Saint-Nom-la-Bretèche et Plaisir. Vous pouvez vérifier votre éligibilité directement sur la page d'accueil en saisissant votre adresse."
+        a: "Nous livrons actuellement dans un rayon de 10km autour de nos points relais : Chatou, Croissy-sur-Seine, Mareil-sur-Mauldre, Saint-Nom-la-Bretèche et Plaisir. Vous pouvez vérifier votre éligibilité directement sur la page d'accueil en saisissant votre adresse."
       },
       {
         q: "Que se passe-t-il si je suis absent lors de la livraison ?",
