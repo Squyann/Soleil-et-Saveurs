@@ -42,14 +42,49 @@ const ELIGIBLE_ZONES = [
   { cp: "78640", city: "Villiers-Saint-Frédéric", delay: "J+0" },
 ].sort((a, b) => a.city.localeCompare(b.city)); // Tri alphabétique pour la clarté
 
+// Points relais + rayon (mêmes valeurs que la page d'accueil / le panier).
+const RELAIS = [
+  { lat: 48.8897, lon: 2.1574 }, // Chatou
+  { lat: 48.8794, lon: 2.1431 }, // Croissy-sur-Seine
+  { lat: 48.8944, lon: 1.8681 }, // Mareil-sur-Mauldre
+  { lat: 48.8594, lon: 2.0186 }, // Saint-Nom-la-Bretèche
+  { lat: 48.8111, lon: 1.9472 }, // Plaisir
+];
+const RAYON_KM = 10;
+
+function distanceKm(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
 export default function LivraisonPage() {
   const [userCP, setUserCP] = useState('');
   const [status, setStatus] = useState<'idle' | 'eligible' | 'not-eligible'>('idle');
+  const [checking, setChecking] = useState(false);
 
-  const checkEligibility = (e: React.FormEvent) => {
+  // Éligibilité par distance réelle : on géocode le code postal puis on vérifie
+  // qu'au moins une commune correspondante est à ≤ 10 km d'un point relais.
+  const checkEligibility = async (e: React.FormEvent) => {
     e.preventDefault();
-    const isEligible = ELIGIBLE_ZONES.some(zone => zone.cp === userCP);
-    setStatus(isEligible ? 'eligible' : 'not-eligible');
+    if (!/^\d{5}$/.test(userCP)) { setStatus('not-eligible'); return; }
+    setChecking(true);
+    setStatus('idle');
+    try {
+      const res = await fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(userCP)}&type=municipality&limit=10`);
+      const data = await res.json();
+      const eligible = (data.features || []).some((f: any) => {
+        const [lon, lat] = f.geometry.coordinates;
+        return RELAIS.some(r => distanceKm(lat, lon, r.lat, r.lon) <= RAYON_KM);
+      });
+      setStatus(eligible ? 'eligible' : 'not-eligible');
+    } catch {
+      setStatus('not-eligible');
+    } finally {
+      setChecking(false);
+    }
   };
 
   return (
@@ -87,8 +122,8 @@ export default function LivraisonPage() {
                 placeholder="Entrez votre Code Postal (ex: 78400)" 
                 className="w-full py-4 text-sm font-bold focus:outline-none"
               />
-              <button className="bg-[#FF4500] text-white px-8 rounded-xl font-black uppercase text-[10px] hover:bg-slate-900 transition-colors">
-                Vérifier
+              <button disabled={checking} className="bg-[#FF4500] text-white px-8 rounded-xl font-black uppercase text-[10px] hover:bg-slate-900 transition-colors disabled:opacity-60">
+                {checking ? '...' : 'Vérifier'}
               </button>
             </div>
 
@@ -195,7 +230,7 @@ export default function LivraisonPage() {
 
         {/* Liste des villes détaillées */}
         <div className="bg-white rounded-[40px] p-12 shadow-sm border border-slate-100">
-           <h3 className="text-2xl font-black uppercase italic tracking-tighter mb-8 text-center">VILLES <span className="text-[#FF4500]">DESSERVIES (RAYON 10KM)</span></h3>
+           <h3 className="text-2xl font-black uppercase italic tracking-tighter mb-8 text-center">EXEMPLES DE VILLES <span className="text-[#FF4500]">DESSERVIES</span></h3>
            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
               {ELIGIBLE_ZONES.map((zone, i) => (
                 <div key={i} className="flex flex-col border-l-2 border-[#FF4500] pl-4">
@@ -206,7 +241,7 @@ export default function LivraisonPage() {
               ))}
            </div>
            <p className="mt-8 text-center text-[10px] text-slate-400 font-bold uppercase tracking-widest italic">
-             📍 Zone couvrant les communes limitrophes de nos points de distribution officiels.
+             📍 Liste non exhaustive. Vérifiez votre code postal ci-dessus : toute adresse à moins de 10 km d'un de nos points relais est éligible.
            </p>
         </div>
       </div>
