@@ -28,7 +28,7 @@ async function validerZoneLivraison(adresse: string): Promise<boolean | null> {
     if (!feat) return null;
     const [lon, lat] = feat.geometry.coordinates;
     const minDist = Math.min(...VILLES_RELAIS.map(v => calculerDistance(lat, lon, v.lat, v.lon)));
-    return minDist <= 5;
+    return minDist <= 10;
   } catch {
     return null;
   }
@@ -229,7 +229,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
     setSuggestions([]);
     const [lon, lat] = feat.geometry.coordinates;
     const minDist = Math.min(...VILLES_RELAIS.map(v => calculerDistance(lat, lon, v.lat, v.lon)));
-    setDistanceValide(minDist <= 5);
+    setDistanceValide(minDist <= 10);
   };
 
   const fmtDate = (d: Date): string =>

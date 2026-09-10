@@ -7,7 +7,7 @@ import {
   AlertCircle, Info
 } from 'lucide-react';
 
-// --- CONFIGURATION EXHAUSTIVE : 5KM AUTOUR DES 5 MARCHÉS ---
+// --- CONFIGURATION EXHAUSTIVE : 10KM AUTOUR DES 5 MARCHÉS ---
 const ELIGIBLE_ZONES = [
   // Zone CHATOU / CROISSY
   { cp: "78400", city: "Chatou", delay: "J+0" },
@@ -71,7 +71,7 @@ export default function LivraisonPage() {
             LIVRAISON <span className="text-[#FF4500]">ULTRA-LOCALE</span>
           </h1>
           <p className="text-slate-400 text-sm md:text-base font-bold uppercase tracking-[0.2em] mb-12 max-w-2xl mx-auto">
-            Nous limitons nos trajets à 5km autour de nos points relais pour une fraîcheur absolue.
+            Nous limitons nos trajets à 10km autour de nos points relais pour une fraîcheur absolue.
           </p>
 
           <form onSubmit={checkEligibility} className="max-w-md mx-auto relative">
@@ -145,11 +145,11 @@ export default function LivraisonPage() {
               Périmètre de sécurité fraîcheur
             </div>
             <h2 className="text-5xl font-black uppercase italic tracking-tighter leading-none">
-              POURQUOI <span className="text-[#FF4500]">5 KM ?</span>
+              POURQUOI <span className="text-[#FF4500]">10 KM ?</span>
             </h2>
             <p className="text-slate-500 font-medium leading-relaxed italic">
               Parce que la saveur d'une fraise ou d'une salade décline à chaque kilomètre parcouru. 
-              En limitant nos livraisons à un rayon de 5km autour de nos points stratégiques dans les <span className="text-slate-900 font-bold">Yvelines (78)</span>, nous garantissons un produit qui n'a perdu aucune fraîcheur.
+              En limitant nos livraisons à un rayon de 10km autour de nos points stratégiques dans les <span className="text-slate-900 font-bold">Yvelines (78)</span>, nous garantissons un produit qui n'a perdu aucune fraîcheur.
             </p>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -195,7 +195,7 @@ export default function LivraisonPage() {
 
         {/* Liste des villes détaillées */}
         <div className="bg-white rounded-[40px] p-12 shadow-sm border border-slate-100">
-           <h3 className="text-2xl font-black uppercase italic tracking-tighter mb-8 text-center">VILLES <span className="text-[#FF4500]">DESSERVIES (RAYON 5KM)</span></h3>
+           <h3 className="text-2xl font-black uppercase italic tracking-tighter mb-8 text-center">VILLES <span className="text-[#FF4500]">DESSERVIES (RAYON 10KM)</span></h3>
            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
               {ELIGIBLE_ZONES.map((zone, i) => (
                 <div key={i} className="flex flex-col border-l-2 border-[#FF4500] pl-4">

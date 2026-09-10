@@ -81,7 +81,7 @@ export default function Home() {
         if (d < minDistance) minDistance = d;
       });
 
-      if (minDistance <= 5) {
+      if (minDistance <= 10) {
         setDistanceAffichee(parseFloat(minDistance.toFixed(1)));
         setDistanceValide(true);
         setShowResult(true);
@@ -183,11 +183,11 @@ export default function Home() {
                   {distanceValide === false && (
                     <div className="mx-2 mt-2 p-3 bg-red-50 rounded-xl text-red-600 flex items-center gap-2 animate-in fade-in zoom-in-95">
                       <AlertCircle className="w-3.5 h-3.5" />
-                      <p className="text-[10px] font-black uppercase">Désolé, hors zone (Rayon 5km autour de nos points relais).</p>
+                      <p className="text-[10px] font-black uppercase">Désolé, hors zone (Rayon 10km autour de nos points relais).</p>
                     </div>
                   )}
                 </div>
-                <p className="text-[10px] text-slate-400 px-4 italic font-semibold">📍 Chatou, Croissy, Mareil, St-Nom, Plaisir (Rayon 5km)</p>
+                <p className="text-[10px] text-slate-400 px-4 italic font-semibold">📍 Chatou, Croissy, Mareil, St-Nom, Plaisir (Rayon 10km)</p>
               </div>
             </div>
 
@@ -220,7 +220,7 @@ export default function Home() {
           <div className="bg-[#FFF5F1] rounded-[2rem] p-8 min-h-[180px] flex flex-col justify-center border border-orange-100 shadow-xl shadow-orange-50">
             <MapPin className="w-8 h-8 text-[#FF4500] mb-4" />
             <h3 className="text-2xl font-black mb-1 uppercase italic tracking-tighter text-slate-900">Zone 78</h3>
-            <p className="text-slate-600 text-sm font-medium">Ultra-local : rayon de 5km maximum.</p>
+            <p className="text-slate-600 text-sm font-medium">Ultra-local : rayon de 10km maximum.</p>
           </div>
         </div>
       </section>
@@ -322,7 +322,7 @@ export default function Home() {
         <div className="bg-white rounded-[3rem] overflow-hidden shadow-2xl shadow-slate-200 border border-slate-50 grid lg:grid-cols-2">
           <div className="p-10 md:p-14 flex flex-col justify-center">
             <h3 className="text-4xl font-black uppercase italic tracking-tighter mb-6 text-slate-900 leading-[0.9]">ZONE DE <br/><span className="text-[#FF4500]">FRAÎCHEUR</span></h3>
-            <p className="text-sm text-slate-500 mb-8 font-semibold italic leading-relaxed">Rayon de 5km autour de nos points de récolte. L'ultra-local est notre priorité.</p>
+            <p className="text-sm text-slate-500 mb-8 font-semibold italic leading-relaxed">Rayon de 10km autour de nos points de récolte. L'ultra-local est notre priorité.</p>
             <ul className="grid grid-cols-2 gap-4 mb-8">
               {['Chatou', 'Croissy', 'Mareil', 'St-Nom', 'Plaisir'].map((v, i) => (
                 <li key={i} className="flex items-center gap-2.5 text-[11px] font-black uppercase tracking-widest text-slate-400">

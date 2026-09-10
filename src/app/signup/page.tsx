@@ -45,7 +45,7 @@ export default function SignupPage() {
     }, 250);
   };
 
-  // --- ZONE DE LIVRAISON (5km autour de chaque ville) ---
+  // --- ZONE DE LIVRAISON (10km autour de chaque ville) ---
   const DELIVERY_CENTERS = [
     { lat: 48.8947, lon: 2.1586 }, // Chatou
     { lat: 48.8778, lon: 2.1414 }, // Croissy-sur-Seine
@@ -53,7 +53,7 @@ export default function SignupPage() {
     { lat: 48.8655, lon: 2.0267 }, // Saint-Nom-la-Bretèche
     { lat: 48.8233, lon: 1.9567 }, // Plaisir
   ];
-  const DELIVERY_RADIUS_KM = 5;
+  const DELIVERY_RADIUS_KM = 10;
 
   const [addressCoords, setAddressCoords] = useState<{ lat: number; lon: number } | null>(null);
 

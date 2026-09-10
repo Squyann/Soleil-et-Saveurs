@@ -147,7 +147,7 @@ export default function CGVPage() {
             </h2>
             <div className="space-y-4 text-slate-600 font-medium leading-relaxed">
               <p>
-                Soleil et Saveurs livre uniquement dans les communes des Yvelines (78) situées à moins de 5 km de ses points de distribution. La liste des villes éligibles est disponible sur la <Link href="/livraison" className="text-[#FF4500] hover:underline font-bold">page Livraison</Link>.
+                Soleil et Saveurs livre uniquement dans les communes des Yvelines (78) situées à moins de 10 km de ses points de distribution. La liste des villes éligibles est disponible sur la <Link href="/livraison" className="text-[#FF4500] hover:underline font-bold">page Livraison</Link>.
               </p>
               <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100 grid sm:grid-cols-3 gap-4 text-center">
                 <div>
