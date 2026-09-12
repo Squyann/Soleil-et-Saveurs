@@ -20,18 +20,28 @@ function calculerDistance(lat1: number, lon1: number, lat2: number, lon2: number
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-async function validerZoneLivraison(adresse: string): Promise<boolean | null> {
+// Géocode une adresse et renvoie la distance au relais le plus proche + les
+// coordonnées (pour calculer les frais selon la distance). null si introuvable.
+async function geocoderAdresse(adresse: string): Promise<{ dist: number; lat: number; lon: number } | null> {
   try {
     const res = await fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(adresse)}&limit=1`);
     const data = await res.json();
     const feat = data.features?.[0];
     if (!feat) return null;
     const [lon, lat] = feat.geometry.coordinates;
-    const minDist = Math.min(...VILLES_RELAIS.map(v => calculerDistance(lat, lon, v.lat, v.lon)));
-    return minDist <= 10;
+    const dist = Math.min(...VILLES_RELAIS.map(v => calculerDistance(lat, lon, v.lat, v.lon)));
+    return { dist, lat, lon };
   } catch {
     return null;
   }
+}
+
+// Frais de livraison selon la distance au relais le plus proche (paliers).
+function fraisSelonDistance(dist: number | null): number {
+  if (dist == null) return 3;
+  if (dist <= 3) return 3;
+  if (dist <= 6) return 4;
+  return 5;
 }
 
 interface PanierDrawerProps {
@@ -50,6 +60,8 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
   const [methodePaiement, setMethodePaiement] = useState<'Espèces' | 'Ligne'>('Espèces');
   const [chargement, setChargement] = useState(false);
   const [distanceValide, setDistanceValide] = useState<boolean | null>(null);
+  const [distanceRelais, setDistanceRelais] = useState<number | null>(null);
+  const [coordsAdresse, setCoordsAdresse] = useState<{ lat: number; lon: number } | null>(null);
   const [dbProfile, setDbProfile] = useState<{ loyalty_points: number; has_referral_discount: boolean; referral_pending: boolean } | null>(null);
   const [applyLoyalty, setApplyLoyalty] = useState(false);
   const [applyReferral, setApplyReferral] = useState(false);
@@ -90,7 +102,15 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
         setTelephone(meta.phone || '');
         if (meta.address) {
           setAdresse(meta.address);
-          validerZoneLivraison(meta.address).then(v => setDistanceValide(v));
+          geocoderAdresse(meta.address).then(r => {
+            if (r) {
+              setDistanceValide(r.dist <= 10);
+              setDistanceRelais(r.dist);
+              setCoordsAdresse({ lat: r.lat, lon: r.lon });
+            } else {
+              setDistanceValide(null);
+            }
+          });
         }
 
         const { data: prof } = await supabase
@@ -230,6 +250,8 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
     const [lon, lat] = feat.geometry.coordinates;
     const minDist = Math.min(...VILLES_RELAIS.map(v => calculerDistance(lat, lon, v.lat, v.lon)));
     setDistanceValide(minDist <= 10);
+    setDistanceRelais(minDist);
+    setCoordsAdresse({ lat, lon });
   };
 
   const fmtDate = (d: Date): string =>
@@ -311,10 +333,11 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
   // Le seuil de livraison gratuite (40€) s'applique sur le sous-total avant
   // remise (code promo, fidélité, parrainage) : une remise ne doit pas faire
   // perdre la livraison gratuite à un client qui l'avait déjà au prix plein.
-  // En dessous du seuil : frais fixes de 2,50€ (non dégressifs).
+  // En dessous du seuil : frais selon la distance au relais le plus proche
+  // (3€ / 4€ / 5€). Le serveur recalcule le montant à partir des coordonnées.
   const fraisLivraison = sousTotalFinal <= 0 ? 0
     : sousTotalFinal >= 40 ? 0
-    : 2.50;
+    : fraisSelonDistance(distanceRelais);
   const totalFinal = totalApresRemise + fraisLivraison;
   const minimumNonAtteint = user && (panier || []).length > 0 && totalApresRemise < 10;
 
@@ -359,6 +382,8 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
           code_promo: codeStatut === 'valid' ? codePromo : null,
           apply_loyalty: applyLoyalty,
           apply_referral: applyReferral,
+          lat: coordsAdresse?.lat ?? null,
+          lon: coordsAdresse?.lon ?? null,
         },
       });
 

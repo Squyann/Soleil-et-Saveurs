@@ -168,7 +168,7 @@ export default function LivraisonPage() {
               <ShieldCheck className="w-7 h-7" />
             </div>
             <h3 className="font-black uppercase text-sm mb-2">Frais Fixes</h3>
-            <p className="text-[11px] text-slate-500 font-medium leading-relaxed italic">Gratuit dès 40€. Participation fixe de 2,50€ en dessous pour nos livreurs locaux.</p>
+            <p className="text-[11px] text-slate-500 font-medium leading-relaxed italic">Gratuit dès 40€. En dessous, participation de 3€ à 5€ selon la distance à nos points relais.</p>
           </div>
         </div>
 

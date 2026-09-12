@@ -30,7 +30,7 @@ const FAQ_CATEGORIES = [
       },
       {
         q: "Les frais de livraison sont-ils gratuits ?",
-        a: "La livraison est offerte à partir de 40€ d'achat. En dessous, une participation fixe de 2,50€ est demandée pour soutenir nos livreurs locaux. Les retraits en point relais sont toujours gratuits."
+        a: "La livraison est offerte à partir de 40€ d'achat. En dessous, une participation de 3€ à 5€ selon la distance à nos points relais est demandée pour soutenir nos livreurs locaux. Les retraits en point relais sont toujours gratuits."
       },
       {
         q: "Puis-je choisir un créneau horaire précis ?",
