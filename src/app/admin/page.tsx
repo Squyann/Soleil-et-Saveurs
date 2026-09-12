@@ -489,8 +489,12 @@ export default function AdminPage() {
       return acc + qteEffective * prixUnit;
     }, 0);
 
+    // On lit le frais réellement facturé (stocké en base). Fallback pour les
+    // anciennes commandes sans frais_livraison enregistré.
     let fraisLivraison = 0;
-    if (!isRetrait && sousTotalProduits > 0) {
+    if (cmd.frais_livraison != null) {
+      fraisLivraison = Number(cmd.frais_livraison);
+    } else if (!isRetrait && sousTotalProduits > 0) {
       fraisLivraison = sousTotalProduits >= 40 ? 0 : 2.50;
     }
 
