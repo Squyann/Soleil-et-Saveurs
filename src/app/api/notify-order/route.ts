@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/api-auth';
+import { requireAuth, consommerQuota } from '@/lib/api-auth';
 
 function escapeHtml(str: string): string {
   return String(str ?? '')
@@ -49,6 +49,12 @@ async function sendEmail(to: string, subject: string, html: string, apiKey: stri
 export async function POST(req: NextRequest) {
   const { user, error: authError } = await requireAuth();
   if (authError) return authError;
+
+  // Limite anti-abus : chaque appel déclenche 2 envois Resend. Sans plafond, une
+  // boucle épuise le quota d'envoi et abîme la réputation du domaine.
+  if (!(await consommerQuota('notify-order', 10, 60))) {
+    return NextResponse.json({ error: 'Trop de requêtes' }, { status: 429 });
+  }
 
   try {
     const { commande: raw } = await req.json();
@@ -185,10 +191,12 @@ export async function POST(req: NextRequest) {
       clientResult = await sendEmail(commande.email_client, `✅ Commande confirmée — Soleil et Saveurs`, clientHtml, process.env.RESEND_API_KEY, from);
     }
 
+    // On ne renvoie jamais le corps d'erreur de Resend au client : il divulgue
+    // l'email admin, le domaine expéditeur et l'état du quota. Détails en logs.
     return NextResponse.json({
       ok: true,
-      admin_email: { sent: adminResult.ok, error: adminResult.detail },
-      client_email: { sent: clientResult.ok, error: clientResult.detail },
+      admin_email: { sent: adminResult.ok },
+      client_email: { sent: clientResult.ok },
     });
   } catch (err) {
     console.error('[notify-order] Unexpected error:', err);
