@@ -20,9 +20,16 @@ function calculerDistance(lat1: number, lon1: number, lat2: number, lon2: number
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-// Géocode une adresse et renvoie la distance au relais le plus proche + les
-// coordonnées (pour calculer les frais selon la distance). null si introuvable.
-async function geocoderAdresse(adresse: string): Promise<{ dist: number; lat: number; lon: number } | null> {
+// Zone de livraison : tout le département des Yvelines (78).
+// Le code INSEE (citycode) et le code postal commencent par le n° de département.
+function estDansLesYvelines(props: any): boolean {
+  const code = String(props?.citycode || props?.postcode || '');
+  return code.startsWith('78');
+}
+
+// Géocode une adresse : distance au relais le plus proche (pour les frais),
+// coordonnées, et appartenance aux Yvelines (pour l'éligibilité).
+async function geocoderAdresse(adresse: string): Promise<{ dist: number; lat: number; lon: number; dansYvelines: boolean } | null> {
   try {
     const res = await fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(adresse)}&limit=1`);
     const data = await res.json();
@@ -30,7 +37,7 @@ async function geocoderAdresse(adresse: string): Promise<{ dist: number; lat: nu
     if (!feat) return null;
     const [lon, lat] = feat.geometry.coordinates;
     const dist = Math.min(...VILLES_RELAIS.map(v => calculerDistance(lat, lon, v.lat, v.lon)));
-    return { dist, lat, lon };
+    return { dist, lat, lon, dansYvelines: estDansLesYvelines(feat.properties) };
   } catch {
     return null;
   }
@@ -104,7 +111,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
           setAdresse(meta.address);
           geocoderAdresse(meta.address).then(r => {
             if (r) {
-              setDistanceValide(r.dist <= 10);
+              setDistanceValide(r.dansYvelines);
               setDistanceRelais(r.dist);
               setCoordsAdresse({ lat: r.lat, lon: r.lon });
             } else {
@@ -249,7 +256,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
     setSuggestions([]);
     const [lon, lat] = feat.geometry.coordinates;
     const minDist = Math.min(...VILLES_RELAIS.map(v => calculerDistance(lat, lon, v.lat, v.lon)));
-    setDistanceValide(minDist <= 10);
+    setDistanceValide(estDansLesYvelines(feat.properties));
     setDistanceRelais(minDist);
     setCoordsAdresse({ lat, lon });
   };

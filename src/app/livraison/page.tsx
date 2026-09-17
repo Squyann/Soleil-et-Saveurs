@@ -7,7 +7,7 @@ import {
   AlertCircle, Info
 } from 'lucide-react';
 
-// --- CONFIGURATION EXHAUSTIVE : 10KM AUTOUR DES 5 MARCHÉS ---
+// --- EXEMPLES DE VILLES DESSERVIES (la livraison couvre tout le 78) ---
 const ELIGIBLE_ZONES = [
   // Zone CHATOU / CROISSY
   { cp: "78400", city: "Chatou", delay: "J+0" },
@@ -42,43 +42,23 @@ const ELIGIBLE_ZONES = [
   { cp: "78640", city: "Villiers-Saint-Frédéric", delay: "J+0" },
 ].sort((a, b) => a.city.localeCompare(b.city)); // Tri alphabétique pour la clarté
 
-// Points relais + rayon (mêmes valeurs que la page d'accueil / le panier).
-const RELAIS = [
-  { lat: 48.8897, lon: 2.1574 }, // Chatou
-  { lat: 48.8794, lon: 2.1431 }, // Croissy-sur-Seine
-  { lat: 48.8944, lon: 1.8681 }, // Mareil-sur-Mauldre
-  { lat: 48.8594, lon: 2.0186 }, // Saint-Nom-la-Bretèche
-  { lat: 48.8111, lon: 1.9472 }, // Plaisir
-];
-const RAYON_KM = 10;
-
-function distanceKm(lat1: number, lon1: number, lat2: number, lon2: number) {
-  const R = 6371;
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
-
 export default function LivraisonPage() {
   const [userCP, setUserCP] = useState('');
   const [status, setStatus] = useState<'idle' | 'eligible' | 'not-eligible'>('idle');
   const [checking, setChecking] = useState(false);
 
-  // Éligibilité par distance réelle : on géocode le code postal puis on vérifie
-  // qu'au moins une commune correspondante est à ≤ 10 km d'un point relais.
+  // Éligibilité : le code postal doit correspondre à une commune des Yvelines (78).
   const checkEligibility = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!/^\d{5}$/.test(userCP)) { setStatus('not-eligible'); return; }
+    if (!/^78\d{3}$/.test(userCP)) { setStatus('not-eligible'); return; }
     setChecking(true);
     setStatus('idle');
     try {
       const res = await fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(userCP)}&type=municipality&limit=10`);
       const data = await res.json();
-      const eligible = (data.features || []).some((f: any) => {
-        const [lon, lat] = f.geometry.coordinates;
-        return RELAIS.some(r => distanceKm(lat, lon, r.lat, r.lon) <= RAYON_KM);
-      });
+      const eligible = (data.features || []).some((f: any) =>
+        String(f.properties?.citycode || f.properties?.postcode || '').startsWith('78')
+      );
       setStatus(eligible ? 'eligible' : 'not-eligible');
     } catch {
       setStatus('not-eligible');
@@ -106,7 +86,7 @@ export default function LivraisonPage() {
             LIVRAISON <span className="text-[#FF4500]">ULTRA-LOCALE</span>
           </h1>
           <p className="text-slate-400 text-sm md:text-base font-bold uppercase tracking-[0.2em] mb-12 max-w-2xl mx-auto">
-            Nous limitons nos trajets à 10km autour de nos points relais pour une fraîcheur absolue.
+            Nous livrons dans tout le département des Yvelines (78), au départ de nos points relais.
           </p>
 
           <form onSubmit={checkEligibility} className="max-w-md mx-auto relative">
@@ -180,11 +160,11 @@ export default function LivraisonPage() {
               Périmètre de sécurité fraîcheur
             </div>
             <h2 className="text-5xl font-black uppercase italic tracking-tighter leading-none">
-              POURQUOI <span className="text-[#FF4500]">10 KM ?</span>
+              POURQUOI LES <span className="text-[#FF4500]">YVELINES ?</span>
             </h2>
             <p className="text-slate-500 font-medium leading-relaxed italic">
               Parce que la saveur d'une fraise ou d'une salade décline à chaque kilomètre parcouru. 
-              En limitant nos livraisons à un rayon de 10km autour de nos points stratégiques dans les <span className="text-slate-900 font-bold">Yvelines (78)</span>, nous garantissons un produit qui n'a perdu aucune fraîcheur.
+              En concentrant nos livraisons sur le seul département des <span className="text-slate-900 font-bold">Yvelines (78)</span>, au départ de nos points relais, nous garantissons un produit qui n'a perdu aucune fraîcheur.
             </p>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -241,7 +221,7 @@ export default function LivraisonPage() {
               ))}
            </div>
            <p className="mt-8 text-center text-[10px] text-slate-400 font-bold uppercase tracking-widest italic">
-             📍 Liste non exhaustive. Vérifiez votre code postal ci-dessus : toute adresse à moins de 10 km d'un de nos points relais est éligible.
+             📍 Liste non exhaustive. Nous livrons dans toutes les communes des Yvelines (78) — vérifiez votre code postal ci-dessus.
            </p>
         </div>
       </div>
