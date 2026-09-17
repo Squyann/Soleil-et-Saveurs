@@ -45,29 +45,11 @@ export default function SignupPage() {
     }, 250);
   };
 
-  // --- ZONE DE LIVRAISON (10km autour de chaque ville) ---
-  const DELIVERY_CENTERS = [
-    { lat: 48.8947, lon: 2.1586 }, // Chatou
-    { lat: 48.8778, lon: 2.1414 }, // Croissy-sur-Seine
-    { lat: 48.8969, lon: 2.0658 }, // Mareil-Marly
-    { lat: 48.8655, lon: 2.0267 }, // Saint-Nom-la-Bretèche
-    { lat: 48.8233, lon: 1.9567 }, // Plaisir
-  ];
-  const DELIVERY_RADIUS_KM = 10;
+  // --- ZONE DE LIVRAISON : tout le département des Yvelines (78) ---
+  // Le code INSEE (citycode) et le code postal commencent par le n° de département.
+  const [addressDept, setAddressDept] = useState<string | null>(null);
 
-  const [addressCoords, setAddressCoords] = useState<{ lat: number; lon: number } | null>(null);
-
-  function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number) {
-    const R = 6371;
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
-    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  }
-
-  const isEligibleZone = addressCoords
-    ? DELIVERY_CENTERS.some(c => haversineKm(addressCoords.lat, addressCoords.lon, c.lat, c.lon) <= DELIVERY_RADIUS_KM)
-    : false;
+  const isEligibleZone = (addressDept || '').startsWith('78');
 
   // --- VALIDATIONS ---
   const isPhoneValid = phone.replace(/\s/g, '').length === 10;
@@ -92,7 +74,7 @@ export default function SignupPage() {
 
   // API ADRESSE
   useEffect(() => {
-    if (address.length > 5 && !addressCoords) {
+    if (address.length > 5 && !addressDept) {
       const fetchAddress = async () => {
         try {
           const res = await fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(address)}&limit=5`);
@@ -103,7 +85,7 @@ export default function SignupPage() {
       const timer = setTimeout(fetchAddress, 300);
       return () => clearTimeout(timer);
     } else { setSuggestions([]); }
-  }, [address, addressCoords]);
+  }, [address, addressDept]);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -234,13 +216,13 @@ export default function SignupPage() {
               <label className="text-[10px] font-black text-slate-400 uppercase ml-4">Adresse Complète (Zone Chatou, Croissy, Mareil, St-Nom, Plaisir)</label>
               <div className="relative">
                 <MapPin className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 ${address && !isEligibleZone ? 'text-red-500' : 'text-slate-300'}`} />
-                <input type="text" required placeholder="Tapez votre adresse..." value={address} onChange={(e) => { setAddress(e.target.value); setAddressCoords(null); }}
+                <input type="text" required placeholder="Tapez votre adresse..." value={address} onChange={(e) => { setAddress(e.target.value); setAddressDept(null); }}
                   className={`w-full bg-[#F5EAE0] border p-3 pl-10 rounded-2xl font-bold text-sm outline-none transition-all uppercase ${address && isEligibleZone ? 'border-green-200 bg-green-50' : 'border-[#D5C9B8] focus:border-[#FF4500]'}`} />
               </div>
               {suggestions.length > 0 && (
                 <div className="absolute z-50 w-full bg-[#F5EAE0] border border-[#D5C9B8] rounded-2xl shadow-2xl mt-1 overflow-hidden">
                   {suggestions.map((s: any) => (
-                    <button key={s.properties.id} type="button" onClick={() => { setAddress(s.properties.label); setSuggestions([]); const [lon, lat] = s.geometry.coordinates; setAddressCoords({ lat, lon }); }}
+                    <button key={s.properties.id} type="button" onClick={() => { setAddress(s.properties.label); setSuggestions([]); setAddressDept(String(s.properties.citycode || s.properties.postcode || '')); }}
                       className="w-full p-3 text-left text-[10px] font-black hover:bg-[#EDE3D5] border-b border-slate-50 last:border-0 flex items-center gap-2 uppercase tracking-tight">
                       <MapPin className="w-3 h-3 text-[#FF4500]" /> {s.properties.label}
                     </button>
