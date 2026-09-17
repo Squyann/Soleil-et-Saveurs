@@ -291,44 +291,29 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
     if (!code) return;
     setCodeStatut('loading');
 
-    // Récupérer l'utilisateur courant directement (ne pas dépendre du state React qui peut être null)
-    let currentUserId: string | null = user?.id ?? null;
-    if (!currentUserId) {
-      const { data: { user: supabaseUser } } = await supabase.auth.getUser();
-      currentUserId = supabaseUser?.id ?? null;
-    }
+    // La table codes_promo n'est plus lisible côté client (elle exposait tous les
+    // codes actifs publiquement). On interroge une fonction serveur qui ne renvoie
+    // que le verdict du code soumis, pour l'utilisateur connecté.
+    const { data, error } = await supabase.rpc('verifier_code_promo', { p_code: code });
 
-    const { data } = await supabase
-      .from('codes_promo')
-      .select('id, reduction_pct')
-      .eq('code', code)
-      .eq('actif', true)
-      .maybeSingle();
-
-    if (data) {
-      if (currentUserId) {
-        const { data: dejaUtilise } = await supabase
-          .from('codes_promo_utilisations')
-          .select('id')
-          .eq('user_id', currentUserId)
-          .eq('code_promo_id', data.id)
-          .maybeSingle();
-        if (dejaUtilise) {
-          setCodeStatut('used');
-          return;
-        }
-      }
-      setRemiseCode(data.reduction_pct);
-      setCodePromoId(data.id);
-      setCodeStatut('valid');
-      setCodePromo(code);
-      setApplyLoyalty(false);
-      setApplyReferral(false);
-    } else {
+    if (error || !data?.valide) {
       setRemiseCode(0);
       setCodePromoId(null);
       setCodeStatut('invalid');
+      return;
     }
+
+    if (data.deja_utilise) {
+      setCodeStatut('used');
+      return;
+    }
+
+    setRemiseCode(data.reduction_pct);
+    setCodePromoId(data.id);
+    setCodeStatut('valid');
+    setCodePromo(code);
+    setApplyLoyalty(false);
+    setApplyReferral(false);
   };
 
   const sousTotalFinal = (panier || []).reduce((acc, item) => acc + calculerPrixLigne(item), 0);
