@@ -80,10 +80,13 @@ export default function AdminPage() {
 
   useEffect(() => {
     async function verifierAcces() {
-      // Le middleware serveur garantit déjà que seul l'admin atteint cette page.
-      // Ce client-side check n'est plus qu'un fallback de session expirée.
+      // Défense en profondeur : le middleware serveur filtre déjà l'accès, mais on
+      // revérifie ici la session ET le rôle admin. Sans ce contrôle de rôle, tout
+      // compte client authentifié qui atteindrait la page chargerait l'interface
+      // d'administration (les données restent protégées par la RLS, mais l'interface
+      // ne doit pas s'afficher).
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      if (!user || user.app_metadata?.role !== 'admin') {
         window.location.href = '/admin/login';
         return;
       }
