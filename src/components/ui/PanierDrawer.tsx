@@ -781,9 +781,11 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
                 <div className="grid grid-cols-2 gap-3">
                   <button onClick={()=>setMethodePaiement('Espèces')} className={`p-4 rounded-2xl border flex flex-col items-center gap-2 font-black text-[10px] transition-all ${methodePaiement === 'Espèces' ? 'bg-[#3D2B1F] text-white border-slate-900 shadow-lg' : 'bg-white text-slate-400 border-[#D5C9B8]'}`}>
                     <Banknote className="w-5 h-5" /> ESPÈCES
+                    <span className="text-[9px] font-bold normal-case opacity-70">(carte bleue)</span>
                   </button>
                   <button type="button" disabled aria-disabled="true" className="p-4 rounded-2xl border flex flex-col items-center gap-2 font-black text-[10px] transition-all bg-white text-slate-300 border-[#D5C9B8] cursor-not-allowed opacity-60">
                     <CreditCard className="w-5 h-5" /> CARTE EN LIGNE
+                    <span className="text-[9px] font-bold normal-case">bientôt disponible</span>
                   </button>
                 </div>
                 {methodePaiement === 'Ligne' && (

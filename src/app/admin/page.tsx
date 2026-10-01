@@ -1101,7 +1101,12 @@ export default function AdminPage() {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {produitsFiltres.map(p => (
-              <div key={p.id} className={`bg-white p-6 rounded-[32px] border ${editingProdId === p.id ? 'border-[#FF4500] ring-4 ring-[#FF4500]/5' : 'border-slate-100'} flex flex-col group transition-all`}>
+              <div key={p.id} className={`relative bg-white p-6 rounded-[32px] border ${editingProdId === p.id ? 'border-[#FF4500] ring-4 ring-[#FF4500]/5' : 'border-slate-100'} flex flex-col group transition-all ${p.actif === false && editingProdId !== p.id ? 'opacity-60 grayscale' : ''}`}>
+                {p.actif === false && editingProdId !== p.id && (
+                  <div className="absolute top-3 left-3 bg-slate-900 text-white text-[9px] font-black px-2.5 py-1 rounded-full uppercase z-10 shadow-sm">
+                    Désactivé
+                  </div>
+                )}
                 {editingProdId === p.id ? (
                   <div className="space-y-4 animate-in fade-in duration-300">
                     <div className="flex gap-4 items-center">
