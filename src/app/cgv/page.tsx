@@ -36,7 +36,7 @@ export default function CGVPage() {
           <h1 className="text-4xl md:text-6xl font-black text-white uppercase tracking-tighter leading-none">
             Conditions<br /><span className="text-[#FF4500]">Générales de Vente</span>
           </h1>
-          <p className="text-slate-400 text-sm font-bold mt-4">Dernière mise à jour : 3 mai 2026 — Applicables à toute commande passée sur soleil-saveurs.fr</p>
+          <p className="text-slate-400 text-sm font-bold mt-4">Dernière mise à jour : 1er octobre 2026 — Applicables à toute commande passée sur soleiletsaveurs.fr</p>
         </div>
       </section>
 
@@ -66,7 +66,7 @@ export default function CGVPage() {
               1. Objet
             </h2>
             <p className="text-slate-600 font-medium leading-relaxed">
-              Les présentes Conditions Générales de Vente (CGV) régissent contractuellement toute relation commerciale entre <strong className="text-slate-900">Soleil et Saveurs</strong> (ci-après « le Vendeur ») et toute personne physique effectuant un achat sur le site <strong className="text-slate-900">soleil-saveurs.fr</strong> (ci-après « le Client »).
+              Les présentes Conditions Générales de Vente (CGV) régissent contractuellement toute relation commerciale entre <strong className="text-slate-900">Soleil et Saveurs</strong> (ci-après « le Vendeur ») et toute personne physique effectuant un achat sur le site <strong className="text-slate-900">soleiletsaveurs.fr</strong> (ci-après « le Client »).
             </p>
             <p className="text-slate-600 font-medium leading-relaxed mt-3">
               Le Client reconnaît avoir pris connaissance des présentes CGV et les accepter sans réserve avant toute commande. Soleil et Saveurs se réserve le droit de modifier les présentes CGV à tout moment ; les CGV applicables sont celles en vigueur à la date de la commande.
@@ -98,14 +98,29 @@ export default function CGVPage() {
             </p>
             <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100 space-y-3">
               <div className="flex justify-between items-center">
-                <span className="font-black text-xs uppercase text-slate-900">Frais de livraison</span>
-                <span className="text-[#FF4500] font-black text-xs">2,50 €</span>
+                <span className="font-black text-xs uppercase text-slate-900">Minimum de commande</span>
+                <span className="text-slate-900 font-black text-xs">10,00 €</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="font-black text-xs uppercase text-slate-900">Frais de livraison — jusqu'à 3 km</span>
+                <span className="text-[#FF4500] font-black text-xs">3,00 €</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="font-black text-xs uppercase text-slate-900">Frais de livraison — de 3 à 6 km</span>
+                <span className="text-[#FF4500] font-black text-xs">4,00 €</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="font-black text-xs uppercase text-slate-900">Frais de livraison — au-delà de 6 km</span>
+                <span className="text-[#FF4500] font-black text-xs">5,00 €</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="font-black text-xs uppercase text-slate-900">Livraison gratuite dès</span>
-                <span className="text-green-600 font-black text-xs">45,00 €</span>
+                <span className="text-green-600 font-black text-xs">40,00 €</span>
               </div>
             </div>
+            <p className="text-slate-600 font-medium leading-relaxed mt-4">
+              Les frais de livraison dépendent de la distance entre l'adresse de livraison et le point relais Soleil et Saveurs le plus proche (Chatou, Croissy-sur-Seine, Mareil-sur-Mauldre, Saint-Nom-la-Bretèche ou Plaisir). Ils sont offerts lorsque le montant des produits atteint 40,00 €, avant application des éventuelles remises. Le montant exact des frais est affiché dans le panier avant la validation de la commande. Le montant minimum de commande est de 10,00 €, après remises.
+            </p>
             <p className="text-slate-600 font-medium leading-relaxed mt-4">
               Soleil et Saveurs se réserve le droit de modifier ses prix à tout moment. Les prix applicables sont ceux affichés au moment de la validation de la commande.
             </p>
@@ -129,7 +144,7 @@ export default function CGVPage() {
               </li>
               <li className="flex gap-3 items-start">
                 <span className="w-6 h-6 bg-[#FF4500] text-white rounded-full flex items-center justify-center font-black text-xs flex-shrink-0 mt-0.5">3</span>
-                Renseigner l'adresse de livraison (obligatoirement dans le 78)
+                Renseigner l'adresse de livraison (obligatoirement dans le 78) et choisir une date de livraison parmi celles proposées
               </li>
               <li className="flex gap-3 items-start">
                 <span className="w-6 h-6 bg-[#FF4500] text-white rounded-full flex items-center justify-center font-black text-xs flex-shrink-0 mt-0.5">4</span>
@@ -147,13 +162,13 @@ export default function CGVPage() {
             </h2>
             <div className="space-y-4 text-slate-600 font-medium leading-relaxed">
               <p>
-                Soleil et Saveurs livre uniquement dans le département des Yvelines (78), dans toutes ses communes. La liste des villes éligibles est disponible sur la <Link href="/livraison" className="text-[#FF4500] hover:underline font-bold">page Livraison</Link>.
+                Soleil et Saveurs livre uniquement dans le département des Yvelines (78), dans toutes ses communes. L'éligibilité d'une adresse peut être vérifiée sur la <Link href="/livraison" className="text-[#FF4500] hover:underline font-bold">page Livraison</Link>.
               </p>
               <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100 grid sm:grid-cols-3 gap-4 text-center">
                 <div>
-                  <p className="font-black text-xs uppercase text-slate-900 mb-1">Délai</p>
-                  <p className="text-[#FF4500] font-black">J+0</p>
-                  <p className="text-[10px] text-slate-400 font-bold uppercase">Même jour</p>
+                  <p className="font-black text-xs uppercase text-slate-900 mb-1">Livraison</p>
+                  <p className="text-[#FF4500] font-black">15h – 20h</p>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase">Dès le lendemain</p>
                 </div>
                 <div>
                   <p className="font-black text-xs uppercase text-slate-900 mb-1">Commande avant</p>
@@ -167,6 +182,9 @@ export default function CGVPage() {
                 </div>
               </div>
               <p>
+                La livraison a lieu à la date choisie par le Client lors de la commande, entre 15h et 20h. Les dates proposées dépendent des jours de livraison et de la capacité disponible ; la date la plus proche possible est le lendemain de la commande.
+              </p>
+              <p>
                 En cas d'impossibilité de livraison (adresse incorrecte, absence du Client, zone non couverte), Soleil et Saveurs contactera le Client pour convenir d'une nouvelle modalité. Les produits frais non livrés ne peuvent être restitués.
               </p>
             </div>
@@ -177,7 +195,7 @@ export default function CGVPage() {
               6. Paiement
             </h2>
             <p className="text-slate-600 font-medium leading-relaxed mb-4">
-              Le paiement s'effectue à la livraison, en espèces ou par carte bancaire auprès du livreur. Le paiement en ligne n'est pas disponible à ce jour.
+              Le paiement s'effectue à la livraison, en espèces ou par carte bancaire auprès du livreur. Le paiement en ligne n'est pas disponible à ce jour ; il sera proposé prochainement.
             </p>
             <p className="text-slate-600 font-medium leading-relaxed">
               La commande est considérée comme validée dès sa confirmation via le site. Le règlement interviendra au moment de la réception des produits.
