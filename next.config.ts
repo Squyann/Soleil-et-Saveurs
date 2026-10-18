@@ -24,6 +24,14 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  experimental: {
+    // Par défaut, Turbopack exécute PostCSS (Tailwind) dans des processus
+    // `node` enfants, résolus via le PATH. Sur le build Hostinger, ce processus
+    // se termine avant que Turbopack ne s'y connecte et le build échoue
+    // (« node process exited before we could connect to it »). Les worker
+    // threads tournent dans le processus du build : plus aucun `node` lancé.
+    turbopackPluginRuntimeStrategy: 'workerThreads',
+  },
   async headers() {
     return [
       {
