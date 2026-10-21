@@ -46,8 +46,9 @@ export default function AdminPage() {
   const [nouvelleVarianteNom, setNouvelleVarianteNom] = useState('');
   
   const [editingProdId, setEditingProdId] = useState<string | null>(null);
-  // Image en cours de cadrage : fichier choisi (URL blob:) ou image actuelle du produit
-  const [cadrage, setCadrage] = useState<{ src: string; isEditing: boolean } | null>(null);
+  // Image en cours de cadrage : fichier choisi (URL blob:) ou image actuelle du produit.
+  // produitId : produit existant en cours de modification, null pour le formulaire « Nouveau produit ».
+  const [cadrage, setCadrage] = useState<{ src: string; produitId: string | null } | null>(null);
   const [editFormData, setEditFormData] = useState<any>(null);
 
   const [showResetConfirm, setShowResetConfirm] = useState(false);
@@ -306,7 +307,7 @@ export default function AdminPage() {
   const TAILLE_MAX_SOURCE = 20 * 1024 * 1024; // 20 Mo : photo choisie, avant cadrage
   const TAILLE_MAX_IMAGE = 5 * 1024 * 1024; // 5 Mo : limite du bucket
 
-  function choisirImage(e: React.ChangeEvent<HTMLInputElement>, isEditing = false) {
+  function choisirImage(e: React.ChangeEvent<HTMLInputElement>, produitId: string | null = null) {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
@@ -318,7 +319,7 @@ export default function AdminPage() {
       alert("Image trop lourde (20 Mo maximum).");
       return;
     }
-    setCadrage({ src: URL.createObjectURL(file), isEditing });
+    setCadrage({ src: URL.createObjectURL(file), produitId });
   }
 
   function fermerCadrage() {
@@ -340,8 +341,18 @@ export default function AdminPage() {
         .upload(fileName, image, { contentType: 'image/jpeg', upsert: false });
       if (error) throw error;
       const { data } = supabase.storage.from('produits-images').getPublicUrl(fileName);
-      if (cadrage.isEditing) setEditFormData((d: any) => ({ ...d, image_url: data.publicUrl }));
-      else setNouveauProd(prod => ({ ...prod, image_url: data.publicUrl }));
+      if (cadrage.produitId) {
+        // Produit existant : l'image est enregistrée dès la validation du cadrage,
+        // sans attendre « Enregistrer » (sinon elle était perdue en quittant l'édition).
+        const { error: erreurProduit } = await supabase.from('products')
+          .update({ image_url: data.publicUrl })
+          .eq('id', cadrage.produitId);
+        if (erreurProduit) throw erreurProduit;
+        setEditFormData((d: any) => ({ ...d, image_url: data.publicUrl }));
+        fetchData();
+      } else {
+        setNouveauProd(prod => ({ ...prod, image_url: data.publicUrl }));
+      }
       fermerCadrage();
     } catch (err) {
       console.error(err);
@@ -850,9 +861,9 @@ export default function AdminPage() {
             <form onSubmit={ajouterProduit} className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="md:col-span-3 border-4 border-dashed border-slate-100 rounded-[32px] p-10 bg-slate-50 flex flex-col items-center justify-center relative cursor-pointer hover:border-[#FF4500]/20 transition-all group">
                 {nouveauProd.image_url ? <img src={nouveauProd.image_url} className="h-32 w-48 object-cover rounded-3xl shadow-lg border-4 border-white" /> : <Plus className="w-12 h-12 text-slate-200 group-hover:text-[#FF4500]" />}
-                <input type="file" accept="image/*" onChange={(e) => choisirImage(e, false)} className="absolute inset-0 opacity-0 cursor-pointer" />
+                <input type="file" accept="image/*" onChange={(e) => choisirImage(e)} className="absolute inset-0 opacity-0 cursor-pointer" />
                 {nouveauProd.image_url && (
-                  <button type="button" onClick={() => setCadrage({ src: nouveauProd.image_url, isEditing: false })} className="relative z-10 mt-4 px-4 py-2 bg-white text-slate-500 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-sm hover:bg-slate-900 hover:text-white transition-all">Recadrer</button>
+                  <button type="button" onClick={() => setCadrage({ src: nouveauProd.image_url, produitId: null })} className="relative z-10 mt-4 px-4 py-2 bg-white text-slate-500 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-sm hover:bg-slate-900 hover:text-white transition-all">Recadrer</button>
                 )}
                 {uploading && <div className="absolute inset-0 bg-white/90 flex items-center justify-center font-black text-[#FF4500] rounded-[32px] animate-pulse">UPLOAD...</div>}
               </div>
@@ -981,11 +992,11 @@ export default function AdminPage() {
                        <div className="flex flex-col items-center gap-1.5">
                          <div className="relative w-20 h-20">
                             {editFormData.image_url ? <img src={editFormData.image_url} className="w-full h-full object-cover rounded-2xl" /> : <Package className="w-full h-full p-5 bg-slate-50 rounded-2xl text-slate-200" />}
-                            <input type="file" accept="image/*" onChange={(e) => choisirImage(e, true)} className="absolute inset-0 opacity-0 cursor-pointer" />
+                            <input type="file" accept="image/*" onChange={(e) => choisirImage(e, p.id)} className="absolute inset-0 opacity-0 cursor-pointer" />
                             <div className="absolute bottom-0 right-0 bg-black text-white p-1 rounded-full"><Edit3 className="w-3 h-3"/></div>
                          </div>
                          {editFormData.image_url && (
-                           <button type="button" onClick={() => setCadrage({ src: editFormData.image_url, isEditing: true })} className="text-[8px] font-black uppercase tracking-widest text-slate-400 hover:text-[#FF4500]">Recadrer</button>
+                           <button type="button" onClick={() => setCadrage({ src: editFormData.image_url, produitId: p.id })} className="text-[8px] font-black uppercase tracking-widest text-slate-400 hover:text-[#FF4500]">Recadrer</button>
                          )}
                        </div>
                        <div className="flex-1">
