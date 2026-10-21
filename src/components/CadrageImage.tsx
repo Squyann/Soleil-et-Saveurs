@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Loader2, Minus, Plus, X } from 'lucide-react';
 
-// Cadre au format des vignettes produit de la boutique (entre 1,3 et 1,65
-// selon la largeur d'écran) : ce qui est cadré ici est ce que voit le client.
+// Cadre au format 3:2 des images produit de la boutique et de l'admin : ce qui
+// est cadré ici est exactement ce que voit le client.
 const RATIO = 3 / 2;
 const LARGEUR_SORTIE = 1200; // px de l'image JPEG envoyée
 const ZOOM_MAX = 4;
@@ -215,9 +215,9 @@ export default function CadrageImage({ src, onAnnuler, onValider }: Props) {
           {!img && !erreur && (
             <div className="absolute inset-0 flex items-center justify-center"><Loader2 className="w-6 h-6 text-slate-300 animate-spin" /></div>
           )}
-          {/* Partie visible dans les vignettes carrées (panier, admin) */}
+          {/* Partie visible dans la vignette carrée du panier */}
           <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 aspect-square border-2 border-dashed border-[#FF4500]/50 pointer-events-none">
-            <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 whitespace-nowrap bg-white/80 text-[8px] font-black uppercase tracking-widest text-[#FF4500] px-2 py-0.5 rounded-full">Vignette carrée</span>
+            <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 whitespace-nowrap bg-white/80 text-[8px] font-black uppercase tracking-widest text-[#FF4500] px-2 py-0.5 rounded-full">Vignette panier</span>
           </div>
         </div>
 

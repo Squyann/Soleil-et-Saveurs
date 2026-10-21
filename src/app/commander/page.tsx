@@ -286,8 +286,8 @@ export default function CommanderPage() {
                     )}
                   </div>
 
-                  {/* IMAGE */}
-                  <div className="h-28 sm:h-48 bg-[#EDE3D5] rounded-xl sm:rounded-[1.5rem] mb-2 sm:mb-4 overflow-hidden flex items-center justify-center relative">
+                  {/* IMAGE — au format 3:2 de l'outil de cadrage de l'admin : le client voit le cadrage exact */}
+                  <div className="aspect-[3/2] bg-[#EDE3D5] rounded-xl sm:rounded-[1.5rem] mb-2 sm:mb-4 overflow-hidden flex items-center justify-center relative">
                     {product.image_url ? (
                       <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-all duration-700" />
                     ) : (
@@ -424,7 +424,7 @@ export default function CommanderPage() {
           onClick={(e) => e.stopPropagation()}
         >
           {infoProduct.image_url && (
-            <div className="h-44 overflow-hidden">
+            <div className="aspect-[3/2] overflow-hidden">
               <img src={infoProduct.image_url} alt={infoProduct.name} className="w-full h-full object-cover" />
             </div>
           )}
