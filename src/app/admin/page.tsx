@@ -11,6 +11,7 @@ function escapeHtml(str: unknown): string {
     .replace(/'/g, '&#039;');
 }
 import { supabase } from '@/lib/supabase';
+import CadrageImage from '@/components/CadrageImage';
 import Link from 'next/link';
 import {
   LayoutDashboard, Package, ListTree, Search,
@@ -45,6 +46,8 @@ export default function AdminPage() {
   const [nouvelleVarianteNom, setNouvelleVarianteNom] = useState('');
   
   const [editingProdId, setEditingProdId] = useState<string | null>(null);
+  // Image en cours de cadrage : fichier choisi (URL blob:) ou image actuelle du produit
+  const [cadrage, setCadrage] = useState<{ src: string; isEditing: boolean } | null>(null);
   const [editFormData, setEditFormData] = useState<any>(null);
 
   const [showResetConfirm, setShowResetConfirm] = useState(false);
@@ -297,48 +300,54 @@ export default function AdminPage() {
     }
   }
 
-  // Types d'images acceptés (l'extension du fichier n'est pas fiable, on se
-  // base sur le type MIME et on force une extension sûre côté serveur).
-  const IMAGE_TYPES: Record<string, string> = {
-    'image/jpeg': 'jpg',
-    'image/png': 'png',
-    'image/webp': 'webp',
-    'image/gif': 'gif',
-  };
-  const TAILLE_MAX_IMAGE = 5 * 1024 * 1024; // 5 Mo
+  // Types d'images acceptés en entrée. L'image envoyée est toujours le JPEG
+  // produit par l'outil de cadrage, quel que soit le format choisi.
+  const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif'];
+  const TAILLE_MAX_SOURCE = 20 * 1024 * 1024; // 20 Mo : photo choisie, avant cadrage
+  const TAILLE_MAX_IMAGE = 5 * 1024 * 1024; // 5 Mo : limite du bucket
 
-  async function handleUpload(e: any, isEditing = false) {
+  function choisirImage(e: React.ChangeEvent<HTMLInputElement>, isEditing = false) {
     const file = e.target.files?.[0];
+    e.target.value = '';
     if (!file) return;
-
-    const ext = IMAGE_TYPES[file.type];
-    if (!ext) {
-      alert("Format non supporté. Utilisez une image JPG, PNG, WEBP ou GIF.");
-      e.target.value = '';
+    if (!IMAGE_TYPES.includes(file.type)) {
+      alert("Format non supporté. Utilisez une image JPG, PNG, WEBP, GIF ou AVIF.");
       return;
     }
-    if (file.size > TAILLE_MAX_IMAGE) {
+    if (file.size > TAILLE_MAX_SOURCE) {
+      alert("Image trop lourde (20 Mo maximum).");
+      return;
+    }
+    setCadrage({ src: URL.createObjectURL(file), isEditing });
+  }
+
+  function fermerCadrage() {
+    if (cadrage?.src.startsWith('blob:')) URL.revokeObjectURL(cadrage.src);
+    setCadrage(null);
+  }
+
+  async function envoyerImageCadree(image: Blob) {
+    if (!cadrage) return;
+    if (image.size > TAILLE_MAX_IMAGE) {
       alert("Image trop lourde (5 Mo maximum).");
-      e.target.value = '';
       return;
     }
-
     setUploading(true);
     try {
-      const fileName = `${Date.now()}-${Math.round(Math.random() * 1e9)}.${ext}`;
+      const fileName = `${Date.now()}-${Math.round(Math.random() * 1e9)}.jpg`;
       const { error } = await supabase.storage
         .from('produits-images')
-        .upload(fileName, file, { contentType: file.type, upsert: false });
+        .upload(fileName, image, { contentType: 'image/jpeg', upsert: false });
       if (error) throw error;
       const { data } = supabase.storage.from('produits-images').getPublicUrl(fileName);
-      if (isEditing) setEditFormData({ ...editFormData, image_url: data.publicUrl });
-      else setNouveauProd({ ...nouveauProd, image_url: data.publicUrl });
+      if (cadrage.isEditing) setEditFormData((d: any) => ({ ...d, image_url: data.publicUrl }));
+      else setNouveauProd(prod => ({ ...prod, image_url: data.publicUrl }));
+      fermerCadrage();
     } catch (err) {
       console.error(err);
       alert("Erreur upload");
     } finally {
       setUploading(false);
-      e.target.value = '';
     }
   }
 
@@ -840,8 +849,11 @@ export default function AdminPage() {
             <h2 className="font-black text-3xl mb-10 italic uppercase tracking-tighter">Nouveau <span className="text-[#FF4500]">Produit</span></h2>
             <form onSubmit={ajouterProduit} className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="md:col-span-3 border-4 border-dashed border-slate-100 rounded-[32px] p-10 bg-slate-50 flex flex-col items-center justify-center relative cursor-pointer hover:border-[#FF4500]/20 transition-all group">
-                {nouveauProd.image_url ? <img src={nouveauProd.image_url} className="h-32 w-32 object-cover rounded-3xl shadow-lg border-4 border-white" /> : <Plus className="w-12 h-12 text-slate-200 group-hover:text-[#FF4500]" />}
-                <input type="file" accept="image/*" onChange={(e) => handleUpload(e, false)} className="absolute inset-0 opacity-0 cursor-pointer" />
+                {nouveauProd.image_url ? <img src={nouveauProd.image_url} className="h-32 w-48 object-cover rounded-3xl shadow-lg border-4 border-white" /> : <Plus className="w-12 h-12 text-slate-200 group-hover:text-[#FF4500]" />}
+                <input type="file" accept="image/*" onChange={(e) => choisirImage(e, false)} className="absolute inset-0 opacity-0 cursor-pointer" />
+                {nouveauProd.image_url && (
+                  <button type="button" onClick={() => setCadrage({ src: nouveauProd.image_url, isEditing: false })} className="relative z-10 mt-4 px-4 py-2 bg-white text-slate-500 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-sm hover:bg-slate-900 hover:text-white transition-all">Recadrer</button>
+                )}
                 {uploading && <div className="absolute inset-0 bg-white/90 flex items-center justify-center font-black text-[#FF4500] rounded-[32px] animate-pulse">UPLOAD...</div>}
               </div>
               
@@ -966,10 +978,15 @@ export default function AdminPage() {
                 <div key={p.id} className="p-6 bg-white rounded-[2.5rem] border border-[#FF4500] ring-4 ring-[#FF4500]/5 sm:col-span-2 self-start">
                   <div className="space-y-4 animate-in fade-in duration-300">
                     <div className="flex gap-4 items-center">
-                       <div className="relative w-20 h-20">
-                          {editFormData.image_url ? <img src={editFormData.image_url} className="w-full h-full object-cover rounded-2xl" /> : <Package className="w-full h-full p-5 bg-slate-50 rounded-2xl text-slate-200" />}
-                          <input type="file" accept="image/*" onChange={(e) => handleUpload(e, true)} className="absolute inset-0 opacity-0 cursor-pointer" />
-                          <div className="absolute bottom-0 right-0 bg-black text-white p-1 rounded-full"><Edit3 className="w-3 h-3"/></div>
+                       <div className="flex flex-col items-center gap-1.5">
+                         <div className="relative w-20 h-20">
+                            {editFormData.image_url ? <img src={editFormData.image_url} className="w-full h-full object-cover rounded-2xl" /> : <Package className="w-full h-full p-5 bg-slate-50 rounded-2xl text-slate-200" />}
+                            <input type="file" accept="image/*" onChange={(e) => choisirImage(e, true)} className="absolute inset-0 opacity-0 cursor-pointer" />
+                            <div className="absolute bottom-0 right-0 bg-black text-white p-1 rounded-full"><Edit3 className="w-3 h-3"/></div>
+                         </div>
+                         {editFormData.image_url && (
+                           <button type="button" onClick={() => setCadrage({ src: editFormData.image_url, isEditing: true })} className="text-[8px] font-black uppercase tracking-widest text-slate-400 hover:text-[#FF4500]">Recadrer</button>
+                         )}
                        </div>
                        <div className="flex-1">
                           <input type="text" className="w-full bg-slate-50 border-none rounded-lg p-2 font-black text-sm mb-2" value={editFormData.name} onChange={e => setEditFormData({...editFormData, name: e.target.value})} />
@@ -1715,6 +1732,11 @@ export default function AdminPage() {
       )}
 
     </main>
+
+    {/* MODAL CADRAGE DE L'IMAGE PRODUIT */}
+    {cadrage && (
+      <CadrageImage src={cadrage.src} onAnnuler={fermerCadrage} onValider={envoyerImageCadree} />
+    )}
 
     {/* MODAL CONFIRMATION RÉINITIALISATION */}
     {showResetConfirm && (
