@@ -1020,7 +1020,20 @@ export default function AdminPage() {
                     {p.image_url ? <img src={p.image_url} alt={p.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform" /> : <Package className="w-10 h-10 text-slate-200" />}
                   </div>
                   <p className="font-black text-sm mb-1 text-center text-slate-800 uppercase italic truncate w-full">{p.name}</p>
-                  <p className="text-[10px] font-bold text-[#FF4500] uppercase tracking-tighter">{p.price?.toFixed(2)}€ / {p.unite}</p>
+                  {/* Unité 'g' : le prix est saisi au kg */}
+                  {p.promotion > 0 ? (
+                    <p className="font-bold uppercase tracking-tighter flex items-baseline gap-1.5">
+                      <span className="text-[11px] line-through text-slate-400">{p.price?.toFixed(2)}€</span>
+                      <span className="text-sm font-black text-[#FF4500]">{(p.price * (1 - p.promotion / 100)).toFixed(2)}€ / {p.unite === 'g' ? 'kg' : p.unite}</span>
+                    </p>
+                  ) : (
+                    <p className="text-xs font-bold text-[#FF4500] uppercase tracking-tighter">{p.price?.toFixed(2)}€ / {p.unite === 'g' ? 'kg' : p.unite}</p>
+                  )}
+                  {p.seuil_promo_qte > 0 && p.prix_promo > 0 && (
+                    <p className="text-[10px] font-black text-blue-600 uppercase tracking-tighter">
+                      Dès {p.seuil_promo_qte}{p.unite === 'g' ? 'kg' : p.unite === 'pièce' ? ' pcs' : ` ${p.unite}`} : {p.prix_promo.toFixed(2)}€ / {p.unite === 'g' ? 'kg' : p.unite}
+                    </p>
+                  )}
                   <p className={`text-[10px] font-bold text-slate-400 uppercase ${p.provenance ? '' : 'mb-3'}`}>{p.category}</p>
                   {p.provenance && <p className="text-[9px] text-slate-400 font-medium italic mb-3">Origine: {p.provenance}</p>}
                   
