@@ -8,6 +8,9 @@ import { Loader2, Minus, Plus, X } from 'lucide-react';
 const RATIO = 3 / 2;
 const LARGEUR_SORTIE = 1200; // px de l'image JPEG envoyée
 const ZOOM_MAX = 4;
+// On peut dézoomer au-delà de l'image entière, jusqu'à ce facteur : le produit
+// rapetisse et des marges blanches l'entourent (utile quand il occupe toute la photo).
+const REDUCTION_MAX = 0.35;
 
 // Position de l'image dans le cadre. Toutes les longueurs sont exprimées en
 // largeurs de cadre (le cadre fait 1 × 1/RATIO), ce qui rend le cadrage
@@ -21,9 +24,13 @@ function taille(img: HTMLImageElement, zoom: number) {
 }
 
 // Zoom où l'image entière tient dans le cadre.
-function zoomMin(img: HTMLImageElement) {
+function zoomEntiere(img: HTMLImageElement) {
   const { l, h } = taille(img, 1);
   return Math.min(1 / l, 1 / RATIO / h);
+}
+
+function zoomMin(img: HTMLImageElement) {
+  return zoomEntiere(img) * REDUCTION_MAX;
 }
 
 // Limite le zoom et empêche l'image de sortir du cadre : plus grande que le
@@ -76,7 +83,7 @@ export default function CadrageImage({ src, onAnnuler, onValider }: Props) {
     if (crossOrigin) i.crossOrigin = crossOrigin;
     i.onload = () => {
       setImg(i);
-      setVue(borner(i, 0, 0, 0)); // départ : image entière visible
+      setVue(borner(i, zoomEntiere(i), 0, 0)); // départ : image entière visible
     };
     i.onerror = () => setErreur("Impossible de charger cette image. Choisissez à nouveau le fichier.");
     i.src = src;
@@ -177,7 +184,11 @@ export default function CadrageImage({ src, onAnnuler, onValider }: Props) {
     }
   }
 
-  const zMin = img ? zoomMin(img) : 1;
+  // Curseur en échelle logarithmique : autant de course pour dézoomer que pour
+  // zoomer, au lieu d'une petite zone tassée au début de la barre.
+  const logMin = Math.log(img ? zoomMin(img) : 1);
+  const logMax = Math.log(ZOOM_MAX);
+  const avancement = ((Math.log(vue.zoom) - logMin) / (logMax - logMin)) * 100;
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in">
@@ -213,16 +224,21 @@ export default function CadrageImage({ src, onAnnuler, onValider }: Props) {
         {erreur && <p className="text-[10px] font-black text-red-500 uppercase mt-3">{erreur}</p>}
 
         <div className="flex items-center gap-3 mt-5">
-          <button onClick={() => zoomer(vue.zoom / 1.2)} disabled={!img} className="w-10 h-10 flex items-center justify-center bg-slate-100 text-slate-500 rounded-xl hover:bg-slate-200 disabled:opacity-40"><Minus className="w-4 h-4" /></button>
+          <button onClick={() => zoomer(vue.zoom / 1.2)} disabled={!img} className="w-12 h-12 shrink-0 flex items-center justify-center bg-slate-100 text-slate-500 rounded-2xl hover:bg-slate-200 disabled:opacity-40"><Minus className="w-5 h-5" /></button>
           <input
-            type="range" min={zMin} max={ZOOM_MAX} step={0.01} value={vue.zoom} disabled={!img}
-            onChange={e => zoomer(parseFloat(e.target.value))}
-            className="flex-1 accent-[#FF4500]"
+            type="range" min={logMin} max={logMax} step={0.001} value={Math.log(vue.zoom)} disabled={!img}
+            onChange={e => zoomer(Math.exp(parseFloat(e.target.value)))}
+            style={{ '--avancement': `${avancement}%` } as React.CSSProperties}
+            className="flex-1 min-w-0 h-12 bg-transparent appearance-none cursor-pointer disabled:opacity-40
+              [&::-webkit-slider-runnable-track]:h-3 [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:bg-[linear-gradient(to_right,#FF4500_var(--avancement),#e2e8f0_var(--avancement))]
+              [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:box-border [&::-webkit-slider-thumb]:-mt-3.5 [&::-webkit-slider-thumb]:w-10 [&::-webkit-slider-thumb]:h-10 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#FF4500] [&::-webkit-slider-thumb]:border-4 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:shadow-lg
+              [&::-moz-range-track]:h-3 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:bg-[linear-gradient(to_right,#FF4500_var(--avancement),#e2e8f0_var(--avancement))]
+              [&::-moz-range-thumb]:box-border [&::-moz-range-thumb]:w-10 [&::-moz-range-thumb]:h-10 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-[#FF4500] [&::-moz-range-thumb]:border-4 [&::-moz-range-thumb]:border-white [&::-moz-range-thumb]:shadow-lg"
           />
-          <button onClick={() => zoomer(vue.zoom * 1.2)} disabled={!img} className="w-10 h-10 flex items-center justify-center bg-slate-900 text-white rounded-xl hover:bg-[#FF4500] disabled:opacity-40"><Plus className="w-4 h-4" /></button>
+          <button onClick={() => zoomer(vue.zoom * 1.2)} disabled={!img} className="w-12 h-12 shrink-0 flex items-center justify-center bg-slate-900 text-white rounded-2xl hover:bg-[#FF4500] disabled:opacity-40"><Plus className="w-5 h-5" /></button>
         </div>
         <div className="grid grid-cols-2 gap-2 mt-3">
-          <button onClick={() => img && setVue(borner(img, 0, 0, 0))} disabled={!img} className="py-2.5 rounded-xl bg-slate-100 text-slate-500 text-[9px] font-black uppercase tracking-widest hover:bg-slate-200 disabled:opacity-40">Image entière</button>
+          <button onClick={() => img && setVue(borner(img, zoomEntiere(img), 0, 0))} disabled={!img} className="py-2.5 rounded-xl bg-slate-100 text-slate-500 text-[9px] font-black uppercase tracking-widest hover:bg-slate-200 disabled:opacity-40">Image entière</button>
           <button onClick={() => img && setVue(borner(img, 1, 0, 0))} disabled={!img} className="py-2.5 rounded-xl bg-slate-100 text-slate-500 text-[9px] font-black uppercase tracking-widest hover:bg-slate-200 disabled:opacity-40">Remplir le cadre</button>
         </div>
 
