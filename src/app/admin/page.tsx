@@ -990,7 +990,7 @@ export default function AdminPage() {
                   <div className="space-y-4 animate-in fade-in duration-300">
                     <div className="flex gap-4 items-center">
                        <div className="flex flex-col items-center gap-1.5">
-                         <div className="relative w-20 h-20">
+                         <div className="relative w-24 h-16">
                             {editFormData.image_url ? <img src={editFormData.image_url} className="w-full h-full object-cover rounded-2xl" /> : <Package className="w-full h-full p-5 bg-slate-50 rounded-2xl text-slate-200" />}
                             <input type="file" accept="image/*" onChange={(e) => choisirImage(e, p.id)} className="absolute inset-0 opacity-0 cursor-pointer" />
                             <div className="absolute bottom-0 right-0 bg-black text-white p-1 rounded-full"><Edit3 className="w-3 h-3"/></div>
@@ -1044,7 +1044,7 @@ export default function AdminPage() {
                       Désactivé
                     </div>
                   )}
-                  <div className="w-24 h-24 bg-white rounded-3xl overflow-hidden mb-4 shadow-sm border border-slate-50 flex items-center justify-center">
+                  <div className="w-full aspect-[3/2] bg-white rounded-3xl overflow-hidden mb-4 shadow-sm border border-slate-50 flex items-center justify-center">
                     {p.image_url ? <img src={p.image_url} alt={p.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform" /> : <Package className="w-10 h-10 text-slate-200" />}
                   </div>
                   <p className="font-black text-sm mb-1 text-center text-slate-800 uppercase italic truncate w-full">{p.name}</p>
