@@ -32,7 +32,7 @@ export default function AdminPage() {
   const [messages, setMessages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [recherche, setRecherche] = useState('');
-  const [onglet, setOnglet] = useState<'commandes' | 'stock' | 'catalogue' | 'messages' | 'stats' | 'calendrier' | 'promos'>('commandes');
+  const [onglet, setOnglet] = useState<'commandes' | 'produits' | 'messages' | 'stats' | 'calendrier' | 'promos'>('commandes');
   const [filtreStatut, setFiltreStatut] = useState<'Toutes' | 'À préparer' | 'livrée'>('Toutes');
   const [uploading, setUploading] = useState(false);
   const [erreurNomProduit, setErreurNomProduit] = useState('');
@@ -232,7 +232,13 @@ export default function AdminPage() {
 
   async function modifierProduit(id: string) {
     try {
-      const { error } = await supabase.from('products').update(editFormData).eq('id', id);
+      // Uniquement les champs de la fiche : stock, activation et promos ont leurs
+      // propres boutons sur la même carte, et la copie prise à l'ouverture de
+      // l'édition ne doit pas écraser ce qui a été modifié entre-temps.
+      const { name, price, category, unite, pas_g, provenance, description, image_url } = editFormData;
+      const { error } = await supabase.from('products')
+        .update({ name, price, category, unite, pas_g, provenance, description, image_url })
+        .eq('id', id);
       if (error) throw error;
       setEditingProdId(null);
       alert("Produit mis à jour !");
@@ -656,7 +662,7 @@ export default function AdminPage() {
         </Link>
 
         <nav className="flex flex-wrap gap-1 bg-slate-100 p-1 rounded-2xl">
-          {(['commandes', 'stock', 'catalogue'] as const).map(t => (
+          {(['commandes', 'produits'] as const).map(t => (
             <button key={t} onClick={() => setOnglet(t)} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${onglet === t ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}>
               {t}
             </button>
@@ -827,155 +833,9 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* --- SECTION STOCK --- */}
-      {onglet === 'stock' && (
-        <div className="animate-in fade-in space-y-8">
-          <div className="bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm">
-            <h2 className="font-black text-2xl mb-8 text-slate-900 italic uppercase tracking-tighter">Gestion des stocks & Promos</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {produitsFiltres.map(p => (
-                <div key={p.id} className={`p-6 bg-[#EDE3D5] rounded-[2.5rem] border border-slate-100 flex flex-col items-center relative transition-all hover:shadow-md group ${p.actif === false ? 'opacity-60 grayscale' : ''}`}>
-                  {(p.promotion > 0 || p.seuil_achat > 0) && (
-                    <div className="absolute top-4 right-4 bg-[#FF4500] text-white text-[9px] font-black px-2.5 py-1 rounded-full uppercase z-10 shadow-sm animate-pulse">
-                      {p.promotion > 0 ? `-${p.promotion}%` : `${p.seuil_achat}+${p.quantite_offerte}`}
-                    </div>
-                  )}
-                  {p.actif === false && (
-                    <div className="absolute top-4 left-4 bg-slate-900 text-white text-[9px] font-black px-2.5 py-1 rounded-full uppercase z-10 shadow-sm">
-                      Désactivé
-                    </div>
-                  )}
-                  <div className="w-24 h-24 bg-white rounded-3xl overflow-hidden mb-4 shadow-sm border border-slate-50 flex items-center justify-center">
-                    {p.image_url ? <img src={p.image_url} alt={p.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform" /> : <Package className="w-10 h-10 text-slate-200" />}
-                  </div>
-                  <p className="font-black text-sm mb-1 text-center text-slate-800 uppercase italic truncate w-full">{p.name}</p>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase mb-3">{p.category}</p>
-                  
-                  <div className="flex items-center gap-3 my-2 bg-white p-2 rounded-2xl shadow-inner border border-slate-100 w-full justify-between">
-                    <button onClick={() => ajusterStock(p.id, p.stock, -1)} className="w-10 h-10 flex items-center justify-center bg-slate-50 text-slate-400 rounded-xl font-black hover:bg-red-50 hover:text-red-500">-</button>
-                    <div className="flex flex-col items-center">
-                      <input type="number" step={p.unite === 'kg' ? "0.1" : "1"} value={p.stock} onChange={(e) => {
-                        const val = parseFloat(e.target.value);
-                        if (!isNaN(val)) supabase.from('products').update({ stock: val }).eq('id', p.id).then(() => fetchData());
-                      }} className={`w-14 text-center font-black text-lg bg-transparent border-none focus:ring-0 p-0 ${p.stock <= 5 ? 'text-red-500' : 'text-slate-900'}`} />
-                      <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest">{p.unite || 'unité'}</span>
-                    </div>
-                    <button onClick={() => ajusterStock(p.id, p.stock, 1)} className="w-10 h-10 flex items-center justify-center bg-slate-900 text-white rounded-xl font-black shadow-lg hover:bg-[#FF4500] transition-all">+</button>
-                  </div>
-
-                  <button onClick={() => basculerActif(p.id, p.actif !== false)} className={`w-full mt-2 text-[9px] font-black uppercase tracking-widest py-3 rounded-xl transition-all ${p.actif === false ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 hover:bg-emerald-500/20' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}>
-                    {p.actif === false ? '✅ Activer l\'article' : '🚫 Désactiver l\'article'}
-                  </button>
-
-                  <div className="w-full mt-2">
-                    <button onClick={() => { setPromoProdId(promoProdId === p.id ? null : p.id); setPourcentage(0); setSeuilAchat(0); setQteOfferte(0); setSeuilPromoQte(0); setPrixPromo(0); }} className={`w-full text-[9px] font-black uppercase tracking-widest py-3 rounded-xl transition-all ${(p.promotion > 0 || p.seuil_achat > 0 || p.seuil_promo_qte > 0) ? 'bg-[#FF4500]/10 text-[#FF4500] border border-[#FF4500]/20' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}>
-                      {(p.promotion > 0 || p.seuil_achat > 0 || p.seuil_promo_qte > 0) ? '🔥 Modifier Promo' : 'Ajouter Promo'}
-                    </button>
-                    {promoProdId === p.id && (
-                      <div className="mt-3 p-4 bg-white rounded-2xl border border-slate-200 shadow-2xl flex flex-col gap-3 animate-in zoom-in-95 duration-200 z-20">
-                        <div>
-                          <p className="text-[8px] font-black uppercase text-slate-400 mb-1 tracking-tighter">Remise %</p>
-                          <input type="number" min="0" max="100" placeholder="Ex: 20" className="w-full p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg text-center" onChange={(e) => { setPourcentage(parseInt(e.target.value) || 0); setSeuilAchat(0); setQteOfferte(0); setSeuilPromoQte(0); setPrixPromo(0); }} />
-                        </div>
-                        {p.unite === 'kg' ? (
-                          <div className="border-t border-slate-50 pt-2">
-                            <p className="text-[8px] font-black uppercase text-slate-400 mb-1 tracking-tighter">Lot au kg (X kg achetés + Y kg offerts)</p>
-                            <div className="flex gap-2">
-                              <div className="w-1/2">
-                                <input type="number" step="0.5" min="0" placeholder="Ex: 2 kg" className="w-full p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg text-center" onChange={(e) => { setSeuilAchat(parseFloat(e.target.value) || 0); setPourcentage(0); setSeuilPromoQte(0); setPrixPromo(0); }} />
-                                <p className="text-[7px] text-center text-slate-300 font-bold mt-0.5 uppercase">Payés (kg)</p>
-                              </div>
-                              <div className="w-1/2">
-                                <input type="number" step="0.5" min="0" placeholder="Ex: 0.5 kg" className="w-full p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg text-center" onChange={(e) => setQteOfferte(parseFloat(e.target.value) || 0)} />
-                                <p className="text-[7px] text-center text-slate-300 font-bold mt-0.5 uppercase">Offerts (kg)</p>
-                              </div>
-                            </div>
-                            {seuilAchat > 0 && qteOfferte > 0 && (
-                              <p className="text-[8px] font-black text-[#FF4500] mt-1 text-center">{seuilAchat} kg achetés = {qteOfferte} kg offerts</p>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="border-t border-slate-50 pt-2">
-                            <p className="text-[8px] font-black uppercase text-slate-400 mb-1 tracking-tighter">Lot à l'unité (X achetés + Y offerts)</p>
-                            <div className="flex gap-2">
-                              <div className="w-1/2">
-                                <input type="number" step="1" min="0" placeholder="Ex: 3" className="w-full p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg text-center" onChange={(e) => { setSeuilAchat(parseFloat(e.target.value) || 0); setPourcentage(0); setSeuilPromoQte(0); setPrixPromo(0); }} />
-                                <p className="text-[7px] text-center text-slate-300 font-bold mt-0.5 uppercase">Payés</p>
-                              </div>
-                              <div className="w-1/2">
-                                <input type="number" step="1" min="0" placeholder="Ex: 1" className="w-full p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg text-center" onChange={(e) => setQteOfferte(parseFloat(e.target.value) || 0)} />
-                                <p className="text-[7px] text-center text-slate-300 font-bold mt-0.5 uppercase">Offerts</p>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                        <div className="border-t border-slate-50 pt-2">
-                          <p className="text-[8px] font-black uppercase text-blue-500 mb-1 tracking-tighter">Prix dégressif (à partir de X, tout à Y€)</p>
-                          <div className="flex gap-2">
-                            <div className="w-1/2">
-                              <input
-                                type="number" step={p.unite === 'kg' || p.unite === 'g' ? '0.5' : '1'} min="0"
-                                placeholder={p.unite === 'g' ? 'Ex: 2 (kg)' : p.unite === 'kg' ? 'Ex: 2 kg' : 'Ex: 4'}
-                                className="w-full p-2.5 text-xs font-bold border border-blue-100 bg-blue-50 rounded-lg text-center focus:outline-none"
-                                onChange={(e) => { setSeuilPromoQte(parseFloat(e.target.value) || 0); setPourcentage(0); setSeuilAchat(0); setQteOfferte(0); }}
-                              />
-                              <p className="text-[7px] text-center text-blue-300 font-bold mt-0.5 uppercase">Seuil ({p.unite === 'g' ? 'kg' : p.unite})</p>
-                            </div>
-                            <div className="w-1/2">
-                              <input
-                                type="number" step="0.01" min="0"
-                                placeholder="Ex: 2.50"
-                                className="w-full p-2.5 text-xs font-bold border border-blue-100 bg-blue-50 rounded-lg text-center focus:outline-none"
-                                onChange={(e) => setPrixPromo(parseFloat(e.target.value) || 0)}
-                              />
-                              <p className="text-[7px] text-center text-blue-300 font-bold mt-0.5 uppercase">Prix ({p.unite === 'g' ? '€/kg' : `€/${p.unite}`})</p>
-                            </div>
-                          </div>
-                          {seuilPromoQte > 0 && prixPromo > 0 && (
-                            <p className="text-[8px] font-black text-blue-600 mt-1 text-center">
-                              À partir de {seuilPromoQte}{p.unite === 'g' ? 'kg' : ` ${p.unite}`} → {prixPromo.toFixed(2)}€/{p.unite === 'g' ? 'kg' : p.unite}
-                            </p>
-                          )}
-                        </div>
-                        <div className="flex gap-2 mt-1">
-                          <button onClick={() => appliquerPromo(p.id)} className="flex-1 bg-slate-900 text-white text-[9px] font-black py-3 rounded-lg shadow-md hover:bg-[#FF4500]">VALIDER</button>
-                          {(p.promotion > 0 || p.seuil_achat > 0 || p.seuil_promo_qte > 0) && (
-                            <button onClick={() => { setPourcentage(0); setSeuilAchat(0); setQteOfferte(0); setSeuilPromoQte(0); setPrixPromo(0); appliquerPromo(p.id); }} className="px-3 bg-red-100 text-red-500 rounded-lg"><Trash2 className="w-4 h-4" /></button>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="w-full mt-2">
-                    <button onClick={() => { setVarianteProdId(varianteProdId === p.id ? null : p.id); setNouvelleVarianteNom(''); }} className={`w-full text-[9px] font-black uppercase tracking-widest py-3 rounded-xl transition-all ${variantes.some(v => v.product_id === p.id) ? 'bg-blue-500/10 text-blue-600 border border-blue-500/20' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}>
-                      {variantes.some(v => v.product_id === p.id) ? `🥗 ${variantes.filter(v => v.product_id === p.id).length} Variété(s)` : 'Ajouter des variétés'}
-                    </button>
-                    {varianteProdId === p.id && (
-                      <div className="mt-3 p-4 bg-white rounded-2xl border border-slate-200 shadow-2xl flex flex-col gap-3 animate-in zoom-in-95 duration-200 z-20">
-                        {variantes.filter(v => v.product_id === p.id).map(v => (
-                          <div key={v.id} className="flex items-center gap-2 bg-slate-50 rounded-xl p-2">
-                            <span className="flex-1 text-xs font-bold text-slate-700 truncate">{v.nom}</span>
-                            <button onClick={() => supprimerVariante(v.id)} className="w-7 h-7 flex items-center justify-center text-red-400 hover:text-red-600"><Trash2 className="w-3.5 h-3.5" /></button>
-                          </div>
-                        ))}
-                        <div className="border-t border-slate-50 pt-2 flex gap-2">
-                          <input type="text" placeholder="Ex: Batavia" value={nouvelleVarianteNom} onChange={(e) => setNouvelleVarianteNom(e.target.value)} className="flex-1 p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg" />
-                        </div>
-                        <button onClick={() => ajouterVariante(p.id)} className="bg-slate-900 text-white text-[9px] font-black py-3 rounded-lg shadow-md hover:bg-[#FF4500]">AJOUTER LA VARIÉTÉ</button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* --- SECTION CATALOGUE --- */}
-      {onglet === 'catalogue' && (
-        <div className="space-y-12 animate-in fade-in">
+      {/* --- SECTION PRODUITS (ex-onglets Stock et Catalogue) --- */}
+      {onglet === 'produits' && (
+        <div className="animate-in fade-in space-y-12">
           <section className="bg-white p-12 rounded-[40px] border border-slate-100 shadow-sm max-w-4xl mx-auto">
             <h2 className="font-black text-3xl mb-10 italic uppercase tracking-tighter">Nouveau <span className="text-[#FF4500]">Produit</span></h2>
             <form onSubmit={ajouterProduit} className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -1098,20 +958,16 @@ export default function AdminPage() {
               </button>
             </form>
           </section>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {produitsFiltres.map(p => (
-              <div key={p.id} className={`relative bg-white p-6 rounded-[32px] border ${editingProdId === p.id ? 'border-[#FF4500] ring-4 ring-[#FF4500]/5' : 'border-slate-100'} flex flex-col group transition-all ${p.actif === false && editingProdId !== p.id ? 'opacity-60 grayscale' : ''}`}>
-                {p.actif === false && editingProdId !== p.id && (
-                  <div className="absolute top-3 left-3 bg-slate-900 text-white text-[9px] font-black px-2.5 py-1 rounded-full uppercase z-10 shadow-sm">
-                    Désactivé
-                  </div>
-                )}
-                {editingProdId === p.id ? (
+
+          <div className="bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm">
+            <h2 className="font-black text-2xl mb-8 text-slate-900 italic uppercase tracking-tighter">Gestion des stocks & Promos</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {produitsFiltres.map(p => editingProdId === p.id ? (
+                <div key={p.id} className="p-6 bg-white rounded-[2.5rem] border border-[#FF4500] ring-4 ring-[#FF4500]/5 sm:col-span-2 self-start">
                   <div className="space-y-4 animate-in fade-in duration-300">
                     <div className="flex gap-4 items-center">
                        <div className="relative w-20 h-20">
-                          <img src={editFormData.image_url} className="w-full h-full object-cover rounded-2xl" />
+                          {editFormData.image_url ? <img src={editFormData.image_url} className="w-full h-full object-cover rounded-2xl" /> : <Package className="w-full h-full p-5 bg-slate-50 rounded-2xl text-slate-200" />}
                           <input type="file" accept="image/*" onChange={(e) => handleUpload(e, true)} className="absolute inset-0 opacity-0 cursor-pointer" />
                           <div className="absolute bottom-0 right-0 bg-black text-white p-1 rounded-full"><Edit3 className="w-3 h-3"/></div>
                        </div>
@@ -1142,49 +998,155 @@ export default function AdminPage() {
                     )}
                     <input type="text" placeholder="Provenance (ex: France)" className="w-full bg-slate-50 border-none rounded-lg p-2 text-xs font-black" value={editFormData.provenance || ''} onChange={e => setEditFormData({...editFormData, provenance: e.target.value})} />
                     <input type="text" placeholder="Description" className="w-full bg-slate-50 border-none rounded-lg p-2 text-xs" value={editFormData.description} onChange={e => setEditFormData({...editFormData, description: e.target.value})} />
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="relative">
-                        <input type="number" step={editFormData.unite === 'kg' || editFormData.unite === 'g' ? '0.5' : '1'} min="0"
-                          placeholder={`Seuil dégressif (${editFormData.unite === 'g' ? 'kg' : editFormData.unite})`}
-                          className="w-full bg-blue-50 border border-blue-100 rounded-lg p-2 text-xs font-black"
-                          value={editFormData.seuil_promo_qte || ''}
-                          onChange={e => setEditFormData({...editFormData, seuil_promo_qte: parseFloat(e.target.value) || 0, promotion: 0, seuil_achat: 0, quantite_offerte: 0})}
-                        />
-                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[8px] font-black text-blue-400">seuil</span>
-                      </div>
-                      <div className="relative">
-                        <input type="number" step="0.01" min="0"
-                          placeholder={`Prix dégressif (${editFormData.unite === 'g' ? '€/kg' : `€/${editFormData.unite}`})`}
-                          className="w-full bg-blue-50 border border-blue-100 rounded-lg p-2 text-xs font-black"
-                          value={editFormData.prix_promo || ''}
-                          onChange={e => setEditFormData({...editFormData, prix_promo: parseFloat(e.target.value) || 0})}
-                        />
-                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[8px] font-black text-blue-400">prix</span>
-                      </div>
-                    </div>
                     <div className="flex gap-2">
                       <button onClick={() => modifierProduit(p.id)} className="flex-1 bg-slate-900 text-white py-2 rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-2"><Save className="w-3 h-3"/> Enregistrer</button>
                       <button onClick={() => setEditingProdId(null)} className="px-4 bg-slate-100 text-slate-400 py-2 rounded-xl text-[10px] font-black uppercase"><X className="w-4 h-4"/></button>
                     </div>
                   </div>
-                ) : (
-                  <div className="flex items-center gap-6">
-                    <div className="w-20 h-20 bg-slate-50 rounded-3xl overflow-hidden flex-shrink-0 shadow-inner">
-                      {p.image_url ? <img src={p.image_url} className="w-full h-full object-cover" /> : <Package className="w-full h-full p-6 text-slate-200" />}
+                </div>
+              ) : (
+                <div key={p.id} className={`p-6 bg-[#EDE3D5] rounded-[2.5rem] border border-slate-100 flex flex-col items-center relative transition-all hover:shadow-md group ${p.actif === false ? 'opacity-60 grayscale' : ''}`}>
+                  {(p.promotion > 0 || p.seuil_achat > 0) && (
+                    <div className="absolute top-4 right-4 bg-[#FF4500] text-white text-[9px] font-black px-2.5 py-1 rounded-full uppercase z-10 shadow-sm animate-pulse">
+                      {p.promotion > 0 ? `-${p.promotion}%` : `${p.seuil_achat}+${p.quantite_offerte}`}
                     </div>
-                    <div className="flex-1">
-                      <h3 className="font-black text-sm uppercase italic tracking-tighter">{p.name}</h3>
-                      <p className="text-[10px] font-bold text-[#FF4500] uppercase tracking-tighter">{p.price?.toFixed(2)}€ / {p.unite}</p>
-                      {p.provenance && <p className="text-[9px] text-slate-400 font-medium italic">Origine: {p.provenance}</p>}
+                  )}
+                  {p.actif === false && (
+                    <div className="absolute top-4 left-4 bg-slate-900 text-white text-[9px] font-black px-2.5 py-1 rounded-full uppercase z-10 shadow-sm">
+                      Désactivé
                     </div>
-                    <div className="flex gap-2">
-                      <button onClick={() => { setEditingProdId(p.id); setEditFormData(p); }} className="w-10 h-10 bg-slate-50 text-slate-400 rounded-xl flex items-center justify-center hover:bg-slate-900 hover:text-white transition-all"><Edit3 className="w-4 h-4" /></button>
-                      <button onClick={() => supprimerProduit(p.id)} className="w-10 h-10 bg-red-50 text-red-400 rounded-xl flex items-center justify-center hover:bg-red-500 hover:text-white transition-all shadow-sm"><Trash2 className="w-4 h-4" /></button>
-                    </div>
+                  )}
+                  <div className="w-24 h-24 bg-white rounded-3xl overflow-hidden mb-4 shadow-sm border border-slate-50 flex items-center justify-center">
+                    {p.image_url ? <img src={p.image_url} alt={p.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform" /> : <Package className="w-10 h-10 text-slate-200" />}
                   </div>
-                )}
-              </div>
-            ))}
+                  <p className="font-black text-sm mb-1 text-center text-slate-800 uppercase italic truncate w-full">{p.name}</p>
+                  <p className="text-[10px] font-bold text-[#FF4500] uppercase tracking-tighter">{p.price?.toFixed(2)}€ / {p.unite}</p>
+                  <p className={`text-[10px] font-bold text-slate-400 uppercase ${p.provenance ? '' : 'mb-3'}`}>{p.category}</p>
+                  {p.provenance && <p className="text-[9px] text-slate-400 font-medium italic mb-3">Origine: {p.provenance}</p>}
+                  
+                  <div className="flex items-center gap-3 my-2 bg-white p-2 rounded-2xl shadow-inner border border-slate-100 w-full justify-between">
+                    <button onClick={() => ajusterStock(p.id, p.stock, -1)} className="w-10 h-10 flex items-center justify-center bg-slate-50 text-slate-400 rounded-xl font-black hover:bg-red-50 hover:text-red-500">-</button>
+                    <div className="flex flex-col items-center">
+                      <input type="number" step={p.unite === 'kg' ? "0.1" : "1"} value={p.stock} onChange={(e) => {
+                        const val = parseFloat(e.target.value);
+                        if (!isNaN(val)) supabase.from('products').update({ stock: val }).eq('id', p.id).then(() => fetchData());
+                      }} className={`w-14 text-center font-black text-lg bg-transparent border-none focus:ring-0 p-0 ${p.stock <= 5 ? 'text-red-500' : 'text-slate-900'}`} />
+                      <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest">{p.unite || 'unité'}</span>
+                    </div>
+                    <button onClick={() => ajusterStock(p.id, p.stock, 1)} className="w-10 h-10 flex items-center justify-center bg-slate-900 text-white rounded-xl font-black shadow-lg hover:bg-[#FF4500] transition-all">+</button>
+                  </div>
+
+                  <button onClick={() => basculerActif(p.id, p.actif !== false)} className={`w-full mt-2 text-[9px] font-black uppercase tracking-widest py-3 rounded-xl transition-all ${p.actif === false ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 hover:bg-emerald-500/20' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}>
+                    {p.actif === false ? '✅ Activer l\'article' : '🚫 Désactiver l\'article'}
+                  </button>
+
+                  <div className="w-full mt-2">
+                    <button onClick={() => { setPromoProdId(promoProdId === p.id ? null : p.id); setPourcentage(0); setSeuilAchat(0); setQteOfferte(0); setSeuilPromoQte(0); setPrixPromo(0); }} className={`w-full text-[9px] font-black uppercase tracking-widest py-3 rounded-xl transition-all ${(p.promotion > 0 || p.seuil_achat > 0 || p.seuil_promo_qte > 0) ? 'bg-[#FF4500]/10 text-[#FF4500] border border-[#FF4500]/20' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}>
+                      {(p.promotion > 0 || p.seuil_achat > 0 || p.seuil_promo_qte > 0) ? '🔥 Modifier Promo' : 'Ajouter Promo'}
+                    </button>
+                    {promoProdId === p.id && (
+                      <div className="mt-3 p-4 bg-white rounded-2xl border border-slate-200 shadow-2xl flex flex-col gap-3 animate-in zoom-in-95 duration-200 z-20">
+                        <div>
+                          <p className="text-[8px] font-black uppercase text-slate-400 mb-1 tracking-tighter">Remise %</p>
+                          <input type="number" min="0" max="100" placeholder="Ex: 20" className="w-full p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg text-center" onChange={(e) => { setPourcentage(parseInt(e.target.value) || 0); setSeuilAchat(0); setQteOfferte(0); setSeuilPromoQte(0); setPrixPromo(0); }} />
+                        </div>
+                        {p.unite === 'kg' ? (
+                          <div className="border-t border-slate-50 pt-2">
+                            <p className="text-[8px] font-black uppercase text-slate-400 mb-1 tracking-tighter">Lot au kg (X kg achetés + Y kg offerts)</p>
+                            <div className="flex gap-2">
+                              <div className="w-1/2">
+                                <input type="number" step="0.5" min="0" placeholder="Ex: 2 kg" className="w-full p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg text-center" onChange={(e) => { setSeuilAchat(parseFloat(e.target.value) || 0); setPourcentage(0); setSeuilPromoQte(0); setPrixPromo(0); }} />
+                                <p className="text-[7px] text-center text-slate-300 font-bold mt-0.5 uppercase">Payés (kg)</p>
+                              </div>
+                              <div className="w-1/2">
+                                <input type="number" step="0.5" min="0" placeholder="Ex: 0.5 kg" className="w-full p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg text-center" onChange={(e) => setQteOfferte(parseFloat(e.target.value) || 0)} />
+                                <p className="text-[7px] text-center text-slate-300 font-bold mt-0.5 uppercase">Offerts (kg)</p>
+                              </div>
+                            </div>
+                            {seuilAchat > 0 && qteOfferte > 0 && (
+                              <p className="text-[8px] font-black text-[#FF4500] mt-1 text-center">{seuilAchat} kg achetés = {qteOfferte} kg offerts</p>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="border-t border-slate-50 pt-2">
+                            <p className="text-[8px] font-black uppercase text-slate-400 mb-1 tracking-tighter">Lot à l'unité (X achetés + Y offerts)</p>
+                            <div className="flex gap-2">
+                              <div className="w-1/2">
+                                <input type="number" step="1" min="0" placeholder="Ex: 3" className="w-full p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg text-center" onChange={(e) => { setSeuilAchat(parseFloat(e.target.value) || 0); setPourcentage(0); setSeuilPromoQte(0); setPrixPromo(0); }} />
+                                <p className="text-[7px] text-center text-slate-300 font-bold mt-0.5 uppercase">Payés</p>
+                              </div>
+                              <div className="w-1/2">
+                                <input type="number" step="1" min="0" placeholder="Ex: 1" className="w-full p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg text-center" onChange={(e) => setQteOfferte(parseFloat(e.target.value) || 0)} />
+                                <p className="text-[7px] text-center text-slate-300 font-bold mt-0.5 uppercase">Offerts</p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        <div className="border-t border-slate-50 pt-2">
+                          <p className="text-[8px] font-black uppercase text-blue-500 mb-1 tracking-tighter">Prix dégressif (à partir de X, tout à Y€)</p>
+                          <div className="flex gap-2">
+                            <div className="w-1/2">
+                              <input
+                                type="number" step={p.unite === 'kg' || p.unite === 'g' ? '0.5' : '1'} min="0"
+                                placeholder={p.unite === 'g' ? 'Ex: 2 (kg)' : p.unite === 'kg' ? 'Ex: 2 kg' : 'Ex: 4'}
+                                className="w-full p-2.5 text-xs font-bold border border-blue-100 bg-blue-50 rounded-lg text-center focus:outline-none"
+                                onChange={(e) => { setSeuilPromoQte(parseFloat(e.target.value) || 0); setPourcentage(0); setSeuilAchat(0); setQteOfferte(0); }}
+                              />
+                              <p className="text-[7px] text-center text-blue-300 font-bold mt-0.5 uppercase">Seuil ({p.unite === 'g' ? 'kg' : p.unite})</p>
+                            </div>
+                            <div className="w-1/2">
+                              <input
+                                type="number" step="0.01" min="0"
+                                placeholder="Ex: 2.50"
+                                className="w-full p-2.5 text-xs font-bold border border-blue-100 bg-blue-50 rounded-lg text-center focus:outline-none"
+                                onChange={(e) => setPrixPromo(parseFloat(e.target.value) || 0)}
+                              />
+                              <p className="text-[7px] text-center text-blue-300 font-bold mt-0.5 uppercase">Prix ({p.unite === 'g' ? '€/kg' : `€/${p.unite}`})</p>
+                            </div>
+                          </div>
+                          {seuilPromoQte > 0 && prixPromo > 0 && (
+                            <p className="text-[8px] font-black text-blue-600 mt-1 text-center">
+                              À partir de {seuilPromoQte}{p.unite === 'g' ? 'kg' : ` ${p.unite}`} → {prixPromo.toFixed(2)}€/{p.unite === 'g' ? 'kg' : p.unite}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex gap-2 mt-1">
+                          <button onClick={() => appliquerPromo(p.id)} className="flex-1 bg-slate-900 text-white text-[9px] font-black py-3 rounded-lg shadow-md hover:bg-[#FF4500]">VALIDER</button>
+                          {(p.promotion > 0 || p.seuil_achat > 0 || p.seuil_promo_qte > 0) && (
+                            <button onClick={() => { setPourcentage(0); setSeuilAchat(0); setQteOfferte(0); setSeuilPromoQte(0); setPrixPromo(0); appliquerPromo(p.id); }} className="px-3 bg-red-100 text-red-500 rounded-lg"><Trash2 className="w-4 h-4" /></button>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="w-full mt-2">
+                    <button onClick={() => { setVarianteProdId(varianteProdId === p.id ? null : p.id); setNouvelleVarianteNom(''); }} className={`w-full text-[9px] font-black uppercase tracking-widest py-3 rounded-xl transition-all ${variantes.some(v => v.product_id === p.id) ? 'bg-blue-500/10 text-blue-600 border border-blue-500/20' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}>
+                      {variantes.some(v => v.product_id === p.id) ? `🥗 ${variantes.filter(v => v.product_id === p.id).length} Variété(s)` : 'Ajouter des variétés'}
+                    </button>
+                    {varianteProdId === p.id && (
+                      <div className="mt-3 p-4 bg-white rounded-2xl border border-slate-200 shadow-2xl flex flex-col gap-3 animate-in zoom-in-95 duration-200 z-20">
+                        {variantes.filter(v => v.product_id === p.id).map(v => (
+                          <div key={v.id} className="flex items-center gap-2 bg-slate-50 rounded-xl p-2">
+                            <span className="flex-1 text-xs font-bold text-slate-700 truncate">{v.nom}</span>
+                            <button onClick={() => supprimerVariante(v.id)} className="w-7 h-7 flex items-center justify-center text-red-400 hover:text-red-600"><Trash2 className="w-3.5 h-3.5" /></button>
+                          </div>
+                        ))}
+                        <div className="border-t border-slate-50 pt-2 flex gap-2">
+                          <input type="text" placeholder="Ex: Batavia" value={nouvelleVarianteNom} onChange={(e) => setNouvelleVarianteNom(e.target.value)} className="flex-1 p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg" />
+                        </div>
+                        <button onClick={() => ajouterVariante(p.id)} className="bg-slate-900 text-white text-[9px] font-black py-3 rounded-lg shadow-md hover:bg-[#FF4500]">AJOUTER LA VARIÉTÉ</button>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="w-full mt-2 flex gap-2">
+                    <button onClick={() => { setEditingProdId(p.id); setEditFormData(p); }} className="flex-1 flex items-center justify-center gap-1.5 text-[9px] font-black uppercase tracking-widest py-3 rounded-xl bg-slate-100 text-slate-400 hover:bg-slate-900 hover:text-white transition-all"><Edit3 className="w-3.5 h-3.5" /> Modifier</button>
+                    <button onClick={() => supprimerProduit(p.id)} title="Supprimer" className="w-12 flex items-center justify-center py-3 rounded-xl bg-red-50 text-red-400 hover:bg-red-500 hover:text-white transition-all shadow-sm"><Trash2 className="w-3.5 h-3.5" /></button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
