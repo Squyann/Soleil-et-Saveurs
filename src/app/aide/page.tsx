@@ -18,7 +18,7 @@ const FAQ_CATEGORIES = [
     questions: [
       {
         q: "Quels sont vos délais exacts de livraison ?",
-        a: "Commandez avant 23h59, et vous êtes livré entre 15h et 20h."
+        a: "Vous choisissez votre date de livraison dans le panier : au plus tôt le lendemain (commande avant minuit), selon les jours de livraison proposés. La livraison a lieu entre 15h et 20h."
       },
       {
         q: "Quelles villes du 78 desservez-vous ?",
@@ -30,7 +30,7 @@ const FAQ_CATEGORIES = [
       },
       {
         q: "Les frais de livraison sont-ils gratuits ?",
-        a: "La livraison est offerte à partir de 40€ d'achat. En dessous, une participation de 3€ à 5€ selon la distance à nos points relais est demandée pour soutenir nos livreurs locaux. Les retraits en point relais sont toujours gratuits."
+        a: "La livraison est offerte à partir de 40€ d'achat (montant avant remises). En dessous, une participation de 3€ à 5€ selon la distance à nos points relais est demandée pour soutenir nos livreurs locaux."
       },
       {
         q: "Puis-je choisir un créneau horaire précis ?",
@@ -45,7 +45,7 @@ const FAQ_CATEGORIES = [
     questions: [
       {
         q: "Pourquoi certains fruits ne sont pas disponibles toute l'année ?",
-        a: "C'est notre promesse. Si ce n'est pas la saison chez nos partenaires, nous ne le vendons pas. Pas de fraises importées en décembre, pas de tomates sous serre en janvier. Vous mangez ce que la terre donne vraiment."
+        a: "Nous suivons les saisons et privilégions les producteurs français. Certains fruits (agrumes, ananas, mangues…) viennent de plus loin : l'origine de chaque produit est toujours indiquée sur sa fiche. Un produit hors saison ou introuvable en qualité suffisante sort simplement du catalogue."
       },
     ]
   },
@@ -56,11 +56,11 @@ const FAQ_CATEGORIES = [
     questions: [
       {
         q: "Comment fonctionne le programme de fidélité ?",
-        a: "C'est entièrement automatique ! Chaque euro dépensé vous rapporte 1 point de fidélité. Dès 100 points atteints, vous débloquez une remise de -10% que vous pouvez activer librement lors de votre prochaine commande. Votre solde de points est visible dans votre espace client."
+        a: "C'est automatique : chaque euro de commande (hors frais de livraison, après remises) vous rapporte 1 point. Dès 100 points, vous pouvez activer une remise de -10% dans le panier ; l'utiliser consomme la totalité de vos points. La remise fidélité ne se cumule ni avec le parrainage ni avec un code promo. Votre solde est visible dans votre espace client."
       },
       {
         q: "Puis-je modifier mon adresse après avoir passé une commande ?",
-        a: "Oui, via l'onglet 'Adresses' de votre espace client, tant que le statut de votre commande n'est pas passé à 'En préparation'. Passé ce stade, contactez-nous immédiatement par WhatsApp pour qu'on intervienne manuellement."
+        a: "Contactez-nous au plus vite sur WhatsApp : tant que la commande n'est pas partie en livraison, nous la modifions pour vous. L'onglet 'Adresses' de votre espace client sert à mettre à jour l'adresse utilisée pour vos prochaines commandes."
       },
       {
         q: "Proposez-vous des abonnements ou des paniers récurrents ?",
@@ -79,15 +79,15 @@ const FAQ_CATEGORIES = [
     questions: [
       {
         q: "Est-ce que le paiement est sécurisé ?",
-        a: "Absolument. Nous n'acceptons que les paiements en espèces à la livraison pour le moment, ce qui élimine tout risque de fraude en ligne. Nous travaillons à l'intégration de Stripe pour les paiements par carte dans les prochaines semaines."
+        a: "Oui : le paiement se fait à la livraison, en espèces ou par carte bancaire auprès du livreur. Aucune donnée bancaire n'est saisie ni stockée sur le site. Le paiement en ligne sera proposé prochainement."
       },
       {
         q: "Acceptez-vous les tickets restaurant ?",
-        a: "Nous acceptons les règlements en espèces et les virements pour les commandes récurrentes. Les tickets restaurant papier sont acceptés à titre exceptionnel. Contactez-nous pour tout arrangement spécifique."
+        a: "Non. Nous acceptons uniquement les espèces et la carte bancaire, au moment de la livraison."
       },
       {
         q: "Comment obtenir ma facture ?",
-        a: "Un bon de livraison est remis à chaque commande. Pour une facture officielle, envoyez-nous votre email via ce formulaire ou par WhatsApp — nous vous la générons sous 24h au format PDF."
+        a: "Votre facture est téléchargeable dans votre espace client (onglet Commandes) dès que la commande est livrée."
       }
     ]
   },
@@ -98,15 +98,15 @@ const FAQ_CATEGORIES = [
     questions: [
       {
         q: "Que faire de ma cagette vide ?",
-        a: "Surtout ne la jetez pas ! Remettez-la au livreur lors de votre prochaine commande. Nous réutilisons chaque cagette jusqu'à 20 fois. C'est un geste simple qui fait une vraie différence sur notre bilan carbone collectif."
+        a: "Surtout ne la jetez pas ! La cagette est consignée gratuitement : remettez-la au livreur lors de votre prochaine livraison. Nous réutilisons chaque cagette jusqu'à 20 fois."
       },
       {
         q: "Un produit est arrivé abîmé, que faire ?",
-        a: "Prenez une photo rapide et envoyez-la nous via WhatsApp ou ce formulaire, dans les 2 heures suivant la livraison. Nous vous créditons la valeur du produit immédiatement, sans discussion. Votre satisfaction est non négociable."
+        a: "Prenez une photo et envoyez-la nous via WhatsApp ou ce formulaire dans les 24h suivant la livraison (idéalement dans les 2h). Nous vous créditons la valeur du produit, sans discussion. Votre satisfaction est non négociable."
       },
       {
         q: "Comment réduisez-vous votre empreinte carbone ?",
-        a: "Nos tournées de livraison sont optimisées par zone pour réduire les kilomètres parcourus. Nos emballages sont en carton recyclé ou réutilisables. Et surtout, le circuit ultra-court (moins de 50km du champ à votre table) est en lui-même notre meilleur argument écologique."
+        a: "Nos tournées de livraison partent de 5 points relais au cœur des Yvelines et sont optimisées par zone pour réduire les kilomètres parcourus. Nos cagettes sont consignées et réutilisées, et nous privilégions les produits français de saison."
       }
     ]
   }
@@ -120,7 +120,6 @@ export default function AidePage() {
   const [contactName, setContactName] = useState('');
   const [contactEmail, setContactEmail] = useState('');
   const [contactMessage, setContactMessage] = useState('');
-  const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
     if (searchTerm) {
@@ -145,7 +144,6 @@ export default function AidePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormStatus('sending');
-    setErrorMsg('');
 
     try {
       const payload = { 
@@ -170,7 +168,6 @@ export default function AidePage() {
       setContactMessage('');
     } catch (err: any) {
       console.error('Erreur lors de l\'envoi:', err);
-      setErrorMsg(err.message || 'Une erreur est survenue');
       setFormStatus('error');
     }
   };
@@ -315,16 +312,11 @@ export default function AidePage() {
                     className="w-full bg-slate-50 border-2 border-transparent rounded-2xl py-4 px-6 text-xs font-bold focus:border-[#FF4500]/20 focus:bg-white outline-none transition-all resize-none"
                   />
 
-                  {/* Affichage de l'erreur avec conseil RLS */}
+                  {/* Le détail technique reste dans la console, pas affiché au client */}
                   {formStatus === 'error' && (
                     <div className="bg-red-50 border border-red-100 rounded-2xl p-4">
                       <p className="text-[10px] font-black text-red-600 uppercase mb-1">Erreur d'envoi</p>
-                      <p className="text-[10px] text-red-500 font-bold">{errorMsg}</p>
-                      {errorMsg.includes('RLS') || errorMsg.includes('blocked') ? (
-                        <p className="text-[9px] text-red-400 mt-2 font-bold">
-                          → Dans Supabase : Table Editor → messages → RLS policies → Ajouter une policy INSERT pour le rôle "anon"
-                        </p>
-                      ) : null}
+                      <p className="text-[10px] text-red-500 font-bold">Votre message n'a pas pu être envoyé. Réessayez, ou écrivez-nous sur WhatsApp au 07 59 72 00 83.</p>
                     </div>
                   )}
 
@@ -360,7 +352,7 @@ export default function AidePage() {
         <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-12 text-left mb-20">
           <div>
             <h5 className="font-black uppercase text-xs mb-4">Soleil et Saveurs</h5>
-            <p className="text-[11px] text-slate-400 font-medium leading-relaxed italic">Le circuit-court réinventé dans les Yvelines.</p>
+            <p className="text-[11px] text-slate-400 font-medium leading-relaxed italic">Fruits & légumes frais livrés dans les Yvelines.</p>
           </div>
           <div>
             <h5 className="font-black uppercase text-xs mb-4">Horaires</h5>

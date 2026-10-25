@@ -33,7 +33,7 @@ export default function MentionsLegales() {
           <h1 className="text-4xl md:text-6xl font-black text-white uppercase tracking-tighter leading-none">
             Mentions<br /><span className="text-[#FF4500]">Légales</span>
           </h1>
-          <p className="text-slate-400 text-sm font-bold mt-4">Dernière mise à jour : 3 mai 2026</p>
+          <p className="text-slate-400 text-sm font-bold mt-4">Dernière mise à jour : 25 octobre 2026</p>
         </div>
       </section>
 
@@ -155,12 +155,6 @@ export default function MentionsLegales() {
             <p className="text-slate-600 font-medium text-sm leading-relaxed mb-4">
               Les présentes mentions légales sont régies par le droit français. En cas de litige, une solution amiable sera recherchée avant toute action judiciaire.
               Conformément aux articles L. 616-1 et R. 616-1 du Code de la consommation, tout consommateur peut recourir gratuitement à un médiateur de la consommation.
-            </p>
-            <p className="text-slate-600 font-medium text-sm leading-relaxed">
-              Plateforme européenne de règlement en ligne des litiges :{' '}
-              <a href="https://ec.europa.eu/consumers/odr" className="text-[#FF4500] hover:underline" target="_blank" rel="noopener noreferrer">
-                ec.europa.eu/consumers/odr
-              </a>
             </p>
           </section>
 

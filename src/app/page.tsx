@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import PointsRelais from '@/components/PointsRelais';
 import { supabase } from '@/lib/supabase';
 import { 
   ArrowRight, Zap, MapPin, ShoppingCart, Truck, 
@@ -129,7 +130,7 @@ export default function Home() {
         <div className="max-w-6xl mx-auto">
           <div className="inline-flex items-center gap-2 bg-[#FF4500]/10 text-[#FF4500] px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider mb-6">
             <span className="w-1.5 h-1.5 rounded-full bg-[#FF4500] animate-pulse"></span>
-            Récolte ultra-locale 78
+            Fruits & légumes frais · Yvelines (78)
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
             <div className="z-10">
@@ -214,8 +215,8 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Link href="/livraison" className="bg-white border border-slate-100 rounded-[2rem] p-8 shadow-xl shadow-slate-100 min-h-[180px] flex flex-col justify-center hover:border-[#FF4500]/20 transition-all group">
             <Truck className="w-8 h-8 text-[#FF4500] mb-4 group-hover:translate-x-3 transition-transform" />
-            <h3 className="text-2xl font-black mb-1 uppercase italic tracking-tighter">Livraison Express</h3>
-            <p className="text-slate-500 text-sm font-medium">Reçu le matin, chez vous le lendemain.</p>
+            <h3 className="text-2xl font-black mb-1 uppercase italic tracking-tighter">Livraison rapide</h3>
+            <p className="text-slate-500 text-sm font-medium">Dès le lendemain, à la date de votre choix, entre 15h et 20h.</p>
           </Link>
           <div className="bg-[#FFF5F1] rounded-[2rem] p-8 min-h-[180px] flex flex-col justify-center border border-orange-100 shadow-xl shadow-orange-50">
             <MapPin className="w-8 h-8 text-[#FF4500] mb-4" />
@@ -242,9 +243,9 @@ export default function Home() {
               {
                 icon: <Clock className="w-7 h-7" />,
                 step: "01",
-                title: "Récoltés à maturité",
-                desc: "Nos agriculteurs partenaires cueillent vos fruits et légumes au pic de leur maturité.",
-                tag: "L'aube",
+                title: "Choisis à maturité",
+                desc: "Nous sélectionnons des fruits et légumes à point, en privilégiant les producteurs français de saison.",
+                tag: "Le choix",
                 bg: "bg-[#FFF5F1]",
                 border: "border-orange-100",
               },
@@ -302,8 +303,8 @@ export default function Home() {
           <div className="absolute -bottom-10 -left-10 w-48 h-48 bg-blue-500/10 blur-[60px] rounded-full pointer-events-none" />
           {[
             { label: "Fraîcheur", val: "100%", desc: "" },
-            { label: "Maturité", val: "Optim.", desc: "Sur l'arbre" },
-            { label: "Circuit", val: "Ultra", desc: "Zéro interm." },
+            { label: "Maturité", val: "Optim.", desc: "Choisis à point" },
+            { label: "Origine", val: "Claire", desc: "Sur chaque fiche" },
           ].map((stat, i) => (
             <div key={i} className="flex flex-col items-start relative z-10 group">
               <p className="text-4xl md:text-5xl font-black text-white leading-none tracking-tighter mb-2 group-hover:text-[#FF4500] transition-colors duration-300">
@@ -322,7 +323,7 @@ export default function Home() {
         <div className="bg-white rounded-[3rem] overflow-hidden shadow-2xl shadow-slate-200 border border-slate-50 grid lg:grid-cols-2">
           <div className="p-10 md:p-14 flex flex-col justify-center">
             <h3 className="text-4xl font-black uppercase italic tracking-tighter mb-6 text-slate-900 leading-[0.9]">ZONE DE <br/><span className="text-[#FF4500]">FRAÎCHEUR</span></h3>
-            <p className="text-sm text-slate-500 mb-8 font-semibold italic leading-relaxed">Livraison dans toutes les Yvelines (78). L'ultra-local est notre priorité.</p>
+            <p className="text-sm text-slate-500 mb-8 font-semibold italic leading-relaxed">Livraison dans toutes les Yvelines (78), au départ de nos 5 points relais : des trajets courts pour des produits frais.</p>
             <ul className="grid grid-cols-2 gap-4 mb-8">
               {['Chatou', 'Croissy', 'Mareil', 'St-Nom', 'Plaisir'].map((v, i) => (
                 <li key={i} className="flex items-center gap-2.5 text-[11px] font-black uppercase tracking-widest text-slate-400">
@@ -335,16 +336,8 @@ export default function Home() {
             </ul>
             <Link href="/livraison" className="text-xs font-black text-[#FF4500] underline underline-offset-8 decoration-2 hover:text-[#e63e00] transition-colors uppercase tracking-widest">Voir les détails de livraison</Link>
           </div>
-          <div className="h-[450px] w-full grayscale contrast-[1.1] hover:grayscale-0 transition-all duration-1000">
-            <iframe
-              src="https://www.google.com/maps/embed?pb=!1m12!1m8!1m3!1d84030.82565651523!2d2.0125!3d48.855!3m2!1i1024!2i768!4f13.1!2m1!1sYvelines%20Chatou%20Plaisir!5e0!3m2!1sfr!2sfr!4v1710000000000!5m2!1sfr!2sfr"
-              width="100%"
-              height="100%"
-              style={{ border: 0 }}
-              allowFullScreen={true}
-              loading="lazy"
-              suppressHydrationWarning
-            ></iframe>
+          <div className="min-h-[450px] w-full">
+            <PointsRelais />
           </div>
         </div>
       </section>
@@ -358,7 +351,7 @@ export default function Home() {
             PRÊT À GOÛTER <br/><span className="text-[#FF4500]">LA DIFFÉRENCE ?</span>
           </h2>
           <button 
-            onClick={() => handleActionClick('/commander')} 
+            onClick={() => handleActionClick(user ? '/commander' : '/signup')} 
             className="relative z-10 inline-flex items-center gap-3 bg-[#FF4500] text-white px-12 py-5 rounded-2xl font-black text-xl hover:scale-105 active:scale-95 transition-all shadow-2xl shadow-orange-500/30 group"
           >
             {user ? "Voir la récolte 🍓" : "Créer mon compte 🍓"}
@@ -368,7 +361,7 @@ export default function Home() {
       </section>
 
       <footer className="text-center py-6 opacity-30 text-[8px] font-black uppercase tracking-[0.4em] italic">
-        © Soleil et Saveurs 2026 — De l'arbre à l'assiette.
+        © Soleil et Saveurs 2026 — Fruits & légumes frais livrés dans le 78.
       </footer>
     </main>
   );

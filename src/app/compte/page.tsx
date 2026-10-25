@@ -1015,9 +1015,9 @@ export default function ComptePage() {
               <div className="absolute bottom-0 right-0 w-56 h-56 bg-[#FF4500]/15 blur-[80px] rounded-full pointer-events-none" />
               <div className="relative z-10">
                 <Truck className="w-8 h-8 text-[#FF4500] mb-4" />
-                <h3 className="text-xl font-black text-white uppercase tracking-tighter italic mb-2">Livraison J+0</h3>
+                <h3 className="text-xl font-black text-white uppercase tracking-tighter italic mb-2">Livraison dès le lendemain</h3>
                 <p className="text-slate-400 text-xs font-bold leading-relaxed mb-6">
-                  Récolté à 5h, chez vous pour le dîner. Gratuit dès 40€.
+                  Entre 15h et 20h, à la date de votre choix. Gratuit dès 40€.
                 </p>
                 <Link
                   href="/commander"

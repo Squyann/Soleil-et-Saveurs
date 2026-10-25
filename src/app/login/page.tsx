@@ -87,7 +87,7 @@ export default function LoginPage() {
           
           <h1 className="text-6xl font-black text-white leading-none tracking-tighter mb-8">
             VOS PRODUITS <br />
-            <span className="text-[#FF4500]">DIRECT PRODUCTEURS.</span>
+            <span className="text-[#FF4500]">FRAIS, LIVRÉS CHEZ VOUS.</span>
           </h1>
 
           <div className="space-y-6">
@@ -107,7 +107,7 @@ export default function LoginPage() {
               </div>
               <div>
                 <h3 className="text-white font-bold uppercase tracking-wider text-sm">Livraison Rapide</h3>
-                <p className="text-slate-400 text-sm leading-relaxed">Livré chez vous dans tout le 78 en moins de 24h.</p>
+                <p className="text-slate-400 text-sm leading-relaxed">Livré dans tout le 78, dès le lendemain, à la date de votre choix.</p>
               </div>
             </div>
 
@@ -116,8 +116,8 @@ export default function LoginPage() {
                 <ShieldCheck className="w-6 h-6 text-[#FF4500]" />
               </div>
               <div>
-                <h3 className="text-white font-bold uppercase tracking-wider text-sm">Paiement Sécurisé</h3>
-                <p className="text-slate-400 text-sm leading-relaxed">Transactions cryptées et option paiement à la livraison.</p>
+                <h3 className="text-white font-bold uppercase tracking-wider text-sm">Paiement à la livraison</h3>
+                <p className="text-slate-400 text-sm leading-relaxed">En espèces ou par carte bancaire, directement au livreur.</p>
               </div>
             </div>
           </div>
@@ -143,7 +143,7 @@ export default function LoginPage() {
             )}
 
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase ml-4 tracking-widest">Email Professionnel</label>
+              <label className="text-[10px] font-black text-slate-400 uppercase ml-4 tracking-widest">Email</label>
               <div className="relative group">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-[#FF4500] transition-colors" />
                 <input 

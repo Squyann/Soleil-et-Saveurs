@@ -88,10 +88,18 @@ export async function POST(req: NextRequest) {
 
     const lignesHTML = buildLignesHTML(commande.panier || []);
 
-    const remiseHTML = commande.remise_pct > 0
+    const remiseHTML = Number(commande.remise_pct) > 0
       ? `<tr>
-          <td style="padding:8px 12px;color:#16a34a;font-weight:bold;">Remise -${commande.remise_pct}%</td>
+          <td style="padding:8px 12px;color:#16a34a;font-weight:bold;">Remise -${Number(commande.remise_pct)}%</td>
           <td style="padding:8px 12px;text-align:right;color:#16a34a;font-weight:bold;">-${Number(commande.remise_montant).toFixed(2)}€</td>
+        </tr>`
+      : '';
+    // Le code promo est une remise distincte de fidélité / parrainage : sans cette
+    // ligne, les lignes de l'e-mail ne correspondaient pas au total facturé.
+    const remiseCodeHTML = Number(commande.remise_code_montant) > 0
+      ? `<tr>
+          <td style="padding:8px 12px;color:#16a34a;font-weight:bold;">Code promo -${Number(commande.remise_code_pct)}%</td>
+          <td style="padding:8px 12px;text-align:right;color:#16a34a;font-weight:bold;">-${Number(commande.remise_code_montant).toFixed(2)}€</td>
         </tr>`
       : '';
 
@@ -101,6 +109,7 @@ export async function POST(req: NextRequest) {
       <table style="width:100%;border-collapse:collapse;border:1px solid #f0f0f0;border-radius:12px;overflow:hidden;">
         ${lignesHTML}
         ${remiseHTML}
+        ${remiseCodeHTML}
         <tr>
           <td style="padding:10px 12px;color:#64748b;font-size:13px;">Livraison</td>
           <td style="padding:10px 12px;text-align:right;font-size:13px;color:#64748b;">${livraisonLabel}</td>

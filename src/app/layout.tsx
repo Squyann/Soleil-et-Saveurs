@@ -12,7 +12,7 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: 'Soleil et Saveurs',
-  description: 'Fruits et légumes ultra-locaux, livrés chez vous dans le 78.',
+  description: 'Fruits et légumes frais, livrés chez vous dans les Yvelines (78).',
   icons: { icon: '/logo.svg' },
 };
 
