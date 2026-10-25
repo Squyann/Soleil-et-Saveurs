@@ -2,6 +2,7 @@
 export const dynamic = 'force-dynamic';
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import { premieresOffertes, qtePayantePremieresOffertes } from '@/lib/promos';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -261,6 +262,7 @@ export default function ComptePage() {
         const reste = qteEffective % tailleLot;
         return acc + (nbLots * seuil + Math.min(reste, seuil)) * prixUnit;
       }
+      if (premieresOffertes(item) > 0) return acc + qtePayantePremieresOffertes(item, qteEffective) * prixUnit;
       return acc + qteEffective * prixUnit;
     }, 0);
 

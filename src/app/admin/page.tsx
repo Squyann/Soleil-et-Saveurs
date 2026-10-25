@@ -12,6 +12,7 @@ function escapeHtml(str: unknown): string {
 }
 import { supabase } from '@/lib/supabase';
 import CadrageImage from '@/components/CadrageImage';
+import { premieresOffertes, qtePayantePremieresOffertes, libellePremieresOffertes } from '@/lib/promos';
 import Link from 'next/link';
 import {
   LayoutDashboard, Package, ListTree, Search,
@@ -58,6 +59,7 @@ export default function AdminPage() {
   const [pourcentage, setPourcentage] = useState(0);
   const [seuilAchat, setSeuilAchat] = useState(0);
   const [qteOfferte, setQteOfferte] = useState(0);
+  const [premieresOffertesSaisie, setPremieresOffertesSaisie] = useState(0);
   const [seuilPromoQte, setSeuilPromoQte] = useState(0);
   const [prixPromo, setPrixPromo] = useState(0);
 
@@ -250,14 +252,17 @@ export default function AdminPage() {
     } catch (error: any) { alert("Erreur : " + error.message); }
   }
 
-  async function appliquerPromo(id: string) {
+  // retirer : supprime toute promo du produit (les setState du bouton corbeille
+  // ne sont pas encore appliqués quand cette fonction est appelée).
+  async function appliquerPromo(id: string, retirer = false) {
     try {
       const { error } = await supabase.from('products').update({
-        promotion: pourcentage,
-        seuil_achat: seuilAchat,
-        quantite_offerte: qteOfferte,
-        seuil_promo_qte: seuilPromoQte,
-        prix_promo: prixPromo,
+        promotion: retirer ? 0 : pourcentage,
+        seuil_achat: retirer ? 0 : seuilAchat,
+        quantite_offerte: retirer ? 0 : qteOfferte,
+        seuil_promo_qte: retirer ? 0 : seuilPromoQte,
+        prix_promo: retirer ? 0 : prixPromo,
+        premieres_offertes: retirer ? 0 : premieresOffertesSaisie,
       }).eq('id', id);
       if (error) throw error;
       setPromoProdId(null);
@@ -515,6 +520,7 @@ export default function AdminPage() {
         const reste = qteEffective % tailleLot;
         return acc + (nbLots * seuil + Math.min(reste, seuil)) * prixUnit;
       }
+      if (premieresOffertes(item) > 0) return acc + qtePayantePremieresOffertes(item, qteEffective) * prixUnit;
       return acc + qteEffective * prixUnit;
     }, 0);
 
@@ -1034,9 +1040,9 @@ export default function AdminPage() {
                 </div>
               ) : (
                 <div key={p.id} className={`p-6 bg-[#EDE3D5] rounded-[2.5rem] border border-slate-100 flex flex-col items-center relative transition-all hover:shadow-md group ${p.actif === false ? 'opacity-60 grayscale' : ''}`}>
-                  {(p.promotion > 0 || p.seuil_achat > 0) && (
+                  {(p.promotion > 0 || p.seuil_achat > 0 || premieresOffertes(p) > 0) && (
                     <div className="absolute top-4 right-4 bg-[#FF4500] text-white text-[9px] font-black px-2.5 py-1 rounded-full uppercase z-10 shadow-sm animate-pulse">
-                      {p.promotion > 0 ? `-${p.promotion}%` : `${p.seuil_achat}+${p.quantite_offerte}`}
+                      {p.promotion > 0 ? `-${p.promotion}%` : p.seuil_achat > 0 ? `${p.seuil_achat}+${p.quantite_offerte}` : libellePremieresOffertes(p)}
                     </div>
                   )}
                   {p.actif === false && (
@@ -1056,6 +1062,9 @@ export default function AdminPage() {
                     </p>
                   ) : (
                     <p className="text-xs font-bold text-[#FF4500] uppercase tracking-tighter">{p.price?.toFixed(2)}€ / {p.unite === 'g' ? 'kg' : p.unite}</p>
+                  )}
+                  {premieresOffertes(p) > 0 && (
+                    <p className="text-[10px] font-black text-green-600 uppercase tracking-tighter">{libellePremieresOffertes(p)}</p>
                   )}
                   {p.seuil_promo_qte > 0 && p.prix_promo > 0 && (
                     <p className="text-[10px] font-black text-blue-600 uppercase tracking-tighter">
@@ -1082,21 +1091,21 @@ export default function AdminPage() {
                   </button>
 
                   <div className="w-full mt-2">
-                    <button onClick={() => { setPromoProdId(promoProdId === p.id ? null : p.id); setPourcentage(0); setSeuilAchat(0); setQteOfferte(0); setSeuilPromoQte(0); setPrixPromo(0); }} className={`w-full text-[9px] font-black uppercase tracking-widest py-3 rounded-xl transition-all ${(p.promotion > 0 || p.seuil_achat > 0 || p.seuil_promo_qte > 0) ? 'bg-[#FF4500]/10 text-[#FF4500] border border-[#FF4500]/20' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}>
-                      {(p.promotion > 0 || p.seuil_achat > 0 || p.seuil_promo_qte > 0) ? '🔥 Modifier Promo' : 'Ajouter Promo'}
+                    <button onClick={() => { setPromoProdId(promoProdId === p.id ? null : p.id); setPourcentage(0); setSeuilAchat(0); setQteOfferte(0); setSeuilPromoQte(0); setPrixPromo(0); setPremieresOffertesSaisie(0); }} className={`w-full text-[9px] font-black uppercase tracking-widest py-3 rounded-xl transition-all ${(p.promotion > 0 || p.seuil_achat > 0 || p.seuil_promo_qte > 0 || p.premieres_offertes > 0) ? 'bg-[#FF4500]/10 text-[#FF4500] border border-[#FF4500]/20' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}>
+                      {(p.promotion > 0 || p.seuil_achat > 0 || p.seuil_promo_qte > 0 || p.premieres_offertes > 0) ? '🔥 Modifier Promo' : 'Ajouter Promo'}
                     </button>
                     {promoProdId === p.id && (
                       <div className="mt-3 p-4 bg-white rounded-2xl border border-slate-200 shadow-2xl flex flex-col gap-3 animate-in zoom-in-95 duration-200 z-20">
                         <div>
                           <p className="text-[8px] font-black uppercase text-slate-400 mb-1 tracking-tighter">Remise %</p>
-                          <input type="number" min="0" max="100" placeholder="Ex: 20" className="w-full p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg text-center" onChange={(e) => { setPourcentage(parseInt(e.target.value) || 0); setSeuilAchat(0); setQteOfferte(0); setSeuilPromoQte(0); setPrixPromo(0); }} />
+                          <input type="number" min="0" max="100" placeholder="Ex: 20" className="w-full p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg text-center" onChange={(e) => { setPourcentage(parseInt(e.target.value) || 0); setSeuilAchat(0); setQteOfferte(0); setSeuilPromoQte(0); setPrixPromo(0); setPremieresOffertesSaisie(0); }} />
                         </div>
                         {p.unite === 'kg' ? (
                           <div className="border-t border-slate-50 pt-2">
                             <p className="text-[8px] font-black uppercase text-slate-400 mb-1 tracking-tighter">Lot au kg (X kg achetés + Y kg offerts)</p>
                             <div className="flex gap-2">
                               <div className="w-1/2">
-                                <input type="number" step="0.5" min="0" placeholder="Ex: 2 kg" className="w-full p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg text-center" onChange={(e) => { setSeuilAchat(parseFloat(e.target.value) || 0); setPourcentage(0); setSeuilPromoQte(0); setPrixPromo(0); }} />
+                                <input type="number" step="0.5" min="0" placeholder="Ex: 2 kg" className="w-full p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg text-center" onChange={(e) => { setSeuilAchat(parseFloat(e.target.value) || 0); setPourcentage(0); setSeuilPromoQte(0); setPrixPromo(0); setPremieresOffertesSaisie(0); }} />
                                 <p className="text-[7px] text-center text-slate-300 font-bold mt-0.5 uppercase">Payés (kg)</p>
                               </div>
                               <div className="w-1/2">
@@ -1113,7 +1122,7 @@ export default function AdminPage() {
                             <p className="text-[8px] font-black uppercase text-slate-400 mb-1 tracking-tighter">Lot à l'unité (X achetés + Y offerts)</p>
                             <div className="flex gap-2">
                               <div className="w-1/2">
-                                <input type="number" step="1" min="0" placeholder="Ex: 3" className="w-full p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg text-center" onChange={(e) => { setSeuilAchat(parseFloat(e.target.value) || 0); setPourcentage(0); setSeuilPromoQte(0); setPrixPromo(0); }} />
+                                <input type="number" step="1" min="0" placeholder="Ex: 3" className="w-full p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg text-center" onChange={(e) => { setSeuilAchat(parseFloat(e.target.value) || 0); setPourcentage(0); setSeuilPromoQte(0); setPrixPromo(0); setPremieresOffertesSaisie(0); }} />
                                 <p className="text-[7px] text-center text-slate-300 font-bold mt-0.5 uppercase">Payés</p>
                               </div>
                               <div className="w-1/2">
@@ -1131,7 +1140,7 @@ export default function AdminPage() {
                                 type="number" step={p.unite === 'kg' || p.unite === 'g' ? '0.5' : '1'} min="0"
                                 placeholder={p.unite === 'g' ? 'Ex: 2 (kg)' : p.unite === 'kg' ? 'Ex: 2 kg' : 'Ex: 4'}
                                 className="w-full p-2.5 text-xs font-bold border border-blue-100 bg-blue-50 rounded-lg text-center focus:outline-none"
-                                onChange={(e) => { setSeuilPromoQte(parseFloat(e.target.value) || 0); setPourcentage(0); setSeuilAchat(0); setQteOfferte(0); }}
+                                onChange={(e) => { setSeuilPromoQte(parseFloat(e.target.value) || 0); setPourcentage(0); setSeuilAchat(0); setQteOfferte(0); setPremieresOffertesSaisie(0); }}
                               />
                               <p className="text-[7px] text-center text-blue-300 font-bold mt-0.5 uppercase">Seuil ({p.unite === 'g' ? 'kg' : p.unite})</p>
                             </div>
@@ -1151,10 +1160,25 @@ export default function AdminPage() {
                             </p>
                           )}
                         </div>
+                        {p.unite !== 'g' && (
+                          <div className="border-t border-slate-50 pt-2">
+                            <p className="text-[8px] font-black uppercase text-green-600 mb-1 tracking-tighter">Premières offertes (ex : 1ʳᵉ botte offerte, les suivantes au prix normal)</p>
+                            <input
+                              type="number" step="1" min="0" placeholder="Ex: 1"
+                              className="w-full p-2.5 text-xs font-bold border border-green-100 bg-green-50 rounded-lg text-center focus:outline-none"
+                              onChange={(e) => { setPremieresOffertesSaisie(parseInt(e.target.value) || 0); setPourcentage(0); setSeuilAchat(0); setQteOfferte(0); setSeuilPromoQte(0); setPrixPromo(0); }}
+                            />
+                            {premieresOffertesSaisie > 0 && (
+                              <p className="text-[8px] font-black text-green-600 mt-1 text-center">
+                                {libellePremieresOffertes({ unite: p.unite, premieres_offertes: premieresOffertesSaisie })}, puis {Number(p.price).toFixed(2)}€/{p.unite}
+                              </p>
+                            )}
+                          </div>
+                        )}
                         <div className="flex gap-2 mt-1">
                           <button onClick={() => appliquerPromo(p.id)} className="flex-1 bg-slate-900 text-white text-[9px] font-black py-3 rounded-lg shadow-md hover:bg-[#FF4500]">VALIDER</button>
-                          {(p.promotion > 0 || p.seuil_achat > 0 || p.seuil_promo_qte > 0) && (
-                            <button onClick={() => { setPourcentage(0); setSeuilAchat(0); setQteOfferte(0); setSeuilPromoQte(0); setPrixPromo(0); appliquerPromo(p.id); }} className="px-3 bg-red-100 text-red-500 rounded-lg"><Trash2 className="w-4 h-4" /></button>
+                          {(p.promotion > 0 || p.seuil_achat > 0 || p.seuil_promo_qte > 0 || p.premieres_offertes > 0) && (
+                            <button onClick={() => { setPourcentage(0); setSeuilAchat(0); setQteOfferte(0); setSeuilPromoQte(0); setPrixPromo(0); setPremieresOffertesSaisie(0); appliquerPromo(p.id, true); }} className="px-3 bg-red-100 text-red-500 rounded-lg"><Trash2 className="w-4 h-4" /></button>
                           )}
                         </div>
                       </div>

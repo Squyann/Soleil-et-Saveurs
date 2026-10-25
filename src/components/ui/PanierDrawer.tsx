@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Trash2, ShoppingBag, MapPin, CreditCard, Banknote, Phone, User, Loader2, CheckCircle2, AlertCircle, LogIn, Gift, TrendingDown, Calendar, Tag, ChevronLeft, ChevronRight, ChevronDown, Mail } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+import { premieresOffertes, qtePayantePremieresOffertes, libellePremieresOffertes } from '@/lib/promos';
 
 const VILLES_RELAIS = [
   { nom: "Chatou", lat: 48.8897, lon: 2.1574 },
@@ -169,7 +170,10 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
       return qteEffective * item.prix_promo;
     }
 
-    let prixUnitaire = parseFloat(item.price);
+    // Prix de base du produit : les anciens paniers stockaient dans `price` un
+    // prix déjà remisé (et originalPrice le prix de base) — la remise ci-dessous
+    // était alors appliquée deux fois.
+    let prixUnitaire = parseFloat(item.originalPrice ?? item.price);
 
     if (item.promotion && item.promotion > 0) {
       prixUnitaire = prixUnitaire * (1 - item.promotion / 100);
@@ -186,14 +190,18 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
       return qtePayante * prixUnitaire;
     }
 
+    if (premieresOffertes(item) > 0) {
+      return qtePayantePremieresOffertes(item, qteTotale) * prixUnitaire;
+    }
+
     return qteEffective * prixUnitaire;
   };
 
   const calculerEconomieTotale = () => {
     return (panier || []).reduce((acc, item) => {
       const prixNormalSansPromo = item.unite === 'g'
-        ? ((item.quantite || 0) / 1000) * parseFloat(item.price)
-        : (item.quantite || 0) * parseFloat(item.price);
+        ? ((item.quantite || 0) / 1000) * parseFloat(item.originalPrice ?? item.price)
+        : (item.quantite || 0) * parseFloat(item.originalPrice ?? item.price);
       const prixFinal = calculerPrixLigne(item);
       return acc + (prixNormalSansPromo - prixFinal);
     }, 0);
@@ -565,6 +573,11 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
                         {produitsOfferts > 0 && (
                           <div className="flex items-center gap-1 text-[#FF4500] text-[9px] font-black uppercase">
                             <Gift className="w-3 h-3" /> {produitsOfferts} offert(s)
+                          </div>
+                        )}
+                        {!prixDegressifActif && premieresOffertes(item) > 0 && (
+                          <div className="flex items-center gap-1 text-[#FF4500] text-[9px] font-black uppercase">
+                            <Gift className="w-3 h-3" /> {libellePremieresOffertes(item)}
                           </div>
                         )}
                         {prixDegressifActif && (

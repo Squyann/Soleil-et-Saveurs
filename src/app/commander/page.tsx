@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { ShoppingCart, Star, ArrowLeft, Plus, Info, Tag, CheckCircle2, TrendingDown, Gift, Search, X } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
+import { premieresOffertes, qtePayantePremieresOffertes, libellePremieresOffertes } from '@/lib/promos';
 
 export default function CommanderPage() {
   const [products, setProducts] = useState<any[]>([]);
@@ -115,10 +116,6 @@ export default function CommanderPage() {
     const panierActuel = JSON.parse(localStorage.getItem('mon-panier') || '[]');
     const index = panierActuel.findIndex((item: any) => item.id === product.id && (item.variant_id ?? null) === variantId);
 
-    const prixUnitairePromo = product.promotion > 0
-      ? product.price * (1 - product.promotion / 100)
-      : product.price;
-
     if (index >= 0) {
       panierActuel[index].quantite += qteFinale;
     } else {
@@ -128,7 +125,9 @@ export default function CommanderPage() {
         stock: product.stock,
         variant_id: variantId,
         variant_nom: variant ? variant.nom : null,
-        price: prixUnitairePromo,
+        // Prix de base : le panier applique lui-même la remise (sinon elle
+        // était comptée deux fois). originalPrice gardé pour les anciens paniers.
+        price: product.price,
         originalPrice: product.price,
         quantite: qteFinale
       });
@@ -246,7 +245,9 @@ export default function CommanderPage() {
                   ? product.price * (1 - product.promotion / 100)
                   : product.price;
 
-              const totalPrice = qteEffective * unitPrice;
+              // Promo « N premières offertes » (ignorée si le prix dégressif s'applique)
+              const nbPremieresOffertes = prixDegressifActif ? 0 : premieresOffertes(product);
+              const totalPrice = (nbPremieresOffertes > 0 ? qtePayantePremieresOffertes(product, currentQty) : qteEffective) * unitPrice;
               const totalEconomy = qteEffective * product.price - totalPrice;
 
               // --- CALCULS D'AFFICHAGE POUR LA PROMO X+Y ---
@@ -282,6 +283,13 @@ export default function CommanderPage() {
                         <TrendingDown className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                         <span className="hidden sm:inline">{`À partir de ${product.seuil_promo_qte}${product.unite === 'g' ? 'kg' : product.unite === 'pièce' ? ' pcs' : ` ${product.unite}`} : ${product.prix_promo.toFixed(2)}€`}</span>
                         <span className="sm:hidden">{product.prix_promo.toFixed(2)}€/{product.unite === 'g' ? 'kg' : product.unite}</span>
+                      </div>
+                    )}
+                    {premieresOffertes(product) > 0 && (
+                      <div className="bg-green-600 text-white text-[8px] sm:text-[10px] font-black px-2 py-1 sm:px-3 sm:py-1.5 rounded-full shadow-lg flex items-center gap-1 uppercase">
+                        <span>🎁</span>
+                        <span className="hidden sm:inline">{libellePremieresOffertes(product)}</span>
+                        <span className="sm:hidden">{premieresOffertes(product)} offerte{premieresOffertes(product) > 1 ? 's' : ''}</span>
                       </div>
                     )}
                   </div>
@@ -363,7 +371,7 @@ export default function CommanderPage() {
                     <div className="flex justify-between items-center">
                       <div className="flex items-baseline gap-1.5">
                         <span className={`text-sm sm:text-xl font-black ${prixDegressifActif ? 'text-blue-600' : 'text-slate-900'}`}>{totalPrice.toFixed(2)}€</span>
-                        {(product.promotion > 0 || prixDegressifActif) && (
+                        {(product.promotion > 0 || prixDegressifActif || nbPremieresOffertes > 0) && (
                           <span className="text-[9px] sm:text-xs line-through text-slate-300 font-bold italic">{(product.price * qteEffective).toFixed(2)}€</span>
                         )}
                       </div>
