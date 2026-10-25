@@ -1,45 +1,46 @@
 'use client';
 import React, { useState } from 'react';
 import Link from 'next/link';
+import PointsRelais from '@/components/PointsRelais';
 import { 
   Truck, MapPin, CheckCircle2, Clock, ShieldCheck, 
   ArrowLeft, Search, Navigation, Package, RefreshCcw,
-  AlertCircle, Info
+  AlertCircle
 } from 'lucide-react';
 
 // --- EXEMPLES DE VILLES DESSERVIES (la livraison couvre tout le 78) ---
 const ELIGIBLE_ZONES = [
   // Zone CHATOU / CROISSY
-  { cp: "78400", city: "Chatou", delay: "J+0" },
-  { cp: "78290", city: "Croissy-sur-Seine", delay: "J+0" },
-  { cp: "78360", city: "Montesson", delay: "J+0" },
-  { cp: "78420", city: "Carrières-sur-Seine", delay: "J+0" },
-  { cp: "78110", city: "Le Vésinet", delay: "J+0" },
-  { cp: "78230", city: "Le Pecq", delay: "J+0" },
+  { cp: "78400", city: "Chatou" },
+  { cp: "78290", city: "Croissy-sur-Seine" },
+  { cp: "78360", city: "Montesson" },
+  { cp: "78420", city: "Carrières-sur-Seine" },
+  { cp: "78110", city: "Le Vésinet" },
+  { cp: "78230", city: "Le Pecq" },
   
   // Zone SAINT-NOM-LA-BRETECHE
-  { cp: "78860", city: "Saint-Nom-la-Bretèche", delay: "J+0" },
-  { cp: "78590", city: "Noisy-le-Roi", delay: "J+0" },
-  { cp: "78620", city: "L'Étang-la-Ville", delay: "J+0" },
-  { cp: "78810", city: "Feucherolles", delay: "J+0" },
-  { cp: "78450", city: "Chavenay", delay: "J+0" },
+  { cp: "78860", city: "Saint-Nom-la-Bretèche" },
+  { cp: "78590", city: "Noisy-le-Roi" },
+  { cp: "78620", city: "L'Étang-la-Ville" },
+  { cp: "78810", city: "Feucherolles" },
+  { cp: "78450", city: "Chavenay" },
 
   // Zone MAREIL-SUR-MAULDRE
-  { cp: "78124", city: "Mareil-sur-Mauldre", delay: "J+0" },
-  { cp: "78580", city: "Maule", delay: "J+0" },
-  { cp: "78124", city: "Montainville", delay: "J+0" },
-  { cp: "78650", city: "Beynes", delay: "J+0" },
-  { cp: "78580", city: "Herbeville", delay: "J+0" },
+  { cp: "78124", city: "Mareil-sur-Mauldre" },
+  { cp: "78580", city: "Maule" },
+  { cp: "78124", city: "Montainville" },
+  { cp: "78650", city: "Beynes" },
+  { cp: "78580", city: "Herbeville" },
 
   // Zone PLAISIR / VILLEPREUX
-  { cp: "78370", city: "Plaisir", delay: "J+0" },
-  { cp: "78450", city: "Villepreux", delay: "J+0" },
-  { cp: "78340", city: "Les Clayes-sous-Bois", delay: "J+0" },
-  { cp: "78330", city: "Fontenay-le-Fleury", delay: "J+0" },
-  { cp: "78210", city: "Saint-Cyr-l'École", delay: "J+0" },
-  { cp: "78640", city: "Neauphle-le-Château", delay: "J+0" },
-  { cp: "78760", city: "Jouars-Pontchartrain", delay: "J+0" },
-  { cp: "78640", city: "Villiers-Saint-Frédéric", delay: "J+0" },
+  { cp: "78370", city: "Plaisir" },
+  { cp: "78450", city: "Villepreux" },
+  { cp: "78340", city: "Les Clayes-sous-Bois" },
+  { cp: "78330", city: "Fontenay-le-Fleury" },
+  { cp: "78210", city: "Saint-Cyr-l'École" },
+  { cp: "78640", city: "Neauphle-le-Château" },
+  { cp: "78760", city: "Jouars-Pontchartrain" },
+  { cp: "78640", city: "Villiers-Saint-Frédéric" },
 ].sort((a, b) => a.city.localeCompare(b.city)); // Tri alphabétique pour la clarté
 
 export default function LivraisonPage() {
@@ -83,7 +84,7 @@ export default function LivraisonPage() {
         
         <div className="max-w-4xl mx-auto relative z-10">
           <h1 className="text-4xl md:text-7xl font-black text-white uppercase tracking-tighter mb-6 italic">
-            LIVRAISON <span className="text-[#FF4500]">ULTRA-LOCALE</span>
+            LIVRAISON <span className="text-[#FF4500]">DANS LE 78</span>
           </h1>
           <p className="text-slate-400 text-sm md:text-base font-bold uppercase tracking-[0.2em] mb-12 max-w-2xl mx-auto">
             Nous livrons dans tout le département des Yvelines (78), au départ de nos points relais.
@@ -112,13 +113,13 @@ export default function LivraisonPage() {
               {status === 'eligible' && (
                 <div className="bg-green-500/10 border border-green-500/20 p-4 rounded-xl flex items-center gap-3 text-green-400">
                   <CheckCircle2 className="w-5 h-5 shrink-0" />
-                  <p className="text-[10px] font-black uppercase text-left">Génial ! Vous êtes dans notre zone de récolte directe. Livraison J+0 disponible.</p>
+                  <p className="text-[10px] font-black uppercase text-left">Génial ! Vous êtes dans notre zone de livraison. Livraison dès le lendemain, selon les dates proposées.</p>
                 </div>
               )}
               {status === 'not-eligible' && (
                 <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-xl flex items-center gap-3 text-red-400">
                   <AlertCircle className="w-5 h-5 shrink-0" />
-                  <p className="text-[10px] font-black uppercase text-left">Nous ne livrons pas encore chez vous. Laissez votre mail sur WhatsApp pour être prévenu !</p>
+                  <p className="text-[10px] font-black uppercase text-left">Nous ne livrons pas encore chez vous. Écrivez-nous sur WhatsApp pour être prévenu(e) !</p>
                 </div>
               )}
             </div>
@@ -133,21 +134,21 @@ export default function LivraisonPage() {
             <div className="w-14 h-14 bg-orange-50 rounded-2xl flex items-center justify-center mb-4 text-[#FF4500]">
               <Clock className="w-7 h-7" />
             </div>
-            <h3 className="font-black uppercase text-sm mb-2">Flux Tendu</h3>
-            <p className="text-[11px] text-slate-500 font-medium leading-relaxed italic">Commande avant minuit, dans votre assiette le lendemain.</p>
+            <h3 className="font-black uppercase text-sm mb-2">Dès le lendemain</h3>
+            <p className="text-[11px] text-slate-500 font-medium leading-relaxed italic">Commandez avant minuit et choisissez votre date : livraison dès le lendemain, entre 15h et 20h, selon les jours proposés.</p>
           </div>
           <div className="bg-white p-8 rounded-[32px] shadow-xl border border-slate-100 flex flex-col items-center text-center">
             <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center mb-4 text-blue-500">
               <Package className="w-7 h-7" />
             </div>
-            <h3 className="font-black uppercase text-sm mb-2">Cagette Consignée</h3>
-            <p className="text-[11px] text-slate-500 font-medium leading-relaxed italic">Zéro carton inutile. Nous récupérons les cagettes à chaque passage.</p>
+            <h3 className="font-black uppercase text-sm mb-2">Cagette consignée</h3>
+            <p className="text-[11px] text-slate-500 font-medium leading-relaxed italic">Consigne gratuite : rendez votre cagette au livreur lors de la livraison suivante.</p>
           </div>
           <div className="bg-white p-8 rounded-[32px] shadow-xl border border-slate-50 flex flex-col items-center text-center">
             <div className="w-14 h-14 bg-green-50 rounded-2xl flex items-center justify-center mb-4 text-green-500">
               <ShieldCheck className="w-7 h-7" />
             </div>
-            <h3 className="font-black uppercase text-sm mb-2">Frais Fixes</h3>
+            <h3 className="font-black uppercase text-sm mb-2">Frais de livraison</h3>
             <p className="text-[11px] text-slate-500 font-medium leading-relaxed italic">Gratuit dès 40€. En dessous, participation de 3€ à 5€ selon la distance à nos points relais.</p>
           </div>
         </div>
@@ -163,8 +164,8 @@ export default function LivraisonPage() {
               POURQUOI LES <span className="text-[#FF4500]">YVELINES ?</span>
             </h2>
             <p className="text-slate-500 font-medium leading-relaxed italic">
-              Parce que la saveur d'une fraise ou d'une salade décline à chaque kilomètre parcouru. 
-              En concentrant nos livraisons sur le seul département des <span className="text-slate-900 font-bold">Yvelines (78)</span>, au départ de nos points relais, nous garantissons un produit qui n'a perdu aucune fraîcheur.
+              Parce que la fraîcheur se joue aussi sur le dernier trajet. 
+              En concentrant nos livraisons sur le seul département des <span className="text-slate-900 font-bold">Yvelines (78)</span>, au départ de nos points relais, vos produits passent le moins de temps possible sur la route.
             </p>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -178,33 +179,15 @@ export default function LivraisonPage() {
               <div className="flex gap-4 items-start p-4 bg-slate-50 rounded-2xl">
                 <div className="p-2 bg-white rounded-lg shadow-sm"><MapPin className="w-4 h-4 text-[#FF4500]"/></div>
                 <div>
-                  <h4 className="text-[10px] font-black uppercase">Soutien Local</h4>
-                  <p className="text-[9px] text-slate-400 font-bold uppercase">100% Yvelines uniquement</p>
+                  <h4 className="text-[10px] font-black uppercase">Livraison locale</h4>
+                  <p className="text-[9px] text-slate-400 font-bold uppercase">100% Yvelines (78)</p>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="relative rounded-[40px] overflow-hidden shadow-2xl border-8 border-white bg-slate-100 h-[500px]">
-             <iframe 
-              src="https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d84074.83177659556!2d1.954602!3d48.814324!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sfr!2sfr!4v1709650000000!5m2!1sfr!2sfr&q=Plaisir+78&z=11" 
-              width="100%" 
-              height="100%" 
-              style={{ border: 0 }} 
-              allowFullScreen={true} 
-              loading="lazy"
-              className="grayscale contrast-125 hover:grayscale-0 transition-all duration-1000"
-            ></iframe>
-            {/* Overlay d'information sur la carte */}
-            <div className="absolute bottom-6 left-6 right-6 bg-slate-900 text-white p-6 rounded-3xl shadow-2xl flex items-center justify-between">
-              <div>
-                <p className="text-[9px] font-black uppercase tracking-widest text-[#FF4500]">Zone de couverture</p>
-                <p className="text-xs font-bold italic">Chatou, Mareil, St-Nom, Plaisir...</p>
-              </div>
-              <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center">
-                <Info className="w-5 h-5" />
-              </div>
-            </div>
+          <div className="relative rounded-[40px] overflow-hidden shadow-2xl border-8 border-white">
+            <PointsRelais />
           </div>
         </div>
 
@@ -216,7 +199,6 @@ export default function LivraisonPage() {
                 <div key={i} className="flex flex-col border-l-2 border-[#FF4500] pl-4">
                   <span className="text-xs font-black text-slate-900 leading-none">{zone.city}</span>
                   <span className="text-[10px] font-bold text-slate-400 uppercase mt-1">{zone.cp}</span>
-                  <span className="text-[9px] font-black text-green-500 uppercase mt-2 bg-green-50 self-start px-2 py-0.5 rounded-full">{zone.delay}</span>
                 </div>
               ))}
            </div>

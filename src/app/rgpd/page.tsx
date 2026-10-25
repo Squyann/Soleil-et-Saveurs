@@ -35,7 +35,7 @@ export default function RGPDPage() {
           <h1 className="text-4xl md:text-6xl font-black text-white uppercase tracking-tighter leading-none">
             Politique de<br /><span className="text-[#FF4500]">Confidentialité</span>
           </h1>
-          <p className="text-slate-400 text-sm font-bold mt-4">Dernière mise à jour : 3 mai 2026 — Conforme au RGPD (UE) 2016/679</p>
+          <p className="text-slate-400 text-sm font-bold mt-4">Dernière mise à jour : 25 octobre 2026 — Conforme au RGPD (UE) 2016/679</p>
         </div>
       </section>
 
@@ -44,7 +44,7 @@ export default function RGPDPage() {
         <div className="max-w-5xl mx-auto flex items-start gap-3">
           <Shield className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
           <p className="text-blue-700 font-bold text-xs leading-relaxed">
-            Soleil et Saveurs s'engage à protéger votre vie privée. Nous ne collectons que les données strictement nécessaires à la réalisation de vos commandes et n'en faisons aucun usage commercial.
+            Soleil et Saveurs s'engage à protéger votre vie privée. Nous ne collectons que les données strictement nécessaires à la réalisation de vos commandes. Nous ne vous envoyons nos offres par e-mail que si vous l'avez accepté.
           </p>
         </div>
       </div>
@@ -95,7 +95,11 @@ export default function RGPDPage() {
                 <ul className="space-y-1.5 text-slate-600 font-medium">
                   <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-[#FF4500] rounded-full flex-shrink-0" />Adresse email</li>
                   <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-[#FF4500] rounded-full flex-shrink-0" />Mot de passe (chiffré, non accessible)</li>
-                  <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-[#FF4500] rounded-full flex-shrink-0" />Prénom et nom (optionnel à l'inscription)</li>
+                  <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-[#FF4500] rounded-full flex-shrink-0" />Prénom et nom</li>
+                  <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-[#FF4500] rounded-full flex-shrink-0" />Date de naissance (vérification de la majorité)</li>
+                  <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-[#FF4500] rounded-full flex-shrink-0" />Téléphone et adresse</li>
+                  <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-[#FF4500] rounded-full flex-shrink-0" />Code de parrainage utilisé (le cas échéant)</li>
+                  <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-[#FF4500] rounded-full flex-shrink-0" />Choix de recevoir ou non nos offres par e-mail</li>
                 </ul>
               </div>
               <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm">
@@ -105,6 +109,8 @@ export default function RGPDPage() {
                   <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-[#FF4500] rounded-full flex-shrink-0" />Numéro de téléphone (pour la livraison)</li>
                   <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-[#FF4500] rounded-full flex-shrink-0" />Adresse de livraison complète</li>
                   <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-[#FF4500] rounded-full flex-shrink-0" />Contenu et montant de la commande</li>
+                  <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-[#FF4500] rounded-full flex-shrink-0" />Date de livraison et commentaire éventuel</li>
+                  <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-[#FF4500] rounded-full flex-shrink-0" />Points de fidélité, parrainage et code promo utilisés</li>
                 </ul>
               </div>
               <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm">
@@ -159,11 +165,16 @@ export default function RGPDPage() {
                     <td className="p-3">Intérêt légitime (sécurité)</td>
                     <td className="p-3">6(1)(f)</td>
                   </tr>
+                  <tr className="border-t border-slate-100 bg-slate-50">
+                    <td className="p-3">Envoi de nos offres par e-mail (si vous l'avez accepté)</td>
+                    <td className="p-3">Consentement (retirable à tout moment)</td>
+                    <td className="p-3">6(1)(a)</td>
+                  </tr>
                 </tbody>
               </table>
             </div>
             <p className="text-slate-600 font-medium leading-relaxed mt-4">
-              Nous n'utilisons pas vos données à des fins de marketing direct, de profilage commercial ou de vente à des tiers.
+              Nous ne faisons aucun profilage commercial et ne vendons jamais vos données. Les offres par e-mail ne sont envoyées qu'aux clients qui l'ont accepté à l'inscription ; vous pouvez retirer ce consentement à tout moment par simple e-mail.
             </p>
           </section>
 
@@ -182,7 +193,7 @@ export default function RGPDPage() {
               </div>
               <div className="flex justify-between items-center bg-slate-50 rounded-2xl p-4 border border-slate-100">
                 <span className="font-bold text-slate-700">Cookie de session</span>
-                <span className="text-[#FF4500] font-black text-xs uppercase">Durée de la session</span>
+                <span className="text-[#FF4500] font-black text-xs uppercase">Jusqu'à la déconnexion</span>
               </div>
               <div className="flex justify-between items-center bg-slate-50 rounded-2xl p-4 border border-slate-100">
                 <span className="font-bold text-slate-700">Panier (localStorage)</span>
@@ -213,9 +224,30 @@ export default function RGPDPage() {
                   <p className="text-slate-500 font-medium text-xs">Hébergement du site web.</p>
                 </div>
               </div>
+              <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm flex items-start gap-4">
+                <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center flex-shrink-0 font-black text-xs text-slate-900">RS</div>
+                <div>
+                  <p className="font-black text-xs uppercase text-slate-900 mb-1">Resend</p>
+                  <p className="text-slate-500 font-medium text-xs">Envoi des e-mails de confirmation et de livraison (adresse e-mail, nom, adresse et contenu de la commande).</p>
+                </div>
+              </div>
+              <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm flex items-start gap-4">
+                <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center flex-shrink-0 font-black text-xs text-slate-900">TG</div>
+                <div>
+                  <p className="font-black text-xs uppercase text-slate-900 mb-1">Telegram et Anthropic</p>
+                  <p className="text-slate-500 font-medium text-xs">Assistant de gestion réservé à l'administrateur : consultation des commandes du jour (nom, téléphone, adresse, articles).</p>
+                </div>
+              </div>
+              <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm flex items-start gap-4">
+                <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center flex-shrink-0 font-black text-xs text-slate-900">BA</div>
+                <div>
+                  <p className="font-black text-xs uppercase text-slate-900 mb-1">Base Adresse Nationale (État)</p>
+                  <p className="text-slate-500 font-medium text-xs">Vérification et géolocalisation de l'adresse saisie (api-adresse.data.gouv.fr), pour la zone et les frais de livraison.</p>
+                </div>
+              </div>
             </div>
             <p className="text-slate-600 font-medium leading-relaxed mt-4">
-              Ces sous-traitants agissent exclusivement sur nos instructions et sont soumis à des obligations contractuelles de confidentialité conformes au RGPD.
+              Ces sous-traitants agissent exclusivement sur nos instructions et sont soumis à des obligations contractuelles de confidentialité conformes au RGPD. Certains sont établis hors de l'Union européenne (notamment aux États-Unis), ce qui implique un transfert de données hors UE.
               <strong className="text-slate-900"> Aucune donnée n'est vendue ou cédée à des tiers à des fins commerciales.</strong>
             </p>
           </section>
@@ -263,7 +295,7 @@ export default function RGPDPage() {
             <ul className="space-y-2 text-slate-600 font-medium">
               <li className="flex items-start gap-2"><span className="w-1.5 h-1.5 bg-green-500 rounded-full flex-shrink-0 mt-1.5" />Connexion chiffrée HTTPS (TLS) sur l'ensemble du site</li>
               <li className="flex items-start gap-2"><span className="w-1.5 h-1.5 bg-green-500 rounded-full flex-shrink-0 mt-1.5" />Mots de passe hachés (bcrypt via Supabase Auth)</li>
-              <li className="flex items-start gap-2"><span className="w-1.5 h-1.5 bg-green-500 rounded-full flex-shrink-0 mt-1.5" />Accès administrateur protégé par authentification forte</li>
+              <li className="flex items-start gap-2"><span className="w-1.5 h-1.5 bg-green-500 rounded-full flex-shrink-0 mt-1.5" />Accès administrateur réservé au compte administrateur (rôle vérifié côté serveur)</li>
               <li className="flex items-start gap-2"><span className="w-1.5 h-1.5 bg-green-500 rounded-full flex-shrink-0 mt-1.5" />Règles de sécurité au niveau base de données (RLS Supabase)</li>
               <li className="flex items-start gap-2"><span className="w-1.5 h-1.5 bg-green-500 rounded-full flex-shrink-0 mt-1.5" />Aucune donnée de paiement stockée sur nos serveurs</li>
             </ul>
@@ -290,7 +322,7 @@ export default function RGPDPage() {
                   <tr className="border-b border-slate-100">
                     <td className="p-3 font-mono">sb-*-auth-token</td>
                     <td className="p-3">Session d'authentification Supabase</td>
-                    <td className="p-3">Session</td>
+                    <td className="p-3">Jusqu'à la déconnexion</td>
                     <td className="p-3"><span className="bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full text-[9px] font-black uppercase">Technique</span></td>
                   </tr>
                   <tr className="bg-slate-50">

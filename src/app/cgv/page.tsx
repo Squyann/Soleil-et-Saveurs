@@ -36,7 +36,7 @@ export default function CGVPage() {
           <h1 className="text-4xl md:text-6xl font-black text-white uppercase tracking-tighter leading-none">
             Conditions<br /><span className="text-[#FF4500]">Générales de Vente</span>
           </h1>
-          <p className="text-slate-400 text-sm font-bold mt-4">Dernière mise à jour : 1er octobre 2026 — Applicables à toute commande passée sur soleiletsaveurs.fr</p>
+          <p className="text-slate-400 text-sm font-bold mt-4">Dernière mise à jour : 25 octobre 2026 — Applicables à toute commande passée sur soleiletsaveurs.fr</p>
         </div>
       </section>
 
@@ -78,7 +78,7 @@ export default function CGVPage() {
               2. Produits & disponibilité
             </h2>
             <p className="text-slate-600 font-medium leading-relaxed mb-4">
-              Soleil et Saveurs commercialise des produits frais issus de l'agriculture locale (fruits, légumes, épicerie) provenant principalement des Yvelines (78). Les produits proposés sont ceux figurant au catalogue en ligne au moment de la consultation, dans la limite des stocks disponibles.
+              Soleil et Saveurs commercialise des fruits et légumes frais ainsi que des produits d'épicerie. Nous privilégions les producteurs français et les produits de saison ; l'origine de chaque produit est indiquée sur sa fiche. Les produits proposés sont ceux figurant au catalogue en ligne au moment de la consultation, dans la limite des stocks disponibles.
             </p>
             <div className="bg-orange-50 border border-orange-100 rounded-2xl p-5 space-y-2">
               <p className="font-black text-xs uppercase text-[#FF4500] tracking-widest mb-2">Spécificités produits frais</p>
@@ -222,7 +222,7 @@ export default function CGVPage() {
               8. Conformité & réclamations
             </h2>
             <p className="text-slate-600 font-medium leading-relaxed mb-4">
-              Soleil et Saveurs s'engage à livrer des produits conformes à la commande et aux normes de qualité en vigueur. En cas de problème (produit abîmé, erreur de livraison), le Client dispose de <strong className="text-slate-900">24h après réception</strong> pour nous le signaler avec photo à l'appui.
+              Soleil et Saveurs s'engage à livrer des produits conformes à la commande et aux normes de qualité en vigueur. En cas de problème (produit abîmé, erreur de livraison), le Client dispose de <strong className="text-slate-900">24h après réception</strong> pour nous le signaler avec photo à l'appui — idéalement dans les 2h suivant la livraison, pour un traitement plus rapide.
             </p>
             <p className="text-slate-600 font-medium leading-relaxed">
               Contact : <strong className="text-slate-900">soleiletsaveurs.livraison@gmail.com</strong> ou via WhatsApp au <strong className="text-slate-900">07 59 72 00 83</strong>.
@@ -259,12 +259,6 @@ export default function CGVPage() {
             <p className="text-slate-600 font-medium leading-relaxed mb-4">
               À défaut de résolution amiable, le Client peut recourir gratuitement à la médiation de la consommation conformément aux articles L. 616-1 et R. 616-1 du Code de la consommation.
             </p>
-            <p className="text-slate-600 font-medium leading-relaxed">
-              Plateforme européenne de règlement en ligne des litiges :{' '}
-              <a href="https://ec.europa.eu/consumers/odr" className="text-[#FF4500] hover:underline" target="_blank" rel="noopener noreferrer">
-                ec.europa.eu/consumers/odr
-              </a>
-            </p>
           </section>
 
           {/* Liens vers les autres pages légales */}
@@ -294,7 +288,7 @@ export default function CGVPage() {
 
       <footer className="py-16 border-t border-slate-100 text-center">
         <p className="text-[9px] font-black uppercase tracking-[0.4em] text-slate-300">
-          © 2026 Soleil et Saveurs — Plaisir (78)
+          © 2026 Soleil et Saveurs — Bagnolet (93)
         </p>
       </footer>
     </div>

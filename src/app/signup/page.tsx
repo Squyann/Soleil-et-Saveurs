@@ -151,7 +151,7 @@ export default function SignupPage() {
           <div className="space-y-4">
             <div className="bg-[#F5EAE0]/5 p-6 rounded-3xl border border-white/10 backdrop-blur-sm flex gap-4 items-center">
               <Gift className="w-8 h-8 text-[#FF4500]" />
-              <p className="text-slate-300 text-xs font-black uppercase tracking-widest">-10% sur votre 1ère commande</p>
+              <p className="text-slate-300 text-xs font-black uppercase tracking-widest">-10% sur votre 1ère commande avec le code SOLEIL78</p>
             </div>
             <div className="bg-[#F5EAE0]/5 p-6 rounded-3xl border border-white/10 backdrop-blur-sm flex gap-4 items-center">
               <ShieldCheck className="w-8 h-8 text-green-400" />
@@ -213,7 +213,7 @@ export default function SignupPage() {
             </div>
 
             <div className="space-y-1 relative">
-              <label className="text-[10px] font-black text-slate-400 uppercase ml-4">Adresse Complète (Zone Chatou, Croissy, Mareil, St-Nom, Plaisir)</label>
+              <label className="text-[10px] font-black text-slate-400 uppercase ml-4">Adresse complète (Yvelines 78)</label>
               <div className="relative">
                 <MapPin className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 ${address && !isEligibleZone ? 'text-red-500' : 'text-slate-300'}`} />
                 <input type="text" required placeholder="Tapez votre adresse..." value={address} onChange={(e) => { setAddress(e.target.value); setAddressDept(null); }}
@@ -271,7 +271,7 @@ export default function SignupPage() {
                   className="w-full bg-[#F5EAE0] border border-[#D5C9B8] p-3 pl-10 rounded-2xl font-bold text-sm uppercase outline-none focus:border-[#FF4500] tracking-widest"
                 />
               </div>
-              <p className="text-[9px] text-slate-400 font-bold ml-4">Vous et votre parrain obtiendrez -10% sur votre prochaine commande</p>
+              <p className="text-[9px] text-slate-400 font-bold ml-4">Votre parrain reçoit -10% sur sa prochaine commande, et vous -10% sur votre 2e commande</p>
             </div>
 
             <label className="flex items-start gap-3 px-1 cursor-pointer">

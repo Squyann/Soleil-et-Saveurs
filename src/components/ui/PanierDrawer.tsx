@@ -392,7 +392,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
             telephone,
             adresse,
             email_client: user.email,
-            methode_paiement: 'Espèces',
+            methode_paiement: 'À la livraison (espèces ou carte)',
             panier: panier.map(item => ({
               name: item.name,
               quantite: item.quantite,
@@ -402,7 +402,10 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
             date_livraison: dateLivraison || null,
             remise_pct: remisePct,
             remise_montant: remiseMontant,
-            frais_livraison: fraisLivraison,
+            remise_code_pct: codeStatut === 'valid' ? remiseCode : 0,
+            remise_code_montant: (result as any)?.remise_code ?? remiseCodeMontant,
+            // Montant réellement facturé, recalculé par le serveur
+            frais_livraison: (result as any)?.frais_livraison ?? fraisLivraison,
             total: totalServeur,
           },
         }),
@@ -699,7 +702,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
                       />
                       <div className="flex-1">
                         <p className="font-black text-[11px] text-slate-900 uppercase">Remise parrainage -10%</p>
-                        <p className="text-[9px] text-slate-400 font-bold uppercase">Offerte par votre parrain</p>
+                        <p className="text-[9px] text-slate-400 font-bold uppercase">Programme de parrainage</p>
                       </div>
                       <span className="font-black text-xs text-green-600 shrink-0">-{(sousTotalFinal * 0.1).toFixed(2)}€</span>
                     </label>
@@ -780,8 +783,8 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
                   <button onClick={()=>setMethodePaiement('Espèces')} className={`p-4 rounded-2xl border flex flex-col items-center gap-2 font-black text-[10px] transition-all ${methodePaiement === 'Espèces' ? 'bg-[#3D2B1F] text-white border-slate-900 shadow-lg' : 'bg-white text-slate-400 border-[#D5C9B8]'}`}>
-                    <Banknote className="w-5 h-5" /> ESPÈCES
-                    <span className="text-[9px] font-bold normal-case opacity-70">(carte bleue)</span>
+                    <Banknote className="w-5 h-5" /> ESPÈCES OU CARTE
+                    <span className="text-[9px] font-bold normal-case opacity-70">(à la livraison)</span>
                   </button>
                   <button type="button" disabled aria-disabled="true" className="p-4 rounded-2xl border flex flex-col items-center gap-2 font-black text-[10px] transition-all bg-white text-slate-300 border-[#D5C9B8] cursor-not-allowed opacity-60">
                     <CreditCard className="w-5 h-5" /> CARTE EN LIGNE
