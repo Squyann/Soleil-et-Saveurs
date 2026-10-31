@@ -12,6 +12,8 @@ function escapeHtml(str: unknown): string {
 }
 import { supabase } from '@/lib/supabase';
 import CadrageImage from '@/components/CadrageImage';
+import nextDynamic from 'next/dynamic';
+import { completudeFiche, type Fiche } from '@/lib/fiches';
 import { premieresOffertes, qtePayantePremieresOffertes, libellePremieresOffertes } from '@/lib/promos';
 import Link from 'next/link';
 import {
@@ -19,8 +21,12 @@ import {
   RefreshCcw, Printer, Phone, MessageSquare,
   Trash2, Plus, Truck, CheckCircle2, Clock, Mail, Save, Edit3, X,
   Inbox, Send, Eye, EyeOff, ChevronDown, ChevronUp,
-  BarChart2, Calendar, TrendingUp, ToggleLeft, ToggleRight, Tag, Loader2, ChevronLeft, ChevronRight, AlertTriangle
+  BarChart2, Calendar, TrendingUp, ToggleLeft, ToggleRight, Tag, Loader2, ChevronLeft, ChevronRight, AlertTriangle,
+  FileText, ExternalLink
 } from 'lucide-react';
+
+// Éditeur des pages produits : chargé seulement à son ouverture
+const EditeurFiche = nextDynamic(() => import('@/components/admin/EditeurFiche'), { ssr: false });
 
 interface StatsType {
   total: number;
@@ -51,6 +57,10 @@ export default function AdminPage() {
   // produitId : produit existant en cours de modification, null pour le formulaire « Nouveau produit ».
   const [cadrage, setCadrage] = useState<{ src: string; produitId: string | null } | null>(null);
   const [editFormData, setEditFormData] = useState<any>(null);
+  // Pages produits détaillées (une fiche par produit, indexées par product_id)
+  const [fiches, setFiches] = useState<{ [productId: string]: Fiche }>({});
+  const [ficheProdId, setFicheProdId] = useState<string | null>(null);
+  const [filtreFiche, setFiltreFiche] = useState<'tous' | 'en_ligne' | 'brouillon' | 'sans'>('tous');
 
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [resetConfirmText, setResetConfirmText] = useState('');
@@ -116,6 +126,9 @@ export default function AdminPage() {
       if (codes) setCodesPromo(codes);
       const { data: variantesData } = await supabase.from('product_variants').select('*').order('ordre', { ascending: true });
       if (variantesData) setVariantes(variantesData);
+      // Table absente (migration pas encore lancée) : aucune fiche, rien ne casse
+      const { data: fichesData } = await supabase.from('fiches_produits').select('*');
+      if (fichesData) setFiches(Object.fromEntries(fichesData.map((f: Fiche) => [f.product_id, f])));
 
       if (msgs) setMessages(msgs);
 
@@ -392,8 +405,26 @@ export default function AdminPage() {
     fetchData();
   }
 
+  // Interrupteur « Page détaillée » : ne touche qu'à la fiche de ce produit,
+  // sans jamais effacer son contenu.
+  async function basculerFiche(productId: string) {
+    const fiche = fiches[productId];
+    if (!fiche) return;
+    if (!fiche.publiee && !fiche.description?.trim()) {
+      alert('Ajoutez une description à la fiche pour pouvoir activer sa page.');
+      return;
+    }
+    const { data, error } = await supabase.from('fiches_produits')
+      .update({ publiee: !fiche.publiee })
+      .eq('product_id', productId)
+      .select()
+      .single();
+    if (error) { alert(`Erreur : ${error.message}`); return; }
+    setFiches(prev => ({ ...prev, [productId]: data as Fiche }));
+  }
+
   async function supprimerProduit(id: string) {
-    if (confirm("Supprimer ?")) {
+    if (confirm(fiches[id] ? "Supprimer ce produit ? Sa page détaillée (textes, photos, recettes) sera aussi supprimée." : "Supprimer ?")) {
       await supabase.from('products').delete().eq('id', id);
       fetchData();
     }
@@ -489,7 +520,15 @@ export default function AdminPage() {
     });
   };
 
-  const produitsFiltres = produits.filter(p => p.name?.toLowerCase().includes(recherche.toLowerCase()));
+  const produitsFiltres = produits
+    .filter(p => p.name?.toLowerCase().includes(recherche.toLowerCase()))
+    .filter(p => {
+      const fiche = fiches[p.id];
+      if (filtreFiche === 'en_ligne') return !!fiche?.publiee;
+      if (filtreFiche === 'brouillon') return !!fiche && !fiche.publiee;
+      if (filtreFiche === 'sans') return !fiche;
+      return true;
+    });
   const commandesFiltrees = commandes.filter(cmd => {
     const matchSearch = cmd.nom_client?.toLowerCase().includes(recherche.toLowerCase()) || cmd.id.toString().includes(recherche);
     if (filtreStatut === 'À préparer') return matchSearch && cmd.statut !== 'livrée';
@@ -989,7 +1028,15 @@ export default function AdminPage() {
           </section>
 
           <div className="bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm">
-            <h2 className="font-black text-2xl mb-8 text-slate-900 italic uppercase tracking-tighter">Gestion des stocks & Promos</h2>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+              <h2 className="font-black text-2xl text-slate-900 italic uppercase tracking-tighter">Gestion des stocks & Promos</h2>
+              <select value={filtreFiche} onChange={e => setFiltreFiche(e.target.value as typeof filtreFiche)} className="p-3 bg-slate-100 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-500 border-none">
+                <option value="tous">Tous les produits</option>
+                <option value="en_ligne">Page détaillée en ligne</option>
+                <option value="brouillon">Page en brouillon</option>
+                <option value="sans">Sans page détaillée</option>
+              </select>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {produitsFiltres.map(p => editingProdId === p.id ? (
                 <div key={p.id} className="p-6 bg-white rounded-[2.5rem] border border-[#FF4500] ring-4 ring-[#FF4500]/5 sm:col-span-2 self-start">
@@ -1204,6 +1251,45 @@ export default function AdminPage() {
                       </div>
                     )}
                   </div>
+
+                  {/* PAGE DÉTAILLÉE */}
+                  {(() => {
+                    const fiche = fiches[p.id];
+                    const { remplies, total } = fiche ? completudeFiche(fiche) : { remplies: 0, total: 0 };
+                    return (
+                      <div className="w-full mt-2 p-3 bg-white rounded-2xl border border-slate-100 flex flex-col gap-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Page détaillée</span>
+                          <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${!fiche ? 'bg-slate-100 text-slate-400' : fiche.publiee ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                            {!fiche ? 'Aucune' : fiche.publiee ? 'En ligne' : 'Brouillon'}
+                          </span>
+                        </div>
+                        {fiche && (
+                          <div className="flex items-center justify-between gap-2">
+                            <button
+                              type="button"
+                              role="switch"
+                              aria-checked={fiche.publiee}
+                              onClick={() => basculerFiche(p.id)}
+                              title={!fiche.publiee && !fiche.description?.trim() ? 'Ajoutez une description pour pouvoir activer la page' : undefined}
+                              className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-slate-500"
+                            >
+                              <span className={`relative w-10 h-6 rounded-full transition-colors ${fiche.publiee ? 'bg-green-500' : 'bg-slate-200'}`}>
+                                <span className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${fiche.publiee ? 'translate-x-4' : ''}`} />
+                              </span>
+                              {fiche.publiee ? 'Activée' : 'Désactivée'}
+                            </button>
+                            <a href={`/produits/${fiche.slug}`} target="_blank" rel="noopener" title={fiche.publiee ? 'Voir la page' : 'Aperçu (visible par les admins uniquement)'} className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-[#FF4500]">
+                              {fiche.publiee ? 'Voir' : 'Aperçu'} <ExternalLink className="w-3 h-3" />
+                            </a>
+                          </div>
+                        )}
+                        <button onClick={() => setFicheProdId(p.id)} className={`w-full text-[9px] font-black uppercase tracking-widest py-2.5 rounded-xl flex items-center justify-center gap-1.5 transition-all ${fiche ? 'bg-slate-100 text-slate-500 hover:bg-slate-900 hover:text-white' : 'bg-[#FF4500]/10 text-[#FF4500] hover:bg-[#FF4500] hover:text-white'}`}>
+                          <FileText className="w-3.5 h-3.5" /> {fiche ? `Modifier la fiche · ${remplies}/${total}` : 'Créer la fiche'}
+                        </button>
+                      </div>
+                    );
+                  })()}
 
                   <div className="w-full mt-2 flex gap-2">
                     <button onClick={() => { setEditingProdId(p.id); setEditFormData(p); }} className="flex-1 flex items-center justify-center gap-1.5 text-[9px] font-black uppercase tracking-widest py-3 rounded-xl bg-slate-100 text-slate-400 hover:bg-slate-900 hover:text-white transition-all"><Edit3 className="w-3.5 h-3.5" /> Modifier</button>
@@ -1767,6 +1853,17 @@ export default function AdminPage() {
       )}
 
     </main>
+
+    {/* ÉDITEUR DE PAGE PRODUIT */}
+    {ficheProdId && produits.find(p => p.id === ficheProdId) && (
+      <EditeurFiche
+        produit={produits.find(p => p.id === ficheProdId)}
+        fiche={fiches[ficheProdId] ?? null}
+        slugsPris={Object.values(fiches).filter(f => f.product_id !== ficheProdId).map(f => f.slug)}
+        onFermer={() => setFicheProdId(null)}
+        onEnregistre={(f) => setFiches(prev => ({ ...prev, [f.product_id]: f }))}
+      />
+    )}
 
     {/* MODAL CADRAGE DE L'IMAGE PRODUIT */}
     {cadrage && (

@@ -1,27 +1,75 @@
 'use client';
 export const dynamic = 'force-dynamic';
 import React, { useState, useEffect } from 'react';
-import { ShoppingCart, Star, ArrowLeft, Plus, Info, Tag, CheckCircle2, TrendingDown, Gift, Search, X } from 'lucide-react';
+import { ShoppingCart, Star, ArrowLeft, Plus, Info, Tag, CheckCircle2, TrendingDown, Gift, Search, X, Flame, BookOpen } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
-import { premieresOffertes, qtePayantePremieresOffertes, libellePremieresOffertes } from '@/lib/promos';
+import { premieresOffertes, libellePremieresOffertes, estEnPromo } from '@/lib/promos';
+import { getStep, getMin, quantiteInitiale, formatGramLabel, uniteAffichee, bornerQuantite, calculerPrixAffiche, ajouterAuPanier as ajouterProduitAuPanier } from '@/lib/panier';
+
+// Mémorisés le temps de la visite, pour retrouver le catalogue tel qu'on l'a
+// laissé en revenant d'une page produit.
+const CLE_FILTRE = 'catalogue-filtre';
+const CLE_RECHERCHE = 'catalogue-recherche';
+const CLE_DEFILEMENT = 'catalogue-defilement';
+
+function lireSession(cle: string): string | null {
+  try { return sessionStorage.getItem(cle); } catch { return null; }
+}
+function ecrireSession(cle: string, valeur: string) {
+  try { sessionStorage.setItem(cle, valeur); } catch {}
+}
+
+// Image et nom d'une carte : lien vers la page produit seulement si elle est
+// publiée, sinon simple bloc (comportement actuel). Défini hors de la page pour
+// ne pas recréer l'image à chaque changement de quantité.
+function LienFiche({ slug, className, children }: { slug?: string; className?: string; children: React.ReactNode }) {
+  if (!slug) return <div className={className}>{children}</div>;
+  return (
+    <Link
+      href={`/produits/${slug}`}
+      onClick={() => ecrireSession(CLE_DEFILEMENT, String(window.scrollY))}
+      className={`${className ?? ''} cursor-pointer`}
+    >
+      {children}
+    </Link>
+  );
+}
 
 export default function CommanderPage() {
   const [products, setProducts] = useState<any[]>([]);
   const [filter, setFilter] = useState('all');
   const [loading, setLoading] = useState(true);
   const [showToast, setShowToast] = useState(false);
-  
+
   // NOUVEAU : État pour gérer les quantités saisies par le client avant l'ajout
   const [quantities, setQuantities] = useState<{ [key: string]: number }>({});
   const [search, setSearch] = useState('');
   const [infoProduct, setInfoProduct] = useState<any | null>(null);
   const [variantsByProduct, setVariantsByProduct] = useState<{ [productId: string]: any[] }>({});
   const [selectedVariant, setSelectedVariant] = useState<{ [productId: string]: string }>({});
+  // Adresse de la page détaillée des produits dont la page est publiée
+  const [slugs, setSlugs] = useState<{ [productId: string]: string }>({});
 
   useEffect(() => {
+    const filtre = lireSession(CLE_FILTRE);
+    const recherche = lireSession(CLE_RECHERCHE);
+    if (filtre) setFilter(filtre);
+    if (recherche) setSearch(recherche);
     fetchProducts();
   }, []);
+
+  const choisirFiltre = (valeur: string) => { setFilter(valeur); ecrireSession(CLE_FILTRE, valeur); };
+  const choisirRecherche = (valeur: string) => { setSearch(valeur); ecrireSession(CLE_RECHERCHE, valeur); };
+
+  // Retour d'une page produit : on revient à l'endroit où le client était.
+  useEffect(() => {
+    if (loading) return;
+    const position = lireSession(CLE_DEFILEMENT);
+    if (!position) return;
+    try { sessionStorage.removeItem(CLE_DEFILEMENT); } catch {}
+    requestAnimationFrame(() => window.scrollTo(0, parseInt(position, 10) || 0));
+  }, [loading]);
 
   async function fetchProducts() {
     try {
@@ -29,20 +77,22 @@ export default function CommanderPage() {
         .from('products')
         .select('*')
         .order('name', { ascending: true });
-      
+
       if (error) throw error;
       if (data) {
         setProducts(data);
         // Initialiser les quantités à 1 pour chaque produit
         const initialQty: { [key: string]: number } = {};
-        data.forEach(p => initialQty[p.id] = p.unite === 'kg' ? 0.5 : p.unite === 'g' ? (p.pas_g || 100) : 1);
+        data.forEach(p => initialQty[p.id] = quantiteInitiale(p));
         setQuantities(initialQty);
       }
 
-      const { data: variantesData } = await supabase
-        .from('product_variants')
-        .select('*')
-        .order('ordre', { ascending: true });
+      const [{ data: variantesData }, { data: fichesData }] = await Promise.all([
+        supabase.from('product_variants').select('*').order('ordre', { ascending: true }),
+        // Pages produits publiées. En cas d'erreur (table absente…), aucun
+        // lien : le catalogue fonctionne exactement comme avant.
+        supabase.from('fiches_produits').select('product_id, slug').eq('publiee', true),
+      ]);
       if (variantesData) {
         const grouped: { [productId: string]: any[] } = {};
         variantesData.forEach((v: any) => {
@@ -55,6 +105,11 @@ export default function CommanderPage() {
           if (vs.length > 0) initialSelected[productId] = vs[0].id;
         });
         setSelectedVariant(initialSelected);
+      }
+      if (fichesData) {
+        const parProduit: { [productId: string]: string } = {};
+        fichesData.forEach((f: any) => { parProduit[f.product_id] = f.slug; });
+        setSlugs(parProduit);
       }
     } catch (error) {
       console.error("Erreur lors de la récupération des produits:", error);
@@ -71,24 +126,19 @@ export default function CommanderPage() {
   };
   const getEffectiveStock = (product: any) => product.stock;
 
-
-  const getPasG = (product: any) => product.pas_g || 100;
-  const getStep = (product: any) => product.unite === 'kg' ? 0.5 : product.unite === 'g' ? getPasG(product) : 1;
-  const getMin  = (product: any) => product.unite === 'kg' ? 0.5 : product.unite === 'g' ? getPasG(product) : 1;
-  const formatGramLabel = (g: number) => g < 1000 ? `${g}g` : `${(g / 1000).toString().replace('.', ',')}kg`;
-
   const handleQtyChange = (id: string, val: string, product: any) => {
-    const step = getStep(product);
-    const min  = getMin(product);
-    const max  = getEffectiveStock(product);
-    const num  = Math.min(max, Math.max(min, parseFloat(val) || min));
-    const rounded = Math.round(num / step) * step;
-    setQuantities(prev => ({ ...prev, [id]: parseFloat(rounded.toFixed(2)) }));
+    const quantite = bornerQuantite(product, val, getEffectiveStock(product));
+    setQuantities(prev => ({ ...prev, [id]: quantite }));
   };
 
-  const filteredProducts = products
-    .filter(p => p.actif !== false)
-    .filter(p => filter === 'all' || p.category?.toLowerCase() === filter.toLowerCase())
+  const produitsActifs = products.filter(p => p.actif !== false);
+  const promosDisponibles = produitsActifs.some(estEnPromo);
+  // Filtre « Promos » mémorisé alors qu'il n'y a plus de promo : on montre tout.
+  const filtreEffectif = filter === 'promos' && !promosDisponibles ? 'all' : filter;
+
+  const filteredProducts = produitsActifs
+    .filter(p => filtreEffectif === 'all'
+      || (filtreEffectif === 'promos' ? estEnPromo(p) : p.category?.toLowerCase() === filtreEffectif.toLowerCase()))
     .filter(p => {
       const q = search.trim().toLowerCase();
       if (!q) return true;
@@ -97,54 +147,22 @@ export default function CommanderPage() {
         p.category?.toLowerCase().includes(q) ||
         p.provenance?.toLowerCase().includes(q)
       );
-    });
+    })
+    // Produits en promo en premier, l'ordre alphabétique est conservé ensuite
+    .sort((a, b) => Number(estEnPromo(b)) - Number(estEnPromo(a)));
 
   const ajouterAuPanier = (product: any) => {
-    const qteSaisie = quantities[product.id] || 1;
-    let qteFinale = qteSaisie;
+    ajouterProduitAuPanier(product, quantities[product.id] || 1, getSelectedVariant(product));
 
-    // --- LOGIQUE PROMO X POUR Y ---
-    if (product.seuil_achat > 0 && product.quantite_offerte > 0) {
-      const nombreDePaliersAtteints = Math.floor(qteSaisie / product.seuil_achat);
-      const produitsGratuits = nombreDePaliersAtteints * product.quantite_offerte;
-      qteFinale = qteSaisie + produitsGratuits;
-    }
-
-    const variant = getSelectedVariant(product);
-    const variantId = variant ? variant.id : null;
-
-    const panierActuel = JSON.parse(localStorage.getItem('mon-panier') || '[]');
-    const index = panierActuel.findIndex((item: any) => item.id === product.id && (item.variant_id ?? null) === variantId);
-
-    if (index >= 0) {
-      panierActuel[index].quantite += qteFinale;
-    } else {
-      panierActuel.push({
-        ...product,
-        name: variant ? `${product.name} – ${variant.nom}` : product.name,
-        stock: product.stock,
-        variant_id: variantId,
-        variant_nom: variant ? variant.nom : null,
-        // Prix de base : le panier applique lui-même la remise (sinon elle
-        // était comptée deux fois). originalPrice gardé pour les anciens paniers.
-        price: product.price,
-        originalPrice: product.price,
-        quantite: qteFinale
-      });
-    }
-
-    localStorage.setItem('mon-panier', JSON.stringify(panierActuel));
-    window.dispatchEvent(new Event('panier-updated'));
-    
     setShowToast(true);
     setTimeout(() => setShowToast(false), 2000);
-    setQuantities(prev => ({ ...prev, [product.id]: product.unite === 'kg' ? 0.5 : product.unite === 'g' ? (product.pas_g || 100) : 1 }));
+    setQuantities(prev => ({ ...prev, [product.id]: quantiteInitiale(product) }));
   };
 
   return (
     <>
     <main className="min-h-screen bg-[#EDE3D5] text-slate-900 pb-20 pt-24 px-2 md:px-10">
-      
+
       {showToast && (
         <div className="fixed top-28 left-1/2 -translate-x-1/2 z-[100] bg-[#3D2B1F] text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-300">
           <CheckCircle2 className="w-5 h-5 text-[#FF4500]" />
@@ -154,7 +172,7 @@ export default function CommanderPage() {
 
 
       <div className="max-w-7xl mx-auto">
-        
+
         <header className="mb-12">
           <Link href="/" className="inline-flex items-center gap-2 text-slate-400 hover:text-[#FF4500] font-bold text-xs uppercase tracking-widest transition-colors mb-6 group">
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Retour
@@ -179,13 +197,13 @@ export default function CommanderPage() {
           <input
             type="text"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => choisirRecherche(e.target.value)}
             placeholder="Rechercher un produit, une provenance..."
             className="w-full bg-white border border-[#D5C9B8] shadow-sm rounded-2xl pl-11 pr-10 py-3.5 text-sm font-bold text-slate-700 placeholder:text-slate-300 placeholder:font-medium focus:outline-none focus:border-[#FF4500] transition-colors"
           />
           {search && (
             <button
-              onClick={() => setSearch('')}
+              onClick={() => choisirRecherche('')}
               className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500 transition-colors"
             >
               <X className="w-4 h-4" />
@@ -195,17 +213,21 @@ export default function CommanderPage() {
 
         {/* FILTRES */}
         <div className="flex flex-wrap gap-2 mb-10 overflow-x-auto pb-2 scrollbar-hide">
-          {['all', 'Fruits', 'Légumes', 'Épicerie'].map((cat) => (
+          {['all', ...(promosDisponibles ? ['promos'] : []), 'Fruits', 'Légumes', 'Épicerie'].map((cat) => (
             <button
               key={cat}
-              onClick={() => setFilter(cat)}
+              onClick={() => choisirFiltre(cat)}
               className={`px-6 py-2.5 rounded-xl font-bold text-sm uppercase tracking-tight transition-all whitespace-nowrap ${
-                filter === cat 
-                ? 'bg-[#3D2B1F] text-white shadow-md' 
-                : 'bg-white text-slate-500 hover:bg-[#EDE3D5] border border-[#D5C9B8] shadow-sm'
+                filtreEffectif === cat
+                ? cat === 'promos' ? 'bg-[#FF4500] text-white shadow-md' : 'bg-[#3D2B1F] text-white shadow-md'
+                : cat === 'promos'
+                  ? 'bg-white text-[#FF4500] hover:bg-orange-50 border border-[#FF4500]/40 shadow-sm'
+                  : 'bg-white text-slate-500 hover:bg-[#EDE3D5] border border-[#D5C9B8] shadow-sm'
               }`}
             >
-              {cat === 'all' ? 'Tout voir' : cat}
+              {cat === 'all' ? 'Tout voir' : cat === 'promos' ? (
+                <span className="inline-flex items-center gap-1.5"><Flame className="w-4 h-4" /> Promos</span>
+              ) : cat}
             </button>
           ))}
         </div>
@@ -222,7 +244,7 @@ export default function CommanderPage() {
             <p className="font-black text-slate-300 uppercase tracking-widest text-sm">Aucun produit trouvé</p>
             {search && (
               <button
-                onClick={() => setSearch('')}
+                onClick={() => choisirRecherche('')}
                 className="mt-4 text-xs font-bold text-[#FF4500] hover:underline uppercase tracking-widest"
               >
                 Effacer la recherche
@@ -233,28 +255,9 @@ export default function CommanderPage() {
           <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-5">
             {filteredProducts.map((product) => {
               const currentQty = quantities[product.id] || 1;
-              const qteEffective = product.unite === 'g' ? currentQty / 1000 : currentQty;
-
-              // Prix dégressif
-              const prixDegressifActif = product.seuil_promo_qte > 0 && product.prix_promo > 0
-                && qteEffective >= product.seuil_promo_qte;
-
-              const unitPrice = prixDegressifActif
-                ? product.prix_promo
-                : product.promotion > 0
-                  ? product.price * (1 - product.promotion / 100)
-                  : product.price;
-
-              // Promo « N premières offertes » (ignorée si le prix dégressif s'applique)
-              const nbPremieresOffertes = prixDegressifActif ? 0 : premieresOffertes(product);
-              const totalPrice = (nbPremieresOffertes > 0 ? qtePayantePremieresOffertes(product, currentQty) : qteEffective) * unitPrice;
-              const totalEconomy = qteEffective * product.price - totalPrice;
-
-              // --- CALCULS D'AFFICHAGE POUR LA PROMO X+Y ---
-              const produitsOfferts = product.seuil_achat > 0
-                ? Math.floor(currentQty / product.seuil_achat) * product.quantite_offerte
-                : 0;
-              const totalItemsRecus = currentQty + produitsOfferts;
+              const { qteEffective, prixDegressifActif, nbPremieresOffertes, totalPrice, totalEconomy, totalItemsRecus } = calculerPrixAffiche(product, currentQty);
+              const enPromo = estEnPromo(product);
+              const slug = slugs[product.id];
 
               const productVariants = getVariants(product);
               const effectiveStock = getEffectiveStock(product);
@@ -262,12 +265,21 @@ export default function CommanderPage() {
               return (
                 <div
                   key={product.id}
-                  className="bg-white rounded-xl sm:rounded-[2rem] p-2 sm:p-4 border border-[#DDD0BF] shadow-sm hover:shadow-[0_20px_50px_rgb(0,0,0,0.06)] transition-all flex flex-col group relative overflow-hidden"
+                  className={`bg-white rounded-xl sm:rounded-[2rem] p-2 sm:p-4 border transition-all flex flex-col group relative overflow-hidden ${
+                    enPromo
+                      ? 'border-[#FF4500]/50 ring-2 ring-[#FF4500]/15 shadow-[0_10px_30px_rgba(255,69,0,0.12)] hover:shadow-[0_20px_50px_rgba(255,69,0,0.18)]'
+                      : 'border-[#DDD0BF] shadow-sm hover:shadow-[0_20px_50px_rgb(0,0,0,0.06)]'
+                  }`}
                 >
                   {/* BADGES PROMO ET X+Y */}
-                  <div className="absolute top-2 left-2 sm:top-4 sm:left-4 z-10 flex flex-col gap-1">
+                  <div className="absolute top-2 left-2 sm:top-4 sm:left-4 z-10 flex flex-col items-start gap-1 pointer-events-none">
+                    {enPromo && (
+                      <div className="bg-gradient-to-r from-[#FF4500] to-[#FF7A1A] text-white text-[8px] sm:text-[10px] font-black px-2 py-1 sm:px-3 sm:py-1.5 rounded-full shadow-lg flex items-center gap-1 uppercase tracking-wider">
+                        <Flame className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> En promo
+                      </div>
+                    )}
                     {product.promotion > 0 && (
-                      <div className="bg-[#FF4500] text-white text-[8px] sm:text-[10px] font-black px-2 py-1 sm:px-3 sm:py-1.5 rounded-full shadow-lg flex items-center gap-1">
+                      <div className="bg-white text-[#FF4500] border border-[#FF4500]/30 text-[8px] sm:text-[10px] font-black px-2 py-1 sm:px-3 sm:py-1.5 rounded-full shadow-lg flex items-center gap-1">
                         <Tag className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> -{product.promotion}%
                       </div>
                     )}
@@ -295,7 +307,7 @@ export default function CommanderPage() {
                   </div>
 
                   {/* IMAGE — au format 3:2 de l'outil de cadrage de l'admin : le client voit le cadrage exact */}
-                  <div className="aspect-[3/2] bg-[#EDE3D5] rounded-xl sm:rounded-[1.5rem] mb-2 sm:mb-4 overflow-hidden flex items-center justify-center relative">
+                  <LienFiche slug={slug} className="aspect-[3/2] bg-[#EDE3D5] rounded-xl sm:rounded-[1.5rem] mb-2 sm:mb-4 overflow-hidden flex items-center justify-center relative">
                     {product.image_url ? (
                       <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-all duration-700" />
                     ) : (
@@ -306,7 +318,12 @@ export default function CommanderPage() {
                         <span className="bg-white px-4 py-2 rounded-xl font-black text-xs uppercase tracking-[0.2em] shadow-sm">Épuisé</span>
                       </div>
                     )}
-                    {product.description && (
+                    {slug && (
+                      <span className="absolute bottom-1.5 right-1.5 sm:bottom-2.5 sm:right-2.5 bg-white/90 backdrop-blur-sm text-[#3D2B1F] text-[8px] sm:text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-full shadow-md flex items-center gap-1 group-hover:bg-[#3D2B1F] group-hover:text-white transition-colors">
+                        <BookOpen className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> Voir la fiche
+                      </span>
+                    )}
+                    {product.description && !slug && (
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); setInfoProduct(product); }}
@@ -315,19 +332,31 @@ export default function CommanderPage() {
                         <Info className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-600" />
                       </button>
                     )}
-                  </div>
+                  </LienFiche>
 
                   <div className="flex justify-between items-start mb-1 gap-1">
-                    <h3 className="text-[9px] sm:text-base font-black uppercase tracking-tight text-slate-800 truncate">{product.name}</h3>
+                    <LienFiche slug={slug} className="min-w-0">
+                      <h3 className={`text-[9px] sm:text-base font-black uppercase tracking-tight text-slate-800 truncate ${slug ? 'hover:text-[#FF4500] transition-colors' : ''}`}>{product.name}</h3>
+                    </LienFiche>
                     {product.provenance && (
                       <span className="text-[8px] sm:text-[10px] font-bold text-[#FF4500] bg-orange-50 px-1.5 py-0.5 rounded-md uppercase shrink-0">{product.provenance}</span>
                     )}
                   </div>
-                  <p className="text-[8px] sm:text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 sm:mb-3">
+                  <p className={`text-[8px] sm:text-xs font-bold text-slate-400 uppercase tracking-widest ${product.promotion > 0 ? 'mb-1' : 'mb-2 sm:mb-3'}`}>
                     {product.unite === 'g'
-                      ? `Vendu au gramme · ${product.price.toFixed(2)}€/kg`
+                      ? product.promotion > 0 ? 'Vendu au gramme' : `Vendu au gramme · ${product.price.toFixed(2)}€/kg`
                       : `Vendu ${product.unite === 'kg' ? 'au' : 'à la'} ${product.unite || 'pièce'}`}
                   </p>
+
+                  {/* PRIX PROMO : nouveau prix bien visible, ancien prix barré */}
+                  {product.promotion > 0 && (
+                    <p className="flex flex-wrap items-baseline gap-x-1.5 mb-2 sm:mb-3">
+                      <span className="text-xs sm:text-lg font-black text-[#FF4500] leading-none">
+                        {(product.price * (1 - product.promotion / 100)).toFixed(2)}€<span className="text-[8px] sm:text-xs">/{uniteAffichee(product)}</span>
+                      </span>
+                      <span className="text-[9px] sm:text-xs line-through text-slate-400 font-bold">{product.price.toFixed(2)}€/{uniteAffichee(product)}</span>
+                    </p>
+                  )}
 
                   {/* SÉLECTEUR DE VARIÉTÉ */}
                   {productVariants.length > 0 && (
@@ -346,7 +375,7 @@ export default function CommanderPage() {
                   )}
 
                   {/* SECTION QUANTITÉ ET PRIX DYNAMIQUE */}
-                  <div className="bg-[#EDE3D5] rounded-xl sm:rounded-2xl p-2 sm:p-3 mb-2 sm:mb-4 border border-[#D5C9B8]/50">
+                  <div className={`rounded-xl sm:rounded-2xl p-2 sm:p-3 mb-2 sm:mb-4 border ${enPromo ? 'bg-orange-50/70 border-[#FF4500]/20' : 'bg-[#EDE3D5] border-[#D5C9B8]/50'}`}>
                     {/* Sélecteur quantité */}
                     <div className="flex items-center justify-between mb-2">
                       <span className="hidden sm:block text-[10px] font-black uppercase text-slate-400 tracking-widest">Quantité</span>
@@ -370,7 +399,7 @@ export default function CommanderPage() {
                     {/* Prix */}
                     <div className="flex justify-between items-center">
                       <div className="flex items-baseline gap-1.5">
-                        <span className={`text-sm sm:text-xl font-black ${prixDegressifActif ? 'text-blue-600' : 'text-slate-900'}`}>{totalPrice.toFixed(2)}€</span>
+                        <span className={`text-sm sm:text-xl font-black ${prixDegressifActif ? 'text-blue-600' : totalEconomy > 0.005 ? 'text-[#FF4500]' : 'text-slate-900'}`}>{totalPrice.toFixed(2)}€</span>
                         {(product.promotion > 0 || prixDegressifActif || nbPremieresOffertes > 0) && (
                           <span className="text-[9px] sm:text-xs line-through text-slate-300 font-bold italic">{(product.price * qteEffective).toFixed(2)}€</span>
                         )}

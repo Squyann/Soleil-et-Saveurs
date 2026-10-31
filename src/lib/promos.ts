@@ -30,3 +30,19 @@ export function libellePremieresOffertes(p: ProduitPromo): string {
   if (unite === 'kg') return n === 1 ? '1er kg offert' : `${n} premiers kg offerts`;
   return n === 1 ? `1ʳᵉ ${unite} offerte` : `${n} premières ${PLURIELS[unite] ?? unite} offertes`;
 }
+
+type ProduitEnPromo = ProduitPromo & {
+  promotion?: number | null;
+  seuil_promo_qte?: number | null;
+  prix_promo?: number | null;
+};
+
+// Le produit a-t-il une promotion en cours (remise %, lot X+Y, prix dégressif
+// ou « N premières offertes ») ? Lu directement sur les champs gérés dans
+// l'admin : retirer la promo rend aussitôt au produit son affichage normal.
+export function estEnPromo(p: ProduitEnPromo): boolean {
+  return (p.promotion || 0) > 0
+    || ((p.seuil_achat || 0) > 0 && (p.quantite_offerte || 0) > 0)
+    || ((p.seuil_promo_qte || 0) > 0 && (p.prix_promo || 0) > 0)
+    || premieresOffertes(p) > 0;
+}
