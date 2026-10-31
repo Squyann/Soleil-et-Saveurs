@@ -11,6 +11,8 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
+  // Adresse du site : sert à compléter les liens des aperçus de partage et de Google
+  metadataBase: new URL('https://soleiletsaveurs.fr'),
   title: 'Soleil et Saveurs',
   description: 'Fruits et légumes frais, livrés chez vous dans les Yvelines (78).',
   icons: { icon: '/logo.svg' },
