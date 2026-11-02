@@ -1,11 +1,11 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import PointsRelais from '@/components/PointsRelais';
 import { supabase } from '@/lib/supabase';
 import { 
-  ArrowRight, Zap, MapPin, ShoppingCart, Truck, 
+  ArrowRight, Volume2, VolumeX, MapPin, ShoppingCart, Truck, 
   User, HelpCircle, Search, X, CheckCircle2, Clock, ShieldCheck, Navigation, Loader2, AlertCircle
 } from 'lucide-react';
 
@@ -38,6 +38,17 @@ function calculerDistance(lat1: number, lon1: number, lat2: number, lon2: number
 
 export default function Home() {
   const [user, setUser] = useState<any>(null);
+  // Vidéo d'accueil : démarre sans le son (les navigateurs bloquent la lecture
+  // automatique avec le son), le bouton permet de l'activer ou le couper.
+  const videoAccueil = useRef<HTMLVideoElement>(null);
+  const [sonActif, setSonActif] = useState(false);
+  const basculerSon = () => {
+    const v = videoAccueil.current;
+    if (!v) return;
+    v.muted = !v.muted;
+    if (!v.muted && v.paused) v.play().catch(() => {});
+    setSonActif(!v.muted);
+  };
   // isPanierOpen et panierCount supprimés — gérés par le layout
   
   const [address, setAddress] = useState('');
@@ -193,16 +204,33 @@ export default function Home() {
             </div>
 
             <div className="relative aspect-[4/5] md:aspect-[3/4] max-w-[420px] mx-auto md:ml-auto w-full rounded-[2.5rem] overflow-hidden shadow-2xl bg-slate-100 border-8 border-white">
-              <video id="hero-video" autoPlay loop playsInline className="absolute inset-0 w-full h-full object-cover" suppressHydrationWarning ref={(el) => { if (el) { el.muted = true; } }}>
-                <source src="/video.mp4" type="video/mp4" />
+              {/* Trois encodages de la même vidéo : chaque navigateur lit le premier
+                  qu'il sait décoder (AV1 le plus léger, HEVC pour Safari/iPhone, H.264 en secours) */}
+              <video
+                ref={videoAccueil}
+                autoPlay muted loop playsInline
+                poster="/video/accueil-poster.jpg"
+                className="absolute inset-0 w-full h-full object-cover"
+                suppressHydrationWarning
+              >
+                <source src="/video/accueil-av1.mp4" type='video/mp4; codecs="av01.0.08M.08, mp4a.40.2"' />
+                <source src="/video/accueil-hevc.mp4" type='video/mp4; codecs="hvc1.1.6.L120.90, mp4a.40.2"' />
+                <source src="/video/accueil-h264.mp4" type="video/mp4" />
               </video>
               <div className="absolute bottom-6 left-6 right-6 p-4 bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                    <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
                    <span className="text-white text-[10px] font-black uppercase tracking-widest">Live du champ</span>
                 </div>
-                <button onClick={() => {const v = document.getElementById('hero-video') as HTMLVideoElement; if (v) v.muted = !v.muted;}} className="text-white hover:scale-110 transition-transform">
-                  <Zap className="w-4 h-4 fill-white text-white" />
+                <button
+                  type="button"
+                  onClick={basculerSon}
+                  aria-label={sonActif ? 'Couper le son' : 'Activer le son'}
+                  aria-pressed={sonActif}
+                  className="flex items-center gap-1.5 text-white hover:scale-110 transition-transform"
+                >
+                  {sonActif ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+                  <span className="text-[9px] font-black uppercase tracking-widest">{sonActif ? 'Son' : 'Son coupé'}</span>
                 </button>
               </div>
             </div>
