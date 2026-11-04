@@ -250,6 +250,8 @@ export default function ComptePage() {
     const items = order.contenu_panier || [];
 
     const sousTotalProduits = items.reduce((acc: number, item: any) => {
+      // Montant de la ligne calculé par le serveur (promos regroupées par produit)
+      if (item.prixTotalLigne != null) return acc + parseFloat(item.prixTotalLigne);
       const qte = parseFloat(item.quantite || item.quantity || 0);
       const qteEffective = item.unite === 'g' ? qte / 1000 : qte;
       let prixUnit = parseFloat(item.price || item.prix || 0);

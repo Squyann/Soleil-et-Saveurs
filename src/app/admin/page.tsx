@@ -27,6 +27,7 @@ import {
 
 // Éditeur des pages produits : chargé seulement à son ouverture
 const EditeurFiche = nextDynamic(() => import('@/components/admin/EditeurFiche'), { ssr: false });
+const GestionVariantes = nextDynamic(() => import('@/components/admin/GestionVariantes'), { ssr: false });
 
 interface StatsType {
   total: number;
@@ -50,7 +51,6 @@ export default function AdminPage() {
 
   const [variantes, setVariantes] = useState<any[]>([]);
   const [varianteProdId, setVarianteProdId] = useState<string | null>(null);
-  const [nouvelleVarianteNom, setNouvelleVarianteNom] = useState('');
   
   const [editingProdId, setEditingProdId] = useState<string | null>(null);
   // Image en cours de cadrage : fichier choisi (URL blob:) ou image actuelle du produit.
@@ -430,22 +430,6 @@ export default function AdminPage() {
     }
   }
 
-  async function ajouterVariante(productId: string) {
-    if (!nouvelleVarianteNom.trim()) return;
-    const ordre = variantes.filter(v => v.product_id === productId).length;
-    await supabase.from('product_variants').insert([{
-      product_id: productId, nom: nouvelleVarianteNom.trim(), ordre,
-    }]);
-    setNouvelleVarianteNom('');
-    fetchData();
-  }
-
-  async function supprimerVariante(id: string) {
-    if (confirm("Supprimer cette variété ?")) {
-      await supabase.from('product_variants').delete().eq('id', id);
-      fetchData();
-    }
-  }
 
   const fmtDateAdmin = (d: Date): string =>
     `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -547,6 +531,8 @@ export default function AdminPage() {
     const refFacture = `INV-${new Date(cmd.created_at).getFullYear()}-${cmd.id.toString().slice(-4).toUpperCase()}`;
 
     const sousTotalProduits = (cmd.contenu_panier || []).reduce((acc: number, item: any) => {
+      // Montant de la ligne calculé par le serveur (promos regroupées par produit)
+      if (item.prixTotalLigne != null) return acc + parseFloat(item.prixTotalLigne);
       const qte = parseFloat(item.quantite || item.quantity || 0);
       const qteEffective = item.unite === 'g' ? qte / 1000 : qte;
       let prixUnit = parseFloat(item.price || item.prix || 0);
@@ -1233,23 +1219,17 @@ export default function AdminPage() {
                   </div>
 
                   <div className="w-full mt-2">
-                    <button onClick={() => { setVarianteProdId(varianteProdId === p.id ? null : p.id); setNouvelleVarianteNom(''); }} className={`w-full text-[9px] font-black uppercase tracking-widest py-3 rounded-xl transition-all ${variantes.some(v => v.product_id === p.id) ? 'bg-blue-500/10 text-blue-600 border border-blue-500/20' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}>
-                      {variantes.some(v => v.product_id === p.id) ? `🥗 ${variantes.filter(v => v.product_id === p.id).length} Variété(s)` : 'Ajouter des variétés'}
-                    </button>
-                    {varianteProdId === p.id && (
-                      <div className="mt-3 p-4 bg-white rounded-2xl border border-slate-200 shadow-2xl flex flex-col gap-3 animate-in zoom-in-95 duration-200 z-20">
-                        {variantes.filter(v => v.product_id === p.id).map(v => (
-                          <div key={v.id} className="flex items-center gap-2 bg-slate-50 rounded-xl p-2">
-                            <span className="flex-1 text-xs font-bold text-slate-700 truncate">{v.nom}</span>
-                            <button onClick={() => supprimerVariante(v.id)} className="w-7 h-7 flex items-center justify-center text-red-400 hover:text-red-600"><Trash2 className="w-3.5 h-3.5" /></button>
-                          </div>
-                        ))}
-                        <div className="border-t border-slate-50 pt-2 flex gap-2">
-                          <input type="text" placeholder="Ex: Batavia" value={nouvelleVarianteNom} onChange={(e) => setNouvelleVarianteNom(e.target.value)} className="flex-1 p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg" />
-                        </div>
-                        <button onClick={() => ajouterVariante(p.id)} className="bg-slate-900 text-white text-[9px] font-black py-3 rounded-lg shadow-md hover:bg-[#FF4500]">AJOUTER LA VARIÉTÉ</button>
-                      </div>
-                    )}
+                    {(() => {
+                      const vs = variantes.filter(v => v.product_id === String(p.id));
+                      const actives = vs.filter(v => v.actif !== false).length;
+                      return (
+                        <button onClick={() => setVarianteProdId(String(p.id))} className={`w-full text-[9px] font-black uppercase tracking-widest py-3 rounded-xl transition-all ${vs.length ? 'bg-blue-500/10 text-blue-600 border border-blue-500/20 hover:bg-blue-500/20' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}>
+                          {vs.length
+                            ? `🥗 ${actives}${actives !== vs.length ? `/${vs.length}` : ''} variante${vs.length > 1 ? 's' : ''} · ${p.variantes_cumulables === false ? 'choix unique' : 'cumulables'}`
+                            : 'Ajouter des variantes'}
+                        </button>
+                      );
+                    })()}
                   </div>
 
                   {/* PAGE DÉTAILLÉE */}
@@ -1853,6 +1833,17 @@ export default function AdminPage() {
       )}
 
     </main>
+
+    {/* GESTION DES VARIANTES D'UN PRODUIT */}
+    {varianteProdId && produits.find(p => String(p.id) === varianteProdId) && (
+      <GestionVariantes
+        produit={produits.find(p => String(p.id) === varianteProdId)}
+        variantes={variantes.filter(v => v.product_id === varianteProdId)}
+        produits={produits}
+        onFermer={() => setVarianteProdId(null)}
+        onChange={() => fetchData()}
+      />
+    )}
 
     {/* ÉDITEUR DE PAGE PRODUIT */}
     {ficheProdId && produits.find(p => p.id === ficheProdId) && (

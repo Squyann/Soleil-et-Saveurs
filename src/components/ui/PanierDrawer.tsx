@@ -3,7 +3,9 @@ import React, { useState, useEffect } from 'react';
 import { X, Trash2, ShoppingBag, MapPin, CreditCard, Banknote, Phone, User, Loader2, CheckCircle2, AlertCircle, LogIn, Gift, TrendingDown, Calendar, Tag, ChevronLeft, ChevronRight, ChevronDown, Mail } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
-import { premieresOffertes, qtePayantePremieresOffertes, libellePremieresOffertes } from '@/lib/promos';
+import { premieresOffertes, libellePremieresOffertes } from '@/lib/promos';
+import { calculerPanier, rafraichirPanier } from '@/lib/panier';
+import { prochainePromo } from '@/lib/prix';
 
 const VILLES_RELAIS = [
   { nom: "Chatou", lat: 48.8897, lon: 2.1574 },
@@ -161,51 +163,11 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
     }
   }, [isOpen, user]);
 
-  const calculerPrixLigne = (item: any) => {
-    const qteTotale = item.quantite || 0;
-    const qteEffective = item.unite === 'g' ? qteTotale / 1000 : qteTotale;
-
-    // Prix dégressif : à partir d'un seuil, tout passe au prix réduit
-    if (item.seuil_promo_qte > 0 && item.prix_promo > 0 && qteEffective >= item.seuil_promo_qte) {
-      return qteEffective * item.prix_promo;
-    }
-
-    // Prix de base du produit : les anciens paniers stockaient dans `price` un
-    // prix déjà remisé (et originalPrice le prix de base) — la remise ci-dessous
-    // était alors appliquée deux fois.
-    let prixUnitaire = parseFloat(item.originalPrice ?? item.price);
-
-    if (item.promotion && item.promotion > 0) {
-      prixUnitaire = prixUnitaire * (1 - item.promotion / 100);
-    }
-
-    const seuil = item.seuil_achat || 0;
-    const offert = item.quantite_offerte || 0;
-
-    if (seuil > 0 && offert > 0) {
-      const tailleLot = seuil + offert;
-      const nombreDeLots = Math.floor(qteTotale / tailleLot);
-      const resteHorsLots = qteTotale % tailleLot;
-      const qtePayante = (nombreDeLots * seuil) + Math.min(resteHorsLots, seuil);
-      return qtePayante * prixUnitaire;
-    }
-
-    if (premieresOffertes(item) > 0) {
-      return qtePayantePremieresOffertes(item, qteTotale) * prixUnitaire;
-    }
-
-    return qteEffective * prixUnitaire;
-  };
-
-  const calculerEconomieTotale = () => {
-    return (panier || []).reduce((acc, item) => {
-      const prixNormalSansPromo = item.unite === 'g'
-        ? ((item.quantite || 0) / 1000) * parseFloat(item.originalPrice ?? item.price)
-        : (item.quantite || 0) * parseFloat(item.originalPrice ?? item.price);
-      const prixFinal = calculerPrixLigne(item);
-      return acc + (prixNormalSansPromo - prixFinal);
-    }, 0);
-  };
+  // Prix calculés par produit : les variantes d'un même produit sont additionnées
+  // pour les promotions (même calcul que creer_commande côté serveur).
+  const calculs = calculerPanier(panier || []);
+  const calculerPrixLigne = (item: any) => calculs.ligne(item)?.total ?? 0;
+  const calculerEconomieTotale = () => calculs.economie;
 
   useEffect(() => {
     const loadPanier = () => {
@@ -218,7 +180,17 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
         }
       }
     };
-    if (isOpen) loadPanier();
+    if (isOpen) {
+      loadPanier();
+      // Prix, promotions, photos et disponibilité à jour depuis la base
+      rafraichirPanier(JSON.parse(localStorage.getItem('mon-panier') || '[]') || [])
+        .then(frais => {
+          setPanier(frais);
+          localStorage.setItem('mon-panier', JSON.stringify(frais));
+          window.dispatchEvent(new Event('panier-updated'));
+        })
+        .catch(() => {});
+    }
     window.addEventListener('storage', loadPanier);
     return () => window.removeEventListener('storage', loadPanier);
   }, [isOpen]);
@@ -229,8 +201,12 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
         if (delta === 0) return { ...item, quantite: 0 };
         const step = item.unite === 'kg' ? 0.5 : item.unite === 'g' ? (item.pas_g || 100) : 1;
         const actualDelta = delta > 0 ? step : -step;
+        // Le stock est celui du produit : partagé entre toutes ses variantes
+        const autresVariantes = (panier || [])
+          .filter(i => i.id === item.id && (i.variant_id ?? null) !== (item.variant_id ?? null))
+          .reduce((s, i) => s + (Number(i.quantite) || 0), 0);
         const newQte = Math.min(
-          item.stock ?? Infinity,
+          item.stock != null ? item.stock - autresVariantes : Infinity,
           Math.max(step, parseFloat(((item.quantite || 0) + actualDelta).toFixed(2)))
         );
         return { ...item, quantite: newQte };
@@ -340,6 +316,8 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
     : fraisSelonDistance(distanceRelais);
   const totalFinal = totalApresRemise + fraisLivraison;
   const minimumNonAtteint = user && (panier || []).length > 0 && totalApresRemise < 10;
+  // Article indisponible ou variantes incompatibles : à corriger avant de commander
+  const panierACorriger = (panier || []).some(i => i.indisponible || i.alerte);
 
   const envoyerCommande = async () => {
     if (!user) {
@@ -549,10 +527,19 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
                 <p className="font-bold text-slate-400 uppercase text-sm tracking-widest">Le panier est vide</p>
               </div>
             ) : (
-              panier.map((item) => {
-                const produitsOfferts = item.seuil_achat > 0 ? Math.floor(item.quantite / (item.seuil_achat + item.quantite_offerte)) * item.quantite_offerte : 0;
-                const qteEffective = item.unite === 'g' ? item.quantite / 1000 : item.quantite;
-                const prixDegressifActif = item.seuil_promo_qte > 0 && item.prix_promo > 0 && qteEffective >= item.seuil_promo_qte;
+              panier.map((item, index) => {
+                const resultat = calculs.ligne(item);
+                const groupe = calculs.groupe(item);
+                const produitsOfferts = resultat?.offerts ?? 0;
+                const prixDegressifActif = !!groupe?.degressifActif;
+                const lotDefini = item.seuil_achat > 0 && item.quantite_offerte > 0;
+                const stockRestant = item.stock != null
+                  ? item.stock - (panier || []).filter(i => i.id === item.id).reduce((s, i) => s + (Number(i.quantite) || 0), 0)
+                  : Infinity;
+                // Dernière ligne du produit : on y indique la promo commune aux variantes
+                const derniereDuProduit = !item.indisponible && !(panier || []).slice(index + 1).some(i => i.id === item.id && !i.indisponible);
+                const plusieursVariantes = (panier || []).filter(i => i.id === item.id && !i.indisponible).length > 1;
+                const suggestion = derniereDuProduit && groupe ? prochainePromo(item, groupe.qteTotale) : null;
 
                 return (
                   <div key={`${item.id}-${item.variant_id ?? ''}`} className="flex gap-4 items-center bg-white p-4 rounded-3xl border border-[#DDD0BF] shadow-sm">
@@ -570,19 +557,19 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
                         {item.promotion > 0 && (
                           <span className="bg-green-100 text-green-700 text-[8px] font-black px-1.5 py-0.5 rounded-full">-{item.promotion}%</span>
                         )}
-                        {produitsOfferts > 0 && (
+                        {produitsOfferts > 0 && lotDefini && (
                           <div className="flex items-center gap-1 text-[#FF4500] text-[9px] font-black uppercase">
                             <Gift className="w-3 h-3" /> {produitsOfferts} offert(s)
                           </div>
                         )}
-                        {!prixDegressifActif && premieresOffertes(item) > 0 && (
+                        {!prixDegressifActif && premieresOffertes(item) > 0 && produitsOfferts > 0 && (
                           <div className="flex items-center gap-1 text-[#FF4500] text-[9px] font-black uppercase">
                             <Gift className="w-3 h-3" /> {libellePremieresOffertes(item)}
                           </div>
                         )}
                         {prixDegressifActif && (
                           <span className="bg-blue-100 text-blue-700 text-[8px] font-black px-1.5 py-0.5 rounded-full">
-                            {item.prix_promo.toFixed(2)}€/{item.unite === 'g' ? 'kg' : item.unite}
+                            {(resultat?.prixUnitaire ?? item.prix_promo).toFixed(2)}€/{item.unite === 'g' ? 'kg' : item.unite}
                           </span>
                         )}
                         {item.seuil_promo_qte > 0 && item.prix_promo > 0 && !prixDegressifActif && (
@@ -595,11 +582,25 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
                       <div className="flex items-center gap-3 mt-2">
                          <button onClick={() => updateQuantity(item.id, -1, item.unite, item.variant_id)} className="w-6 h-6 border border-[#D5C9B8] rounded-full flex items-center justify-center text-slate-400 hover:bg-[#EDE3D5]">-</button>
                          <span className="text-xs font-bold">{item.unite === 'g' ? (item.quantite < 1000 ? `${item.quantite}g` : `${(item.quantite/1000).toString().replace('.',',')}kg`) : `${item.quantite}${item.unite ? ` ${item.unite}` : ''}`}</span>
-                         <button onClick={() => updateQuantity(item.id, 1, item.unite, item.variant_id)} disabled={item.stock != null && item.quantite >= item.stock} className="w-6 h-6 border border-[#D5C9B8] rounded-full flex items-center justify-center text-slate-400 hover:bg-[#EDE3D5] disabled:opacity-30 disabled:cursor-not-allowed">+</button>
+                         <button onClick={() => updateQuantity(item.id, 1, item.unite, item.variant_id)} disabled={stockRestant <= 0} className="w-6 h-6 border border-[#D5C9B8] rounded-full flex items-center justify-center text-slate-400 hover:bg-[#EDE3D5] disabled:opacity-30 disabled:cursor-not-allowed">+</button>
                       </div>
+                      {(item.indisponible || item.alerte) && (
+                        <p className="flex items-center gap-1 mt-1.5 text-[9px] font-black uppercase text-red-500">
+                          <AlertCircle className="w-3 h-3 shrink-0" /> {item.indisponible || item.alerte}
+                        </p>
+                      )}
+                      {derniereDuProduit && plusieursVariantes && groupe && groupe.totalSansPromo - groupe.total > 0.005 && (
+                        <p className="mt-1.5 text-[9px] font-black text-green-600">✓ Promo sur vos {String(groupe.qteTotale).replace('.', ',')}{item.unite === 'g' ? ' g' : item.unite === 'kg' ? ' kg' : ''} (toutes variantes) : -{(groupe.totalSansPromo - groupe.total).toFixed(2)}€</p>
+                      )}
+                      {suggestion && !item.indisponible && (
+                        <p className="mt-1.5 text-[9px] font-black text-[#FF4500]">{suggestion.texte}{plusieursVariantes || item.variant_id ? ' (variantes mélangeables)' : ''}</p>
+                      )}
                     </div>
                     <div className="text-right">
                       <p className="font-black text-sm">{calculerPrixLigne(item).toFixed(2)}€</p>
+                      {resultat && resultat.totalSansPromo - resultat.total > 0.005 && (
+                        <p className="text-[10px] font-bold text-slate-300 line-through">{resultat.totalSansPromo.toFixed(2)}€</p>
+                      )}
                       <button onClick={() => updateQuantity(item.id, 0, item.unite, item.variant_id)} className="text-slate-300 hover:text-red-500 transition-colors mt-1">
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -940,6 +941,13 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
             </div>
           )}
 
+          {panierACorriger && (
+            <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-100 rounded-xl">
+              <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
+              <p className="text-[10px] font-black text-red-600 uppercase">Retirez les articles signalés en rouge pour commander</p>
+            </div>
+          )}
+
           {minimumNonAtteint && (
             <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-100 rounded-xl">
               <AlertCircle className="w-4 h-4 text-amber-500 shrink-0" />
@@ -950,7 +958,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
           )}
 
           <button
-            disabled={chargement || methodePaiement === 'Ligne' || !!minimumNonAtteint || (user && (!(panier || []).length || !distanceValide || !nom || !telephone || !dateLivraison))}
+            disabled={chargement || methodePaiement === 'Ligne' || !!minimumNonAtteint || panierACorriger || (user && (!(panier || []).length || !distanceValide || !nom || !telephone || !dateLivraison))}
             onClick={envoyerCommande}
             className={`w-full ${!user ? 'bg-blue-600' : 'bg-[#3D2B1F]'} disabled:bg-[#DDD0BF] disabled:text-slate-300 text-white p-5 rounded-2xl font-black uppercase text-sm tracking-widest hover:opacity-90 transition-all shadow-xl flex items-center justify-center gap-3`}
           >
