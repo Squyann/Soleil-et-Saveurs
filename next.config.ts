@@ -24,6 +24,10 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Le site n'utilise pas next/image (balises <img>) : on désactive
+  // l'optimiseur d'images, qui reste sinon accessible publiquement
+  // (/_next/image) et a déjà fait l'objet de failles (SSRF, SVG).
+  images: { unoptimized: true },
   experimental: {
     // Par défaut, Turbopack exécute PostCSS (Tailwind) dans des processus
     // `node` enfants, résolus via le PATH. Sur le build Hostinger, ce processus

@@ -372,29 +372,8 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
       fetch('/api/notify-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          commande: {
-            nom,
-            telephone,
-            adresse,
-            email_client: user.email,
-            methode_paiement: 'À la livraison (espèces ou carte)',
-            panier: panier.map(item => ({
-              name: item.name,
-              quantite: item.quantite,
-              unite: item.unite || '',
-              prix_ligne: calculerPrixLigne(item),
-            })),
-            date_livraison: dateLivraison || null,
-            remise_pct: remisePct,
-            remise_montant: remiseMontant,
-            remise_code_pct: codeStatut === 'valid' ? remiseCode : 0,
-            remise_code_montant: (result as any)?.remise_code ?? remiseCodeMontant,
-            // Montant réellement facturé, recalculé par le serveur
-            frais_livraison: (result as any)?.frais_livraison ?? fraisLivraison,
-            total: totalServeur,
-          },
-        }),
+        // Le serveur relit la commande en base pour construire les e-mails
+        body: JSON.stringify({ commande_id: (result as any)?.id }),
       }).then(async r => {
         const data = await r.json().catch(() => ({}));
         if (!r.ok) {
