@@ -6,52 +6,22 @@ import { useRouter } from 'next/navigation';
 import { premieresOffertes, libellePremieresOffertes } from '@/lib/promos';
 import { calculerPanier, rafraichirPanier } from '@/lib/panier';
 import { prochainePromo } from '@/lib/prix';
-
-const VILLES_RELAIS = [
-  { nom: "Chatou", lat: 48.8897, lon: 2.1574 },
-  { nom: "Croissy-sur-Seine", lat: 48.8794, lon: 2.1431 },
-  { nom: "Mareil-sur-Mauldre", lat: 48.8944, lon: 1.8681 },
-  { nom: "Saint-Nom-la-Bretèche", lat: 48.8594, lon: 2.0186 },
-  { nom: "Plaisir", lat: 48.8111, lon: 1.9472 },
-];
-
-function calculerDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
-  const R = 6371;
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
-
-// Zone de livraison : tout le département des Yvelines (78).
-// Le code INSEE (citycode) et le code postal commencent par le n° de département.
-function estDansLesYvelines(props: any): boolean {
-  const code = String(props?.citycode || props?.postcode || '');
-  return code.startsWith('78');
-}
+import { distanceAuRelais, estDansLesYvelines, estVilleRelais, fraisLivraison as calculerFraisLivraison, SEUIL_LIVRAISON_OFFERTE } from '@/lib/livraison';
 
 // Géocode une adresse : distance au relais le plus proche (pour les frais),
-// coordonnées, et appartenance aux Yvelines (pour l'éligibilité).
-async function geocoderAdresse(adresse: string): Promise<{ dist: number; lat: number; lon: number; dansYvelines: boolean } | null> {
+// coordonnées, appartenance aux Yvelines (éligibilité) et ville de point relais
+// (livraison offerte). Règles dans src/lib/livraison.ts.
+async function geocoderAdresse(adresse: string): Promise<{ dist: number; lat: number; lon: number; dansYvelines: boolean; villeRelais: boolean } | null> {
   try {
     const res = await fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(adresse)}&limit=1`);
     const data = await res.json();
     const feat = data.features?.[0];
     if (!feat) return null;
     const [lon, lat] = feat.geometry.coordinates;
-    const dist = Math.min(...VILLES_RELAIS.map(v => calculerDistance(lat, lon, v.lat, v.lon)));
-    return { dist, lat, lon, dansYvelines: estDansLesYvelines(feat.properties) };
+    return { dist: distanceAuRelais(lat, lon), lat, lon, dansYvelines: estDansLesYvelines(feat.properties), villeRelais: estVilleRelais(feat.properties) };
   } catch {
     return null;
   }
-}
-
-// Frais de livraison selon la distance au relais le plus proche (paliers).
-function fraisSelonDistance(dist: number | null): number {
-  if (dist == null) return 3;
-  if (dist <= 3) return 3;
-  if (dist <= 6) return 4;
-  return 5;
 }
 
 interface PanierDrawerProps {
@@ -71,6 +41,8 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
   const [chargement, setChargement] = useState(false);
   const [distanceValide, setDistanceValide] = useState<boolean | null>(null);
   const [distanceRelais, setDistanceRelais] = useState<number | null>(null);
+  // Adresse dans une ville de point relais : livraison offerte
+  const [villeRelais, setVilleRelais] = useState(false);
   const [coordsAdresse, setCoordsAdresse] = useState<{ lat: number; lon: number } | null>(null);
   const [dbProfile, setDbProfile] = useState<{ loyalty_points: number; has_referral_discount: boolean; referral_pending: boolean } | null>(null);
   const [applyLoyalty, setApplyLoyalty] = useState(false);
@@ -116,6 +88,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
             if (r) {
               setDistanceValide(r.dansYvelines);
               setDistanceRelais(r.dist);
+              setVilleRelais(r.villeRelais);
               setCoordsAdresse({ lat: r.lat, lon: r.lon });
             } else {
               setDistanceValide(null);
@@ -247,9 +220,9 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
     setAdresse(feat.properties.label);
     setSuggestions([]);
     const [lon, lat] = feat.geometry.coordinates;
-    const minDist = Math.min(...VILLES_RELAIS.map(v => calculerDistance(lat, lon, v.lat, v.lon)));
     setDistanceValide(estDansLesYvelines(feat.properties));
-    setDistanceRelais(minDist);
+    setDistanceRelais(distanceAuRelais(lat, lon));
+    setVilleRelais(estVilleRelais(feat.properties));
     setCoordsAdresse({ lat, lon });
   };
 
@@ -314,14 +287,11 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
   const remiseMontant = sousTotalFinal * remisePct / 100;
   const remiseCodeMontant = codeStatut === 'valid' ? Math.round(sousTotalFinal * remiseCode / 100 * 100) / 100 : 0;
   const totalApresRemise = sousTotalFinal - remiseMontant - remiseCodeMontant;
-  // Le seuil de livraison gratuite (40€) s'applique sur le sous-total avant
-  // remise (code promo, fidélité, parrainage) : une remise ne doit pas faire
-  // perdre la livraison gratuite à un client qui l'avait déjà au prix plein.
-  // En dessous du seuil : frais selon la distance au relais le plus proche
-  // (3€ / 4€ / 5€). Le serveur recalcule le montant à partir des coordonnées.
-  const fraisLivraison = sousTotalFinal <= 0 ? 0
-    : sousTotalFinal >= 40 ? 0
-    : fraisSelonDistance(distanceRelais);
+  // Livraison offerte dans les villes des points relais, ou dès 40€ de produits
+  // avant remise (une remise ne fait pas perdre la livraison offerte). Sinon
+  // 3€ / 4€ / 5€ selon la distance au relais le plus proche. Le serveur
+  // recalcule le montant en géocodant lui-même l'adresse.
+  const fraisLivraison = calculerFraisLivraison({ sousTotal: sousTotalFinal, distance: distanceRelais, villeRelais });
   const totalFinal = totalApresRemise + fraisLivraison;
   const minimumNonAtteint = user && (panier || []).length > 0 && totalApresRemise < 10;
   // Article indisponible ou variantes incompatibles : à corriger avant de commander
@@ -834,8 +804,11 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
             {totalApresRemise >= 10 && (
               <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                 <span>Livraison</span>
-                <span>{fraisLivraison === 0 ? 'GRATUIT' : fraisLivraison.toFixed(2) + '€'}</span>
+                <span>{fraisLivraison === 0 ? (villeRelais ? 'OFFERTE (VILLE RELAIS)' : 'GRATUIT') : fraisLivraison.toFixed(2) + '€'}</span>
               </div>
+            )}
+            {totalApresRemise >= 10 && fraisLivraison > 0 && sousTotalFinal < SEUIL_LIVRAISON_OFFERTE && (
+              <p className="text-[9px] font-bold text-green-600 text-right -mt-1">Encore {(SEUIL_LIVRAISON_OFFERTE - sousTotalFinal).toFixed(2)}€ pour la livraison offerte</p>
             )}
             <div className="flex justify-between font-black text-xl text-slate-900 pt-2">
               <span>TOTAL</span>

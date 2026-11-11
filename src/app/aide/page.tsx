@@ -22,7 +22,7 @@ const FAQ_CATEGORIES = [
       },
       {
         q: "Quelles villes du 78 desservez-vous ?",
-        a: "Nous livrons dans TOUTES les communes des Yvelines (78), au départ de nos points relais de Chatou, Croissy-sur-Seine, Mareil-sur-Mauldre, Saint-Nom-la-Bretèche et Plaisir. Vous pouvez vérifier votre éligibilité directement sur la page d'accueil en saisissant votre adresse."
+        a: "Nous livrons dans TOUTES les communes des Yvelines (78), au départ de nos points relais de Chatou, Croissy-sur-Seine, Mareil-sur-Mauldre et Saint-Nom-la-Bretèche (livraison offerte dans ces 4 villes). Vous pouvez vérifier votre éligibilité directement sur la page d'accueil en saisissant votre adresse."
       },
       {
         q: "Que se passe-t-il si je suis absent lors de la livraison ?",
@@ -30,7 +30,7 @@ const FAQ_CATEGORIES = [
       },
       {
         q: "Combien coûtent les frais de livraison ? Sont-ils gratuits ?",
-        a: "La livraison est OFFERTE dès 40€ de produits. En dessous, les frais dépendent de la distance (à vol d'oiseau) entre votre adresse et notre point relais le plus proche (Chatou, Croissy-sur-Seine, Mareil-sur-Mauldre, Saint-Nom-la-Bretèche ou Plaisir) :\n• jusqu'à 3 km : 3€\n• de 3 à 6 km : 4€\n• au-delà de 6 km : 5€\n\nLe seuil de 40€ se calcule sur vos produits avant remises : un code promo, la remise fidélité ou le parrainage ne vous font jamais perdre la livraison offerte. Le minimum de commande est de 10€ (après remises, hors frais de livraison). Les frais exacts s'affichent dans votre panier avant validation ; ils sont payés avec la commande, à la livraison."
+        a: "La livraison est OFFERTE, quel que soit le montant, si vous habitez dans une ville de nos points relais : Chatou, Croissy-sur-Seine, Mareil-sur-Mauldre ou Saint-Nom-la-Bretèche.\n\nAilleurs dans les Yvelines, elle est OFFERTE dès 40€ de produits. En dessous, les frais dépendent de la distance (à vol d'oiseau) entre votre adresse et notre point relais le plus proche :\n• jusqu'à 3 km : 3€\n• de 3 à 6 km : 4€\n• au-delà de 6 km : 5€\n\nLe seuil de 40€ se calcule sur vos produits avant remises : un code promo, la remise fidélité ou le parrainage ne vous font jamais perdre la livraison offerte. Le minimum de commande est de 10€ (après remises, hors frais de livraison). Les frais exacts s'affichent dans votre panier avant validation ; ils sont payés avec la commande, à la livraison."
       },
       {
         q: "Puis-je choisir un créneau horaire précis ?",
@@ -245,9 +245,13 @@ export default function AidePage() {
             <div>
               <div className="rounded-3xl bg-green-50 border border-green-100 px-5 py-4 mb-4 flex items-center gap-3">
                 <Gift className="w-6 h-6 text-green-600 shrink-0" />
-                <p className="text-sm font-black text-green-800">Livraison <span className="uppercase">offerte</span> dès 40€ de produits</p>
+                <p className="text-sm font-black text-green-800">Livraison <span className="uppercase">offerte</span> à Chatou, Croissy-sur-Seine, Mareil-sur-Mauldre et Saint-Nom-la-Bretèche, quel que soit le montant</p>
               </div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 px-1">En dessous de 40€, selon la distance</p>
+              <div className="rounded-3xl bg-green-50/60 border border-green-100 px-5 py-3 mb-4 flex items-center gap-3">
+                <Gift className="w-5 h-5 text-green-600 shrink-0" />
+                <p className="text-sm font-black text-green-800">Ailleurs dans le 78 : offerte dès 40€ de produits</p>
+              </div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 px-1">En dessous de 40€, hors villes relais, selon la distance</p>
               <div className="rounded-3xl border border-slate-100 overflow-hidden">
                 {[
                   { distance: "Jusqu'à 3 km", prix: '3€' },
@@ -261,7 +265,7 @@ export default function AidePage() {
                 ))}
               </div>
               <p className="text-[11px] font-medium text-slate-400 mt-2 px-1 leading-relaxed">
-                Distance à vol d&apos;oiseau entre votre adresse et notre point relais le plus proche : Chatou, Croissy-sur-Seine, Mareil-sur-Mauldre, Saint-Nom-la-Bretèche ou Plaisir.
+                Distance à vol d&apos;oiseau entre votre adresse et notre point relais le plus proche : Chatou, Croissy-sur-Seine, Mareil-sur-Mauldre ou Saint-Nom-la-Bretèche.
               </p>
             </div>
 
