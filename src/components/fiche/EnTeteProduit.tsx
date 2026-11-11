@@ -27,8 +27,8 @@ export default function EnTeteProduit({
 
   return (
     <div className="grid lg:grid-cols-[1.15fr_1fr] gap-5 lg:gap-10 items-start">
-      {/* key : la galerie revient sur la première photo à chaque changement de variante */}
-      <GaleriePhotos key={variante?.id ?? 'produit'} photos={photosAffichees} alt={titreAffiche} />
+      {/* La galerie change de photo en fondu et revient sur la première à chaque variante */}
+      <GaleriePhotos photos={photosAffichees} alt={titreAffiche} />
 
       <div className="lg:sticky lg:top-20 space-y-4">
         <div>
@@ -47,7 +47,7 @@ export default function EnTeteProduit({
               </span>
             )}
           </div>
-          <h1 key={titreAffiche} className="text-3xl sm:text-5xl font-black tracking-tighter uppercase leading-[0.95] text-slate-900 animate-in fade-in">{titreAffiche}</h1>
+          <h1 className="text-3xl sm:text-5xl font-black tracking-tighter uppercase leading-[0.95] text-slate-900">{titreAffiche}</h1>
           {accroche && (
             <p className="text-slate-500 font-medium italic mt-3 text-sm sm:text-base leading-relaxed">{accroche}</p>
           )}

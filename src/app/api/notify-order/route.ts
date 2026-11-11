@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth, consommerQuota } from '@/lib/api-auth';
+import { requireAuth, consommerQuota, getSupabaseServerClient } from '@/lib/api-auth';
 
 function escapeHtml(str: string): string {
   return String(str ?? '')
@@ -57,29 +57,55 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { commande: raw } = await req.json();
-
-    // Validation minimale — empêche les appels sans payload valide
-    if (!raw?.nom || !Array.isArray(raw?.panier) || raw.panier.length === 0) {
+    // Le corps de la requête ne contient que le numéro de la commande : tout le
+    // contenu de l'e-mail est relu dans la base (commande du client connecté,
+    // passée il y a moins de 30 minutes). Avant, l'e-mail était construit avec
+    // les données envoyées par le navigateur : un client pouvait faire envoyer
+    // à la boutique une fausse « nouvelle commande » au contenu inventé.
+    const body = await req.json().catch(() => ({}));
+    const commandeId = Number(body?.commande_id);
+    if (!Number.isInteger(commandeId) || commandeId <= 0) {
       return NextResponse.json({ error: 'Payload invalide' }, { status: 400 });
     }
+    const supabase = await getSupabaseServerClient();
+    const { data: cmd } = await supabase
+      .from('commandes')
+      .select('id, user_id, nom_client, telephone_client, adresse_livraison, total, contenu_panier, date_livraison, code_promo, remise_code_pct, frais_livraison, created_at')
+      .eq('id', commandeId)
+      .eq('user_id', user!.id)
+      .maybeSingle();
+    if (!cmd || Date.now() - new Date(cmd.created_at).getTime() > 30 * 60 * 1000) {
+      return NextResponse.json({ error: 'Commande introuvable' }, { status: 404 });
+    }
+
+    const lignes = Array.isArray(cmd.contenu_panier) ? cmd.contenu_panier : [];
+    const sousTotal = lignes.reduce((s: number, l: any) => s + (Number(l.prixTotalLigne) || 0), 0);
+    const frais = Number(cmd.frais_livraison) || 0;
+    // Remise totale déduite des montants enregistrés (code promo, ou
+    // fidélité / parrainage — jamais cumulés avec un code)
+    const remiseTotale = Math.max(Math.round((sousTotal + frais - Number(cmd.total)) * 100) / 100, 0);
+    const avecCode = !!cmd.code_promo && remiseTotale > 0;
     const commande = {
-      ...raw,
-      nom: escapeHtml(raw.nom),
-      telephone: escapeHtml(raw.telephone),
-      adresse: escapeHtml(raw.adresse),
-      // L'email de destination du client vient toujours du compte authentifié,
-      // jamais du corps de la requête — sinon n'importe quel utilisateur connecté
-      // pourrait faire envoyer un email à une adresse arbitraire de son choix.
+      nom: escapeHtml(cmd.nom_client),
+      telephone: escapeHtml(cmd.telephone_client),
+      adresse: escapeHtml(cmd.adresse_livraison),
+      // L'email de destination du client vient toujours du compte authentifié
       email_client: escapeHtml(user!.email ?? ''),
-      methode_paiement: escapeHtml(raw.methode_paiement),
-      creneau_livraison: raw.creneau_livraison ? escapeHtml(raw.creneau_livraison) : null,
-      date_livraison: raw.date_livraison || null,
-      panier: (raw.panier || []).map((item: any) => ({
-        ...item,
-        name: escapeHtml(item.name),
-        unite: escapeHtml(item.unite ?? ''),
+      methode_paiement: escapeHtml('À la livraison (espèces ou carte)'),
+      creneau_livraison: null as string | null,
+      date_livraison: /^\d{4}-\d{2}-\d{2}$/.test(String(cmd.date_livraison ?? '')) ? cmd.date_livraison : null,
+      panier: lignes.map((l: any) => ({
+        name: escapeHtml(l.name ?? l.nom ?? ''),
+        quantite: Number(l.quantite) || 0,
+        unite: escapeHtml(l.unite ?? ''),
+        prix_ligne: Number(l.prixTotalLigne) || 0,
       })),
+      remise_pct: !avecCode && remiseTotale > 0 && sousTotal > 0 ? Math.round((remiseTotale / sousTotal) * 100) : 0,
+      remise_montant: !avecCode ? remiseTotale : 0,
+      remise_code_pct: avecCode ? Number(cmd.remise_code_pct) || 0 : 0,
+      remise_code_montant: avecCode ? remiseTotale : 0,
+      frais_livraison: frais,
+      total: Number(cmd.total) || 0,
     };
     const siteUrl = getSiteUrl();
     const adminUrl = `${siteUrl}/admin`;

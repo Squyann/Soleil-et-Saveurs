@@ -1,5 +1,6 @@
 'use client';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import ImageFondu from '@/components/ImageFondu';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 // Galerie au format 3:2 (celui de l'outil de cadrage) : défilement au doigt
@@ -7,6 +8,12 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 export default function GaleriePhotos({ photos, alt }: { photos: string[]; alt: string }) {
   const piste = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
+
+  // Nouvelle variante (première photo différente) : retour en douceur sur la première photo
+  const premiere = photos[0];
+  useEffect(() => {
+    piste.current?.scrollTo({ left: 0, behavior: 'smooth' });
+  }, [premiere]);
 
   const allerA = (i: number) => {
     const el = piste.current;
@@ -38,14 +45,9 @@ export default function GaleriePhotos({ photos, alt }: { photos: string[]; alt: 
           className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide rounded-[1.5rem] sm:rounded-[2rem] bg-white border border-[#DDD0BF] shadow-sm [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           {photos.map((url, i) => (
-            <div key={url + i} className="w-full shrink-0 snap-center aspect-[3/2]">
-              <img
-                src={url}
-                alt={photos.length > 1 ? `${alt} — photo ${i + 1}` : alt}
-                className="w-full h-full object-cover"
-                loading={i === 0 ? 'eager' : 'lazy'}
-                draggable={false}
-              />
+            <div key={i} className="relative w-full shrink-0 snap-center aspect-[3/2]">
+              {/* Changement de photo en fondu (variantes) */}
+              <ImageFondu src={url} alt={photos.length > 1 ? `${alt} — photo ${i + 1}` : alt} />
             </div>
           ))}
         </div>
@@ -85,7 +87,7 @@ export default function GaleriePhotos({ photos, alt }: { photos: string[]; alt: 
         <div className="hidden sm:flex gap-2 mt-3 overflow-x-auto pb-1">
           {photos.map((url, i) => (
             <button
-              key={url + i}
+              key={i}
               type="button"
               onClick={() => allerA(i)}
               aria-label={`Afficher la photo ${i + 1}`}
