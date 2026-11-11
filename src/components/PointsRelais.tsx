@@ -1,15 +1,10 @@
 import { ExternalLink, MapPin } from 'lucide-react';
+import { RELAIS } from '@/lib/livraison';
 
 // Remplace les cartes Google Maps intégrées : la CSP du site (frame-src) les
 // bloquait, et les autoriser déposerait des cookies Google non déclarés.
 // Chaque relais ouvre simplement Google Maps dans un nouvel onglet.
-const RELAIS = [
-  { nom: 'Chatou', lat: 48.8897, lon: 2.1574 },
-  { nom: 'Croissy-sur-Seine', lat: 48.8794, lon: 2.1431 },
-  { nom: 'Mareil-sur-Mauldre', lat: 48.8944, lon: 1.8681 },
-  { nom: 'Saint-Nom-la-Bretèche', lat: 48.8594, lon: 2.0186 },
-  { nom: 'Plaisir', lat: 48.8111, lon: 1.9472 },
-];
+// Liste unique des points relais (src/lib/livraison.ts)
 
 export default function PointsRelais() {
   return (
@@ -31,7 +26,7 @@ export default function PointsRelais() {
           </span>
         </a>
       ))}
-      <p className="text-[10px] font-bold text-slate-500 italic mt-2">Livraison dans toutes les communes des Yvelines, au départ de ces relais.</p>
+      <p className="text-[10px] font-bold text-slate-500 italic mt-2">Livraison dans toutes les communes des Yvelines, au départ de ces relais — <span className="text-green-700 not-italic font-black">offerte dans ces {RELAIS.length} villes</span>.</p>
     </div>
   );
 }

@@ -3,27 +3,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import PointsRelais from '@/components/PointsRelais';
+import { RELAIS, estDansLesYvelines, estVilleRelais, distanceAuRelais, fraisLivraison } from '@/lib/livraison';
 import { supabase } from '@/lib/supabase';
 import { 
   ArrowRight, Volume2, VolumeX, MapPin, ShoppingCart, Truck, 
   User, HelpCircle, Search, X, CheckCircle2, Clock, ShieldCheck, Navigation, Loader2, AlertCircle
 } from 'lucide-react';
 
-// --- CONFIGURATION DES VILLES (MISES À JOUR) ET CALCUL DE DISTANCE ---
-const VILLES_RELAIS = [
-  { nom: "Chatou", lat: 48.8897, lon: 2.1574 },
-  { nom: "Croissy-sur-Seine", lat: 48.8794, lon: 2.1431 },
-  { nom: "Mareil-sur-Mauldre", lat: 48.8944, lon: 1.8681 },
-  { nom: "Saint-Nom-la-Bretèche", lat: 48.8594, lon: 2.0186 },
-  { nom: "Plaisir", lat: 48.8111, lon: 1.9472 }
-];
-
-// Zone de livraison : tout le département des Yvelines (78).
-// Le code INSEE (citycode) et le code postal commencent par le n° de département.
-function estDansLesYvelines(props: any): boolean {
-  const code = String(props?.citycode || props?.postcode || '');
-  return code.startsWith('78');
-}
+// Points relais, zone et frais : src/lib/livraison.ts (mêmes règles que le serveur)
 
 function calculerDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
   const R = 6371;
@@ -57,6 +44,8 @@ export default function Home() {
   const [showResult, setShowResult] = useState(false);
   const [distanceValide, setDistanceValide] = useState<boolean | null>(null);
   const [distanceAffichee, setDistanceAffichee] = useState<number | null>(null);
+  // Frais de livraison pour l'adresse testée (sous 40€ de produits)
+  const [infoLivraison, setInfoLivraison] = useState<{ villeRelais: boolean; frais: number } | null>(null);
   
   const router = useRouter();
 
@@ -95,6 +84,8 @@ export default function Home() {
       setIsVerifying(false);
       
       if (estDansLesYvelines(feat.properties)) {
+        const villeRelais = estVilleRelais(feat.properties);
+        setInfoLivraison({ villeRelais, frais: fraisLivraison({ sousTotal: 1, distance: distanceAuRelais(latSaisie, lonSaisie), villeRelais }) });
         setDistanceValide(true);
         setShowResult(true);
       } else {
@@ -120,7 +111,14 @@ export default function Home() {
             <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle2 className="w-8 h-8" />
             </div>
-            <h3 className="text-xl font-black uppercase italic mb-6 tracking-tighter">Vous êtes éligible !</h3>
+            <h3 className="text-xl font-black uppercase italic mb-2 tracking-tighter">Vous êtes éligible !</h3>
+            {infoLivraison && (
+              <p className="text-sm font-bold text-slate-500 mb-6 leading-snug">
+                {infoLivraison.villeRelais
+                  ? <><span className="text-green-600 font-black">Livraison offerte</span> chez vous, quel que soit le montant.</>
+                  : <>Livraison {infoLivraison.frais.toFixed(0)}€, <span className="text-green-600 font-black">offerte dès 40€</span> de produits.</>}
+              </p>
+            )}
             <div className="space-y-3">
               <button
                 onClick={() => handleActionClick('/commander')}
@@ -351,9 +349,9 @@ export default function Home() {
         <div className="bg-white rounded-[3rem] overflow-hidden shadow-2xl shadow-slate-200 border border-slate-50 grid lg:grid-cols-2">
           <div className="p-10 md:p-14 flex flex-col justify-center">
             <h3 className="text-4xl font-black uppercase italic tracking-tighter mb-6 text-slate-900 leading-[0.9]">ZONE DE <br/><span className="text-[#FF4500]">FRAÎCHEUR</span></h3>
-            <p className="text-sm text-slate-500 mb-8 font-semibold italic leading-relaxed">Livraison dans toutes les Yvelines (78), au départ de nos 5 points relais : des trajets courts pour des produits frais.</p>
+            <p className="text-sm text-slate-500 mb-8 font-semibold italic leading-relaxed">Livraison dans toutes les Yvelines (78), au départ de nos {RELAIS.length} points relais : des trajets courts pour des produits frais. <span className="text-green-600 not-italic font-black">Livraison offerte dans ces {RELAIS.length} villes.</span></p>
             <ul className="grid grid-cols-2 gap-4 mb-8">
-              {['Chatou', 'Croissy', 'Mareil', 'St-Nom', 'Plaisir'].map((v, i) => (
+              {['Chatou', 'Croissy', 'Mareil', 'St-Nom'].map((v, i) => (
                 <li key={i} className="flex items-center gap-2.5 text-[11px] font-black uppercase tracking-widest text-slate-400">
                   <div className="w-5 h-5 rounded-full bg-green-50 flex items-center justify-center">
                     <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />

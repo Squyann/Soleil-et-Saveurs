@@ -1021,7 +1021,7 @@ export default function ComptePage() {
                 <Truck className="w-8 h-8 text-[#FF4500] mb-4" />
                 <h3 className="text-xl font-black text-white uppercase tracking-tighter italic mb-2">Livraison dès le lendemain</h3>
                 <p className="text-slate-400 text-xs font-bold leading-relaxed mb-6">
-                  Entre 15h et 20h, à la date de votre choix. Gratuit dès 40€.
+                  Entre 15h et 20h, à la date de votre choix. Offerte dans nos villes relais, et partout dès 40€.
                 </p>
                 <Link
                   href="/commander"

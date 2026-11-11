@@ -32,7 +32,7 @@ const ELIGIBLE_ZONES = [
   { cp: "78650", city: "Beynes" },
   { cp: "78580", city: "Herbeville" },
 
-  // Zone PLAISIR / VILLEPREUX
+  // Zone VILLEPREUX / LES CLAYES
   { cp: "78370", city: "Plaisir" },
   { cp: "78450", city: "Villepreux" },
   { cp: "78340", city: "Les Clayes-sous-Bois" },
@@ -149,7 +149,7 @@ export default function LivraisonPage() {
               <ShieldCheck className="w-7 h-7" />
             </div>
             <h3 className="font-black uppercase text-sm mb-2">Frais de livraison</h3>
-            <p className="text-[11px] text-slate-500 font-medium leading-relaxed italic">Gratuit dès 40€. En dessous, participation de 3€ à 5€ selon la distance à nos points relais.</p>
+            <p className="text-[11px] text-slate-500 font-medium leading-relaxed italic">Offerte à Chatou, Croissy-sur-Seine, Mareil-sur-Mauldre et Saint-Nom-la-Bretèche. Ailleurs : offerte dès 40€, sinon 3€ à 5€ selon la distance à nos points relais.</p>
           </div>
         </div>
 

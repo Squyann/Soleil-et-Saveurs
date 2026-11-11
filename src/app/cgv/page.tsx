@@ -119,7 +119,7 @@ export default function CGVPage() {
               </div>
             </div>
             <p className="text-slate-600 font-medium leading-relaxed mt-4">
-              Les frais de livraison dépendent de la distance entre l'adresse de livraison et le point relais Soleil et Saveurs le plus proche (Chatou, Croissy-sur-Seine, Mareil-sur-Mauldre, Saint-Nom-la-Bretèche ou Plaisir). Ils sont offerts lorsque le montant des produits atteint 40,00 €, avant application des éventuelles remises. Le montant exact des frais est affiché dans le panier avant la validation de la commande. Le montant minimum de commande est de 10,00 €, après remises.
+              La livraison est offerte pour toute adresse située à Chatou, Croissy-sur-Seine, Mareil-sur-Mauldre ou Saint-Nom-la-Bretèche, communes des points relais Soleil et Saveurs. Ailleurs dans les Yvelines, les frais dépendent de la distance entre l'adresse de livraison et le point relais le plus proche : 3,00 € jusqu'à 3 km, 4,00 € jusqu'à 6 km, 5,00 € au-delà ; ils sont offerts lorsque le montant des produits atteint 40,00 €, avant application des éventuelles remises. Le montant exact des frais est affiché dans le panier avant la validation de la commande. Le montant minimum de commande est de 10,00 €, après remises.
             </p>
             <p className="text-slate-600 font-medium leading-relaxed mt-4">
               Soleil et Saveurs se réserve le droit de modifier ses prix à tout moment. Les prix applicables sont ceux affichés au moment de la validation de la commande.
