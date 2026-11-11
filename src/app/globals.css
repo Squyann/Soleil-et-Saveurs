@@ -138,3 +138,60 @@
   width: max-content;
   animation: scroll-fast 25s linear infinite;
 }
+/* ---- Identité visuelle : titres et animations ---- */
+
+/* Titres en serif, assortis au logo */
+.titre {
+  font-family: var(--font-titre), Georgia, 'Times New Roman', serif;
+  font-weight: 560;
+  letter-spacing: -0.025em;
+}
+.titre em {
+  font-style: italic;
+  font-weight: 500;
+}
+
+@keyframes ss-monte {
+  from { opacity: 0; transform: translateY(22px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes ss-tourne {
+  to { transform: rotate(360deg); }
+}
+@keyframes ss-flotte {
+  0%, 100% { transform: translateY(0) rotate(var(--r, 0deg)); }
+  50% { transform: translateY(-10px) rotate(var(--r, 0deg)); }
+}
+@keyframes ss-defile {
+  to { transform: translateX(-50%); }
+}
+@keyframes ss-pouls {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+@keyframes ss-pop {
+  0% { opacity: 0; transform: scale(0.92); }
+  60% { transform: scale(1.03); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes ss-rebond {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
+
+.ss-monte { animation: ss-monte 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.ss-rayons { animation: ss-tourne 90s linear infinite; transform-origin: 50% 50%; will-change: transform; }
+.ss-flotte { animation: ss-flotte 7s ease-in-out infinite; }
+.ss-defile { animation: ss-defile 38s linear infinite; }
+.ss-pouls { animation: ss-pouls 1.8s ease-in-out infinite; }
+.ss-pop { animation: ss-pop 0.28s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.ss-rebond { animation: ss-rebond 0.32s ease-out; }
+
+/* Rubans à faire défiler au doigt (promos, avantages) */
+.ss-ruban { scrollbar-width: none; }
+.ss-ruban::-webkit-scrollbar { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ss-monte, .ss-rayons, .ss-flotte, .ss-defile, .ss-pouls, .ss-pop, .ss-rebond { animation: none; }
+}

@@ -128,6 +128,75 @@ export function ajouterAuPanier(product: any, qteSaisie: number, variant: Varian
   return remplace;
 }
 
+const memeLigne = (item: any, product: any, variantId: string | null) =>
+  item.id === product.id && (item.variant_id ?? null) === variantId;
+
+// Quantité maximale d'une ligne : stock propre de la variante, sinon stock du
+// produit moins les autres lignes qui le partagent, sinon illimité.
+export function stockMaxLigne(panier: any[], item: any): number {
+  if (item.stock == null) return Infinity;
+  if (item.stock_partage === false) return Number(item.stock);
+  const autres = panier
+    .filter(i => i.id === item.id && i.stock_partage !== false && (i.variant_id ?? null) !== (item.variant_id ?? null))
+    .reduce((s, i) => s + (Number(i.quantite) || 0), 0);
+  return Number(item.stock) - autres;
+}
+
+// Ajoute un pas de vente (1 pièce, 0,5 kg, 300 g…) de la variante au panier,
+// dans la limite du stock. Produit à variante unique : la variante choisie
+// remplace les autres. Lot « X achetés + Y offerts » : les unités offertes
+// sont ajoutées dès que X est atteint (comme l'ajout par quantité).
+export function ajouterUnPas(product: any, variant: Variante | null): { ok: boolean; remplace: boolean; offerts: number } {
+  const variantId = variant ? variant.id : null;
+  let panier = lirePanier();
+  let remplace = false;
+  if (variant && !variantesCumulables(product)) {
+    const avant = panier.length;
+    panier = panier.filter((item: any) => item.id !== product.id || (item.variant_id ?? null) === variantId);
+    remplace = panier.length < avant;
+  }
+
+  const modele = ligneDepuisProduit(product, variant, 0);
+  const pas = getStep(modele);
+  const index = panier.findIndex((item: any) => memeLigne(item, product, variantId));
+  const actuelle = index >= 0 ? Number(panier[index].quantite) || 0 : 0;
+  const max = stockMaxLigne(panier, modele);
+  let cible = parseFloat((actuelle + pas).toFixed(2));
+  if (cible > max + 1e-9) return { ok: false, remplace: false, offerts: 0 };
+
+  let offerts = 0;
+  const seuil = Number(modele.seuil_achat) || 0;
+  const offert = Number(modele.quantite_offerte) || 0;
+  if (seuil > 0 && offert > 0 && pas === 1) {
+    const autres = panier
+      .filter((item: any) => item.id === product.id && !memeLigne(item, product, variantId) && cleGroupe(item).endsWith('|parent'))
+      .reduce((s: number, item: any) => s + (Number(item.quantite) || 0), 0);
+    if ((autres + cible) % (seuil + offert) === seuil) {
+      offerts = Math.max(0, Math.min(offert, max - cible));
+      cible += offerts;
+    }
+  }
+
+  const ligne = ligneDepuisProduit(product, variant, cible);
+  if (index >= 0) panier[index] = ligne;
+  else panier.push(ligne);
+  ecrirePanier(panier);
+  return { ok: true, remplace, offerts };
+}
+
+// Retire un pas de vente ; sous le minimum, la ligne quitte le panier.
+export function retirerUnPas(product: any, variant: Variante | null) {
+  const variantId = variant ? variant.id : null;
+  const panier = lirePanier();
+  const index = panier.findIndex((item: any) => memeLigne(item, product, variantId));
+  if (index < 0) return;
+  const item = panier[index];
+  const cible = parseFloat(((Number(item.quantite) || 0) - getStep(item)).toFixed(2));
+  if (cible < getMin(item) - 1e-9) panier.splice(index, 1);
+  else panier[index] = { ...item, quantite: cible };
+  ecrirePanier(panier);
+}
+
 // Prix de toutes les lignes du panier, comme sur le serveur : les variantes
 // d'un même produit vendues dans son unité sont calculées ensemble (promotions
 // par quantité sur le total) ; une variante d'une autre unité garde sa remise %.

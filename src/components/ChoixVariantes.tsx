@@ -90,22 +90,22 @@ export default function ChoixVariantes({
         role="radio"
         aria-checked={actif}
         onClick={() => onChoisir(v.id)}
-        className={`relative shrink-0 snap-start flex items-center gap-1.5 border font-black uppercase tracking-tight transition-[background-color,border-color,color,box-shadow] duration-200 ${
-          compact ? 'px-2 py-1 rounded-lg text-[8px] sm:text-[10px]' : 'px-3 py-2 rounded-xl text-[11px]'
+        className={`relative shrink-0 snap-start flex items-center gap-1.5 border transition-[background-color,border-color,color,box-shadow] duration-200 ${
+          compact ? 'h-9 sm:h-10 px-2.5 sm:px-3.5 rounded-[11px] sm:rounded-[13px] border-[1.5px] text-xs sm:text-[13px] font-bold' : 'px-3 py-2 rounded-xl text-[11px] font-black uppercase tracking-tight'
         } ${actif
-          ? 'bg-[#3D2B1F] border-[#3D2B1F] text-white shadow-md'
-          : 'bg-white border-[#D5C9B8] text-slate-500 hover:border-[#FF4500]/50 hover:text-[#3D2B1F]'}`}
+          ? compact ? 'bg-[#3D2B1F] border-[#3D2B1F] text-[#F5EAE0]' : 'bg-[#3D2B1F] border-[#3D2B1F] text-white shadow-md'
+          : compact ? 'bg-white border-[#DDD0BF] text-[#3D2B1F] hover:border-[#3D2B1F]' : 'bg-white border-[#D5C9B8] text-slate-500 hover:border-[#FF4500]/50 hover:text-[#3D2B1F]'}`}
       >
         {!compact && v.image_url && (
           <img src={v.image_url} alt="" className="w-7 h-5 rounded object-cover -ml-1" />
         )}
-        {actif && <Check className={compact ? 'w-2.5 h-2.5' : 'w-3.5 h-3.5'} />}
+        {actif && <Check className={compact ? 'w-3 h-3 sm:w-3.5 sm:h-3.5' : 'w-3.5 h-3.5'} strokeWidth={compact ? 3 : 2} />}
         <span className="whitespace-nowrap">{libelleCourt(produit, v)}</span>
         {prixDifferents && !compact && (
           <span className={`font-bold normal-case ${actif ? 'text-white/70' : 'text-slate-400'}`}>{infos[i].final.toFixed(2)}€/{infos[i].unite}</span>
         )}
         {dansPanier > 0 && (
-          <span className="absolute -top-1.5 -right-1.5 min-w-4 h-4 px-1 rounded-full bg-[#FF4500] text-white text-[8px] font-black flex items-center justify-center">
+          <span className={`absolute -top-1.5 -right-1.5 px-1 rounded-full bg-[#D43A00] text-white font-black flex items-center justify-center ${compact ? 'min-w-[18px] h-[18px] text-[10px]' : 'min-w-4 h-4 text-[8px]'}`}>
             {uniteLigne === 'g' || uniteLigne === 'kg' ? '✓' : dansPanier}
           </span>
         )}
@@ -121,7 +121,7 @@ export default function ChoixVariantes({
     );
   }
 
-  const fleche = 'absolute top-1/2 -translate-y-1/2 mt-0.5 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-white border border-[#D5C9B8] shadow-md text-[#3D2B1F] flex items-center justify-center transition-opacity duration-200';
+  const fleche = 'absolute top-1/2 -translate-y-1/2 mt-0.5 w-7 h-7 rounded-full bg-white border border-[#D5C9B8] shadow-md text-[#3D2B1F] flex items-center justify-center transition-opacity duration-200';
   return (
     <div className="relative" onPointerEnter={precharger} onTouchStart={precharger}>
       <div
@@ -139,11 +139,11 @@ export default function ChoixVariantes({
       <div aria-hidden className={`pointer-events-none absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent transition-opacity duration-200 ${bords.droite ? 'opacity-100' : 'opacity-0'}`} />
       <button type="button" tabIndex={bords.gauche ? 0 : -1} aria-label="Variantes précédentes" onClick={() => defiler(-1)}
         className={`${fleche} -left-1 ${bords.gauche ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-        <ChevronLeft className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+        <ChevronLeft className="w-3.5 h-3.5" />
       </button>
       <button type="button" tabIndex={bords.droite ? 0 : -1} aria-label="Variantes suivantes" onClick={() => defiler(1)}
         className={`${fleche} -right-1 ${bords.droite ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-        <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+        <ChevronRight className="w-3.5 h-3.5" />
       </button>
     </div>
   );

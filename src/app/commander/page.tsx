@@ -1,27 +1,27 @@
 'use client';
 export const dynamic = 'force-dynamic';
 import React, { useState, useEffect, useCallback } from 'react';
-import { ShoppingCart, Star, ArrowLeft, Plus, Info, Tag, CheckCircle2, TrendingDown, Gift, Search, X, Flame, BookOpen, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Plus, Minus, Info, Check, CheckCircle2, Search, X, Flame, BookOpen, ChevronDown, ShoppingBasket } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
-import { premieresOffertes, libellePremieresOffertes, estEnPromo } from '@/lib/promos';
-import { getStep, getMin, quantiteInitiale, formatGramLabel, formatQuantite, uniteAffichee, bornerQuantite, calculerPrixAffiche, stockDisponible, ajouterAuPanier as ajouterProduitAuPanier, lirePanier, calculerPanier } from '@/lib/panier';
+import { estEnPromo, etiquettesPromo } from '@/lib/promos';
+import { getStep, getMin, formatQuantite, uniteAffichee, stockDisponible, stockMaxLigne, ligneDepuisProduit, ajouterUnPas, retirerUnPas, lirePanier, calculerPanier } from '@/lib/panier';
 import { variantesActives, prixVariante, imageVariante, nomVariante, libelleCourt, variantesCumulables, produitPourVariante } from '@/lib/variantes';
 import { prochainePromo } from '@/lib/prix';
+import { formatPrix, libelleUnite } from '@/lib/format';
+import { CLE_FILTRE, CLE_RECHERCHE, CLE_DEFILEMENT, lireSession, ecrireSession } from '@/lib/catalogue';
 import ChoixVariantes, { PanneauVariantes } from '@/components/ChoixVariantes';
 import ImageFondu from '@/components/ImageFondu';
+import BarrePanier from '@/components/BarrePanier';
 
-// Mémorisés le temps de la visite, pour retrouver le catalogue tel qu'on l'a
-// laissé en revenant d'une page produit.
-const CLE_FILTRE = 'catalogue-filtre';
-const CLE_RECHERCHE = 'catalogue-recherche';
-const CLE_DEFILEMENT = 'catalogue-defilement';
+const PLURIELS: Record<string, string> = { pièce: 'pièces', botte: 'bottes', barquette: 'barquettes' };
 
-function lireSession(cle: string): string | null {
-  try { return sessionStorage.getItem(cle); } catch { return null; }
-}
-function ecrireSession(cle: string, valeur: string) {
-  try { sessionStorage.setItem(cle, valeur); } catch {}
+// Quantité en toutes lettres : « 2 pièces », « 1,5 kg », « 300 g »
+function libelleQuantite(produit: any, q: number): string {
+  if (produit.unite === 'g') return q < 1000 ? `${q} g` : `${String(q / 1000).replace('.', ',')} kg`;
+  if (produit.unite === 'kg') return `${String(q).replace('.', ',')} kg`;
+  const unite = produit.unite || 'pièce';
+  return `${q} ${q > 1 ? PLURIELS[unite] ?? unite : unite}`;
 }
 
 // Image et nom d'une carte : lien vers la page produit seulement si elle est
@@ -45,12 +45,10 @@ export default function CommanderPage() {
   const [filter, setFilter] = useState('all');
   const [loading, setLoading] = useState(true);
   const [showToast, setShowToast] = useState(false);
-  const [texteToast, setTexteToast] = useState('Ajouté au panier !');
+  const [texteToast, setTexteToast] = useState('');
   // Panier actuel : quantités déjà choisies par variante et promos en cours
   const [panier, setPanier] = useState<any[]>([]);
 
-  // NOUVEAU : État pour gérer les quantités saisies par le client avant l'ajout
-  const [quantities, setQuantities] = useState<{ [key: string]: number }>({});
   const [search, setSearch] = useState('');
   const [infoProduct, setInfoProduct] = useState<any | null>(null);
   const [variantsByProduct, setVariantsByProduct] = useState<{ [productId: string]: any[] }>({});
@@ -96,13 +94,7 @@ export default function CommanderPage() {
         .order('name', { ascending: true });
 
       if (error) throw error;
-      if (data) {
-        setProducts(data);
-        // Initialiser les quantités à 1 pour chaque produit
-        const initialQty: { [key: string]: number } = {};
-        data.forEach(p => initialQty[p.id] = quantiteInitiale(p));
-        setQuantities(initialQty);
-      }
+      if (data) setProducts(data);
 
       const [{ data: variantesData }, { data: fichesData }] = await Promise.all([
         supabase.from('product_variants').select('*').order('ordre', { ascending: true }),
@@ -123,17 +115,6 @@ export default function CommanderPage() {
           if (premiere) initialSelected[productId] = premiere.id;
         });
         setSelectedVariant(initialSelected);
-        // Quantité de départ dans l'unité de la variante affichée par défaut
-        if (data) {
-          setQuantities(prev => {
-            const q = { ...prev };
-            data.forEach((p: any) => {
-              const premiere = variantesActives(grouped[p.id])[0];
-              if (premiere) q[p.id] = quantiteInitiale(produitPourVariante(p, premiere));
-            });
-            return q;
-          });
-        }
       }
       if (fichesData) {
         const parProduit: { [productId: string]: string } = {};
@@ -153,11 +134,6 @@ export default function CommanderPage() {
     const vs = getVariants(product);
     if (vs.length === 0) return null;
     return vs.find(v => v.id === selectedVariant[product.id]) || vs[0];
-  };
-
-  const handleQtyChange = (id: string, val: string, product: any) => {
-    const quantite = bornerQuantite(product, val, stockDisponible(product));
-    setQuantities(prev => ({ ...prev, [id]: quantite }));
   };
 
   const produitsActifs = products.filter(p => p.actif !== false);
@@ -182,30 +158,36 @@ export default function CommanderPage() {
     // Produits en promo en premier, l'ordre alphabétique est conservé ensuite
     .sort((a, b) => Number(enPromoProduit(b)) - Number(enPromoProduit(a)));
 
-  // Changer de variante : quantité de départ dans l'unité de la nouvelle variante
   const choisirVariante = (product: any, id: string) => {
     setSelectedVariant(prev => ({ ...prev, [product.id]: id }));
-    setQuantities(prev => ({ ...prev, [product.id]: getMin(produitPourVariante(product, getVariants(product).find(v => v.id === id))) }));
   };
   const fermerPanneau = useCallback(() => setPanneauVariantes(null), []);
 
-  const ajouterAuPanier = (product: any) => {
-    const variante = getSelectedVariant(product);
-    const remplace = ajouterProduitAuPanier(product, quantities[product.id] || 1, variante);
-    setTexteToast(remplace && variante ? `Remplacé par : ${libelleCourt(product, variante)}` : 'Ajouté au panier !');
+  const afficherToast = (texte: string) => {
+    setTexteToast(texte);
     setShowToast(true);
     setTimeout(() => setShowToast(false), 2000);
-    setQuantities(prev => ({ ...prev, [product.id]: quantiteInitiale(produitPourVariante(product, variante)) }));
   };
+
+  // « Ajouter » puis « + » : un pas de vente de plus dans le panier. La carte
+  // se met à jour d'elle-même (événement panier-updated).
+  const ajouterAuPanier = (product: any) => {
+    const variante = getSelectedVariant(product);
+    const resultat = ajouterUnPas(product, variante);
+    if (!resultat.ok) afficherToast('Stock maximum atteint');
+    else if (resultat.remplace && variante) afficherToast(`Remplacé par : ${libelleCourt(product, variante)}`);
+    else if (resultat.offerts > 0) afficherToast(`${resultat.offerts} offert${resultat.offerts > 1 ? 's' : ''} : ajouté${resultat.offerts > 1 ? 's' : ''} au panier`);
+  };
+  const retirerDuPanier = (product: any) => retirerUnPas(product, getSelectedVariant(product));
 
   return (
     <>
-    <main className="min-h-screen bg-[#EDE3D5] text-slate-900 pb-20 pt-24 px-2 md:px-10">
+    <main className="min-h-screen bg-[#EDE3D5] text-slate-900 pb-44 md:pb-36 pt-24 px-2 md:px-10">
 
       {showToast && (
         <div className="fixed top-28 left-1/2 -translate-x-1/2 z-[100] bg-[#3D2B1F] text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-300">
-          <CheckCircle2 className="w-5 h-5 text-[#FF4500]" />
-          <span className="font-black text-[10px] uppercase tracking-widest">{texteToast}</span>
+          <CheckCircle2 className="w-5 h-5 text-[#FF7A47]" aria-hidden />
+          <span role="status" className="font-bold text-sm">{texteToast}</span>
         </div>
       )}
 
@@ -293,7 +275,6 @@ export default function CommanderPage() {
         ) : (
           <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-5">
             {filteredProducts.map((product) => {
-              const currentQty = quantities[product.id] || 1;
               // Variante affichée : sa photo, son nom et son prix remplacent ceux du produit
               const variante = getSelectedVariant(product);
               // Produit vu à travers la variante : unité, pas, remise, stock et promos applicables
@@ -302,146 +283,218 @@ export default function CommanderPage() {
               const imageCarte = imageVariante(product, variante);
               const nomCarte = nomVariante(product, variante);
               const descriptionCarte = variante?.description || product.description;
-              const { qteEffective, prixDegressifActif, nbPremieresOffertes, totalPrice, totalEconomy, totalItemsRecus } = calculerPrixAffiche(pv, currentQty, prixBase);
+              const productVariants = getVariants(product);
+              const slug = slugs[product.id];
+              const pas = getStep(pv);
+
               // Déjà dans le panier pour ce produit (toutes variantes)
               const lignesPanier = panier.filter((i: any) => String(i.id) === String(product.id));
               const qteParVariante = Object.fromEntries(lignesPanier.map((i: any) => [i.variant_id ?? '', Number(i.quantite) || 0]));
+              // Ligne de la variante affichée : c'est elle que le sélecteur de quantité modifie
+              const ligne = lignesPanier.find((i: any) => (i.variant_id ?? null) === (variante?.id ?? null)) ?? null;
+              const qteLigne = ligne ? Number(ligne.quantite) || 0 : 0;
+              const calculs = lignesPanier.length ? calculerPanier(lignesPanier) : null;
+              const resultat = ligne && calculs ? calculs.ligne(ligne) : null;
               // Quantité dans l'unité du produit (base des promotions par quantité)
               const qtePanierTotale = lignesPanier.filter((i: any) => (i.unite ?? null) === (product.unite ?? null)).reduce((s: number, i: any) => s + (Number(i.quantite) || 0), 0);
-              const economiePanier = lignesPanier.length ? calculerPanier(lignesPanier).economie : 0;
+              const economiePanier = calculs ? calculs.economie : 0;
               const suggestion = qtePanierTotale > 0 ? prochainePromo(product, qtePanierTotale) : null;
-              const enPromo = estEnPromo(pv);
-              const slug = slugs[product.id];
 
-              const productVariants = getVariants(product);
               const effectiveStock = stockDisponible(pv);
+              const epuise = effectiveStock <= 0;
+              const stockMax = stockMaxLigne(panier, ligne ?? ligneDepuisProduit(product, variante, 0));
+              const plusPossible = qteLigne + pas <= stockMax + 1e-9;
+
+              // Prix à l'unité : celui du panier s'il y est (dégressif compris), sinon remise % déduite
+              const prixUnitaire = resultat ? resultat.prixUnitaire : pv.promotion > 0 ? prixBase * (1 - pv.promotion / 100) : prixBase;
+              const prixReduit = prixUnitaire < prixBase - 0.005;
+
+              // Message de promotion : ce qu'il manque, ce qui est gagné, ou l'offre
+              const etiquettes = etiquettesPromo(pv);
+              const offre = etiquettes.find(e => e.cle !== 'remise');
+              const message: { texte: string; ton: 'orange' | 'vert' | 'neutre' } | null =
+                suggestion ? { texte: `${suggestion.texte}${productVariants.length > 0 && variantesCumulables(product) ? ' (toutes variétés)' : ''}`, ton: 'orange' }
+                : economiePanier > 0.005 ? { texte: `Promo appliquée : -${formatPrix(economiePanier)}`, ton: 'vert' }
+                : offre ? { texte: offre.cle === 'degressif' ? `${offre.texte} ${pv.unite === 'g' || pv.unite === 'kg' ? 'le kg' : `la ${pv.unite || 'pièce'}`}` : offre.texte, ton: 'orange' }
+                : pv.unite === 'g' ? { texte: `Par tranche de ${libelleQuantite(pv, pas)}`, ton: 'neutre' }
+                : null;
 
               return (
-                <div
+                <article
                   key={product.id}
-                  className={`bg-white rounded-xl sm:rounded-[2rem] p-2 sm:p-4 border transition-all flex flex-col group relative overflow-hidden ${
-                    enPromo
-                      ? 'border-[#FF4500]/50 ring-2 ring-[#FF4500]/15 shadow-[0_10px_30px_rgba(255,69,0,0.12)] hover:shadow-[0_20px_50px_rgba(255,69,0,0.18)]'
-                      : 'border-[#DDD0BF] shadow-sm hover:shadow-[0_20px_50px_rgb(0,0,0,0.06)]'
-                  }`}
+                  className={`group relative flex flex-col rounded-[18px] sm:rounded-3xl border border-[#E8DCCB] p-1.5 sm:p-2.5 overflow-hidden transition-[transform,box-shadow] duration-300 ease-out sm:hover:-translate-y-1 sm:hover:shadow-[0_26px_44px_-28px_rgba(61,43,31,0.5)] ${epuise ? 'bg-[#F9F3EA]' : 'bg-white'}`}
                 >
-                  {/* BADGES PROMO ET X+Y */}
-                  <div className="absolute top-2 left-2 sm:top-4 sm:left-4 z-10 flex flex-col items-start gap-1 pointer-events-none">
-                    {enPromo && (
-                      <div className="bg-gradient-to-r from-[#FF4500] to-[#FF7A1A] text-white text-[8px] sm:text-[10px] font-black px-2 py-1 sm:px-3 sm:py-1.5 rounded-full shadow-lg flex items-center gap-1 uppercase tracking-wider">
-                        <Flame className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> En promo
-                      </div>
-                    )}
-                    {pv.promotion > 0 && (
-                      <div className="bg-white text-[#FF4500] border border-[#FF4500]/30 text-[8px] sm:text-[10px] font-black px-2 py-1 sm:px-3 sm:py-1.5 rounded-full shadow-lg flex items-center gap-1">
-                        <Tag className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> -{pv.promotion}%
-                      </div>
-                    )}
-                    {pv.seuil_achat > 0 && (
-                      <div className="bg-[#3D2B1F] text-white text-[8px] sm:text-[10px] font-black px-2 py-1 sm:px-3 sm:py-1.5 rounded-full shadow-lg flex items-center gap-1 border border-slate-700">
-                        <span>🎁</span>
-                        <span className="hidden sm:inline">{pv.seuil_achat} ACHETÉS = {pv.quantite_offerte} OFFERT(S)</span>
-                        <span className="sm:hidden">{pv.seuil_achat}+{pv.quantite_offerte}</span>
-                      </div>
-                    )}
-                    {pv.seuil_promo_qte > 0 && pv.prix_promo > 0 && (
-                      <div className="bg-blue-600 text-white text-[8px] sm:text-[10px] font-black px-2 py-1 sm:px-3 sm:py-1.5 rounded-full shadow-lg flex items-center gap-1">
-                        <TrendingDown className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                        <span className="hidden sm:inline">{`À partir de ${pv.seuil_promo_qte}${pv.unite === 'g' ? 'kg' : pv.unite === 'pièce' ? ' pcs' : ` ${pv.unite}`} : ${pv.prix_promo.toFixed(2)}€`}</span>
-                        <span className="sm:hidden">{pv.prix_promo.toFixed(2)}€/{pv.unite === 'g' ? 'kg' : pv.unite}</span>
-                      </div>
-                    )}
-                    {premieresOffertes(pv) > 0 && (
-                      <div className="bg-green-600 text-white text-[8px] sm:text-[10px] font-black px-2 py-1 sm:px-3 sm:py-1.5 rounded-full shadow-lg flex items-center gap-1 uppercase">
-                        <span>🎁</span>
-                        <span className="hidden sm:inline">{libellePremieresOffertes(pv)}</span>
-                        <span className="sm:hidden">{premieresOffertes(pv)} offerte{premieresOffertes(pv) > 1 ? 's' : ''}</span>
-                      </div>
-                    )}
-                  </div>
+                  {/* PHOTO — au format 3:2 de l'outil de cadrage de l'admin : le client voit le cadrage exact */}
+                  <div className="relative">
+                    <LienFiche slug={slug} className="block aspect-[3/2] bg-white rounded-xl sm:rounded-2xl overflow-hidden relative">
+                      {imageCarte ? (
+                        <div className={`absolute inset-0 transition-transform duration-700 ease-out group-hover:scale-105 ${epuise ? 'grayscale opacity-45' : ''}`}>
+                          <ImageFondu src={imageCarte} alt={nomCarte} />
+                        </div>
+                      ) : (
+                        <span className="absolute inset-0 flex items-center justify-center bg-[#F5EAE0] text-[#C9BBAA]"><ShoppingBasket className="w-10 h-10" aria-hidden /></span>
+                      )}
+                      {slug && (
+                        <span className="absolute bottom-1.5 right-1.5 sm:bottom-2 sm:right-2 bg-white/90 backdrop-blur-sm text-[#3D2B1F] text-[11px] sm:text-xs font-bold px-2 py-1 rounded-full shadow-sm flex items-center gap-1 group-hover:bg-[#3D2B1F] group-hover:text-[#F5EAE0] transition-colors">
+                          <BookOpen className="w-3 h-3" aria-hidden /> Voir la fiche
+                        </span>
+                      )}
+                    </LienFiche>
 
-                  {/* IMAGE — au format 3:2 de l'outil de cadrage de l'admin : le client voit le cadrage exact */}
-                  <LienFiche slug={slug} className="aspect-[3/2] bg-[#EDE3D5] rounded-xl sm:rounded-[1.5rem] mb-2 sm:mb-4 overflow-hidden flex items-center justify-center relative">
-                    {imageCarte ? (
-                      <div className="absolute inset-0 transition-transform duration-700 group-hover:scale-110">
-                        <ImageFondu src={imageCarte} alt={nomCarte} />
-                      </div>
-                    ) : (
-                      <span className="text-6xl grayscale opacity-20">🧺</span>
-                    )}
-                    {effectiveStock <= 0 && (
-                      <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] flex items-center justify-center">
-                        <span className="bg-white px-4 py-2 rounded-xl font-black text-xs uppercase tracking-[0.2em] shadow-sm">Épuisé</span>
-                      </div>
-                    )}
-                    {slug && (
-                      <span className="absolute bottom-1.5 right-1.5 sm:bottom-2.5 sm:right-2.5 bg-white/90 backdrop-blur-sm text-[#3D2B1F] text-[8px] sm:text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-full shadow-md flex items-center gap-1 group-hover:bg-[#3D2B1F] group-hover:text-white transition-colors">
-                        <BookOpen className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> Voir la fiche
+                    {/* PROMOTIONS ET DISPONIBILITÉ */}
+                    <div className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 flex flex-col items-start gap-1 pointer-events-none">
+                      {epuise ? (
+                        <span className="px-2 py-1 sm:px-2.5 rounded-full bg-[#5C4030] text-white text-[11px] sm:text-[13px] font-extrabold">Épuisé</span>
+                      ) : etiquettes.map(e => (
+                        <span
+                          key={e.cle}
+                          className={`px-2 py-1 sm:px-2.5 rounded-full text-white text-[11px] sm:text-[13px] font-extrabold ${
+                            e.cle === 'offertes' ? 'bg-[#166534]' : e.cle === 'lot' ? 'bg-[#3D2B1F]' : 'bg-[#D43A00]'}`}
+                        >
+                          <span className="sm:hidden">{e.court}</span>
+                          <span className="hidden sm:inline">{e.texte}</span>
+                        </span>
+                      ))}
+                    </div>
+
+                    {qteLigne > 0 && (
+                      <span className="ss-pop absolute top-1.5 right-1.5 sm:top-2 sm:right-2 flex items-center gap-1 h-6 px-1.5 sm:pl-2 sm:pr-2.5 rounded-full bg-[#166534] text-white text-xs font-extrabold pointer-events-none">
+                        <Check className="w-3.5 h-3.5" strokeWidth={3} aria-hidden />
+                        <span className="hidden sm:inline">Au panier</span>
+                        <span className="sr-only sm:hidden">Au panier</span>
                       </span>
                     )}
+
                     {descriptionCarte && !slug && (
                       <button
                         type="button"
-                        onClick={(e) => { e.stopPropagation(); setInfoProduct({ ...product, name: nomCarte, image_url: imageCarte, description: descriptionCarte }); }}
-                        className="absolute top-2 right-2 w-6 h-6 sm:w-7 sm:h-7 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-md hover:bg-white transition-all z-10"
+                        onClick={() => setInfoProduct({ ...product, name: nomCarte, image_url: imageCarte, description: descriptionCarte })}
+                        aria-label={`Description : ${nomCarte}`}
+                        className="absolute bottom-1.5 right-1.5 sm:bottom-2 sm:right-2 w-9 h-9 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm text-[#5C4030] hover:bg-white hover:text-[#3D2B1F] transition-colors"
                       >
-                        <Info className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-600" />
+                        <Info className="w-4 h-4" aria-hidden />
                       </button>
                     )}
-                  </LienFiche>
+                  </div>
 
-                  <div className="flex justify-between items-start mb-1 gap-1">
-                    <LienFiche slug={slug} className="min-w-0">
-                      <h3 className={`text-[9px] sm:text-base font-black uppercase tracking-tight text-slate-800 truncate ${slug ? 'hover:text-[#FF4500] transition-colors' : ''}`}>{nomCarte}</h3>
-                    </LienFiche>
-                    {product.provenance && (
-                      <span className="text-[8px] sm:text-[10px] font-bold text-[#FF4500] bg-orange-50 px-1.5 py-0.5 rounded-md uppercase shrink-0">{product.provenance}</span>
+                  <div className="flex-1 flex flex-col gap-2 sm:gap-3 px-1 sm:px-1.5 pt-2.5 sm:pt-3.5 pb-0.5 sm:pb-1">
+                    <div>
+                      <LienFiche slug={slug} className="block min-w-0">
+                        <h3 className={`text-sm sm:text-[17px] font-extrabold leading-tight text-[#3D2B1F] line-clamp-2 ${epuise ? 'text-[#5C4030]' : ''} ${slug ? 'hover:underline' : ''}`}>{nomCarte}</h3>
+                      </LienFiche>
+                      <p className="mt-0.5 text-xs sm:text-[13px] font-semibold text-[#6F5A4B]">
+                        {product.provenance ? `${product.provenance} · ` : ''}{libelleUnite(pv.unite)}
+                      </p>
+                    </div>
+
+                    {/* CHOIX DE LA VARIANTE : photo, nom et prix changent aussitôt */}
+                    {productVariants.length > 0 && (
+                      <div>
+                        <div className="flex items-center justify-between gap-1 mb-0.5">
+                          <p className="text-[11px] sm:text-xs font-semibold text-[#6F5A4B] truncate">
+                            {productVariants.length} {variantesCumulables(product) ? 'variétés' : 'versions'}<span className="hidden sm:inline">{variantesCumulables(product) ? ' · cumulables' : ' au choix'}</span>
+                          </p>
+                          {productVariants.length > 2 && (
+                            <button
+                              type="button"
+                              onClick={() => setPanneauVariantes(String(product.id))}
+                              aria-haspopup="dialog"
+                              className="shrink-0 inline-flex items-center gap-0.5 text-[11px] sm:text-xs font-bold text-[#C73600] hover:text-[#3D2B1F] transition-colors"
+                            >
+                              Tout voir <ChevronDown className="w-3 h-3" aria-hidden />
+                            </button>
+                          )}
+                        </div>
+                        <ChoixVariantes
+                          compact
+                          produit={product}
+                          variantes={productVariants}
+                          selection={variante?.id ?? null}
+                          quantites={qteParVariante}
+                          onChoisir={(id) => choisirVariante(product, id)}
+                        />
+                      </div>
+                    )}
+
+                    {message && !epuise && (
+                      <p
+                        aria-live="polite"
+                        className={`self-start px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-[10px] sm:rounded-xl text-[11px] sm:text-[13px] font-bold leading-snug ${
+                          message.ton === 'vert' ? 'bg-[#ECF7EF] text-[#166534]' : message.ton === 'orange' ? 'bg-[#FFF1EA] text-[#B83200]' : 'bg-[#F5EAE0] text-[#5C4030]'}`}
+                      >
+                        {message.texte}
+                      </p>
+                    )}
+
+                    {/* PRIX : nouveau prix bien visible, ancien prix barré */}
+                    <div className="mt-auto flex items-end justify-between gap-2">
+                      <p className="flex flex-col">
+                        {prixReduit && <s className="text-xs sm:text-[13px] font-semibold text-[#6F5A4B]">{formatPrix(prixBase)}</s>}
+                        <span className={`text-[19px] sm:text-2xl font-black tracking-tight leading-tight ${epuise ? 'text-[#6F5A4B]' : prixReduit ? 'text-[#FF4500]' : 'text-[#3D2B1F]'}`}>
+                          {formatPrix(prixUnitaire)}<span className="text-xs sm:text-[13px] font-bold tracking-normal text-[#6F5A4B]"> /{uniteAffichee(pv)}</span>
+                        </span>
+                      </p>
+                      {resultat && (
+                        <p className="mb-0.5 text-xs sm:text-[13px] font-semibold text-[#6F5A4B] text-right leading-tight">
+                          Total<br />
+                          <strong className="text-sm sm:text-[15px] font-extrabold text-[#3D2B1F]">{formatPrix(resultat.total)}</strong>
+                          {resultat.offerts > 0 && <span className="block text-[11px] font-bold text-[#166534]">dont {resultat.offerts} offert{resultat.offerts > 1 ? 's' : ''}</span>}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* ACTION : « Ajouter », puis sélecteur de quantité relié au panier */}
+                    {epuise ? (
+                      <button type="button" disabled className="w-full h-11 sm:h-[50px] rounded-[13px] sm:rounded-[15px] border-[1.5px] border-dashed border-[#C9BBAA] text-[#5C4030] text-[13px] sm:text-[15px] font-bold cursor-not-allowed">
+                        Bientôt de retour
+                      </button>
+                    ) : qteLigne === 0 ? (
+                      <button
+                        type="button"
+                        onClick={() => ajouterAuPanier(product)}
+                        className="w-full h-11 sm:h-[50px] rounded-[13px] sm:rounded-[15px] bg-[#3D2B1F] text-[#F5EAE0] text-sm sm:text-[15px] font-extrabold flex items-center justify-center gap-2 transition-[background-color,transform] duration-200 hover:bg-[#FF4500] active:scale-[0.97]"
+                      >
+                        <Plus className="w-[18px] h-[18px]" strokeWidth={2.6} aria-hidden />
+                        Ajouter{pv.unite === 'g' || pv.unite === 'kg' ? ` ${libelleQuantite(pv, pas)}` : ''}
+                      </button>
+                    ) : (
+                      <div className="ss-pop flex items-center h-11 sm:h-[50px] p-[3px] rounded-[13px] sm:rounded-[15px] bg-[#FFF1EA] border-[1.5px] border-[#FFC9B0]">
+                        <button
+                          type="button"
+                          onClick={() => retirerDuPanier(product)}
+                          aria-label={qteLigne <= getMin(pv) ? `Retirer ${nomCarte} du panier` : `Diminuer la quantité de ${nomCarte}`}
+                          className="shrink-0 w-10 sm:w-11 h-full rounded-[10px] sm:rounded-xl bg-white text-[#3D2B1F] flex items-center justify-center transition-[background-color,transform] duration-150 hover:bg-[#FFE1D3] active:scale-90"
+                        >
+                          <Minus className="w-[18px] h-[18px]" strokeWidth={2.6} aria-hidden />
+                        </button>
+                        <span aria-live="polite" className="flex-1 text-center text-[13px] sm:text-[15px] font-extrabold text-[#3D2B1F] whitespace-nowrap">{libelleQuantite(pv, qteLigne)}</span>
+                        <button
+                          type="button"
+                          onClick={() => ajouterAuPanier(product)}
+                          disabled={!plusPossible}
+                          aria-label={`Augmenter la quantité de ${nomCarte}`}
+                          className="shrink-0 w-10 sm:w-11 h-full rounded-[10px] sm:rounded-xl bg-[#FF4500] text-white flex items-center justify-center transition-[background-color,transform] duration-150 hover:bg-[#D43A00] active:scale-90 disabled:bg-[#C9BBAA] disabled:cursor-not-allowed"
+                        >
+                          <Plus className="w-[18px] h-[18px]" strokeWidth={2.6} aria-hidden />
+                        </button>
+                      </div>
+                    )}
+
+                    {/* DÉJÀ DANS LE PANIER (variantes cumulées) */}
+                    {productVariants.length > 0 && lignesPanier.length > 0 && (
+                      <p className="text-[11px] sm:text-xs font-semibold text-[#6F5A4B] leading-snug">
+                        <span className="font-extrabold text-[#3D2B1F]">Panier : </span>
+                        {lignesPanier.map((i: any) => `${formatQuantite(i, Number(i.quantite))} ${i.variant_nom ? libelleCourt(product, { nom: i.variant_nom }) : product.name}`).join(' · ')}
+                      </p>
+                    )}
+
+                    {!epuise && effectiveStock < (pv.unite === 'g' ? 500 : 5) && (
+                      <p className="flex items-center justify-center gap-2 text-[11px] sm:text-xs font-bold text-[#C73600]">
+                        <span className="ss-pouls w-1.5 h-1.5 bg-[#FF4500] rounded-full" />
+                        Derniers exemplaires !
+                      </p>
                     )}
                   </div>
-                  <p className={`text-[8px] sm:text-xs font-bold text-slate-400 uppercase tracking-widest ${pv.promotion > 0 ? 'mb-1' : 'mb-2 sm:mb-3'}`}>
-                    {pv.unite === 'g'
-                      ? pv.promotion > 0 ? 'Vendu au gramme' : `Vendu au gramme · ${prixBase.toFixed(2)}€/kg`
-                      : `Vendu ${pv.unite === 'kg' ? 'au' : 'à la'} ${pv.unite || 'pièce'}`}
-                  </p>
-
-                  {/* PRIX PROMO : nouveau prix bien visible, ancien prix barré */}
-                  {pv.promotion > 0 && (
-                    <p className="flex flex-wrap items-baseline gap-x-1.5 mb-2 sm:mb-3">
-                      <span className="text-xs sm:text-lg font-black text-[#FF4500] leading-none">
-                        {(prixBase * (1 - pv.promotion / 100)).toFixed(2)}€<span className="text-[8px] sm:text-xs">/{uniteAffichee(pv)}</span>
-                      </span>
-                      <span className="text-[9px] sm:text-xs line-through text-slate-400 font-bold">{prixBase.toFixed(2)}€/{uniteAffichee(pv)}</span>
-                    </p>
-                  )}
-
-                  {/* CHOIX DE LA VARIANTE : photo, nom et prix changent aussitôt */}
-                  {productVariants.length > 0 && (
-                    <div className="mb-2 sm:mb-3">
-                      <div className="flex items-center justify-between gap-1 mb-0.5">
-                        <p className="text-[7px] sm:text-[9px] font-black uppercase tracking-widest text-slate-400 truncate">
-                          {productVariants.length} {variantesCumulables(product) ? 'variétés' : 'versions'}<span className="hidden sm:inline">{variantesCumulables(product) ? ' · cumulables' : ' au choix'}</span>
-                        </p>
-                        {productVariants.length > 2 && (
-                          <button
-                            type="button"
-                            onClick={() => setPanneauVariantes(String(product.id))}
-                            aria-haspopup="dialog"
-                            className="shrink-0 inline-flex items-center gap-0.5 text-[7px] sm:text-[9px] font-black uppercase tracking-widest text-[#FF4500] hover:text-[#3D2B1F] transition-colors"
-                          >
-                            Tout voir <ChevronDown className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                          </button>
-                        )}
-                      </div>
-                      <ChoixVariantes
-                        compact
-                        produit={product}
-                        variantes={productVariants}
-                        selection={variante?.id ?? null}
-                        quantites={qteParVariante}
-                        onChoisir={(id) => choisirVariante(product, id)}
-                      />
-                    </div>
-                  )}
 
                   {/* TOUTES LES VARIANTES : panneau par-dessus la carte (la grille ne bouge pas) */}
                   {panneauVariantes === String(product.id) && (
@@ -454,100 +507,15 @@ export default function CommanderPage() {
                       onFermer={fermerPanneau}
                     />
                   )}
-
-                  {/* SECTION QUANTITÉ ET PRIX DYNAMIQUE */}
-                  <div className={`rounded-xl sm:rounded-2xl p-2 sm:p-3 mb-2 sm:mb-4 border ${enPromo ? 'bg-orange-50/70 border-[#FF4500]/20' : 'bg-[#EDE3D5] border-[#D5C9B8]/50'}`}>
-                    {/* Sélecteur quantité */}
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="hidden sm:block text-[10px] font-black uppercase text-slate-400 tracking-widest">Quantité</span>
-                      <div className="flex items-center bg-white rounded-lg sm:rounded-xl shadow-sm border border-[#D5C9B8] overflow-hidden w-full sm:w-auto">
-                        <button
-                          onClick={() => handleQtyChange(product.id, String(currentQty - getStep(pv)), pv)}
-                          disabled={currentQty <= getMin(pv)}
-                          className="px-2 sm:px-3 py-1.5 sm:py-2 hover:bg-[#EDE3D5] text-slate-900 font-bold transition-colors disabled:text-slate-300 disabled:cursor-not-allowed text-sm"
-                        >-</button>
-                        <span className="flex-1 sm:w-16 text-center font-black text-[10px] sm:text-sm px-1">
-                          {pv.unite === 'g' ? formatGramLabel(currentQty) : currentQty}
-                        </span>
-                        <button
-                          onClick={() => handleQtyChange(product.id, String(currentQty + getStep(pv)), pv)}
-                          disabled={currentQty >= effectiveStock}
-                          className="px-2 sm:px-3 py-1.5 sm:py-2 hover:bg-[#EDE3D5] text-slate-900 font-bold transition-colors disabled:text-slate-300 disabled:cursor-not-allowed text-sm"
-                        >+</button>
-                      </div>
-                    </div>
-
-                    {/* Prix */}
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-baseline gap-1.5">
-                        <span className={`text-sm sm:text-xl font-black ${prixDegressifActif ? 'text-blue-600' : totalEconomy > 0.005 ? 'text-[#FF4500]' : 'text-slate-900'}`}>{totalPrice.toFixed(2)}€</span>
-                        {(pv.promotion > 0 || prixDegressifActif || nbPremieresOffertes > 0) && (
-                          <span className="text-[9px] sm:text-xs line-through text-slate-300 font-bold italic">{(prixBase * qteEffective).toFixed(2)}€</span>
-                        )}
-                      </div>
-                      {totalEconomy > 0 && (
-                        <div className={`hidden sm:flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black ${prixDegressifActif ? 'text-blue-600 bg-blue-50' : 'text-green-600 bg-green-50'}`}>
-                          <TrendingDown className="w-3 h-3" />-{totalEconomy.toFixed(2)}€
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* BOUTON ACTION FINAL */}
-                  <button
-                    disabled={effectiveStock <= 0}
-                    onClick={() => ajouterAuPanier(product)}
-                    className={`w-full py-2 sm:py-3 rounded-xl sm:rounded-[1.25rem] font-black uppercase tracking-widest text-xs flex items-center justify-center gap-2 transition-all ${
-                      effectiveStock > 0
-                      ? 'bg-[#3D2B1F] text-white hover:bg-[#FF4500] shadow-xl active:scale-95'
-                      : 'bg-[#DDD0BF] text-slate-300 cursor-not-allowed'
-                    }`}
-                  >
-                    {effectiveStock > 0 ? (
-                        <>
-                            <ShoppingCart className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                            <span className="hidden sm:inline">Ajouter {pv.unite === 'g' ? formatGramLabel(totalItemsRecus) : totalItemsRecus} au panier</span>
-                            <span className="sm:hidden">Ajouter</span>
-                        </>
-                    ) : (
-                        <>
-                            <Info className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                            <span className="hidden sm:inline">Produit indisponible</span>
-                        </>
-                    )}
-                  </button>
-
-                  {/* DÉJÀ DANS LE PANIER (variantes cumulées) et promo du produit */}
-                  {productVariants.length > 0 && lignesPanier.length > 0 && (
-                    <div className="mt-2 rounded-lg sm:rounded-xl bg-[#FBF7F2] border border-[#EDE3D5] px-2 py-1.5 sm:px-3 sm:py-2">
-                      <p className="text-[8px] sm:text-[10px] font-bold text-slate-500 leading-snug">
-                        <span className="font-black uppercase text-[#3D2B1F]">Panier : </span>
-                        {lignesPanier.map((i: any) => `${formatQuantite(i, Number(i.quantite))} ${i.variant_nom ? libelleCourt(product, { nom: i.variant_nom }) : product.name}`).join(' · ')}
-                      </p>
-                      {economiePanier > 0.005 && (
-                        <p className="text-[8px] sm:text-[10px] font-black text-green-600 mt-0.5">✓ Promo appliquée : -{economiePanier.toFixed(2)}€</p>
-                      )}
-                      {suggestion && (
-                        <p className="text-[8px] sm:text-[10px] font-black text-[#FF4500] mt-0.5">{suggestion.texte}{variantesCumulables(product) ? ' (toutes variétés)' : ''}</p>
-                      )}
-                    </div>
-                  )}
-
-                  {effectiveStock > 0 && effectiveStock < (pv.unite === 'g' ? 500 : 5) && (
-                    <div className="hidden sm:flex mt-4 items-center justify-center gap-2">
-                      <span className="w-1.5 h-1.5 bg-[#FF4500] rounded-full animate-pulse" />
-                      <p className="text-[9px] font-black uppercase tracking-widest text-[#FF4500]">
-                        Derniers exemplaires !
-                      </p>
-                    </div>
-                  )}
-                </div>
+                </article>
               );
             })}
           </div>
         )}
       </div>
     </main>
+
+    <BarrePanier panier={panier} />
 
     {/* MODAL DESCRIPTION PRODUIT */}
     {infoProduct && (

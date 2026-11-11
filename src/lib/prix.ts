@@ -14,6 +14,7 @@
 //      total, offertes en priorité sur les variantes les moins chères ;
 //    - ou « N premières offertes » : idem, les N moins chères.
 import { premieresOffertes } from '@/lib/promos';
+import { formatPrix } from '@/lib/format';
 
 export type ProduitPrix = {
   price: number;
@@ -121,7 +122,7 @@ export function prochainePromo(p: ProduitPrix, qteTotale: number): { manque: num
   const prixPromo = Number(p.prix_promo) || 0;
   if (seuilDegressif > 0 && prixPromo > 0 && qteEff < seuilDegressif) {
     const manque = +(seuilDegressif - qteEff).toFixed(3);
-    return { manque, texte: `Encore ${String(manque).replace('.', ',')}${uniteTexte ? ' ' + uniteTexte : ''} pour passer à ${prixPromo.toFixed(2)}€/${auGramme ? 'kg' : p.unite || 'pièce'}` };
+    return { manque, texte: `Encore ${String(manque).replace('.', ',')}${uniteTexte ? ' ' + uniteTexte : ''} pour passer à ${formatPrix(prixPromo)}/${auGramme ? 'kg' : p.unite || 'pièce'}` };
   }
   const seuil = Number(p.seuil_achat) || 0;
   const offert = Number(p.quantite_offerte) || 0;
