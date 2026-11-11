@@ -1,11 +1,12 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { X, Trash2, ShoppingBag, MapPin, CreditCard, Banknote, Phone, User, Loader2, CheckCircle2, AlertCircle, LogIn, Gift, TrendingDown, Calendar, Tag, ChevronLeft, ChevronRight, ChevronDown, Mail } from 'lucide-react';
+import { X, Trash2, ShoppingBag, ShoppingBasket, MapPin, CreditCard, Banknote, Phone, Loader2, AlertCircle, LogIn, Gift, ChevronLeft, ChevronRight, Mail, Check, Minus, Plus, Truck, ArrowLeft, ArrowRight } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { premieresOffertes, libellePremieresOffertes } from '@/lib/promos';
 import { calculerPanier, rafraichirPanier } from '@/lib/panier';
 import { prochainePromo } from '@/lib/prix';
+import { formatPrix, libelleQuantite } from '@/lib/format';
 import { distanceAuRelais, estDansLesYvelines, estVilleRelais, fraisLivraison as calculerFraisLivraison, SEUIL_LIVRAISON_OFFERTE } from '@/lib/livraison';
 
 // Géocode une adresse : distance au relais le plus proche (pour les frais),
@@ -52,13 +53,14 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
   const [exceptionsLiv, setExceptionsLiv] = useState<{ date: string; ferme: boolean }[]>([]);
   const [commandesParDate, setCommandesParDate] = useState<Record<string, number>>({});
   const [moisCal, setMoisCal] = useState<{ annee: number; mois: number }>({ annee: new Date().getFullYear(), mois: new Date().getMonth() });
-  const [calOpen, setCalOpen] = useState(false);
   const [codePromo, setCodePromo] = useState('');
   const [codeStatut, setCodeStatut] = useState<'idle' | 'loading' | 'valid' | 'invalid' | 'used'>('idle');
   const [remiseCode, setRemiseCode] = useState(0);
   const [codePromoId, setCodePromoId] = useState<string | null>(null);
   const [commentaireClient, setCommentaireClient] = useState('');
   const [confirmation, setConfirmation] = useState<{ id: number; total: number; date: string | null } | null>(null);
+  // Étape affichée : 1 = le panier, 2 = livraison et paiement (la confirmation suit)
+  const [etape, setEtape] = useState<1 | 2>(1);
 
   const router = useRouter();
 
@@ -107,6 +109,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
 
     if (isOpen) {
       setConfirmation(null);
+      setEtape(1);
       setApplyLoyalty(false);
       setApplyReferral(false);
       setDateLivraison(null);
@@ -381,490 +384,384 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
 
   if (!isOpen) return null;
 
+  const articles = panier || [];
+  const fermer = () => { onClose(); };
+  const dateChoisie = dateLivraison ? new Date(dateLivraison + 'T12:00:00') : null;
+  // Frais connus dès que l'adresse est validée (ou offerts par le montant)
+  const livraisonConnue = distanceValide === true || fraisLivraison === 0;
+  const libelleLivraison = fraisLivraison === 0 ? (villeRelais ? 'Offerte (ville relais)' : 'Offerte') : formatPrix(fraisLivraison);
+  const resteLivraisonOfferte = SEUIL_LIVRAISON_OFFERTE - sousTotalFinal;
+  // Ce qu'il manque pour confirmer (étape 2)
+  const manques = [
+    !nom && 'votre nom',
+    !telephone && 'votre téléphone',
+    !distanceValide && 'une adresse dans le 78',
+    !dateLivraison && 'la date de livraison',
+  ].filter(Boolean) as string[];
+  const confirmationImpossible = chargement || methodePaiement === 'Ligne' || !!minimumNonAtteint || panierACorriger
+    || articles.length === 0 || !distanceValide || !nom || !telephone || !dateLivraison;
+
+  const champ = 'w-full h-[52px] px-4 rounded-[14px] border-[1.5px] border-[#E0D3C0] bg-white text-base font-semibold text-[#3D2B1F] placeholder:text-[#8C7867] placeholder:font-medium outline-none focus:border-[#FF4500] transition-colors';
+  const etiquetteChamp = 'block mb-1.5 text-[13px] font-bold text-[#5C4030]';
+  const carte = 'bg-white rounded-[22px] border border-[#E8DCCB] px-4 py-[18px]';
+  const boutonPrincipal = 'w-full min-h-[60px] px-[22px] rounded-[18px] bg-[#FF4500] text-white text-[19px] font-extrabold flex items-center justify-between gap-3 shadow-[0_16px_30px_-14px_rgba(255,69,0,0.55)] transition-[background-color,transform] duration-200 hover:bg-[#E63E00] active:scale-[0.98] disabled:bg-[#EDE3D5] disabled:text-[#6F5A4B] disabled:shadow-none disabled:cursor-not-allowed';
+
+  const alertes = (
+    <>
+      {panierACorriger && (
+        <p role="alert" className="flex items-center gap-2.5 px-3.5 py-3 rounded-[14px] bg-red-50 text-red-700 text-[13.5px] font-bold">
+          <AlertCircle className="w-[18px] h-[18px] shrink-0" aria-hidden />Retirez les articles signalés en rouge pour commander
+        </p>
+      )}
+      {minimumNonAtteint && (
+        <p role="alert" className="flex items-center gap-2.5 px-3.5 py-3 rounded-[14px] bg-[#FFF1EA] text-[#B83200] text-[13.5px] font-bold">
+          <AlertCircle className="w-[18px] h-[18px] shrink-0" aria-hidden />Minimum de commande : 10€ (encore {formatPrix(10 - totalApresRemise)})
+        </p>
+      )}
+    </>
+  );
+
+  const etapes = (
+    <ol className="flex items-center gap-2 mt-3.5 text-[12.5px] font-bold">
+      {['Panier', 'Livraison', 'Confirmation'].map((nomEtape, i) => {
+        const numero = i + 1;
+        const faite = numero < etape;
+        const courante = numero === etape;
+        return (
+          <React.Fragment key={nomEtape}>
+            {i > 0 && <li aria-hidden className={`flex-1 h-0.5 rounded-full ${numero <= etape ? 'bg-[#166534]' : 'bg-[#DDD0BF]'}`} />}
+            <li aria-current={courante ? 'step' : undefined} className={`flex items-center gap-1.5 ${faite ? 'text-[#166534]' : courante ? 'text-[#3D2B1F]' : 'text-[#6F5A4B]'}`}>
+              <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-extrabold ${faite ? 'bg-[#166534] text-white' : courante ? 'bg-[#FF4500] text-white' : 'bg-white border-[1.5px] border-[#DDD0BF]'}`}>
+                {faite ? <Check className="w-3.5 h-3.5" strokeWidth={3} aria-hidden /> : numero}
+              </span>
+              {nomEtape}
+            </li>
+          </React.Fragment>
+        );
+      })}
+    </ol>
+  );
+
   return (
     <div className="fixed inset-0 z-[110] flex justify-end">
-      <div className="absolute inset-0 bg-[#3D2B1F]/40 backdrop-blur-md" onClick={confirmation ? undefined : onClose} />
+      <div className="absolute inset-0 bg-[#3D2B1F]/45 backdrop-blur-sm" onClick={confirmation ? undefined : fermer} />
 
-      {/* ÉCRAN DE CONFIRMATION DE COMMANDE */}
+      {/* ÉTAPE 3 : COMMANDE CONFIRMÉE */}
       {confirmation && (
-        <div className="relative w-full max-w-md bg-[#EDE3D5] h-full flex flex-col shadow-2xl animate-in slide-in-from-right duration-300 overflow-y-auto">
-          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-            {/* Coche animée */}
-            <div className="relative w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-8">
-              <div className="absolute inset-0 rounded-full border-4 border-green-500/20 animate-ping" />
-              <CheckCircle2 className="w-14 h-14 text-green-500 animate-in zoom-in duration-500" />
+        <div role="dialog" aria-modal="true" aria-labelledby="titre-confirmation" className="relative w-full sm:max-w-[480px] bg-[#F5EAE0] text-[#3D2B1F] h-full flex flex-col shadow-2xl animate-in slide-in-from-right duration-300 overflow-y-auto">
+          <div className="flex-1 flex flex-col items-center px-6 pt-11 text-center">
+            <div className="relative w-[132px] h-[132px] flex items-center justify-center mb-[26px]">
+              <svg className="ss-rayons absolute inset-0 w-full h-full" viewBox="0 0 200 200" aria-hidden>
+                <circle cx="100" cy="100" r="86" fill="none" stroke="#FF4500" strokeOpacity="0.3" strokeWidth="20" strokeDasharray="4 26" />
+              </svg>
+              <span className="ss-pop relative w-[84px] h-[84px] rounded-full bg-[#166534] text-white flex items-center justify-center">
+                <Check className="w-[42px] h-[42px]" strokeWidth={3} aria-hidden />
+              </span>
             </div>
-
-            <p className="text-[10px] font-black text-[#FF4500] uppercase tracking-[0.3em] mb-2">Soleil et Saveurs</p>
-            <h2 className="text-3xl font-black uppercase tracking-tighter text-slate-900 leading-none mb-3">
-              Commande<br />confirmée !
+            <p className="mb-2.5 text-xs font-extrabold uppercase tracking-[0.16em] text-[#C73600]">Soleil et Saveurs</p>
+            <h2 id="titre-confirmation" className="titre text-[42px] leading-none mb-3">
+              Commande<br /><em className="text-[#FF4500]">confirmée !</em>
             </h2>
-            <p className="text-slate-500 font-medium italic mb-8">
+            <p className="text-base leading-normal text-[#5C4030] mb-[26px]">
               Merci pour votre confiance, votre régal arrive bientôt.
             </p>
 
             {/* Récap */}
-            <div className="w-full bg-white rounded-3xl border border-[#D5C9B8] shadow-sm divide-y divide-[#EDE3D5] mb-6">
+            <dl className="w-full bg-white rounded-[22px] border border-[#E8DCCB] divide-y divide-[#F0E7DA] mb-4 text-left">
               {confirmation.id > 0 && (
-                <div className="flex items-center justify-between px-5 py-4">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Commande</span>
-                  <span className="font-black text-slate-900">#{String(confirmation.id).slice(-6).toUpperCase()}</span>
+                <div className="flex items-center justify-between gap-3 px-[18px] py-[15px]">
+                  <dt className="text-sm font-semibold text-[#6F5A4B]">Commande</dt>
+                  <dd className="text-base font-extrabold">#{String(confirmation.id).slice(-6).toUpperCase()}</dd>
                 </div>
               )}
               {confirmation.date && (
-                <div className="flex items-center justify-between px-5 py-4">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Livraison</span>
-                  <span className="font-black text-slate-900 text-sm capitalize">
+                <div className="flex items-center justify-between gap-3 px-[18px] py-[15px]">
+                  <dt className="text-sm font-semibold text-[#6F5A4B]">Livraison</dt>
+                  <dd className="text-base font-extrabold text-right">
                     {new Date(confirmation.date + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
-                  </span>
+                  </dd>
                 </div>
               )}
-              <div className="flex items-center justify-between px-5 py-4">
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Total</span>
-                <span className="font-black text-xl text-[#FF4500]">{confirmation.total.toFixed(2)}€</span>
+              <div className="flex items-center justify-between gap-3 px-[18px] py-[15px]">
+                <dt className="text-sm font-semibold text-[#6F5A4B]">Total</dt>
+                <dd className="text-[22px] font-black tracking-tight text-[#FF4500]">{formatPrix(confirmation.total)}</dd>
               </div>
-            </div>
+            </dl>
 
             {/* Prochaines étapes */}
-            <div className="w-full bg-white/60 rounded-3xl p-5 space-y-3 text-left mb-2">
-              <div className="flex items-start gap-3">
-                <div className="w-7 h-7 bg-white rounded-full flex items-center justify-center shadow-sm shrink-0">
-                  <Mail className="w-3.5 h-3.5 text-slate-500" />
-                </div>
-                <p className="text-[11px] font-bold text-slate-600 leading-snug">Un récapitulatif vous est envoyé par e-mail.</p>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-7 h-7 bg-white rounded-full flex items-center justify-center shadow-sm shrink-0">
-                  <Phone className="w-3.5 h-3.5 text-green-600" />
-                </div>
-                <p className="text-[11px] font-bold text-slate-600 leading-snug">Nous vous contactons sur WhatsApp pour la livraison.</p>
-              </div>
-            </div>
+            <ul className="w-full flex flex-col gap-2.5 text-left text-[14.5px] font-semibold text-[#5C4030]">
+              <li className="flex items-center gap-3">
+                <span className="shrink-0 w-10 h-10 rounded-xl bg-white text-[#FF4500] flex items-center justify-center"><Mail className="w-[19px] h-[19px]" aria-hidden /></span>
+                Un récapitulatif vous est envoyé par e-mail.
+              </li>
+              <li className="flex items-center gap-3">
+                <span className="shrink-0 w-10 h-10 rounded-xl bg-white text-[#FF4500] flex items-center justify-center"><Phone className="w-[19px] h-[19px]" aria-hidden /></span>
+                Nous vous contactons sur WhatsApp pour la livraison.
+              </li>
+            </ul>
           </div>
 
-          {/* Boutons */}
-          <div className="p-6 bg-white border-t border-[#D5C9B8] space-y-3">
-            <button
-              onClick={() => { setConfirmation(null); onClose(); router.push('/compte'); }}
-              className="w-full bg-[#3D2B1F] text-white p-5 rounded-2xl font-black uppercase text-sm tracking-widest hover:bg-[#FF4500] transition-all shadow-xl flex items-center justify-center gap-3 group"
-            >
+          <div className="px-5 pt-[22px] pb-[max(1.5rem,env(safe-area-inset-bottom))] flex flex-col gap-1.5">
+            <button type="button" onClick={() => { setConfirmation(null); onClose(); router.push('/compte'); }} className={boutonPrincipal}>
               Suivre ma commande
-              <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              <ArrowRight className="w-[22px] h-[22px]" strokeWidth={2.4} aria-hidden />
             </button>
-            <button
-              onClick={() => { setConfirmation(null); onClose(); }}
-              className="w-full bg-transparent text-slate-500 p-3 rounded-2xl font-black uppercase text-[11px] tracking-widest hover:text-slate-900 transition-all"
-            >
+            <button type="button" onClick={() => { setConfirmation(null); onClose(); }} className="w-full min-h-[52px] text-base font-bold text-[#3D2B1F] hover:text-[#C73600] transition-colors">
               Retour à la boutique
             </button>
           </div>
         </div>
       )}
-      
+
       {!confirmation && (
-      <div className="relative w-full max-w-md bg-[#EDE3D5] h-full flex flex-col shadow-2xl animate-in slide-in-from-right duration-300">
+        <div role="dialog" aria-modal="true" aria-labelledby="titre-panier" className="relative w-full sm:max-w-[480px] bg-[#EDE3D5] text-[#3D2B1F] h-full flex flex-col shadow-2xl animate-in slide-in-from-right duration-300">
 
-        <div className="p-6 border-b border-[#D5C9B8] flex justify-between items-center bg-[#F5EAE0]">
-          <div>
-            <h2 className="text-2xl font-black uppercase tracking-tighter text-slate-900">Mon Panier</h2>
-            <p className="text-[10px] font-bold text-[#FF4500] uppercase tracking-[0.2em]">Soleil et Saveurs Direct</p>
-          </div>
-          <button onClick={onClose} className="p-2 hover:bg-[#EDE3D5] rounded-full transition-colors">
-            <X className="w-6 h-6 text-slate-400" />
-          </button>
-        </div>
+          {/* EN-TÊTE ET ÉTAPES */}
+          <header className="shrink-0 bg-[#F5EAE0] border-b border-[#DDD0BF] px-3 pt-4 pb-3.5">
+            <div className="flex items-center gap-2">
+              {etape === 2 && (
+                <button type="button" onClick={() => setEtape(1)} aria-label="Retour au panier" className="shrink-0 w-11 h-11 rounded-full bg-white text-[#3D2B1F] flex items-center justify-center hover:bg-[#FFF1EA] transition-colors">
+                  <ArrowLeft className="w-5 h-5" strokeWidth={2.4} aria-hidden />
+                </button>
+              )}
+              <h2 id="titre-panier" className={`titre flex-1 leading-none ${etape === 1 ? 'pl-2 text-[34px]' : 'text-[30px]'}`}>
+                {etape === 1 ? <>Mon <em className="text-[#FF4500]">panier</em></> : 'Livraison'}
+              </h2>
+              <button type="button" onClick={fermer} aria-label="Fermer le panier" className="shrink-0 w-11 h-11 rounded-full bg-white text-[#3D2B1F] flex items-center justify-center hover:bg-[#FFF1EA] transition-colors">
+                <X className="w-5 h-5" strokeWidth={2.4} aria-hidden />
+              </button>
+            </div>
+            <div className="px-2">{etapes}</div>
+          </header>
 
-        <div className="flex-1 overflow-y-auto p-6 space-y-8">
-          <div className="space-y-4">
-            {(panier || []).length === 0 ? (
-              <div className="text-center py-20">
-                <div className="w-20 h-20 bg-[#EDE3D5] rounded-full flex items-center justify-center mx-auto mb-4">
-                  <ShoppingBag className="w-8 h-8 text-slate-200" />
-                </div>
-                <p className="font-bold text-slate-400 uppercase text-sm tracking-widest">Le panier est vide</p>
-              </div>
-            ) : (
-              panier.map((item, index) => {
-                const resultat = calculs.ligne(item);
-                const groupe = calculs.groupe(item);
-                const produitsOfferts = resultat?.offerts ?? 0;
-                const prixDegressifActif = !!groupe?.degressifActif;
-                const lotDefini = item.seuil_achat > 0 && item.quantite_offerte > 0;
-                const stockRestant = stockMaxLigne(item) - (Number(item.quantite) || 0);
-                // Dernière ligne du produit : on y indique la promo commune aux variantes
-                const derniereDuProduit = !item.indisponible && !(panier || []).slice(index + 1).some(i => i.id === item.id && !i.indisponible);
-                const plusieursVariantes = (panier || []).filter(i => i.id === item.id && !i.indisponible).length > 1;
-                const suggestion = derniereDuProduit && groupe ? prochainePromo(item, groupe.qteTotale) : null;
-
-                return (
-                  <div key={`${item.id}-${item.variant_id ?? ''}`} className="flex gap-4 items-center bg-white p-4 rounded-3xl border border-[#DDD0BF] shadow-sm">
-                    <div className="w-14 h-14 bg-[#EDE3D5] rounded-2xl flex items-center justify-center overflow-hidden">
-                      {item.image_url ? (
-                        <img src={item.image_url} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        <span className="text-2xl">🧺</span>
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-black uppercase text-xs text-slate-800">{item.name}</p>
-
-                      <div className="flex flex-wrap gap-2 mt-1">
-                        {item.promotion > 0 && (
-                          <span className="bg-green-100 text-green-700 text-[8px] font-black px-1.5 py-0.5 rounded-full">-{item.promotion}%</span>
-                        )}
-                        {produitsOfferts > 0 && lotDefini && (
-                          <div className="flex items-center gap-1 text-[#FF4500] text-[9px] font-black uppercase">
-                            <Gift className="w-3 h-3" /> {produitsOfferts} offert(s)
-                          </div>
-                        )}
-                        {!prixDegressifActif && premieresOffertes(item) > 0 && produitsOfferts > 0 && (
-                          <div className="flex items-center gap-1 text-[#FF4500] text-[9px] font-black uppercase">
-                            <Gift className="w-3 h-3" /> {libellePremieresOffertes(item)}
-                          </div>
-                        )}
-                        {prixDegressifActif && (
-                          <span className="bg-blue-100 text-blue-700 text-[8px] font-black px-1.5 py-0.5 rounded-full">
-                            {(resultat?.prixUnitaire ?? item.prix_promo).toFixed(2)}€/{item.unite === 'g' ? 'kg' : item.unite}
-                          </span>
-                        )}
-                        {item.seuil_promo_qte > 0 && item.prix_promo > 0 && !prixDegressifActif && (
-                          <span className="bg-[#DDD0BF] text-slate-500 text-[8px] font-bold px-1.5 py-0.5 rounded-full">
-                            -{item.seuil_promo_qte}{item.unite === 'g' ? 'kg' : item.unite === 'pièce' ? ' pcs' : ` ${item.unite}`}: {item.prix_promo.toFixed(2)}€
-                          </span>
-                        )}
+          {/* ÉTAPE 1 : MON PANIER */}
+          {etape === 1 && (
+            <>
+              <div className="flex-1 overflow-y-auto overscroll-contain px-3 pt-3.5 pb-4 flex flex-col gap-2.5">
+                {articles.length === 0 ? (
+                  <div className="flex-1 flex flex-col items-center justify-center text-center py-16">
+                    <span className="w-20 h-20 rounded-full bg-[#F5EAE0] text-[#C9BBAA] flex items-center justify-center mb-4"><ShoppingBag className="w-9 h-9" aria-hidden /></span>
+                    <p className="titre text-2xl mb-5">Le panier est vide</p>
+                    <button type="button" onClick={() => { fermer(); router.push('/commander'); }} className="min-h-12 px-6 rounded-full border-[1.5px] border-[#3D2B1F] text-sm font-bold hover:bg-[#3D2B1F] hover:text-[#F5EAE0] transition-colors">
+                      Voir la récolte
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="rounded-[18px] bg-[#3D2B1F] text-[#F5EAE0] px-4 py-3.5 flex flex-col gap-2.5">
+                      <p aria-live="polite" className="flex items-center gap-2.5 text-sm font-bold">
+                        <Truck className="w-[18px] h-[18px] shrink-0 text-[#FF9466]" aria-hidden />
+                        {villeRelais && distanceValide ? 'Livraison offerte (ville relais)' : resteLivraisonOfferte > 0.005 ? `Encore ${formatPrix(resteLivraisonOfferte)} pour la livraison offerte` : 'Livraison offerte'}
+                      </p>
+                      <div className="h-[7px] rounded-full bg-[#5C4030] overflow-hidden">
+                        <div className="h-full rounded-full bg-[#FF7A47] transition-[width] duration-500 ease-out" style={{ width: `${villeRelais && distanceValide ? 100 : Math.max(0, Math.min(100, (sousTotalFinal / SEUIL_LIVRAISON_OFFERTE) * 100))}%` }} />
                       </div>
+                    </div>
 
-                      <div className="flex items-center gap-3 mt-2">
-                         <button onClick={() => updateQuantity(item.id, -1, item.unite, item.variant_id)} className="w-6 h-6 border border-[#D5C9B8] rounded-full flex items-center justify-center text-slate-400 hover:bg-[#EDE3D5]">-</button>
-                         <span className="text-xs font-bold">{item.unite === 'g' ? (item.quantite < 1000 ? `${item.quantite}g` : `${(item.quantite/1000).toString().replace('.',',')}kg`) : `${item.quantite}${item.unite ? ` ${item.unite}` : ''}`}</span>
-                         <button onClick={() => updateQuantity(item.id, 1, item.unite, item.variant_id)} disabled={stockRestant <= 0} className="w-6 h-6 border border-[#D5C9B8] rounded-full flex items-center justify-center text-slate-400 hover:bg-[#EDE3D5] disabled:opacity-30 disabled:cursor-not-allowed">+</button>
+                    {articles.map((item, index) => {
+                      const resultat = calculs.ligne(item);
+                      const groupe = calculs.groupe(item);
+                      const produitsOfferts = resultat?.offerts ?? 0;
+                      const prixDegressifActif = !!groupe?.degressifActif;
+                      const lotDefini = item.seuil_achat > 0 && item.quantite_offerte > 0;
+                      const stockRestant = stockMaxLigne(item) - (Number(item.quantite) || 0);
+                      const pas = item.unite === 'kg' ? 0.5 : item.unite === 'g' ? (item.pas_g || 100) : 1;
+                      // Dernière ligne du produit : on y indique la promo commune aux variantes
+                      const derniereDuProduit = !item.indisponible && !articles.slice(index + 1).some(i => i.id === item.id && !i.indisponible);
+                      const plusieursVariantes = articles.filter(i => i.id === item.id && !i.indisponible).length > 1;
+                      const suggestion = derniereDuProduit && groupe ? prochainePromo(item, groupe.qteTotale) : null;
+                      const unite = item.unite === 'g' ? 'kg' : item.unite || 'pièce';
+                      const reduit = !!resultat && resultat.totalSansPromo - resultat.total > 0.005;
+                      const signale = item.indisponible || item.alerte;
+                      return (
+                        <article key={`${item.id}-${item.variant_id ?? ''}`} className={`flex gap-3 bg-white rounded-[20px] border p-2.5 ${signale ? 'border-red-300' : 'border-[#E8DCCB]'}`}>
+                          <span className="shrink-0 w-[84px] h-[84px] rounded-[14px] overflow-hidden bg-[#F5EAE0] border border-[#F0E7DA] flex items-center justify-center text-[#C9BBAA]">
+                            {item.image_url ? (
+                              <img src={item.image_url} alt="" className={`w-full h-full object-cover ${item.indisponible ? 'grayscale opacity-50' : ''}`} />
+                            ) : (
+                              <ShoppingBasket className="w-8 h-8" aria-hidden />
+                            )}
+                          </span>
+                          <div className="flex-1 min-w-0 flex flex-col gap-2">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="min-w-0">
+                                <h3 className="text-[15px] font-extrabold leading-tight">{item.name}</h3>
+                                <p className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[12.5px] font-semibold text-[#6F5A4B]">
+                                  {item.promotion > 0 && !prixDegressifActif && (
+                                    <span className="px-1.5 py-0.5 rounded-full bg-[#D43A00] text-white text-[11px] font-extrabold">-{item.promotion}%</span>
+                                  )}
+                                  {prixDegressifActif && (
+                                    <span className="px-1.5 py-0.5 rounded-full bg-[#ECF7EF] text-[#166534] text-[11px] font-extrabold">Prix dès {String(item.seuil_promo_qte).replace('.', ',')}</span>
+                                  )}
+                                  {produitsOfferts > 0 && lotDefini && (
+                                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-[#ECF7EF] text-[#166534] text-[11px] font-extrabold"><Gift className="w-3 h-3" aria-hidden />{produitsOfferts} offert{produitsOfferts > 1 ? 's' : ''}</span>
+                                  )}
+                                  {!prixDegressifActif && premieresOffertes(item) > 0 && produitsOfferts > 0 && (
+                                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-[#ECF7EF] text-[#166534] text-[11px] font-extrabold"><Gift className="w-3 h-3" aria-hidden />{libellePremieresOffertes(item)}</span>
+                                  )}
+                                  {item.seuil_promo_qte > 0 && item.prix_promo > 0 && !prixDegressifActif && (
+                                    <span className="px-1.5 py-0.5 rounded-full bg-[#FFF1EA] text-[#B83200] text-[11px] font-extrabold">Dès {String(item.seuil_promo_qte).replace('.', ',')}{item.unite === 'g' || item.unite === 'kg' ? ' kg' : ''} : {formatPrix(item.prix_promo)}</span>
+                                  )}
+                                  <span>{formatPrix(resultat?.prixUnitaire ?? item.price)} /{unite}</span>
+                                </p>
+                              </div>
+                              <button type="button" onClick={() => updateQuantity(item.id, 0, item.unite, item.variant_id)} aria-label={`Retirer ${item.name} du panier`} className="shrink-0 -mt-1 -mr-1 w-10 h-10 rounded-full flex items-center justify-center text-[#6F5A4B] hover:bg-red-50 hover:text-red-600 transition-colors">
+                                <Trash2 className="w-[18px] h-[18px]" aria-hidden />
+                              </button>
+                            </div>
+
+                            {signale && (
+                              <p className="flex items-center gap-1.5 text-[13px] font-bold text-red-700">
+                                <AlertCircle className="w-4 h-4 shrink-0" aria-hidden /> {item.indisponible || item.alerte}
+                              </p>
+                            )}
+
+                            <div className="flex items-end justify-between gap-2">
+                              <div className="flex items-center w-[138px] h-11 p-[3px] rounded-[13px] bg-[#F5EAE0]">
+                                <button type="button" onClick={() => updateQuantity(item.id, -1, item.unite, item.variant_id)} disabled={(Number(item.quantite) || 0) <= pas} aria-label={`Diminuer la quantité de ${item.name}`} className="shrink-0 w-10 h-full rounded-[10px] bg-white text-[#3D2B1F] flex items-center justify-center active:scale-90 transition-transform disabled:text-[#C9BBAA]">
+                                  <Minus className="w-4 h-4" strokeWidth={2.6} aria-hidden />
+                                </button>
+                                <span aria-live="polite" className="flex-1 text-center text-[13.5px] font-extrabold tabular-nums whitespace-nowrap">{libelleQuantite(item, Number(item.quantite) || 0)}</span>
+                                <button type="button" onClick={() => updateQuantity(item.id, 1, item.unite, item.variant_id)} disabled={stockRestant <= 0} aria-label={`Augmenter la quantité de ${item.name}`} className="shrink-0 w-10 h-full rounded-[10px] bg-[#3D2B1F] text-[#F5EAE0] flex items-center justify-center active:scale-90 transition-transform disabled:bg-[#C9BBAA]">
+                                  <Plus className="w-4 h-4" strokeWidth={2.6} aria-hidden />
+                                </button>
+                              </div>
+                              <p className="text-right leading-tight">
+                                {reduit && <s className="text-[12.5px] font-semibold text-[#6F5A4B]">{formatPrix(resultat!.totalSansPromo)}</s>}
+                                <strong className={`block text-lg font-black tracking-tight tabular-nums ${reduit ? 'text-[#FF4500]' : ''}`}>{formatPrix(calculerPrixLigne(item))}</strong>
+                              </p>
+                            </div>
+
+                            {derniereDuProduit && plusieursVariantes && groupe && groupe.totalSansPromo - groupe.total > 0.005 && (
+                              <p className="text-[13px] font-bold text-[#166534]">Promo sur vos {String(groupe.qteTotale).replace('.', ',')}{item.unite === 'g' ? ' g' : item.unite === 'kg' ? ' kg' : ''} (toutes variantes) : -{formatPrix(groupe.totalSansPromo - groupe.total)}</p>
+                            )}
+                            {suggestion && !item.indisponible && (
+                              <p className="text-[13px] font-bold text-[#B83200]">{suggestion.texte}{plusieursVariantes || item.variant_id ? ' (variantes mélangeables)' : ''}</p>
+                            )}
+                          </div>
+                        </article>
+                      );
+                    })}
+
+                    <button type="button" onClick={fermer} className="self-center inline-flex items-center gap-2 min-h-11 px-3 text-sm font-bold text-[#5C4030] hover:text-[#C73600] transition-colors">
+                      <Plus className="w-[17px] h-[17px]" strokeWidth={2.2} aria-hidden />Continuer mes achats
+                    </button>
+
+                    <dl className={`${carte} flex flex-col gap-2 text-[14.5px] font-semibold text-[#5C4030]`}>
+                      <div className="flex justify-between gap-3"><dt>Sous-total</dt><dd className="tabular-nums">{formatPrix(sousTotalFinal + economie)}</dd></div>
+                      {economie > 0.005 && (
+                        <div className="flex justify-between gap-3 font-extrabold text-[#166534]"><dt>Économie promo</dt><dd className="tabular-nums">-{formatPrix(economie)}</dd></div>
+                      )}
+                      <div className="flex justify-between gap-3">
+                        <dt>Livraison</dt>
+                        <dd className={livraisonConnue ? (fraisLivraison === 0 ? 'font-extrabold text-[#166534]' : 'tabular-nums') : 'text-[#6F5A4B]'}>
+                          {livraisonConnue ? libelleLivraison : 'calculée à l’étape suivante'}
+                        </dd>
                       </div>
-                      {(item.indisponible || item.alerte) && (
-                        <p className="flex items-center gap-1 mt-1.5 text-[9px] font-black uppercase text-red-500">
-                          <AlertCircle className="w-3 h-3 shrink-0" /> {item.indisponible || item.alerte}
-                        </p>
-                      )}
-                      {derniereDuProduit && plusieursVariantes && groupe && groupe.totalSansPromo - groupe.total > 0.005 && (
-                        <p className="mt-1.5 text-[9px] font-black text-green-600">✓ Promo sur vos {String(groupe.qteTotale).replace('.', ',')}{item.unite === 'g' ? ' g' : item.unite === 'kg' ? ' kg' : ''} (toutes variantes) : -{(groupe.totalSansPromo - groupe.total).toFixed(2)}€</p>
-                      )}
-                      {suggestion && !item.indisponible && (
-                        <p className="mt-1.5 text-[9px] font-black text-[#FF4500]">{suggestion.texte}{plusieursVariantes || item.variant_id ? ' (variantes mélangeables)' : ''}</p>
-                      )}
-                    </div>
-                    <div className="text-right">
-                      <p className="font-black text-sm">{calculerPrixLigne(item).toFixed(2)}€</p>
-                      {resultat && resultat.totalSansPromo - resultat.total > 0.005 && (
-                        <p className="text-[10px] font-bold text-slate-300 line-through">{resultat.totalSansPromo.toFixed(2)}€</p>
-                      )}
-                      <button onClick={() => updateQuantity(item.id, 0, item.unite, item.variant_id)} className="text-slate-300 hover:text-red-500 transition-colors mt-1">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-
-          {(panier || []).length > 0 && (
-            <div className="space-y-5 pt-6 border-t border-[#D5C9B8]">
-              <div className="flex items-center justify-between">
-                <h3 className="font-black uppercase text-sm tracking-widest text-slate-900">Infos de livraison</h3>
-                {user && <span className="text-[9px] bg-blue-50 text-blue-600 px-2 py-1 rounded-full font-bold uppercase">Profil connecté</span>}
-              </div>
-              
-              <div className="space-y-3">
-                <div className="relative group">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
-                  <input type="text" placeholder="NOM COMPLET" value={nom} onChange={(e)=>setNom(e.target.value)} className="w-full bg-white border border-[#D5C9B8] p-4 pl-12 rounded-2xl font-bold text-xs uppercase focus:border-[#FF4500] outline-none transition-all" />
-                </div>
-                
-                <div className="relative group">
-                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
-                  <input type="tel" placeholder="TÉLÉPHONE" value={telephone} onChange={(e)=>setTelephone(e.target.value)} className="w-full bg-white border border-[#D5C9B8] p-4 pl-12 rounded-2xl font-bold text-xs uppercase focus:border-[#FF4500] outline-none transition-all" />
-                </div>
-
-                <div className="relative group">
-                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
-                  <input 
-                    type="text" 
-                    placeholder="ADRESSE (DANS LE 78)" 
-                    value={adresse} 
-                    onChange={(e) => handleAdresseChange(e.target.value)}
-                    className="w-full bg-white border border-[#D5C9B8] p-4 pl-12 rounded-2xl font-bold text-xs uppercase focus:border-[#FF4500] outline-none transition-all" 
-                  />
-                  {(suggestions || []).length > 0 && (
-                    <div className="absolute z-50 top-full left-0 right-0 bg-white border border-[#D5C9B8] shadow-xl rounded-2xl mt-2 overflow-hidden">
-                      {suggestions.map((s, i) => (
-                        <button key={i} onClick={() => selectionnerAdresse(s)} className="w-full p-3 text-left text-[10px] font-bold uppercase border-b border-[#DDD0BF] hover:bg-[#EDE3D5]">
-                          {s.properties.label}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {distanceValide === false && (
-                  <div className="flex items-center gap-2 p-3 bg-red-50 rounded-xl text-red-600">
-                    <AlertCircle className="w-4 h-4" />
-                    <p className="text-[10px] font-black uppercase">Désolé, nous livrons uniquement dans le 78.</p>
-                  </div>
-                )}
-                {distanceValide === true && (
-                  <div className="flex items-center gap-2 p-3 bg-green-50 rounded-xl text-green-600">
-                    <CheckCircle2 className="w-4 h-4" />
-                    <p className="text-[10px] font-black uppercase">Zone de livraison validée !</p>
-                  </div>
+                    </dl>
+                  </>
                 )}
               </div>
 
-              {/* REMISES DISPONIBLES */}
-              {user && dbProfile?.referral_pending && (
-                <div className="flex items-start gap-3 p-4 bg-amber-50 border border-amber-100 rounded-2xl">
-                  <Gift className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                  <div>
-                    <p className="font-black text-[11px] text-amber-700 uppercase">Bon parrainage -10% en attente</p>
-                    <p className="text-[9px] text-amber-600 font-bold uppercase mt-0.5">Validez cette commande pour débloquer votre bon</p>
+              {articles.length > 0 && (
+                <footer className="shrink-0 bg-white border-t border-[#E8DCCB] px-5 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] flex flex-col gap-3 shadow-[0_-16px_30px_-22px_rgba(61,43,31,0.45)]">
+                  {alertes}
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className="titre text-[26px] leading-none">Total produits</span>
+                    <strong className="text-[30px] font-black tracking-tight leading-none text-[#FF4500] tabular-nums">{formatPrix(sousTotalFinal)}</strong>
                   </div>
-                </div>
-              )}
-
-              {user && ((dbProfile?.loyalty_points ?? 0) >= 100 || (dbProfile?.has_referral_discount && !dbProfile?.referral_pending)) && (
-                <div className="space-y-2">
-                  <h3 className="font-black uppercase text-xs tracking-widest text-slate-900">Remises disponibles</h3>
-                  {(dbProfile?.loyalty_points ?? 0) >= 100 && (
-                    <label className={`flex items-center gap-3 p-4 bg-white border border-[#D5C9B8] rounded-2xl transition-all ${codeStatut === 'valid' || applyReferral ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-green-200'}`}>
-                      <input
-                        type="checkbox"
-                        checked={applyLoyalty}
-                        disabled={codeStatut === 'valid' || applyReferral}
-                        onChange={(e) => {
-                          setApplyLoyalty(e.target.checked);
-                          if (e.target.checked) {
-                            setApplyReferral(false);
-                            setCodePromo(''); setCodeStatut('idle'); setRemiseCode(0); setCodePromoId(null);
-                          }
-                        }}
-                        className="w-4 h-4 accent-[#FF4500] shrink-0"
-                      />
-                      <div className="flex-1">
-                        <p className="font-black text-[11px] text-slate-900 uppercase">Remise fidélité -10%</p>
-                        <p className="text-[9px] text-slate-400 font-bold uppercase">{dbProfile?.loyalty_points} points · réinitialise à 0</p>
-                      </div>
-                      <span className="font-black text-xs text-green-600 shrink-0">-{(sousTotalFinal * 0.1).toFixed(2)}€</span>
-                    </label>
-                  )}
-                  {dbProfile?.has_referral_discount && !dbProfile?.referral_pending && (
-                    <label className={`flex items-center gap-3 p-4 bg-white border border-[#D5C9B8] rounded-2xl transition-all ${codeStatut === 'valid' || applyLoyalty ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-green-200'}`}>
-                      <input
-                        type="checkbox"
-                        checked={applyReferral}
-                        disabled={codeStatut === 'valid' || applyLoyalty}
-                        onChange={(e) => {
-                          setApplyReferral(e.target.checked);
-                          if (e.target.checked) {
-                            setApplyLoyalty(false);
-                            setCodePromo(''); setCodeStatut('idle'); setRemiseCode(0); setCodePromoId(null);
-                          }
-                        }}
-                        className="w-4 h-4 accent-[#FF4500] shrink-0"
-                      />
-                      <div className="flex-1">
-                        <p className="font-black text-[11px] text-slate-900 uppercase">Remise parrainage -10%</p>
-                        <p className="text-[9px] text-slate-400 font-bold uppercase">Programme de parrainage</p>
-                      </div>
-                      <span className="font-black text-xs text-green-600 shrink-0">-{(sousTotalFinal * 0.1).toFixed(2)}€</span>
-                    </label>
-                  )}
-                </div>
-              )}
-
-              {/* CODE PROMO */}
-              <div className="space-y-2">
-                <h3 className="font-black uppercase text-xs tracking-widest text-slate-900">Code promo</h3>
-                <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <Tag className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
-                    <input
-                      type="text"
-                      placeholder="VOTRE CODE"
-                      value={codePromo}
-                      onChange={(e) => { setCodePromo(e.target.value.toUpperCase()); setCodeStatut('idle'); setRemiseCode(0); setCodePromoId(null); }}
-                      disabled={codeStatut === 'valid' || codeStatut === 'used' || applyLoyalty || applyReferral}
-                      className={`w-full bg-white border p-4 pl-12 rounded-2xl font-bold text-xs uppercase outline-none transition-all ${
-                        codeStatut === 'valid' ? 'border-green-400 bg-green-50 text-green-700' :
-                        codeStatut === 'invalid' || codeStatut === 'used' ? 'border-red-300' :
-                        applyLoyalty || applyReferral ? 'border-[#D5C9B8] opacity-50 cursor-not-allowed' :
-                        'border-[#D5C9B8] focus:border-[#FF4500]'
-                      }`}
-                    />
-                  </div>
-                  {codeStatut === 'valid' ? (
-                    <button
-                      onClick={() => { setCodePromo(''); setCodeStatut('idle'); setRemiseCode(0); setCodePromoId(null); }}
-                      className="px-4 py-2 rounded-2xl border border-slate-200 bg-white text-[10px] font-black uppercase text-slate-400 hover:text-red-500 hover:border-red-200 transition-all"
-                    >
-                      Retirer
+                  {user ? (
+                    <button type="button" disabled={panierACorriger || !!minimumNonAtteint} onClick={() => setEtape(2)} className={boutonPrincipal}>
+                      Commander
+                      <ArrowRight className="w-[22px] h-[22px]" strokeWidth={2.4} aria-hidden />
                     </button>
                   ) : (
-                    <button
-                      onClick={validerCodePromo}
-                      disabled={codeStatut === 'loading' || !codePromo.trim() || applyLoyalty || applyReferral}
-                      className="px-4 py-2 rounded-2xl bg-[#3D2B1F] text-white text-[10px] font-black uppercase tracking-widest disabled:opacity-40 hover:opacity-90 transition-all"
-                    >
-                      {codeStatut === 'loading' ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Appliquer'}
+                    <button type="button" onClick={envoyerCommande} className={boutonPrincipal}>
+                      Se connecter pour commander
+                      <LogIn className="w-[22px] h-[22px]" aria-hidden />
                     </button>
                   )}
-                </div>
-                {codeStatut === 'valid' && (
-                  <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-100 rounded-xl">
-                    <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
-                    <p className="text-[10px] font-black text-green-700 uppercase">Code valide — -{remiseCode}% appliqué !</p>
-                  </div>
-                )}
-                {codeStatut === 'invalid' && (
-                  <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-100 rounded-xl">
-                    <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
-                    <p className="text-[10px] font-black text-red-600 uppercase">Code invalide ou expiré.</p>
-                  </div>
-                )}
-                {codeStatut === 'used' && (
-                  <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-100 rounded-xl">
-                    <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
-                    <p className="text-[10px] font-black text-red-600 uppercase">Vous avez déjà utilisé ce code promo.</p>
-                  </div>
-                )}
-              </div>
-
-              {/* COMMENTAIRE CLIENT */}
-              <div className="space-y-2">
-                <h3 className="font-black uppercase text-xs tracking-widest text-slate-900">Commentaire (optionnel)</h3>
-                <textarea
-                  value={commentaireClient}
-                  onChange={(e) => setCommentaireClient(e.target.value)}
-                  placeholder="Une précision pour le livreur ?"
-                  maxLength={250}
-                  rows={2}
-                  className="w-full bg-white border border-[#D5C9B8] p-4 rounded-2xl font-medium text-xs outline-none focus:border-[#FF4500] transition-all resize-none"
-                />
-              </div>
-
-              <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <button onClick={()=>setMethodePaiement('Espèces')} className={`p-4 rounded-2xl border flex flex-col items-center gap-2 font-black text-[10px] transition-all ${methodePaiement === 'Espèces' ? 'bg-[#3D2B1F] text-white border-slate-900 shadow-lg' : 'bg-white text-slate-400 border-[#D5C9B8]'}`}>
-                    <Banknote className="w-5 h-5" /> ESPÈCES OU CARTE
-                    <span className="text-[9px] font-bold normal-case opacity-70">(à la livraison)</span>
-                  </button>
-                  <button type="button" disabled aria-disabled="true" className="p-4 rounded-2xl border flex flex-col items-center gap-2 font-black text-[10px] transition-all bg-white text-slate-300 border-[#D5C9B8] cursor-not-allowed opacity-60">
-                    <CreditCard className="w-5 h-5" /> CARTE EN LIGNE
-                    <span className="text-[9px] font-bold normal-case">bientôt disponible</span>
-                  </button>
-                </div>
-                {methodePaiement === 'Ligne' && (
-                  <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-100 rounded-xl">
-                    <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                    <p className="text-[10px] font-bold text-amber-700 leading-relaxed">
-                      Paiement en ligne indisponible pour l'instant. Un règlement par carte est possible lors de la livraison.
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
+                  <p className="text-center text-[12.5px] font-semibold text-[#6F5A4B]">Minimum de commande : 10€ · Paiement à la livraison</p>
+                </footer>
+              )}
+            </>
           )}
-        </div>
 
-        <div className="p-6 bg-white border-t border-[#D5C9B8] space-y-4">
-          <div className="space-y-1">
-            <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-              <span>Sous-total</span>
-              <span>{(sousTotalFinal + economie).toFixed(2)}€</span>
-            </div>
-            
-            {economie > 0 && (
-              <div className="flex justify-between text-[10px] font-black text-green-600 uppercase tracking-widest">
-                <span className="flex items-center gap-1"><TrendingDown className="w-3 h-3" /> Économie promo</span>
-                <span>-{economie.toFixed(2)}€</span>
-              </div>
-            )}
+          {/* ÉTAPE 2 : LIVRAISON ET PAIEMENT */}
+          {etape === 2 && (
+            <>
+              <div className="flex-1 overflow-y-auto overscroll-contain px-3 pt-3.5 pb-4 flex flex-col gap-3">
 
-            {remiseMontant > 0 && (
-              <div className="flex justify-between text-[10px] font-black text-green-600 uppercase tracking-widest">
-                <span className="flex items-center gap-1"><TrendingDown className="w-3 h-3" /> Remise -{remisePct}%</span>
-                <span>-{remiseMontant.toFixed(2)}€</span>
-              </div>
-            )}
+                <section className={`${carte} flex flex-col gap-3`}>
+                  <div className="flex items-center justify-between gap-2.5">
+                    <h3 className="text-[17px] font-extrabold">Infos de livraison</h3>
+                    {user && <span className="px-2.5 py-1 rounded-full bg-[#ECF7EF] text-xs font-bold text-[#166534]">Profil connecté</span>}
+                  </div>
+                  <div>
+                    <label htmlFor="panier-nom" className={etiquetteChamp}>Nom complet</label>
+                    <input id="panier-nom" type="text" autoComplete="name" maxLength={100} value={nom} onChange={(e) => setNom(e.target.value)} className={champ} />
+                  </div>
+                  <div>
+                    <label htmlFor="panier-telephone" className={etiquetteChamp}>Téléphone</label>
+                    <input id="panier-telephone" type="tel" autoComplete="tel" maxLength={30} value={telephone} onChange={(e) => setTelephone(e.target.value)} className={champ} />
+                  </div>
+                  <div className="relative">
+                    <label htmlFor="panier-adresse" className={etiquetteChamp}>Adresse (dans le 78)</label>
+                    <input id="panier-adresse" type="text" autoComplete="off" maxLength={200} value={adresse} onChange={(e) => handleAdresseChange(e.target.value)} className={champ} />
+                    {(suggestions || []).length > 0 && (
+                      <div className="absolute z-20 left-0 right-0 top-full mt-1.5 bg-white border border-[#E0D3C0] rounded-2xl shadow-2xl overflow-hidden">
+                        {suggestions.map((s, i) => (
+                          <button key={i} type="button" onClick={() => selectionnerAdresse(s)} className="w-full min-h-12 px-4 py-2.5 flex items-center gap-2.5 text-left text-sm font-semibold border-b border-[#F0E7DA] last:border-b-0 hover:bg-[#F5EAE0] transition-colors">
+                            <MapPin className="w-4 h-4 shrink-0 text-[#FF4500]" aria-hidden />{s.properties.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  {distanceValide === false && (
+                    <p role="alert" className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-red-50 text-[13.5px] font-bold text-red-700">
+                      <AlertCircle className="w-[17px] h-[17px] shrink-0" aria-hidden />Désolé, nous livrons uniquement dans le 78.
+                    </p>
+                  )}
+                  {distanceValide === true && (
+                    <p className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-[#ECF7EF] text-[13.5px] font-bold text-[#166534]">
+                      <Check className="w-[17px] h-[17px] shrink-0" strokeWidth={2.6} aria-hidden />
+                      Zone de livraison validée !{villeRelais ? ' Livraison offerte (ville relais).' : ''}
+                    </p>
+                  )}
+                </section>
 
-            {remiseCodeMontant > 0 && (
-              <div className="flex justify-between text-[10px] font-black text-green-600 uppercase tracking-widest">
-                <span className="flex items-center gap-1"><Tag className="w-3 h-3" /> Code promo -{remiseCode}%</span>
-                <span>-{remiseCodeMontant.toFixed(2)}€</span>
-              </div>
-            )}
-
-            {totalApresRemise >= 10 && (
-              <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                <span>Livraison</span>
-                <span>{fraisLivraison === 0 ? (villeRelais ? 'OFFERTE (VILLE RELAIS)' : 'GRATUIT') : fraisLivraison.toFixed(2) + '€'}</span>
-              </div>
-            )}
-            {totalApresRemise >= 10 && fraisLivraison > 0 && sousTotalFinal < SEUIL_LIVRAISON_OFFERTE && (
-              <p className="text-[9px] font-bold text-green-600 text-right -mt-1">Encore {(SEUIL_LIVRAISON_OFFERTE - sousTotalFinal).toFixed(2)}€ pour la livraison offerte</p>
-            )}
-            <div className="flex justify-between font-black text-xl text-slate-900 pt-2">
-              <span>TOTAL</span>
-              <span className="text-2xl text-[#FF4500]">{totalFinal.toFixed(2)}€</span>
-            </div>
-          </div>
-          
-          {/* CALENDRIER DE LIVRAISON */}
-          {configCal !== null && (
-            <div className="space-y-2">
-              <button
-                type="button"
-                onClick={() => setCalOpen(o => !o)}
-                className="w-full flex items-center gap-2 p-3 bg-white border border-[#D5C9B8] rounded-2xl hover:border-slate-300 transition-all"
-              >
-                <Calendar className="w-4 h-4 text-blue-500 shrink-0" />
-                <span className="font-black uppercase text-xs tracking-widest text-slate-900">Date de livraison</span>
-                {dateLivraison ? (
-                  <span className="text-[9px] bg-green-50 text-green-600 px-2 py-0.5 rounded-full font-bold uppercase truncate">
-                    {new Date(dateLivraison + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })}
-                  </span>
-                ) : (
-                  <span className="text-[9px] bg-red-50 text-red-500 px-2 py-0.5 rounded-full font-bold uppercase">Requis</span>
-                )}
-                <ChevronDown className={`w-4 h-4 text-slate-400 ml-auto shrink-0 transition-transform duration-200 ${calOpen ? 'rotate-180' : ''}`} />
-              </button>
-
-              {calOpen && (
-                <div className="space-y-2">
-                  <div className="bg-white border border-[#D5C9B8] rounded-2xl overflow-hidden">
-                    {/* Header mois */}
-                    <div className="flex items-center justify-between px-4 py-3 border-b border-[#D5C9B8] bg-[#F5EAE0]">
-                      <button type="button" onClick={() => setMoisCal(prev => { const d = new Date(prev.annee, prev.mois - 1); return { annee: d.getFullYear(), mois: d.getMonth() }; })} className="w-7 h-7 rounded-lg hover:bg-[#EDE3D5] flex items-center justify-center transition-colors">
-                        <ChevronLeft className="w-4 h-4 text-slate-500" />
+                {/* CALENDRIER DE LIVRAISON */}
+                {configCal !== null && (
+                  <section className={carte}>
+                    <div className="flex items-center justify-between gap-2.5 mb-1">
+                      <h3 className="text-[17px] font-extrabold">Date de livraison</h3>
+                      {dateChoisie ? (
+                        <span className="text-sm font-extrabold text-[#C73600]">{dateChoisie.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
+                      ) : (
+                        <span className="px-2.5 py-1 rounded-full bg-[#FFF1EA] text-xs font-bold text-[#B83200]">Requis</span>
+                      )}
+                    </div>
+                    <p className="mb-3.5 text-[13px] font-semibold text-[#6F5A4B]">Livraison entre 15h et 20h.</p>
+                    <div className="flex items-center justify-between mb-2">
+                      <button type="button" aria-label="Mois précédent" onClick={() => setMoisCal(prev => { const d = new Date(prev.annee, prev.mois - 1); return { annee: d.getFullYear(), mois: d.getMonth() }; })} className="w-11 h-11 rounded-xl bg-[#F5EAE0] text-[#3D2B1F] flex items-center justify-center hover:bg-[#EAD9C8] transition-colors">
+                        <ChevronLeft className="w-[18px] h-[18px]" strokeWidth={2.4} aria-hidden />
                       </button>
-                      <span className="text-xs font-black uppercase tracking-widest text-slate-900">
-                        {new Date(moisCal.annee, moisCal.mois).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }).toUpperCase()}
-                      </span>
-                      <button type="button" onClick={() => setMoisCal(prev => { const d = new Date(prev.annee, prev.mois + 1); return { annee: d.getFullYear(), mois: d.getMonth() }; })} className="w-7 h-7 rounded-lg hover:bg-[#EDE3D5] flex items-center justify-center transition-colors">
-                        <ChevronRight className="w-4 h-4 text-slate-500" />
+                      <p className="text-[15px] font-extrabold first-letter:uppercase">
+                        {new Date(moisCal.annee, moisCal.mois).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
+                      </p>
+                      <button type="button" aria-label="Mois suivant" onClick={() => setMoisCal(prev => { const d = new Date(prev.annee, prev.mois + 1); return { annee: d.getFullYear(), mois: d.getMonth() }; })} className="w-11 h-11 rounded-xl bg-[#F5EAE0] text-[#3D2B1F] flex items-center justify-center hover:bg-[#EAD9C8] transition-colors">
+                        <ChevronRight className="w-[18px] h-[18px]" strokeWidth={2.4} aria-hidden />
                       </button>
                     </div>
-
-                    {/* Entêtes jours */}
-                    <div className="grid grid-cols-7 border-b border-[#D5C9B8]">
-                      {['L','M','M','J','V','S','D'].map((j, i) => (
-                        <div key={i} className="text-center text-[9px] font-black text-slate-300 uppercase py-2">{j}</div>
-                      ))}
+                    <div aria-hidden className="grid grid-cols-7 gap-1 mb-1 text-center text-xs font-bold text-[#6F5A4B]">
+                      {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((j, i) => <span key={i}>{j}</span>)}
                     </div>
-
-                    {/* Jours */}
-                    <div className="grid grid-cols-7 p-2 gap-1">
+                    <div className="grid grid-cols-7 gap-1">
                       {joursDuMois(moisCal.annee, moisCal.mois).map((date, i) => {
-                        if (!date) return <div key={`e-${i}`} />;
+                        if (!date) return <span key={`e-${i}`} />;
                         const dateStr = fmtDate(date);
-                        const auj = new Date(); auj.setHours(0,0,0,0);
+                        const auj = new Date(); auj.setHours(0, 0, 0, 0);
                         const demain = new Date(auj); demain.setDate(auj.getDate() + 1);
                         const passe = date < demain;
                         const dispo = !passe && isDisponible(date);
@@ -875,66 +772,214 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
                             key={dateStr}
                             type="button"
                             disabled={!dispo || plein}
-                            onClick={() => { setDateLivraison(selec ? null : dateStr); if (!selec) setCalOpen(false); }}
-                            className={`aspect-square rounded-xl text-[11px] font-black transition-all flex items-center justify-center
-                              ${selec ? 'bg-[#3D2B1F] text-white shadow-md' :
-                                passe || !dispo ? 'text-slate-200 cursor-not-allowed' :
-                                plein ? 'bg-orange-50 text-orange-300 cursor-not-allowed border border-orange-100' :
-                                'hover:bg-[#EDE3D5] text-slate-700 cursor-pointer'}`}
+                            aria-pressed={selec}
+                            aria-label={`${date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}${selec ? ', date choisie' : plein ? ', complet' : dispo ? ', disponible' : ', indisponible'}`}
+                            onClick={() => setDateLivraison(selec ? null : dateStr)}
+                            className={`aspect-square rounded-xl text-sm flex items-center justify-center transition-colors ${
+                              selec ? 'bg-[#3D2B1F] text-[#F5EAE0] font-extrabold'
+                              : passe || !dispo ? 'text-[#8C7867] font-medium line-through cursor-not-allowed'
+                              : plein ? 'bg-[#FFF1EA] text-[#B83200] font-bold cursor-not-allowed'
+                              : 'bg-[#F5EAE0] text-[#3D2B1F] font-bold hover:bg-[#EAD9C8]'}`}
                           >
                             {date.getDate()}
                           </button>
                         );
                       })}
                     </div>
-                  </div>
+                    <p className="mt-3.5 flex items-center gap-x-3.5 gap-y-1 flex-wrap text-[12.5px] font-semibold text-[#6F5A4B]">
+                      <span className="inline-flex items-center gap-1.5"><span className="w-3.5 h-3.5 rounded-[5px] bg-[#F5EAE0] border border-[#E0D3C0]" />Disponible</span>
+                      <span className="inline-flex items-center gap-1.5"><span className="w-3.5 h-3.5 rounded-[5px] bg-[#FFF1EA] border border-[#FFC9B0]" />Complet</span>
+                      <span className="inline-flex items-center gap-1.5"><span className="w-3.5 h-3.5 rounded-[5px] bg-[#3D2B1F]" />Votre choix</span>
+                    </p>
+                    {!dateLivraison && (
+                      <p className="mt-2.5 text-[13px] font-bold text-[#B83200]">Veuillez sélectionner une date de livraison</p>
+                    )}
+                  </section>
+                )}
 
-                  {!dateLivraison && (
-                    <p className="text-[9px] font-bold text-amber-600 uppercase tracking-wide pl-1">
-                      Veuillez sélectionner une date de livraison
+                {/* REMISES DISPONIBLES ET CODE PROMO */}
+                <section className={`${carte} flex flex-col gap-3`}>
+                  {user && dbProfile?.referral_pending && (
+                    <div className="flex items-center gap-3 px-3 py-3 rounded-[14px] bg-[#FFF8E6] text-[#92400E]">
+                      <Gift className="w-5 h-5 shrink-0" aria-hidden />
+                      <div>
+                        <p className="text-sm font-extrabold">Bon parrainage -10% en attente</p>
+                        <p className="text-[12.5px] font-semibold">Validez cette commande pour débloquer votre bon</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {user && ((dbProfile?.loyalty_points ?? 0) >= 100 || (dbProfile?.has_referral_discount && !dbProfile?.referral_pending)) && (
+                    <>
+                      <h3 className="text-[17px] font-extrabold">Remises disponibles</h3>
+                      {(dbProfile?.loyalty_points ?? 0) >= 100 && (
+                        <label className={`flex items-center gap-3 min-h-14 px-3 py-2.5 rounded-[14px] border-[1.5px] transition-colors ${applyLoyalty ? 'border-[#166534] bg-[#ECF7EF]' : 'border-[#E0D3C0]'} ${codeStatut === 'valid' || applyReferral ? 'opacity-50' : 'cursor-pointer'}`}>
+                          <input
+                            type="checkbox"
+                            checked={applyLoyalty}
+                            disabled={codeStatut === 'valid' || applyReferral}
+                            onChange={(e) => {
+                              setApplyLoyalty(e.target.checked);
+                              if (e.target.checked) {
+                                setApplyReferral(false);
+                                setCodePromo(''); setCodeStatut('idle'); setRemiseCode(0); setCodePromoId(null);
+                              }
+                            }}
+                            className="shrink-0 w-[22px] h-[22px] accent-[#FF4500]"
+                          />
+                          <span className="flex-1 min-w-0">
+                            <span className="block text-[14.5px] font-extrabold">Remise fidélité -10%</span>
+                            <span className="block text-[12.5px] font-semibold text-[#6F5A4B]">{dbProfile?.loyalty_points} points · réinitialise à 0</span>
+                          </span>
+                          <span className="shrink-0 text-[14.5px] font-extrabold text-[#166534] tabular-nums">-{formatPrix(sousTotalFinal * 0.1)}</span>
+                        </label>
+                      )}
+                      {dbProfile?.has_referral_discount && !dbProfile?.referral_pending && (
+                        <label className={`flex items-center gap-3 min-h-14 px-3 py-2.5 rounded-[14px] border-[1.5px] transition-colors ${applyReferral ? 'border-[#166534] bg-[#ECF7EF]' : 'border-[#E0D3C0]'} ${codeStatut === 'valid' || applyLoyalty ? 'opacity-50' : 'cursor-pointer'}`}>
+                          <input
+                            type="checkbox"
+                            checked={applyReferral}
+                            disabled={codeStatut === 'valid' || applyLoyalty}
+                            onChange={(e) => {
+                              setApplyReferral(e.target.checked);
+                              if (e.target.checked) {
+                                setApplyLoyalty(false);
+                                setCodePromo(''); setCodeStatut('idle'); setRemiseCode(0); setCodePromoId(null);
+                              }
+                            }}
+                            className="shrink-0 w-[22px] h-[22px] accent-[#FF4500]"
+                          />
+                          <span className="flex-1 min-w-0">
+                            <span className="block text-[14.5px] font-extrabold">Remise parrainage -10%</span>
+                            <span className="block text-[12.5px] font-semibold text-[#6F5A4B]">Programme de parrainage</span>
+                          </span>
+                          <span className="shrink-0 text-[14.5px] font-extrabold text-[#166534] tabular-nums">-{formatPrix(sousTotalFinal * 0.1)}</span>
+                        </label>
+                      )}
+                    </>
+                  )}
+
+                  {/* CODE PROMO */}
+                  <div>
+                    <label htmlFor="panier-code" className={etiquetteChamp}>Code promo</label>
+                    <div className="flex gap-2">
+                      <input
+                        id="panier-code"
+                        type="text"
+                        autoComplete="off"
+                        maxLength={40}
+                        placeholder="Votre code"
+                        value={codePromo}
+                        onChange={(e) => { setCodePromo(e.target.value.toUpperCase()); setCodeStatut('idle'); setRemiseCode(0); setCodePromoId(null); }}
+                        disabled={codeStatut === 'valid' || codeStatut === 'used' || applyLoyalty || applyReferral}
+                        className={`${champ} flex-1 min-w-0 uppercase placeholder:normal-case ${
+                          codeStatut === 'valid' ? '!border-[#166534] !bg-[#ECF7EF] !text-[#166534]' :
+                          codeStatut === 'invalid' || codeStatut === 'used' ? '!border-red-300' :
+                          applyLoyalty || applyReferral ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
+                      />
+                      {codeStatut === 'valid' ? (
+                        <button type="button" onClick={() => { setCodePromo(''); setCodeStatut('idle'); setRemiseCode(0); setCodePromoId(null); }} className="shrink-0 h-[52px] px-[18px] rounded-[14px] border-[1.5px] border-[#3D2B1F] text-[15px] font-bold hover:bg-[#3D2B1F] hover:text-[#F5EAE0] transition-colors">
+                          Retirer
+                        </button>
+                      ) : (
+                        <button type="button" onClick={validerCodePromo} disabled={codeStatut === 'loading' || !codePromo.trim() || applyLoyalty || applyReferral} className="shrink-0 h-[52px] min-w-[104px] px-[18px] rounded-[14px] bg-[#3D2B1F] text-[#F5EAE0] text-[15px] font-bold flex items-center justify-center hover:bg-[#FF4500] transition-colors disabled:bg-[#EDE3D5] disabled:text-[#6F5A4B]">
+                          {codeStatut === 'loading' ? <Loader2 className="w-4 h-4 animate-spin" aria-label="Vérification" /> : 'Appliquer'}
+                        </button>
+                      )}
+                    </div>
+                    {codeStatut === 'valid' && (
+                      <p className="mt-2 flex items-center gap-2 text-[13.5px] font-bold text-[#166534]"><Check className="w-4 h-4 shrink-0" strokeWidth={2.6} aria-hidden />Code valide — -{remiseCode}% appliqué !</p>
+                    )}
+                    {codeStatut === 'invalid' && (
+                      <p role="alert" className="mt-2 flex items-center gap-2 text-[13.5px] font-bold text-red-700"><AlertCircle className="w-4 h-4 shrink-0" aria-hidden />Code invalide ou expiré.</p>
+                    )}
+                    {codeStatut === 'used' && (
+                      <p role="alert" className="mt-2 flex items-center gap-2 text-[13.5px] font-bold text-red-700"><AlertCircle className="w-4 h-4 shrink-0" aria-hidden />Vous avez déjà utilisé ce code promo.</p>
+                    )}
+                  </div>
+                </section>
+
+                {/* COMMENTAIRE CLIENT */}
+                <section className={carte}>
+                  <label htmlFor="panier-commentaire" className="block mb-2 text-[17px] font-extrabold">Commentaire <span className="text-[13px] font-semibold text-[#6F5A4B]">(optionnel)</span></label>
+                  <textarea
+                    id="panier-commentaire"
+                    value={commentaireClient}
+                    onChange={(e) => setCommentaireClient(e.target.value)}
+                    placeholder="Une précision pour le livreur ?"
+                    maxLength={250}
+                    rows={2}
+                    className="w-full px-4 py-3.5 rounded-[14px] border-[1.5px] border-[#E0D3C0] bg-white text-base font-medium text-[#3D2B1F] placeholder:text-[#8C7867] resize-none outline-none focus:border-[#FF4500] transition-colors"
+                  />
+                </section>
+
+                {/* PAIEMENT */}
+                <section className={`${carte} flex flex-col gap-2.5`}>
+                  <h3 className="mb-0.5 text-[17px] font-extrabold">Paiement</h3>
+                  <button type="button" aria-pressed={methodePaiement === 'Espèces'} onClick={() => setMethodePaiement('Espèces')} className={`flex items-center gap-3 min-h-[60px] px-3.5 py-2.5 rounded-[14px] text-left transition-colors ${methodePaiement === 'Espèces' ? 'border-2 border-[#3D2B1F] bg-[#FBF7F2]' : 'border-[1.5px] border-[#E0D3C0]'}`}>
+                    <Banknote className="w-[22px] h-[22px] shrink-0 text-[#FF4500]" aria-hidden />
+                    <span className="flex-1">
+                      <span className="block text-[15px] font-extrabold">Espèces ou carte</span>
+                      <span className="block text-[12.5px] font-semibold text-[#6F5A4B]">à la livraison</span>
+                    </span>
+                    {methodePaiement === 'Espèces' && <Check className="w-5 h-5 shrink-0 text-[#166534]" strokeWidth={2.6} aria-hidden />}
+                  </button>
+                  <button type="button" disabled aria-disabled="true" className="flex items-center gap-3 min-h-[60px] px-3.5 py-2.5 rounded-[14px] border-[1.5px] border-dashed border-[#C9BBAA] text-left text-[#5C4030] cursor-not-allowed">
+                    <CreditCard className="w-[22px] h-[22px] shrink-0" aria-hidden />
+                    <span className="flex-1">
+                      <span className="block text-[15px] font-bold">Carte en ligne</span>
+                      <span className="block text-[12.5px] font-semibold text-[#6F5A4B]">bientôt disponible</span>
+                    </span>
+                  </button>
+                  {methodePaiement === 'Ligne' && (
+                    <p role="alert" className="flex items-start gap-2.5 px-3 py-2.5 rounded-xl bg-[#FFF8E6] text-[13.5px] font-bold text-[#92400E]">
+                      <AlertCircle className="w-[17px] h-[17px] shrink-0 mt-0.5" aria-hidden />
+                      Paiement en ligne indisponible pour l&apos;instant. Un règlement par carte est possible lors de la livraison.
                     </p>
                   )}
+                </section>
+
+                {/* RÉCAPITULATIF */}
+                <dl className={`${carte} flex flex-col gap-2 text-[14.5px] font-semibold text-[#5C4030]`}>
+                  <div className="flex justify-between gap-3"><dt>Sous-total</dt><dd className="tabular-nums">{formatPrix(sousTotalFinal + economie)}</dd></div>
+                  {economie > 0.005 && (
+                    <div className="flex justify-between gap-3 font-extrabold text-[#166534]"><dt>Économie promo</dt><dd className="tabular-nums">-{formatPrix(economie)}</dd></div>
+                  )}
+                  {remiseMontant > 0 && (
+                    <div className="flex justify-between gap-3 font-extrabold text-[#166534]"><dt>Remise -{remisePct}%</dt><dd className="tabular-nums">-{formatPrix(remiseMontant)}</dd></div>
+                  )}
+                  {remiseCodeMontant > 0 && (
+                    <div className="flex justify-between gap-3 font-extrabold text-[#166534]"><dt>Code promo -{remiseCode}%</dt><dd className="tabular-nums">-{formatPrix(remiseCodeMontant)}</dd></div>
+                  )}
+                  {totalApresRemise >= 10 && (
+                    <div className="flex justify-between gap-3">
+                      <dt>Livraison</dt>
+                      <dd className={fraisLivraison === 0 ? 'font-extrabold text-[#166534]' : 'tabular-nums'}>{libelleLivraison}</dd>
+                    </div>
+                  )}
+                  {totalApresRemise >= 10 && fraisLivraison > 0 && sousTotalFinal < SEUIL_LIVRAISON_OFFERTE && (
+                    <p className="text-right text-[13px] font-bold text-[#166534]">Encore {formatPrix(SEUIL_LIVRAISON_OFFERTE - sousTotalFinal)} pour la livraison offerte</p>
+                  )}
+                </dl>
+              </div>
+
+              <footer className="shrink-0 bg-white border-t border-[#E8DCCB] px-5 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] flex flex-col gap-3 shadow-[0_-16px_30px_-22px_rgba(61,43,31,0.45)]">
+                {alertes}
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className="titre text-[26px] leading-none">Total</span>
+                  <strong className="text-[30px] font-black tracking-tight leading-none text-[#FF4500] tabular-nums">{formatPrix(totalFinal)}</strong>
                 </div>
-              )}
-            </div>
+                <button type="button" disabled={confirmationImpossible} onClick={envoyerCommande} className={`${boutonPrincipal} !justify-center`}>
+                  {chargement ? <Loader2 className="w-6 h-6 animate-spin" aria-label="Envoi de la commande" /> : methodePaiement === 'Ligne' ? 'Payer par carte' : 'Confirmer la commande'}
+                </button>
+                {!chargement && manques.length > 0 && (
+                  <p className="text-center text-[12.5px] font-semibold text-[#6F5A4B]">Il manque : {manques.join(', ')}.</p>
+                )}
+              </footer>
+            </>
           )}
-
-          {panierACorriger && (
-            <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-100 rounded-xl">
-              <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
-              <p className="text-[10px] font-black text-red-600 uppercase">Retirez les articles signalés en rouge pour commander</p>
-            </div>
-          )}
-
-          {minimumNonAtteint && (
-            <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-100 rounded-xl">
-              <AlertCircle className="w-4 h-4 text-amber-500 shrink-0" />
-              <p className="text-[10px] font-black text-amber-700 uppercase">
-                Minimum de commande : 10€ (encore {(10 - totalApresRemise).toFixed(2)}€)
-              </p>
-            </div>
-          )}
-
-          <button
-            disabled={chargement || methodePaiement === 'Ligne' || !!minimumNonAtteint || panierACorriger || (user && (!(panier || []).length || !distanceValide || !nom || !telephone || !dateLivraison))}
-            onClick={envoyerCommande}
-            className={`w-full ${!user ? 'bg-blue-600' : 'bg-[#3D2B1F]'} disabled:bg-[#DDD0BF] disabled:text-slate-300 text-white p-5 rounded-2xl font-black uppercase text-sm tracking-widest hover:opacity-90 transition-all shadow-xl flex items-center justify-center gap-3`}
-          >
-            {chargement ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : !user ? (
-              <>
-                <LogIn className="w-5 h-5" />
-                Se connecter pour commander
-              </>
-            ) : methodePaiement === 'Ligne' ? (
-              'Payer par carte'
-            ) : (
-              'Confirmer la commande'
-            )}
-          </button>
         </div>
-      </div>
       )}
     </div>
   );
