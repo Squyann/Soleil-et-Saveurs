@@ -4,10 +4,10 @@ import { ShoppingCart, CheckCircle2, TrendingDown, Tag, Flame, Info, Minus, Plus
 import { premieresOffertes, libellePremieresOffertes, estEnPromo } from '@/lib/promos';
 import {
   getStep, getMin, quantiteInitiale, formatGramLabel, formatQuantite, uniteAffichee, bornerQuantite,
-  calculerPrixAffiche, ajouterAuPanier, lirePanier,
+  calculerPrixAffiche, ajouterAuPanier, lirePanier, calculerPanier, ligneDepuisProduit, stockDisponible,
 } from '@/lib/panier';
-import { calculerGroupe, prochainePromo } from '@/lib/prix';
-import { imageVariante, libelleCourt, prixVariante, variantesCumulables, type Variante } from '@/lib/variantes';
+import { prochainePromo } from '@/lib/prix';
+import { imageVariante, libelleCourt, prixVariante, variantesCumulables, produitPourVariante, memeUniteQueProduit, type Variante } from '@/lib/variantes';
 import ChoixVariantes from '@/components/ChoixVariantes';
 
 // Bloc prix + variantes + quantité + ajout au panier de la page produit.
@@ -24,12 +24,22 @@ export default function AchatProduit({
   onSelection: (id: string) => void;
 }) {
   const cumul = variantes.length > 0 && variantesCumulables(produit);
-  const [quantite, setQuantite] = useState<number>(quantiteInitiale(produit));
+  const variante = variantes.find(v => v.id === selection) ?? null;
+  // Produit vu à travers la variante affichée : unité, pas, remise, stock et promos
+  const pv = produitPourVariante(produit, variante);
+  const [quantite, setQuantite] = useState<number>(quantiteInitiale(pv));
   const [quantites, setQuantites] = useState<Record<string, number>>({}); // mode cumul
   const [toast, setToast] = useState<string | null>(null);
   const [boutonVisible, setBoutonVisible] = useState(true);
   const [panier, setPanier] = useState<any[]>([]);
+  const [selectionVue, setSelectionVue] = useState(selection);
   const zoneBouton = useRef<HTMLDivElement>(null);
+
+  // Changement de variante : quantité de départ dans l'unité de la nouvelle variante
+  if (selection !== selectionVue) {
+    setSelectionVue(selection);
+    setQuantite(quantiteInitiale(pv));
+  }
 
   useEffect(() => {
     const lire = () => setPanier(lirePanier());
@@ -49,27 +59,39 @@ export default function AchatProduit({
     return () => obs.disconnect();
   }, []);
 
-  const variante = variantes.find(v => v.id === selection) ?? null;
   const prixBase = prixVariante(produit, variante);
-  const enPromo = estEnPromo(produit);
-  const unite = uniteAffichee(produit);
-  const prixUnitaire = produit.promotion > 0 ? prixBase * (1 - produit.promotion / 100) : prixBase;
+  const promoBadges = cumul ? produit : pv; // cumul : promotions communes du produit
+  const enPromo = estEnPromo(promoBadges) || (cumul && variantes.some(v => (Number(v.promotion) || 0) > 0));
+  const unite = uniteAffichee(pv);
+  const prixUnitaire = pv.promotion > 0 ? prixBase * (1 - pv.promotion / 100) : prixBase;
 
   // Déjà dans le panier pour ce produit
   const lignesPanier = panier.filter((i: any) => String(i.id) === String(produit.id));
-  const qteDansPanier = lignesPanier.reduce((s: number, i: any) => s + (Number(i.quantite) || 0), 0);
   const qteParVariante = Object.fromEntries(lignesPanier.map((i: any) => [i.variant_id ?? '', Number(i.quantite) || 0]));
-  const stockDisponible = produit.stock != null ? produit.stock - qteDansPanier : Infinity;
+  const qtePanierPartagee = lignesPanier.filter((i: any) => i.stock_partage !== false).reduce((s: number, i: any) => s + (Number(i.quantite) || 0), 0);
+  const qtePanierUniteProduit = lignesPanier.filter((i: any) => (i.unite ?? null) === (produit.unite ?? null)).reduce((s: number, i: any) => s + (Number(i.quantite) || 0), 0);
+
+  // Stock restant pour une variante : son stock propre, sinon le stock partagé
+  // du produit (variantes de même unité), sinon illimité.
+  const stockRestantPour = (v: Variante | null, autresSelection = 0) => {
+    const eff = produitPourVariante(produit, v);
+    if (v && v.stock != null) return Number(v.stock) - (qteParVariante[v.id] ?? 0) - autresSelection;
+    if (eff.stock == null) return Infinity;
+    return Number(eff.stock) - qtePanierPartagee - autresSelection;
+  };
 
   // --- Mode simple (une quantité) ---
-  const affiche = calculerPrixAffiche(produit, quantite, prixBase);
-  const libelleQuantite = produit.unite === 'g' ? formatGramLabel(affiche.totalItemsRecus) : affiche.totalItemsRecus;
+  const stockRestant = stockRestantPour(variante);
+  const affiche = calculerPrixAffiche(pv, quantite, prixBase);
+  const libelleQuantite = pv.unite === 'g' ? formatGramLabel(affiche.totalItemsRecus) : affiche.totalItemsRecus;
 
   // --- Mode cumul (une quantité par variante) ---
   const lignesSelection = variantes.filter(v => (quantites[v.id] ?? 0) > 0);
-  const groupeSelection = calculerGroupe(produit, lignesSelection.map(v => ({ qte: quantites[v.id], prixBase: prixVariante(produit, v) })));
-  const qteSelection = groupeSelection.qteTotale;
-  const suggestion = cumul ? prochainePromo(produit, qteSelection + qteDansPanier) : null;
+  const lignesCalcul = lignesSelection.map(v => ligneDepuisProduit(produit, v, quantites[v.id]));
+  const calculSelection = calculerPanier(lignesCalcul);
+  const economieSelection = calculSelection.economie;
+  const qteSelectionUniteProduit = lignesCalcul.filter(l => (l.unite ?? null) === (produit.unite ?? null)).reduce((s, l) => s + l.quantite, 0);
+  const suggestion = cumul ? prochainePromo(produit, qteSelectionUniteProduit + qtePanierUniteProduit) : null;
 
   const notifier = (texte: string) => {
     setToast(texte);
@@ -79,7 +101,7 @@ export default function AchatProduit({
   const ajouterSimple = () => {
     const remplace = ajouterAuPanier(produit, quantite || 1, variante);
     notifier(remplace && variante ? `Remplacé par : ${libelleCourt(produit, variante)}` : 'Ajouté au panier !');
-    setQuantite(quantiteInitiale(produit));
+    setQuantite(quantiteInitiale(pv));
   };
 
   const ajouterSelection = () => {
@@ -89,26 +111,32 @@ export default function AchatProduit({
     setQuantites({});
   };
 
-  const changerQuantite = (val: number) => setQuantite(bornerQuantite(produit, String(val), stockDisponible));
-  const changerQuantiteVariante = (id: string, delta: number) => {
+  const changerQuantite = (val: number) => setQuantite(bornerQuantite(pv, String(val), stockRestant));
+  // Mode cumul : chaque variante a son pas (unité) et sa limite de stock
+  const maxVariante = (v: Variante) => {
+    const partage = v.stock == null && memeUniteQueProduit(produit, v);
+    const autres = partage
+      ? variantes.filter(x => x.id !== v.id && x.stock == null && memeUniteQueProduit(produit, x)).reduce((s, x) => s + (quantites[x.id] ?? 0), 0)
+      : 0;
+    return stockRestantPour(v, autres);
+  };
+  const changerQuantiteVariante = (v: Variante, delta: number) => {
+    const eff = produitPourVariante(produit, v);
     setQuantites(prev => {
-      const actuelle = prev[id] ?? 0;
-      const autres = Object.entries(prev).filter(([k]) => k !== id).reduce((s, [, q]) => s + q, 0);
-      const pas = getStep(produit);
-      const max = stockDisponible - autres;
-      let q = parseFloat((actuelle + delta * pas).toFixed(2));
-      if (delta > 0 && actuelle === 0) q = getMin(produit);
-      if (q < getMin(produit)) q = 0;
-      q = Math.min(q, Math.max(max, 0));
-      return { ...prev, [id]: q };
+      const actuelle = prev[v.id] ?? 0;
+      let q = parseFloat((actuelle + delta * getStep(eff)).toFixed(2));
+      if (delta > 0 && actuelle === 0) q = getMin(eff);
+      if (q < getMin(eff)) q = 0;
+      q = Math.min(q, Math.max(maxVariante(v), 0));
+      return { ...prev, [v.id]: q };
     });
-    onSelection(id);
+    onSelection(v.id);
   };
 
-  const epuise = produit.stock != null && produit.stock <= 0;
-  const peutAjouter = cumul ? qteSelection > 0 : !epuise && stockDisponible > 0;
+  const epuise = cumul ? variantes.every(v => maxVariante(v) <= 0) : stockRestant <= 0 && stockDisponible(pv) <= 0;
+  const peutAjouter = cumul ? lignesSelection.length > 0 : !epuise && stockRestant > 0;
   const ajouter = cumul ? ajouterSelection : ajouterSimple;
-  const totalBarre = cumul ? groupeSelection.total : affiche.totalPrice;
+  const totalBarre = cumul ? calculSelection.total : affiche.totalPrice;
 
   return (
     <>
@@ -126,25 +154,25 @@ export default function AchatProduit({
             <span className="bg-gradient-to-r from-[#FF4500] to-[#FF7A1A] text-white text-[10px] font-black px-3 py-1.5 rounded-full shadow flex items-center gap-1 uppercase tracking-wider">
               <Flame className="w-3 h-3" /> En promo
             </span>
-            {produit.promotion > 0 && (
+            {Number(promoBadges.promotion) > 0 && (
               <span className="bg-white text-[#FF4500] border border-[#FF4500]/30 text-[10px] font-black px-3 py-1.5 rounded-full flex items-center gap-1">
-                <Tag className="w-3 h-3" /> -{produit.promotion}%
+                <Tag className="w-3 h-3" /> -{promoBadges.promotion}%
               </span>
             )}
-            {produit.seuil_achat > 0 && produit.quantite_offerte > 0 && (
+            {promoBadges.seuil_achat > 0 && promoBadges.quantite_offerte > 0 && (
               <span className="bg-[#3D2B1F] text-white text-[10px] font-black px-3 py-1.5 rounded-full uppercase">
-                🎁 {produit.seuil_achat} achetés = {produit.quantite_offerte} offert(s)
+                🎁 {promoBadges.seuil_achat} achetés = {promoBadges.quantite_offerte} offert(s)
               </span>
             )}
-            {produit.seuil_promo_qte > 0 && produit.prix_promo > 0 && (
+            {promoBadges.seuil_promo_qte > 0 && promoBadges.prix_promo > 0 && (
               <span className="bg-blue-600 text-white text-[10px] font-black px-3 py-1.5 rounded-full flex items-center gap-1">
                 <TrendingDown className="w-3 h-3" />
-                À partir de {produit.seuil_promo_qte}{produit.unite === 'g' ? 'kg' : produit.unite === 'pièce' ? ' pcs' : ` ${produit.unite}`} : {produit.prix_promo.toFixed(2)}€/{unite}
+                À partir de {promoBadges.seuil_promo_qte}{promoBadges.unite === 'g' ? 'kg' : promoBadges.unite === 'pièce' ? ' pcs' : ` ${promoBadges.unite}`} : {Number(promoBadges.prix_promo).toFixed(2)}€/{uniteAffichee(produit)}
               </span>
             )}
-            {premieresOffertes(produit) > 0 && (
+            {premieresOffertes(promoBadges) > 0 && (
               <span className="bg-green-600 text-white text-[10px] font-black px-3 py-1.5 rounded-full uppercase">
-                🎁 {libellePremieresOffertes(produit)}
+                🎁 {libellePremieresOffertes(promoBadges)}
               </span>
             )}
             {cumul && (
@@ -155,15 +183,15 @@ export default function AchatProduit({
 
         {/* Prix unitaire de la variante affichée */}
         <div className="flex flex-wrap items-baseline gap-x-2 mb-1">
-          <span key={prixBase} className={`text-3xl font-black tracking-tight animate-in fade-in ${produit.promotion > 0 ? 'text-[#FF4500]' : 'text-slate-900'}`}>
+          <span className={`text-3xl font-black tracking-tight transition-colors duration-200 tabular-nums ${pv.promotion > 0 ? 'text-[#FF4500]' : 'text-slate-900'}`}>
             {prixUnitaire.toFixed(2)}€<span className="text-base">/{unite}</span>
           </span>
-          {produit.promotion > 0 && (
+          {pv.promotion > 0 && (
             <span className="text-base line-through text-slate-400 font-bold">{prixBase.toFixed(2)}€/{unite}</span>
           )}
         </div>
         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-5">
-          {produit.unite === 'g' ? 'Vendu au gramme' : `Vendu ${produit.unite === 'kg' ? 'au' : 'à la'} ${produit.unite || 'pièce'}`}
+          {pv.unite === 'g' ? 'Vendu au gramme' : `Vendu ${pv.unite === 'kg' ? 'au' : 'à la'} ${pv.unite || 'pièce'}`}
         </p>
 
         {/* VARIANTE UNIQUE : choix de la version */}
@@ -171,14 +199,14 @@ export default function AchatProduit({
           <div className="mb-4">
             <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-2">Choisissez votre version</p>
             <ChoixVariantes produit={produit} variantes={variantes} selection={selection} onChoisir={onSelection} quantites={qteParVariante} />
-            {qteDansPanier > 0 && lignesPanier.some((i: any) => i.variant_id && i.variant_id !== selection) && (
+            {lignesPanier.some((i: any) => i.variant_id && i.variant_id !== selection) && (
               <p className="text-[10px] font-bold text-amber-600 mt-2">Une seule version par commande : l’ajouter remplacera celle de votre panier.</p>
             )}
           </div>
         )}
 
         {variante?.description && (
-          <p key={variante.id} className="text-sm text-slate-600 leading-relaxed mb-4 bg-[#FBF7F2] rounded-xl px-3 py-2.5 whitespace-pre-line animate-in fade-in">{variante.description}</p>
+          <p key={variante.id} className="text-sm text-slate-600 leading-relaxed mb-4 bg-[#FBF7F2] rounded-xl px-3 py-2.5 whitespace-pre-line animate-in fade-in duration-200">{variante.description}</p>
         )}
 
         {/* VARIANTES CUMULABLES : une quantité par variante */}
@@ -189,6 +217,9 @@ export default function AchatProduit({
               {variantes.map(v => {
                 const q = quantites[v.id] ?? 0;
                 const actif = v.id === selection;
+                const eff = produitPourVariante(produit, v);
+                const prixLigne = prixVariante(produit, v);
+                const prixLigneFinal = eff.promotion > 0 ? prixLigne * (1 - eff.promotion / 100) : prixLigne;
                 const image = imageVariante(produit, v);
                 const dejaDansPanier = qteParVariante[v.id] ?? 0;
                 return (
@@ -200,15 +231,16 @@ export default function AchatProduit({
                       <span className="min-w-0">
                         <span className="block text-xs font-black uppercase tracking-tight text-slate-800 truncate">{libelleCourt(produit, v)}</span>
                         <span className="block text-[10px] font-bold text-slate-400">
-                          {prixVariante(produit, v).toFixed(2)}€/{unite}
-                          {dejaDansPanier > 0 && <span className="text-[#FF4500]"> · {formatQuantite(produit, dejaDansPanier)} au panier</span>}
+                          <span className={prixLigneFinal < prixLigne ? 'text-[#FF4500]' : ''}>{prixLigneFinal.toFixed(2)}€/{uniteAffichee(eff)}</span>
+                          {prixLigneFinal < prixLigne && <span className="line-through ml-1">{prixLigne.toFixed(2)}€</span>}
+                          {dejaDansPanier > 0 && <span className="text-[#FF4500]"> · {formatQuantite(eff, dejaDansPanier)} au panier</span>}
                         </span>
                       </span>
                     </button>
                     <div className="flex items-center bg-white rounded-lg border border-[#D5C9B8] overflow-hidden shrink-0">
-                      <button type="button" onClick={() => changerQuantiteVariante(v.id, -1)} disabled={q <= 0} aria-label={`Retirer ${v.nom}`} className="w-8 h-8 flex items-center justify-center text-slate-700 disabled:text-slate-300"><Minus className="w-3.5 h-3.5" /></button>
-                      <span className="w-12 text-center text-xs font-black">{q > 0 ? formatQuantite(produit, q) : '0'}</span>
-                      <button type="button" onClick={() => changerQuantiteVariante(v.id, 1)} disabled={stockDisponible - qteSelection <= 0} aria-label={`Ajouter ${v.nom}`} className="w-8 h-8 flex items-center justify-center text-slate-700 disabled:text-slate-300"><Plus className="w-3.5 h-3.5" /></button>
+                      <button type="button" onClick={() => changerQuantiteVariante(v, -1)} disabled={q <= 0} aria-label={`Retirer ${v.nom}`} className="w-8 h-8 flex items-center justify-center text-slate-700 disabled:text-slate-300"><Minus className="w-3.5 h-3.5" /></button>
+                      <span className="w-12 text-center text-xs font-black tabular-nums">{q > 0 ? formatQuantite(eff, q) : '0'}</span>
+                      <button type="button" onClick={() => changerQuantiteVariante(v, 1)} disabled={maxVariante(v) - q <= 0} aria-label={`Ajouter ${v.nom}`} className="w-8 h-8 flex items-center justify-center text-slate-700 disabled:text-slate-300"><Plus className="w-3.5 h-3.5" /></button>
                     </div>
                   </li>
                 );
@@ -218,20 +250,20 @@ export default function AchatProduit({
             <div className={`mt-3 rounded-2xl p-3 border ${enPromo ? 'bg-orange-50/70 border-[#FF4500]/20' : 'bg-[#EDE3D5] border-[#D5C9B8]/50'}`}>
               <div className="flex justify-between items-center">
                 <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
-                  {qteSelection > 0 ? `Sélection : ${formatQuantite(produit, qteSelection)}${produit.unite === 'g' || produit.unite === 'kg' ? '' : ` ${unite}${qteSelection > 1 && unite === 'pièce' ? 's' : ''}`}` : 'Aucune variété choisie'}
+                  {lignesSelection.length > 0 ? `Sélection : ${lignesSelection.length} variété${lignesSelection.length > 1 ? 's' : ''}` : 'Aucune variété choisie'}
                 </span>
                 <div className="flex items-baseline gap-1.5">
-                  <span className={`text-2xl font-black ${groupeSelection.totalSansPromo - groupeSelection.total > 0.005 ? 'text-[#FF4500]' : 'text-slate-900'}`}>{groupeSelection.total.toFixed(2)}€</span>
-                  {groupeSelection.totalSansPromo - groupeSelection.total > 0.005 && (
-                    <span className="text-xs line-through text-slate-300 font-bold italic">{groupeSelection.totalSansPromo.toFixed(2)}€</span>
+                  <span className={`text-2xl font-black tabular-nums ${economieSelection > 0.005 ? 'text-[#FF4500]' : 'text-slate-900'}`}>{calculSelection.total.toFixed(2)}€</span>
+                  {economieSelection > 0.005 && (
+                    <span className="text-xs line-through text-slate-300 font-bold italic">{(calculSelection.total + economieSelection).toFixed(2)}€</span>
                   )}
                 </div>
               </div>
               {suggestion && (
-                <p className="mt-1.5 text-[10px] font-black text-[#FF4500]">{suggestion.texte}{qteDansPanier > 0 ? ' (avec votre panier)' : ''}</p>
+                <p className="mt-1.5 text-[10px] font-black text-[#FF4500]">{suggestion.texte}{qtePanierUniteProduit > 0 ? ' (avec votre panier)' : ''}</p>
               )}
-              {qteDansPanier > 0 && (
-                <p className="mt-1 text-[10px] font-bold text-slate-500">Déjà au panier : {lignesPanier.map((i: any) => `${formatQuantite(produit, Number(i.quantite))} ${i.variant_nom ? libelleCourt(produit, { id: i.variant_id, product_id: String(produit.id), nom: i.variant_nom }) : produit.name}`).join(' · ')}</p>
+              {lignesPanier.length > 0 && (
+                <p className="mt-1 text-[10px] font-bold text-slate-500">Déjà au panier : {lignesPanier.map((i: any) => `${formatQuantite(i, Number(i.quantite))} ${i.variant_nom ? libelleCourt(produit, { nom: i.variant_nom }) : produit.name}`).join(' · ')}</p>
               )}
             </div>
           </div>
@@ -242,17 +274,17 @@ export default function AchatProduit({
               <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Quantité</span>
               <div className="flex items-center bg-white rounded-xl shadow-sm border border-[#D5C9B8] overflow-hidden">
                 <button
-                  onClick={() => changerQuantite(quantite - getStep(produit))}
-                  disabled={quantite <= getMin(produit)}
+                  onClick={() => changerQuantite(quantite - getStep(pv))}
+                  disabled={quantite <= getMin(pv)}
                   aria-label="Diminuer la quantité"
                   className="px-4 py-2 hover:bg-[#EDE3D5] text-slate-900 font-bold transition-colors disabled:text-slate-300 disabled:cursor-not-allowed"
                 >-</button>
-                <span className="w-20 text-center font-black text-sm">
-                  {produit.unite === 'g' ? formatGramLabel(quantite) : quantite}
+                <span className="w-20 text-center font-black text-sm tabular-nums">
+                  {pv.unite === 'g' ? formatGramLabel(quantite) : quantite}
                 </span>
                 <button
-                  onClick={() => changerQuantite(quantite + getStep(produit))}
-                  disabled={quantite >= stockDisponible}
+                  onClick={() => changerQuantite(quantite + getStep(pv))}
+                  disabled={quantite >= stockRestant}
                   aria-label="Augmenter la quantité"
                   className="px-4 py-2 hover:bg-[#EDE3D5] text-slate-900 font-bold transition-colors disabled:text-slate-300 disabled:cursor-not-allowed"
                 >+</button>
@@ -261,7 +293,7 @@ export default function AchatProduit({
             <div className="flex justify-between items-center">
               <div className="flex items-baseline gap-1.5">
                 <span className={`text-2xl font-black ${affiche.prixDegressifActif ? 'text-blue-600' : affiche.totalEconomy > 0.005 ? 'text-[#FF4500]' : 'text-slate-900'}`}>{affiche.totalPrice.toFixed(2)}€</span>
-                {(produit.promotion > 0 || affiche.prixDegressifActif || affiche.nbPremieresOffertes > 0) && (
+                {(pv.promotion > 0 || affiche.prixDegressifActif || affiche.nbPremieresOffertes > 0) && (
                   <span className="text-xs line-through text-slate-300 font-bold italic">{(prixBase * affiche.qteEffective).toFixed(2)}€</span>
                 )}
               </div>
@@ -285,14 +317,14 @@ export default function AchatProduit({
             {epuise ? (
               <><Info className="w-4 h-4" /> Produit épuisé</>
             ) : cumul ? (
-              <><ShoppingCart className="w-4 h-4" /> {qteSelection > 0 ? `Ajouter la sélection · ${groupeSelection.total.toFixed(2)}€` : 'Choisissez vos variétés'}</>
+              <><ShoppingCart className="w-4 h-4" /> {lignesSelection.length > 0 ? `Ajouter la sélection · ${calculSelection.total.toFixed(2)}€` : 'Choisissez vos variétés'}</>
             ) : (
               <><ShoppingCart className="w-4 h-4" /> Ajouter {libelleQuantite} au panier</>
             )}
           </button>
         </div>
 
-        {!epuise && produit.stock != null && produit.stock < (produit.unite === 'g' ? 500 : 5) && (
+        {!epuise && !cumul && stockDisponible(pv) < (pv.unite === 'g' ? 500 : 5) && (
           <div className="flex mt-4 items-center justify-center gap-2">
             <span className="w-1.5 h-1.5 bg-[#FF4500] rounded-full animate-pulse" />
             <p className="text-[9px] font-black uppercase tracking-widest text-[#FF4500]">Derniers exemplaires !</p>
@@ -304,9 +336,9 @@ export default function AchatProduit({
       {!epuise && (
         <div className={`lg:hidden fixed bottom-0 inset-x-0 z-[90] bg-white/95 backdrop-blur-md border-t border-[#D5C9B8] px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex items-center gap-3 shadow-[0_-10px_30px_rgba(0,0,0,0.08)] transition-transform duration-300 ${boutonVisible ? 'translate-y-full' : 'translate-y-0'}`}>
           <div className="min-w-0">
-            <p className={`text-lg font-black leading-none ${cumul ? (groupeSelection.totalSansPromo - groupeSelection.total > 0.005 ? 'text-[#FF4500]' : 'text-slate-900') : (affiche.totalEconomy > 0.005 ? 'text-[#FF4500]' : 'text-slate-900')}`}>{totalBarre.toFixed(2)}€</p>
+            <p className={`text-lg font-black leading-none ${cumul ? (economieSelection > 0.005 ? 'text-[#FF4500]' : 'text-slate-900') : (affiche.totalEconomy > 0.005 ? 'text-[#FF4500]' : 'text-slate-900')}`}>{totalBarre.toFixed(2)}€</p>
             <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest truncate">
-              {cumul ? `${lignesSelection.length} variété${lignesSelection.length > 1 ? 's' : ''}` : variante ? libelleCourt(produit, variante) : produit.unite === 'g' ? formatGramLabel(quantite) : `${quantite} ${unite}`}
+              {cumul ? `${lignesSelection.length} variété${lignesSelection.length > 1 ? 's' : ''}` : variante ? libelleCourt(produit, variante) : pv.unite === 'g' ? formatGramLabel(quantite) : `${quantite} ${unite}`}
             </p>
           </div>
           <button

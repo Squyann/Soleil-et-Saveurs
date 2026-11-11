@@ -14,6 +14,7 @@ import { supabase } from '@/lib/supabase';
 import CadrageImage from '@/components/CadrageImage';
 import nextDynamic from 'next/dynamic';
 import { completudeFiche, type Fiche } from '@/lib/fiches';
+import { UNITES } from '@/lib/variantes';
 import { premieresOffertes, qtePayantePremieresOffertes, libellePremieresOffertes } from '@/lib/promos';
 import Link from 'next/link';
 import {
@@ -919,11 +920,7 @@ export default function AdminPage() {
               </select>
 
               <select className="p-5 bg-slate-100 rounded-2xl font-black border-none text-xs uppercase" value={nouveauProd.unite} onChange={e => setNouveauProd({...nouveauProd, unite: e.target.value})}>
-                  <option value="kg">kilogramme (kg)</option>
-                  <option value="g">grammes (g) — prix saisi au kg</option>
-                  <option value="pièce">unité (pièce)</option>
-                  <option value="botte">botte</option>
-                  <option value="barquette">barquette</option>
+                  {UNITES.map(u => <option key={u.valeur} value={u.valeur}>{u.libelle}</option>)}
               </select>
 
               <div className="relative">
@@ -1014,8 +1011,26 @@ export default function AdminPage() {
           </section>
 
           <div className="bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-              <h2 className="font-black text-2xl text-slate-900 italic uppercase tracking-tighter">Gestion des stocks & Promos</h2>
+            <h2 className="font-black text-2xl text-slate-900 italic uppercase tracking-tighter mb-4">Gestion des stocks & Promos</h2>
+            {/* Recherche toujours accessible : reste fixée sous le menu du site pendant le défilement */}
+            <div className="sticky top-14 z-30 -mx-8 px-8 py-3 mb-6 bg-white/90 backdrop-blur-md border-b border-slate-100 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+              <div className="relative flex-1 min-w-0">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                <input
+                  type="search"
+                  value={recherche}
+                  onChange={(e) => setRecherche(e.target.value)}
+                  placeholder="Rechercher un produit…"
+                  aria-label="Rechercher un produit"
+                  className="w-full pl-10 pr-9 py-3 bg-slate-100 border-none rounded-xl text-sm font-bold focus:ring-2 focus:ring-[#FF4500] focus:bg-white outline-none transition-colors"
+                />
+                {recherche && (
+                  <button type="button" onClick={() => setRecherche('')} aria-label="Effacer la recherche" className="absolute right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center hover:bg-slate-300">
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+              <span className="hidden sm:inline text-[10px] font-black uppercase tracking-widest text-slate-400 whitespace-nowrap">{produitsFiltres.length} produit{produitsFiltres.length > 1 ? 's' : ''}</span>
               <select value={filtreFiche} onChange={e => setFiltreFiche(e.target.value as typeof filtreFiche)} className="p-3 bg-slate-100 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-500 border-none">
                 <option value="tous">Tous les produits</option>
                 <option value="en_ligne">Page détaillée en ligne</option>
@@ -1050,11 +1065,7 @@ export default function AdminPage() {
                         <option value="Épicerie">Épicerie</option>
                       </select>
                       <select className="bg-slate-50 border-none rounded-lg p-2 text-[10px] font-black uppercase" value={editFormData.unite} onChange={e => setEditFormData({...editFormData, unite: e.target.value})}>
-                        <option value="kg">kg</option>
-                        <option value="g">g (prix/kg)</option>
-                        <option value="pièce">pièce</option>
-                        <option value="botte">botte</option>
-                        <option value="barquette">barquette</option>
+                        {UNITES.map(u => <option key={u.valeur} value={u.valeur}>{u.valeur === 'g' ? 'g (prix/kg)' : u.valeur}</option>)}
                       </select>
                     </div>
                     {editFormData.unite === 'g' && (
@@ -1078,11 +1089,22 @@ export default function AdminPage() {
                       {p.promotion > 0 ? `-${p.promotion}%` : p.seuil_achat > 0 ? `${p.seuil_achat}+${p.quantite_offerte}` : libellePremieresOffertes(p)}
                     </div>
                   )}
-                  {p.actif === false && (
-                    <div className="absolute top-4 left-4 bg-slate-900 text-white text-[9px] font-black px-2.5 py-1 rounded-full uppercase z-10 shadow-sm">
-                      Désactivé
-                    </div>
-                  )}
+                  {p.actif === false && (() => {
+                    // Produit regroupé dans un autre (variante) : on indique lequel
+                    const regroupement = variantes.find(v => String(v.source_product_id ?? '') === String(p.id));
+                    const parent = regroupement && produits.find(x => String(x.id) === String(regroupement.product_id));
+                    return (
+                      <div className={`absolute top-4 left-4 right-4 z-10 flex ${parent ? '' : 'pointer-events-none'}`}>
+                        {parent ? (
+                          <button type="button" onClick={() => setVarianteProdId(String(parent.id))} className="max-w-full truncate bg-blue-600 text-white text-[9px] font-black px-2.5 py-1 rounded-full uppercase shadow-sm hover:bg-blue-700" title="Ouvrir les variantes du produit principal">
+                            Regroupé dans « {parent.name.trim()} »
+                          </button>
+                        ) : (
+                          <span className="bg-slate-900 text-white text-[9px] font-black px-2.5 py-1 rounded-full uppercase shadow-sm">Désactivé</span>
+                        )}
+                      </div>
+                    );
+                  })()}
                   <div className="w-full aspect-[3/2] bg-white rounded-3xl overflow-hidden mb-4 shadow-sm border border-slate-50 flex items-center justify-center">
                     {p.image_url ? <img src={p.image_url} alt={p.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform" /> : <Package className="w-10 h-10 text-slate-200" />}
                   </div>

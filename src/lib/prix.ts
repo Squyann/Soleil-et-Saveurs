@@ -9,7 +9,7 @@
 // 1. Prix dégressif (seuil_promo_qte / prix_promo) atteint : chaque unité perd
 //    l'écart prix de base → prix promo (une variante au prix du parent passe
 //    exactement au prix promo ; une variante plus chère garde son écart).
-// 2. Sinon remise % sur chaque unité, puis :
+// 2. Sinon remise % sur chaque unité (celle de la variante si elle en a une), puis :
 //    - lot « X achetés + Y offerts » : nombre d'unités offertes calculé sur le
 //      total, offertes en priorité sur les variantes les moins chères ;
 //    - ou « N premières offertes » : idem, les N moins chères.
@@ -26,7 +26,8 @@ export type ProduitPrix = {
   premieres_offertes?: number | null;
 };
 
-export type LigneGroupe = { qte: number; prixBase: number };
+// promotion : remise % propre à la ligne (variante), sinon celle du produit
+export type LigneGroupe = { qte: number; prixBase: number; promotion?: number | null };
 
 export type ResultatLigne = {
   prixUnitaire: number;   // prix unitaire après remise (€/unité ou €/kg)
@@ -69,7 +70,8 @@ export function calculerGroupe(p: ProduitPrix, lignes: LigneGroupe[]): ResultatG
     });
   } else {
     lignes.forEach((l, i) => {
-      resultats[i].prixUnitaire = pct > 0 ? l.prixBase * (1 - pct / 100) : l.prixBase;
+      const pctLigne = l.promotion != null ? Number(l.promotion) || 0 : pct;
+      resultats[i].prixUnitaire = pctLigne > 0 ? l.prixBase * (1 - pctLigne / 100) : l.prixBase;
     });
 
     const seuil = Number(p.seuil_achat) || 0;

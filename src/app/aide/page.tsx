@@ -292,6 +292,7 @@ export default function AidePage() {
                     value={contactName}
                     onChange={(e) => setContactName(e.target.value)}
                     type="text"
+                    maxLength={200}
                     placeholder="Votre nom"
                     className="w-full bg-slate-50 border-2 border-transparent rounded-2xl py-4 px-6 text-xs font-bold focus:border-[#FF4500]/20 focus:bg-white outline-none transition-all"
                   />
@@ -300,6 +301,7 @@ export default function AidePage() {
                     value={contactEmail}
                     onChange={(e) => setContactEmail(e.target.value)}
                     type="email"
+                    maxLength={320}
                     placeholder="Email de contact"
                     className="w-full bg-slate-50 border-2 border-transparent rounded-2xl py-4 px-6 text-xs font-bold focus:border-[#FF4500]/20 focus:bg-white outline-none transition-all"
                   />
@@ -308,6 +310,7 @@ export default function AidePage() {
                     value={contactMessage}
                     onChange={(e) => setContactMessage(e.target.value)}
                     placeholder="Détaillez votre demande..."
+                    maxLength={5000}
                     rows={4}
                     className="w-full bg-slate-50 border-2 border-transparent rounded-2xl py-4 px-6 text-xs font-bold focus:border-[#FF4500]/20 focus:bg-white outline-none transition-all resize-none"
                   />

@@ -195,18 +195,26 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
     return () => window.removeEventListener('storage', loadPanier);
   }, [isOpen]);
 
+  // Quantité maximale d'une ligne : stock propre de la variante, sinon stock du
+  // produit moins les autres lignes qui le partagent, sinon illimité.
+  const stockMaxLigne = (item: any) => {
+    if (item.stock == null) return Infinity;
+    if (item.stock_partage === false) return Number(item.stock);
+    const autres = (panier || [])
+      .filter(i => i.id === item.id && i.stock_partage !== false && (i.variant_id ?? null) !== (item.variant_id ?? null))
+      .reduce((s, i) => s + (Number(i.quantite) || 0), 0);
+    return Number(item.stock) - autres;
+  };
+
   const updateQuantity = (id: number, delta: number, unite?: string, variantId?: string | null) => {
     const nouveauPanier = (panier || []).map(item => {
       if (item.id === id && (item.variant_id ?? null) === (variantId ?? null)) {
         if (delta === 0) return { ...item, quantite: 0 };
         const step = item.unite === 'kg' ? 0.5 : item.unite === 'g' ? (item.pas_g || 100) : 1;
         const actualDelta = delta > 0 ? step : -step;
-        // Le stock est celui du produit : partagé entre toutes ses variantes
-        const autresVariantes = (panier || [])
-          .filter(i => i.id === item.id && (i.variant_id ?? null) !== (item.variant_id ?? null))
-          .reduce((s, i) => s + (Number(i.quantite) || 0), 0);
+        // Stock propre à la variante, ou stock du produit partagé entre ses variantes
         const newQte = Math.min(
-          item.stock != null ? item.stock - autresVariantes : Infinity,
+          stockMaxLigne(item),
           Math.max(step, parseFloat(((item.quantite || 0) + actualDelta).toFixed(2)))
         );
         return { ...item, quantite: newQte };
@@ -512,9 +520,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
                 const produitsOfferts = resultat?.offerts ?? 0;
                 const prixDegressifActif = !!groupe?.degressifActif;
                 const lotDefini = item.seuil_achat > 0 && item.quantite_offerte > 0;
-                const stockRestant = item.stock != null
-                  ? item.stock - (panier || []).filter(i => i.id === item.id).reduce((s, i) => s + (Number(i.quantite) || 0), 0)
-                  : Infinity;
+                const stockRestant = stockMaxLigne(item) - (Number(item.quantite) || 0);
                 // Dernière ligne du produit : on y indique la promo commune aux variantes
                 const derniereDuProduit = !item.indisponible && !(panier || []).slice(index + 1).some(i => i.id === item.id && !i.indisponible);
                 const plusieursVariantes = (panier || []).filter(i => i.id === item.id && !i.indisponible).length > 1;

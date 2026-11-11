@@ -1,14 +1,15 @@
 'use client';
 export const dynamic = 'force-dynamic';
-import React, { useState, useEffect } from 'react';
-import { ShoppingCart, Star, ArrowLeft, Plus, Info, Tag, CheckCircle2, TrendingDown, Gift, Search, X, Flame, BookOpen } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { ShoppingCart, Star, ArrowLeft, Plus, Info, Tag, CheckCircle2, TrendingDown, Gift, Search, X, Flame, BookOpen, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { premieresOffertes, libellePremieresOffertes, estEnPromo } from '@/lib/promos';
-import { getStep, getMin, quantiteInitiale, formatGramLabel, formatQuantite, uniteAffichee, bornerQuantite, calculerPrixAffiche, ajouterAuPanier as ajouterProduitAuPanier, lirePanier, calculerPanier } from '@/lib/panier';
-import { variantesActives, prixVariante, imageVariante, nomVariante, libelleCourt, variantesCumulables } from '@/lib/variantes';
+import { getStep, getMin, quantiteInitiale, formatGramLabel, formatQuantite, uniteAffichee, bornerQuantite, calculerPrixAffiche, stockDisponible, ajouterAuPanier as ajouterProduitAuPanier, lirePanier, calculerPanier } from '@/lib/panier';
+import { variantesActives, prixVariante, imageVariante, nomVariante, libelleCourt, variantesCumulables, produitPourVariante } from '@/lib/variantes';
 import { prochainePromo } from '@/lib/prix';
-import ChoixVariantes from '@/components/ChoixVariantes';
+import ChoixVariantes, { PanneauVariantes } from '@/components/ChoixVariantes';
+import ImageFondu from '@/components/ImageFondu';
 
 // Mémorisés le temps de la visite, pour retrouver le catalogue tel qu'on l'a
 // laissé en revenant d'une page produit.
@@ -56,6 +57,8 @@ export default function CommanderPage() {
   const [selectedVariant, setSelectedVariant] = useState<{ [productId: string]: string }>({});
   // Adresse de la page détaillée des produits dont la page est publiée
   const [slugs, setSlugs] = useState<{ [productId: string]: string }>({});
+  // Carte dont le panneau « Toutes les variantes » est ouvert
+  const [panneauVariantes, setPanneauVariantes] = useState<string | null>(null);
 
   useEffect(() => {
     const filtre = lireSession(CLE_FILTRE);
@@ -116,9 +119,21 @@ export default function CommanderPage() {
         setVariantsByProduct(grouped);
         const initialSelected: { [productId: string]: string } = {};
         Object.entries(grouped).forEach(([productId, vs]) => {
-          if (vs.length > 0) initialSelected[productId] = vs[0].id;
+          const premiere = variantesActives(vs)[0];
+          if (premiere) initialSelected[productId] = premiere.id;
         });
         setSelectedVariant(initialSelected);
+        // Quantité de départ dans l'unité de la variante affichée par défaut
+        if (data) {
+          setQuantities(prev => {
+            const q = { ...prev };
+            data.forEach((p: any) => {
+              const premiere = variantesActives(grouped[p.id])[0];
+              if (premiere) q[p.id] = quantiteInitiale(produitPourVariante(p, premiere));
+            });
+            return q;
+          });
+        }
       }
       if (fichesData) {
         const parProduit: { [productId: string]: string } = {};
@@ -139,21 +154,22 @@ export default function CommanderPage() {
     if (vs.length === 0) return null;
     return vs.find(v => v.id === selectedVariant[product.id]) || vs[0];
   };
-  const getEffectiveStock = (product: any) => product.stock;
 
   const handleQtyChange = (id: string, val: string, product: any) => {
-    const quantite = bornerQuantite(product, val, getEffectiveStock(product));
+    const quantite = bornerQuantite(product, val, stockDisponible(product));
     setQuantities(prev => ({ ...prev, [id]: quantite }));
   };
 
   const produitsActifs = products.filter(p => p.actif !== false);
-  const promosDisponibles = produitsActifs.some(estEnPromo);
+  // En promo : le produit ou l'une de ses variantes (remise % propre)
+  const enPromoProduit = (p: any) => estEnPromo(p) || getVariants(p).some(v => (Number(v.promotion) || 0) > 0);
+  const promosDisponibles = produitsActifs.some(enPromoProduit);
   // Filtre « Promos » mémorisé alors qu'il n'y a plus de promo : on montre tout.
   const filtreEffectif = filter === 'promos' && !promosDisponibles ? 'all' : filter;
 
   const filteredProducts = produitsActifs
     .filter(p => filtreEffectif === 'all'
-      || (filtreEffectif === 'promos' ? estEnPromo(p) : p.category?.toLowerCase() === filtreEffectif.toLowerCase()))
+      || (filtreEffectif === 'promos' ? enPromoProduit(p) : p.category?.toLowerCase() === filtreEffectif.toLowerCase()))
     .filter(p => {
       const q = search.trim().toLowerCase();
       if (!q) return true;
@@ -164,7 +180,14 @@ export default function CommanderPage() {
       );
     })
     // Produits en promo en premier, l'ordre alphabétique est conservé ensuite
-    .sort((a, b) => Number(estEnPromo(b)) - Number(estEnPromo(a)));
+    .sort((a, b) => Number(enPromoProduit(b)) - Number(enPromoProduit(a)));
+
+  // Changer de variante : quantité de départ dans l'unité de la nouvelle variante
+  const choisirVariante = (product: any, id: string) => {
+    setSelectedVariant(prev => ({ ...prev, [product.id]: id }));
+    setQuantities(prev => ({ ...prev, [product.id]: getMin(produitPourVariante(product, getVariants(product).find(v => v.id === id))) }));
+  };
+  const fermerPanneau = useCallback(() => setPanneauVariantes(null), []);
 
   const ajouterAuPanier = (product: any) => {
     const variante = getSelectedVariant(product);
@@ -172,7 +195,7 @@ export default function CommanderPage() {
     setTexteToast(remplace && variante ? `Remplacé par : ${libelleCourt(product, variante)}` : 'Ajouté au panier !');
     setShowToast(true);
     setTimeout(() => setShowToast(false), 2000);
-    setQuantities(prev => ({ ...prev, [product.id]: quantiteInitiale(product) }));
+    setQuantities(prev => ({ ...prev, [product.id]: quantiteInitiale(produitPourVariante(product, variante)) }));
   };
 
   return (
@@ -273,22 +296,25 @@ export default function CommanderPage() {
               const currentQty = quantities[product.id] || 1;
               // Variante affichée : sa photo, son nom et son prix remplacent ceux du produit
               const variante = getSelectedVariant(product);
+              // Produit vu à travers la variante : unité, pas, remise, stock et promos applicables
+              const pv = produitPourVariante(product, variante);
               const prixBase = prixVariante(product, variante);
               const imageCarte = imageVariante(product, variante);
               const nomCarte = nomVariante(product, variante);
               const descriptionCarte = variante?.description || product.description;
-              const { qteEffective, prixDegressifActif, nbPremieresOffertes, totalPrice, totalEconomy, totalItemsRecus } = calculerPrixAffiche(product, currentQty, prixBase);
+              const { qteEffective, prixDegressifActif, nbPremieresOffertes, totalPrice, totalEconomy, totalItemsRecus } = calculerPrixAffiche(pv, currentQty, prixBase);
               // Déjà dans le panier pour ce produit (toutes variantes)
               const lignesPanier = panier.filter((i: any) => String(i.id) === String(product.id));
               const qteParVariante = Object.fromEntries(lignesPanier.map((i: any) => [i.variant_id ?? '', Number(i.quantite) || 0]));
-              const qtePanierTotale = lignesPanier.reduce((s: number, i: any) => s + (Number(i.quantite) || 0), 0);
-              const groupePanier = lignesPanier.length ? calculerPanier(lignesPanier).groupe(lignesPanier[0]) : undefined;
+              // Quantité dans l'unité du produit (base des promotions par quantité)
+              const qtePanierTotale = lignesPanier.filter((i: any) => (i.unite ?? null) === (product.unite ?? null)).reduce((s: number, i: any) => s + (Number(i.quantite) || 0), 0);
+              const economiePanier = lignesPanier.length ? calculerPanier(lignesPanier).economie : 0;
               const suggestion = qtePanierTotale > 0 ? prochainePromo(product, qtePanierTotale) : null;
-              const enPromo = estEnPromo(product);
+              const enPromo = estEnPromo(pv);
               const slug = slugs[product.id];
 
               const productVariants = getVariants(product);
-              const effectiveStock = getEffectiveStock(product);
+              const effectiveStock = stockDisponible(pv);
 
               return (
                 <div
@@ -306,30 +332,30 @@ export default function CommanderPage() {
                         <Flame className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> En promo
                       </div>
                     )}
-                    {product.promotion > 0 && (
+                    {pv.promotion > 0 && (
                       <div className="bg-white text-[#FF4500] border border-[#FF4500]/30 text-[8px] sm:text-[10px] font-black px-2 py-1 sm:px-3 sm:py-1.5 rounded-full shadow-lg flex items-center gap-1">
-                        <Tag className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> -{product.promotion}%
+                        <Tag className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> -{pv.promotion}%
                       </div>
                     )}
-                    {product.seuil_achat > 0 && (
+                    {pv.seuil_achat > 0 && (
                       <div className="bg-[#3D2B1F] text-white text-[8px] sm:text-[10px] font-black px-2 py-1 sm:px-3 sm:py-1.5 rounded-full shadow-lg flex items-center gap-1 border border-slate-700">
                         <span>🎁</span>
-                        <span className="hidden sm:inline">{product.seuil_achat} ACHETÉS = {product.quantite_offerte} OFFERT(S)</span>
-                        <span className="sm:hidden">{product.seuil_achat}+{product.quantite_offerte}</span>
+                        <span className="hidden sm:inline">{pv.seuil_achat} ACHETÉS = {pv.quantite_offerte} OFFERT(S)</span>
+                        <span className="sm:hidden">{pv.seuil_achat}+{pv.quantite_offerte}</span>
                       </div>
                     )}
-                    {product.seuil_promo_qte > 0 && product.prix_promo > 0 && (
+                    {pv.seuil_promo_qte > 0 && pv.prix_promo > 0 && (
                       <div className="bg-blue-600 text-white text-[8px] sm:text-[10px] font-black px-2 py-1 sm:px-3 sm:py-1.5 rounded-full shadow-lg flex items-center gap-1">
                         <TrendingDown className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                        <span className="hidden sm:inline">{`À partir de ${product.seuil_promo_qte}${product.unite === 'g' ? 'kg' : product.unite === 'pièce' ? ' pcs' : ` ${product.unite}`} : ${product.prix_promo.toFixed(2)}€`}</span>
-                        <span className="sm:hidden">{product.prix_promo.toFixed(2)}€/{product.unite === 'g' ? 'kg' : product.unite}</span>
+                        <span className="hidden sm:inline">{`À partir de ${pv.seuil_promo_qte}${pv.unite === 'g' ? 'kg' : pv.unite === 'pièce' ? ' pcs' : ` ${pv.unite}`} : ${pv.prix_promo.toFixed(2)}€`}</span>
+                        <span className="sm:hidden">{pv.prix_promo.toFixed(2)}€/{pv.unite === 'g' ? 'kg' : pv.unite}</span>
                       </div>
                     )}
-                    {premieresOffertes(product) > 0 && (
+                    {premieresOffertes(pv) > 0 && (
                       <div className="bg-green-600 text-white text-[8px] sm:text-[10px] font-black px-2 py-1 sm:px-3 sm:py-1.5 rounded-full shadow-lg flex items-center gap-1 uppercase">
                         <span>🎁</span>
-                        <span className="hidden sm:inline">{libellePremieresOffertes(product)}</span>
-                        <span className="sm:hidden">{premieresOffertes(product)} offerte{premieresOffertes(product) > 1 ? 's' : ''}</span>
+                        <span className="hidden sm:inline">{libellePremieresOffertes(pv)}</span>
+                        <span className="sm:hidden">{premieresOffertes(pv)} offerte{premieresOffertes(pv) > 1 ? 's' : ''}</span>
                       </div>
                     )}
                   </div>
@@ -337,7 +363,9 @@ export default function CommanderPage() {
                   {/* IMAGE — au format 3:2 de l'outil de cadrage de l'admin : le client voit le cadrage exact */}
                   <LienFiche slug={slug} className="aspect-[3/2] bg-[#EDE3D5] rounded-xl sm:rounded-[1.5rem] mb-2 sm:mb-4 overflow-hidden flex items-center justify-center relative">
                     {imageCarte ? (
-                      <img key={imageCarte} src={imageCarte} alt={nomCarte} className="w-full h-full object-cover group-hover:scale-110 transition-all duration-700 animate-in fade-in" />
+                      <div className="absolute inset-0 transition-transform duration-700 group-hover:scale-110">
+                        <ImageFondu src={imageCarte} alt={nomCarte} />
+                      </div>
                     ) : (
                       <span className="text-6xl grayscale opacity-20">🧺</span>
                     )}
@@ -370,40 +398,61 @@ export default function CommanderPage() {
                       <span className="text-[8px] sm:text-[10px] font-bold text-[#FF4500] bg-orange-50 px-1.5 py-0.5 rounded-md uppercase shrink-0">{product.provenance}</span>
                     )}
                   </div>
-                  <p className={`text-[8px] sm:text-xs font-bold text-slate-400 uppercase tracking-widest ${product.promotion > 0 ? 'mb-1' : 'mb-2 sm:mb-3'}`}>
-                    {product.unite === 'g'
-                      ? product.promotion > 0 ? 'Vendu au gramme' : `Vendu au gramme · ${prixBase.toFixed(2)}€/kg`
-                      : `Vendu ${product.unite === 'kg' ? 'au' : 'à la'} ${product.unite || 'pièce'}`}
+                  <p className={`text-[8px] sm:text-xs font-bold text-slate-400 uppercase tracking-widest ${pv.promotion > 0 ? 'mb-1' : 'mb-2 sm:mb-3'}`}>
+                    {pv.unite === 'g'
+                      ? pv.promotion > 0 ? 'Vendu au gramme' : `Vendu au gramme · ${prixBase.toFixed(2)}€/kg`
+                      : `Vendu ${pv.unite === 'kg' ? 'au' : 'à la'} ${pv.unite || 'pièce'}`}
                   </p>
 
                   {/* PRIX PROMO : nouveau prix bien visible, ancien prix barré */}
-                  {product.promotion > 0 && (
+                  {pv.promotion > 0 && (
                     <p className="flex flex-wrap items-baseline gap-x-1.5 mb-2 sm:mb-3">
                       <span className="text-xs sm:text-lg font-black text-[#FF4500] leading-none">
-                        {(prixBase * (1 - product.promotion / 100)).toFixed(2)}€<span className="text-[8px] sm:text-xs">/{uniteAffichee(product)}</span>
+                        {(prixBase * (1 - pv.promotion / 100)).toFixed(2)}€<span className="text-[8px] sm:text-xs">/{uniteAffichee(pv)}</span>
                       </span>
-                      <span className="text-[9px] sm:text-xs line-through text-slate-400 font-bold">{prixBase.toFixed(2)}€/{uniteAffichee(product)}</span>
+                      <span className="text-[9px] sm:text-xs line-through text-slate-400 font-bold">{prixBase.toFixed(2)}€/{uniteAffichee(pv)}</span>
                     </p>
                   )}
 
                   {/* CHOIX DE LA VARIANTE : photo, nom et prix changent aussitôt */}
                   {productVariants.length > 0 && (
                     <div className="mb-2 sm:mb-3">
-                      <p className="text-[7px] sm:text-[9px] font-black uppercase tracking-widest text-slate-400 mb-0.5">
-                        {productVariants.length} {variantesCumulables(product) ? 'variétés · cumulables' : 'versions au choix'}
-                      </p>
+                      <div className="flex items-center justify-between gap-1 mb-0.5">
+                        <p className="text-[7px] sm:text-[9px] font-black uppercase tracking-widest text-slate-400 truncate">
+                          {productVariants.length} {variantesCumulables(product) ? 'variétés' : 'versions'}<span className="hidden sm:inline">{variantesCumulables(product) ? ' · cumulables' : ' au choix'}</span>
+                        </p>
+                        {productVariants.length > 2 && (
+                          <button
+                            type="button"
+                            onClick={() => setPanneauVariantes(String(product.id))}
+                            aria-haspopup="dialog"
+                            className="shrink-0 inline-flex items-center gap-0.5 text-[7px] sm:text-[9px] font-black uppercase tracking-widest text-[#FF4500] hover:text-[#3D2B1F] transition-colors"
+                          >
+                            Tout voir <ChevronDown className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                          </button>
+                        )}
+                      </div>
                       <ChoixVariantes
                         compact
                         produit={product}
                         variantes={productVariants}
                         selection={variante?.id ?? null}
                         quantites={qteParVariante}
-                        onChoisir={(id) => {
-                          setSelectedVariant(prev => ({ ...prev, [product.id]: id }));
-                          setQuantities(prev => ({ ...prev, [product.id]: getMin(product) }));
-                        }}
+                        onChoisir={(id) => choisirVariante(product, id)}
                       />
                     </div>
+                  )}
+
+                  {/* TOUTES LES VARIANTES : panneau par-dessus la carte (la grille ne bouge pas) */}
+                  {panneauVariantes === String(product.id) && (
+                    <PanneauVariantes
+                      produit={product}
+                      variantes={productVariants}
+                      selection={variante?.id ?? null}
+                      quantites={qteParVariante}
+                      onChoisir={(id) => { choisirVariante(product, id); setPanneauVariantes(null); }}
+                      onFermer={fermerPanneau}
+                    />
                   )}
 
                   {/* SECTION QUANTITÉ ET PRIX DYNAMIQUE */}
@@ -413,15 +462,15 @@ export default function CommanderPage() {
                       <span className="hidden sm:block text-[10px] font-black uppercase text-slate-400 tracking-widest">Quantité</span>
                       <div className="flex items-center bg-white rounded-lg sm:rounded-xl shadow-sm border border-[#D5C9B8] overflow-hidden w-full sm:w-auto">
                         <button
-                          onClick={() => handleQtyChange(product.id, String(currentQty - getStep(product)), product)}
-                          disabled={currentQty <= getMin(product)}
+                          onClick={() => handleQtyChange(product.id, String(currentQty - getStep(pv)), pv)}
+                          disabled={currentQty <= getMin(pv)}
                           className="px-2 sm:px-3 py-1.5 sm:py-2 hover:bg-[#EDE3D5] text-slate-900 font-bold transition-colors disabled:text-slate-300 disabled:cursor-not-allowed text-sm"
                         >-</button>
                         <span className="flex-1 sm:w-16 text-center font-black text-[10px] sm:text-sm px-1">
-                          {product.unite === 'g' ? formatGramLabel(currentQty) : currentQty}
+                          {pv.unite === 'g' ? formatGramLabel(currentQty) : currentQty}
                         </span>
                         <button
-                          onClick={() => handleQtyChange(product.id, String(currentQty + getStep(product)), product)}
+                          onClick={() => handleQtyChange(product.id, String(currentQty + getStep(pv)), pv)}
                           disabled={currentQty >= effectiveStock}
                           className="px-2 sm:px-3 py-1.5 sm:py-2 hover:bg-[#EDE3D5] text-slate-900 font-bold transition-colors disabled:text-slate-300 disabled:cursor-not-allowed text-sm"
                         >+</button>
@@ -432,7 +481,7 @@ export default function CommanderPage() {
                     <div className="flex justify-between items-center">
                       <div className="flex items-baseline gap-1.5">
                         <span className={`text-sm sm:text-xl font-black ${prixDegressifActif ? 'text-blue-600' : totalEconomy > 0.005 ? 'text-[#FF4500]' : 'text-slate-900'}`}>{totalPrice.toFixed(2)}€</span>
-                        {(product.promotion > 0 || prixDegressifActif || nbPremieresOffertes > 0) && (
+                        {(pv.promotion > 0 || prixDegressifActif || nbPremieresOffertes > 0) && (
                           <span className="text-[9px] sm:text-xs line-through text-slate-300 font-bold italic">{(prixBase * qteEffective).toFixed(2)}€</span>
                         )}
                       </div>
@@ -457,7 +506,7 @@ export default function CommanderPage() {
                     {effectiveStock > 0 ? (
                         <>
                             <ShoppingCart className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                            <span className="hidden sm:inline">Ajouter {product.unite === 'g' ? formatGramLabel(totalItemsRecus) : totalItemsRecus} au panier</span>
+                            <span className="hidden sm:inline">Ajouter {pv.unite === 'g' ? formatGramLabel(totalItemsRecus) : totalItemsRecus} au panier</span>
                             <span className="sm:hidden">Ajouter</span>
                         </>
                     ) : (
@@ -473,10 +522,10 @@ export default function CommanderPage() {
                     <div className="mt-2 rounded-lg sm:rounded-xl bg-[#FBF7F2] border border-[#EDE3D5] px-2 py-1.5 sm:px-3 sm:py-2">
                       <p className="text-[8px] sm:text-[10px] font-bold text-slate-500 leading-snug">
                         <span className="font-black uppercase text-[#3D2B1F]">Panier : </span>
-                        {lignesPanier.map((i: any) => `${formatQuantite(product, Number(i.quantite))} ${i.variant_nom ? libelleCourt(product, { ...i, id: i.variant_id, nom: i.variant_nom, product_id: String(product.id) }) : product.name}`).join(' · ')}
+                        {lignesPanier.map((i: any) => `${formatQuantite(i, Number(i.quantite))} ${i.variant_nom ? libelleCourt(product, { nom: i.variant_nom }) : product.name}`).join(' · ')}
                       </p>
-                      {groupePanier && groupePanier.totalSansPromo - groupePanier.total > 0.005 && (
-                        <p className="text-[8px] sm:text-[10px] font-black text-green-600 mt-0.5">✓ Promo appliquée : -{(groupePanier.totalSansPromo - groupePanier.total).toFixed(2)}€</p>
+                      {economiePanier > 0.005 && (
+                        <p className="text-[8px] sm:text-[10px] font-black text-green-600 mt-0.5">✓ Promo appliquée : -{economiePanier.toFixed(2)}€</p>
                       )}
                       {suggestion && (
                         <p className="text-[8px] sm:text-[10px] font-black text-[#FF4500] mt-0.5">{suggestion.texte}{variantesCumulables(product) ? ' (toutes variétés)' : ''}</p>
@@ -484,7 +533,7 @@ export default function CommanderPage() {
                     </div>
                   )}
 
-                  {effectiveStock > 0 && effectiveStock < (product.unite === 'g' ? 500 : 5) && (
+                  {effectiveStock > 0 && effectiveStock < (pv.unite === 'g' ? 500 : 5) && (
                     <div className="hidden sm:flex mt-4 items-center justify-center gap-2">
                       <span className="w-1.5 h-1.5 bg-[#FF4500] rounded-full animate-pulse" />
                       <p className="text-[9px] font-black uppercase tracking-widest text-[#FF4500]">
