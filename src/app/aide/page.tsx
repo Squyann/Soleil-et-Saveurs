@@ -29,8 +29,8 @@ const FAQ_CATEGORIES = [
         a: "Pas d'inquiétude ! Indiquez un lieu sûr dans les notes de commande (voisin de confiance, boîte à colis, porche abrité). Nos livreurs sont habitués et vous enverront une photo de dépôt via WhatsApp pour confirmation."
       },
       {
-        q: "Les frais de livraison sont-ils gratuits ?",
-        a: "La livraison est offerte à partir de 40€ d'achat (montant avant remises). En dessous, une participation de 3€ à 5€ selon la distance à nos points relais est demandée pour soutenir nos livreurs locaux."
+        q: "Combien coûtent les frais de livraison ? Sont-ils gratuits ?",
+        a: "La livraison est OFFERTE dès 40€ de produits. En dessous, les frais dépendent de la distance (à vol d'oiseau) entre votre adresse et notre point relais le plus proche (Chatou, Croissy-sur-Seine, Mareil-sur-Mauldre, Saint-Nom-la-Bretèche ou Plaisir) :\n• jusqu'à 3 km : 3€\n• de 3 à 6 km : 4€\n• au-delà de 6 km : 5€\n\nLe seuil de 40€ se calcule sur vos produits avant remises : un code promo, la remise fidélité ou le parrainage ne vous font jamais perdre la livraison offerte. Le minimum de commande est de 10€ (après remises, hors frais de livraison). Les frais exacts s'affichent dans votre panier avant validation ; ils sont payés avec la commande, à la livraison."
       },
       {
         q: "Puis-je choisir un créneau horaire précis ?",
@@ -231,6 +231,57 @@ export default function AidePage() {
           ))}
         </div>
 
+        {/* FRAIS DE LIVRAISON : conditions et tarifs (mêmes règles que le calcul de la commande) */}
+        <section id="frais-livraison" className="mb-16 bg-white rounded-[40px] border border-slate-100 shadow-xl p-6 sm:p-10 scroll-mt-32">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="w-12 h-12 bg-[#FF4500] text-white rounded-2xl flex items-center justify-center shadow-lg shadow-[#FF4500]/20 shrink-0"><Truck className="w-5 h-5" /></div>
+            <div>
+              <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tighter text-slate-900 italic">Frais de livraison</h2>
+              <p className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-widest">Partout dans les Yvelines (78)</p>
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-[1.1fr_1fr] gap-6 md:gap-10 items-start">
+            <div>
+              <div className="rounded-3xl bg-green-50 border border-green-100 px-5 py-4 mb-4 flex items-center gap-3">
+                <Gift className="w-6 h-6 text-green-600 shrink-0" />
+                <p className="text-sm font-black text-green-800">Livraison <span className="uppercase">offerte</span> dès 40€ de produits</p>
+              </div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 px-1">En dessous de 40€, selon la distance</p>
+              <div className="rounded-3xl border border-slate-100 overflow-hidden">
+                {[
+                  { distance: "Jusqu'à 3 km", prix: '3€' },
+                  { distance: 'De 3 à 6 km', prix: '4€' },
+                  { distance: 'Au-delà de 6 km', prix: '5€' },
+                ].map((palier, i) => (
+                  <div key={palier.distance} className={`flex items-center justify-between px-5 py-3.5 ${i > 0 ? 'border-t border-slate-100' : ''}`}>
+                    <span className="flex items-center gap-2 text-sm font-bold text-slate-600"><MapPin className="w-4 h-4 text-[#FF4500]" />{palier.distance}</span>
+                    <span className="text-lg font-black text-slate-900 tabular-nums">{palier.prix}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[11px] font-medium text-slate-400 mt-2 px-1 leading-relaxed">
+                Distance à vol d&apos;oiseau entre votre adresse et notre point relais le plus proche : Chatou, Croissy-sur-Seine, Mareil-sur-Mauldre, Saint-Nom-la-Bretèche ou Plaisir.
+              </p>
+            </div>
+
+            <ul className="space-y-3 text-sm text-slate-600 leading-relaxed">
+              {[
+                { titre: 'Seuil de 40€ avant remises', texte: 'Un code promo, la remise fidélité ou le parrainage ne vous font jamais perdre la livraison offerte.' },
+                { titre: 'Minimum de commande : 10€', texte: 'Montant de vos produits après remises, hors frais de livraison.' },
+                { titre: 'Toutes les communes du 78', texte: "Votre adresse est vérifiée à la commande. Nous ne livrons pas en dehors des Yvelines." },
+                { titre: 'Frais affichés avant de valider', texte: "Le montant exact apparaît dans votre panier dès que vous choisissez votre adresse. S'il ne peut pas être vérifié au moment de la commande, le tarif de 5€ s'applique." },
+                { titre: 'Livraison dès le lendemain, de 15h à 20h', texte: 'À la date de votre choix parmi les jours proposés dans le panier. Paiement à la livraison, en espèces ou par carte.' },
+              ].map(c => (
+                <li key={c.titre} className="flex gap-3">
+                  <span className="mt-1 w-5 h-5 rounded-full bg-orange-50 text-[#FF4500] flex items-center justify-center shrink-0"><ShieldCheck className="w-3 h-3" /></span>
+                  <span><strong className="font-black text-slate-800">{c.titre}.</strong> {c.texte}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+
         <div className="grid lg:grid-cols-3 gap-12">
           <div className="lg:col-span-2 space-y-16">
             {filteredCategories.length > 0 ? (
@@ -249,7 +300,7 @@ export default function AidePage() {
                             <ChevronRight className="w-5 h-5 text-slate-400 group-open:rotate-90 transition-transform" />
                           </div>
                         </summary>
-                        <div className="px-8 pb-8 text-sm font-medium text-slate-500 leading-relaxed border-t border-slate-50 pt-6 italic">
+                        <div className="px-8 pb-8 text-sm font-medium text-slate-500 leading-relaxed border-t border-slate-50 pt-6 italic whitespace-pre-line">
                           {item.a}
                         </div>
                       </details>
