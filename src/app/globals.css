@@ -195,3 +195,12 @@
 @media (prefers-reduced-motion: reduce) {
   .ss-monte, .ss-rayons, .ss-flotte, .ss-defile, .ss-pouls, .ss-pop, .ss-rebond { animation: none; }
 }
+
+/* Titre en serif à partir de l'écran d'ordinateur seulement */
+@media (min-width: 1024px) {
+  .titre-lg {
+    font-family: var(--font-titre), Georgia, 'Times New Roman', serif;
+    font-weight: 560;
+    letter-spacing: -0.025em;
+  }
+}

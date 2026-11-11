@@ -1,9 +1,10 @@
 'use client';
 import React, { useEffect, useRef, useState } from 'react';
-import { ShoppingCart, CheckCircle2, TrendingDown, Tag, Flame, Info, Minus, Plus } from 'lucide-react';
-import { premieresOffertes, libellePremieresOffertes, estEnPromo } from '@/lib/promos';
+import { ShoppingCart, CheckCircle2, Info, Minus, Plus } from 'lucide-react';
+import { estEnPromo, etiquettesPromo } from '@/lib/promos';
+import { formatPrix, libelleUnite, libelleQuantite } from '@/lib/format';
 import {
-  getStep, getMin, quantiteInitiale, formatGramLabel, formatQuantite, uniteAffichee, bornerQuantite,
+  getStep, getMin, quantiteInitiale, formatQuantite, uniteAffichee, bornerQuantite,
   calculerPrixAffiche, ajouterAuPanier, lirePanier, calculerPanier, ligneDepuisProduit, stockDisponible,
 } from '@/lib/panier';
 import { prochainePromo } from '@/lib/prix';
@@ -83,7 +84,6 @@ export default function AchatProduit({
   // --- Mode simple (une quantité) ---
   const stockRestant = stockRestantPour(variante);
   const affiche = calculerPrixAffiche(pv, quantite, prixBase);
-  const libelleQuantite = pv.unite === 'g' ? formatGramLabel(affiche.totalItemsRecus) : affiche.totalItemsRecus;
 
   // --- Mode cumul (une quantité par variante) ---
   const lignesSelection = variantes.filter(v => (quantites[v.id] ?? 0) > 0);
@@ -138,82 +138,74 @@ export default function AchatProduit({
   const ajouter = cumul ? ajouterSelection : ajouterSimple;
   const totalBarre = cumul ? calculSelection.total : affiche.totalPrice;
 
+  const etiquettes = etiquettesPromo(promoBadges);
+  const totalSimpleSansPromo = prixBase * affiche.qteEffective;
+  const bouton = 'w-full min-h-[60px] lg:min-h-16 rounded-[18px] lg:rounded-[20px] text-[19px] lg:text-xl font-extrabold flex items-center justify-center gap-3 transition-[background-color,transform] duration-200';
+
   return (
     <>
       {toast && (
         <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[100] bg-[#3D2B1F] text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-300">
-          <CheckCircle2 className="w-5 h-5 text-[#FF4500]" />
-          <span className="font-black text-[10px] uppercase tracking-widest">{toast}</span>
+          <CheckCircle2 className="w-5 h-5 text-[#FF7A47]" aria-hidden />
+          <span role="status" className="font-bold text-sm">{toast}</span>
         </div>
       )}
 
-      <div className={`bg-white rounded-[1.5rem] sm:rounded-[2rem] p-4 sm:p-6 border shadow-sm ${enPromo ? 'border-[#FF4500]/40 ring-2 ring-[#FF4500]/10' : 'border-[#DDD0BF]'}`}>
+      <div className="flex flex-col gap-4 lg:gap-5">
+        {/* Prix unitaire de la variante affichée */}
+        <div>
+          <div className="flex flex-wrap items-end gap-x-3.5 gap-y-1">
+            <p className={`text-4xl lg:text-[44px] font-black tracking-tight leading-none tabular-nums transition-colors duration-200 ${pv.promotion > 0 ? 'text-[#FF4500]' : 'text-[#3D2B1F]'}`}>
+              {formatPrix(prixUnitaire)}<span className="text-[15px] lg:text-[17px] font-bold tracking-normal text-[#6F5A4B]"> /{unite}</span>
+            </p>
+            {pv.promotion > 0 && (
+              <s className="mb-0.5 text-base lg:text-lg font-semibold text-[#6F5A4B]">{formatPrix(prixBase)}</s>
+            )}
+          </div>
+          <p className="mt-1.5 text-[13px] font-semibold text-[#6F5A4B]">Vendu {libelleUnite(pv.unite)}</p>
+        </div>
+
         {/* Promotions (celles du produit, valables sur toutes ses variantes) */}
         {enPromo && (
-          <div className="flex flex-wrap gap-1.5 mb-4">
-            <span className="bg-gradient-to-r from-[#FF4500] to-[#FF7A1A] text-white text-[10px] font-black px-3 py-1.5 rounded-full shadow flex items-center gap-1 uppercase tracking-wider">
-              <Flame className="w-3 h-3" /> En promo
-            </span>
-            {Number(promoBadges.promotion) > 0 && (
-              <span className="bg-white text-[#FF4500] border border-[#FF4500]/30 text-[10px] font-black px-3 py-1.5 rounded-full flex items-center gap-1">
-                <Tag className="w-3 h-3" /> -{promoBadges.promotion}%
-              </span>
+          <div className="flex flex-wrap items-center gap-1.5">
+            {etiquettes.length === 0 && (
+              <span className="px-3 py-1.5 rounded-full bg-[#D43A00] text-white text-[13px] font-extrabold">En promo</span>
             )}
-            {promoBadges.seuil_achat > 0 && promoBadges.quantite_offerte > 0 && (
-              <span className="bg-[#3D2B1F] text-white text-[10px] font-black px-3 py-1.5 rounded-full uppercase">
-                🎁 {promoBadges.seuil_achat} achetés = {promoBadges.quantite_offerte} offert(s)
+            {etiquettes.map(e => (
+              <span
+                key={e.cle}
+                className={`px-3 py-1.5 rounded-full text-white text-[13px] font-extrabold ${
+                  e.cle === 'offertes' ? 'bg-[#166534]' : e.cle === 'lot' ? 'bg-[#3D2B1F]' : 'bg-[#D43A00]'}`}
+              >
+                {e.cle === 'degressif' ? `${e.texte} /${uniteAffichee(produit)}` : e.texte}
               </span>
-            )}
-            {promoBadges.seuil_promo_qte > 0 && promoBadges.prix_promo > 0 && (
-              <span className="bg-blue-600 text-white text-[10px] font-black px-3 py-1.5 rounded-full flex items-center gap-1">
-                <TrendingDown className="w-3 h-3" />
-                À partir de {promoBadges.seuil_promo_qte}{promoBadges.unite === 'g' ? 'kg' : promoBadges.unite === 'pièce' ? ' pcs' : ` ${promoBadges.unite}`} : {Number(promoBadges.prix_promo).toFixed(2)}€/{uniteAffichee(produit)}
-              </span>
-            )}
-            {premieresOffertes(promoBadges) > 0 && (
-              <span className="bg-green-600 text-white text-[10px] font-black px-3 py-1.5 rounded-full uppercase">
-                🎁 {libellePremieresOffertes(promoBadges)}
-              </span>
-            )}
+            ))}
             {cumul && (
-              <span className="text-[10px] font-black text-[#FF4500] px-1 py-1.5 uppercase tracking-wide">Promo valable en mélangeant les variétés</span>
+              <span className="text-[13px] font-bold text-[#C73600]">Promo valable en mélangeant les variétés</span>
             )}
           </div>
         )}
 
-        {/* Prix unitaire de la variante affichée */}
-        <div className="flex flex-wrap items-baseline gap-x-2 mb-1">
-          <span className={`text-3xl font-black tracking-tight transition-colors duration-200 tabular-nums ${pv.promotion > 0 ? 'text-[#FF4500]' : 'text-slate-900'}`}>
-            {prixUnitaire.toFixed(2)}€<span className="text-base">/{unite}</span>
-          </span>
-          {pv.promotion > 0 && (
-            <span className="text-base line-through text-slate-400 font-bold">{prixBase.toFixed(2)}€/{unite}</span>
-          )}
-        </div>
-        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-5">
-          {pv.unite === 'g' ? 'Vendu au gramme' : `Vendu ${pv.unite === 'kg' ? 'au' : 'à la'} ${pv.unite || 'pièce'}`}
-        </p>
-
         {/* VARIANTE UNIQUE : choix de la version */}
         {variantes.length > 0 && !cumul && (
-          <div className="mb-4">
-            <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-2">Choisissez votre version</p>
+          <div>
+            <p className="mb-2.5 text-sm font-bold text-[#5C4030]">{variantes.length} versions au choix</p>
             <ChoixVariantes produit={produit} variantes={variantes} selection={selection} onChoisir={onSelection} quantites={qteParVariante} />
             {lignesPanier.some((i: any) => i.variant_id && i.variant_id !== selection) && (
-              <p className="text-[10px] font-bold text-amber-600 mt-2">Une seule version par commande : l’ajouter remplacera celle de votre panier.</p>
+              <p className="mt-2.5 text-[13px] font-semibold text-[#92400E]">Une seule version par commande : l’ajouter remplacera celle de votre panier.</p>
             )}
           </div>
         )}
 
         {variante?.description && (
-          <p key={variante.id} className="text-sm text-slate-600 leading-relaxed mb-4 bg-[#FBF7F2] rounded-xl px-3 py-2.5 whitespace-pre-line animate-in fade-in duration-200">{variante.description}</p>
+          <p key={variante.id} className="text-[15px] text-[#5C4030] leading-relaxed bg-[#F5EAE0] rounded-2xl px-4 py-3 whitespace-pre-line animate-in fade-in duration-200">{variante.description}</p>
         )}
 
         {/* VARIANTES CUMULABLES : une quantité par variante */}
         {cumul ? (
-          <div className="mb-4">
-            <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-2">Composez votre sélection</p>
-            <ul className="space-y-1.5">
+          <div>
+            <p className="mb-2.5 text-sm font-bold text-[#5C4030]">Composez votre sélection</p>
+            <ul className="flex flex-col gap-2">
               {variantes.map(v => {
                 const q = quantites[v.id] ?? 0;
                 const actif = v.id === selection;
@@ -223,131 +215,139 @@ export default function AchatProduit({
                 const image = imageVariante(produit, v);
                 const dejaDansPanier = qteParVariante[v.id] ?? 0;
                 return (
-                  <li key={v.id} className={`flex items-center gap-2.5 rounded-xl border p-2 transition-colors ${actif ? 'border-[#3D2B1F] bg-[#FBF7F2]' : 'border-[#EDE3D5] bg-white'}`}>
-                    <button type="button" onClick={() => onSelection(v.id)} className="flex items-center gap-2.5 min-w-0 flex-1 text-left" aria-label={`Voir ${v.nom}`}>
-                      <span className="w-12 h-8 rounded-lg overflow-hidden bg-[#EDE3D5] shrink-0">
+                  <li key={v.id} className={`flex items-center gap-2.5 rounded-2xl border-[1.5px] p-2 transition-colors ${actif ? 'border-[#3D2B1F] bg-[#FBF7F2]' : 'border-[#E8DCCB] bg-white'}`}>
+                    <button type="button" onClick={() => onSelection(v.id)} className="flex items-center gap-3 min-w-0 flex-1 min-h-11 text-left" aria-label={`Voir ${v.nom}`}>
+                      <span className="w-[54px] h-9 rounded-[10px] overflow-hidden bg-[#F5EAE0] shrink-0">
                         {image && <img src={image} alt="" className="w-full h-full object-cover" />}
                       </span>
                       <span className="min-w-0">
-                        <span className="block text-xs font-black uppercase tracking-tight text-slate-800 truncate">{libelleCourt(produit, v)}</span>
-                        <span className="block text-[10px] font-bold text-slate-400">
-                          <span className={prixLigneFinal < prixLigne ? 'text-[#FF4500]' : ''}>{prixLigneFinal.toFixed(2)}€/{uniteAffichee(eff)}</span>
-                          {prixLigneFinal < prixLigne && <span className="line-through ml-1">{prixLigne.toFixed(2)}€</span>}
-                          {dejaDansPanier > 0 && <span className="text-[#FF4500]"> · {formatQuantite(eff, dejaDansPanier)} au panier</span>}
+                        <span className="block text-sm font-extrabold text-[#3D2B1F] truncate">{libelleCourt(produit, v)}</span>
+                        <span className="block text-xs font-semibold text-[#6F5A4B]">
+                          <span className={prixLigneFinal < prixLigne ? 'font-bold text-[#C73600]' : ''}>{formatPrix(prixLigneFinal)}/{uniteAffichee(eff)}</span>
+                          {prixLigneFinal < prixLigne && <span className="line-through ml-1">{formatPrix(prixLigne)}</span>}
+                          {dejaDansPanier > 0 && <span className="font-bold text-[#166534]"> · {formatQuantite(eff, dejaDansPanier)} au panier</span>}
                         </span>
                       </span>
                     </button>
-                    <div className="flex items-center bg-white rounded-lg border border-[#D5C9B8] overflow-hidden shrink-0">
-                      <button type="button" onClick={() => changerQuantiteVariante(v, -1)} disabled={q <= 0} aria-label={`Retirer ${v.nom}`} className="w-8 h-8 flex items-center justify-center text-slate-700 disabled:text-slate-300"><Minus className="w-3.5 h-3.5" /></button>
-                      <span className="w-12 text-center text-xs font-black tabular-nums">{q > 0 ? formatQuantite(eff, q) : '0'}</span>
-                      <button type="button" onClick={() => changerQuantiteVariante(v, 1)} disabled={maxVariante(v) - q <= 0} aria-label={`Ajouter ${v.nom}`} className="w-8 h-8 flex items-center justify-center text-slate-700 disabled:text-slate-300"><Plus className="w-3.5 h-3.5" /></button>
+                    <div className="flex items-center h-11 p-[3px] rounded-[13px] bg-[#F5EAE0] shrink-0">
+                      <button type="button" onClick={() => changerQuantiteVariante(v, -1)} disabled={q <= 0} aria-label={`Retirer ${v.nom}`} className="w-10 h-full rounded-[10px] bg-white flex items-center justify-center text-[#3D2B1F] disabled:text-[#C9BBAA] active:scale-90 transition-transform"><Minus className="w-4 h-4" strokeWidth={2.6} aria-hidden /></button>
+                      <span className="w-12 text-center text-sm font-extrabold tabular-nums">{q > 0 ? formatQuantite(eff, q) : '0'}</span>
+                      <button type="button" onClick={() => changerQuantiteVariante(v, 1)} disabled={maxVariante(v) - q <= 0} aria-label={`Ajouter ${v.nom}`} className="w-10 h-full rounded-[10px] bg-[#3D2B1F] flex items-center justify-center text-[#F5EAE0] disabled:bg-[#C9BBAA] active:scale-90 transition-transform"><Plus className="w-4 h-4" strokeWidth={2.6} aria-hidden /></button>
                     </div>
                   </li>
                 );
               })}
             </ul>
 
-            <div className={`mt-3 rounded-2xl p-3 border ${enPromo ? 'bg-orange-50/70 border-[#FF4500]/20' : 'bg-[#EDE3D5] border-[#D5C9B8]/50'}`}>
-              <div className="flex justify-between items-center">
-                <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
+            <div className="mt-3 rounded-[20px] bg-[#F5EAE0] px-4 py-3.5">
+              <div className="flex justify-between items-center gap-3">
+                <span className="text-sm font-bold text-[#5C4030]">
                   {lignesSelection.length > 0 ? `Sélection : ${lignesSelection.length} variété${lignesSelection.length > 1 ? 's' : ''}` : 'Aucune variété choisie'}
                 </span>
-                <div className="flex items-baseline gap-1.5">
-                  <span className={`text-2xl font-black tabular-nums ${economieSelection > 0.005 ? 'text-[#FF4500]' : 'text-slate-900'}`}>{calculSelection.total.toFixed(2)}€</span>
+                <div className="flex items-baseline gap-2">
                   {economieSelection > 0.005 && (
-                    <span className="text-xs line-through text-slate-300 font-bold italic">{(calculSelection.total + economieSelection).toFixed(2)}€</span>
+                    <s className="text-[13px] font-semibold text-[#6F5A4B]">{formatPrix(calculSelection.total + economieSelection)}</s>
                   )}
+                  <span className={`text-[26px] font-black tracking-tight tabular-nums ${economieSelection > 0.005 ? 'text-[#FF4500]' : 'text-[#3D2B1F]'}`}>{formatPrix(calculSelection.total)}</span>
                 </div>
               </div>
               {suggestion && (
-                <p className="mt-1.5 text-[10px] font-black text-[#FF4500]">{suggestion.texte}{qtePanierUniteProduit > 0 ? ' (avec votre panier)' : ''}</p>
+                <p className="mt-1.5 text-[13px] font-bold text-[#B83200]">{suggestion.texte}{qtePanierUniteProduit > 0 ? ' (avec votre panier)' : ''}</p>
               )}
               {lignesPanier.length > 0 && (
-                <p className="mt-1 text-[10px] font-bold text-slate-500">Déjà au panier : {lignesPanier.map((i: any) => `${formatQuantite(i, Number(i.quantite))} ${i.variant_nom ? libelleCourt(produit, { nom: i.variant_nom }) : produit.name}`).join(' · ')}</p>
+                <p className="mt-1 text-[13px] font-semibold text-[#6F5A4B]">Déjà au panier : {lignesPanier.map((i: any) => `${formatQuantite(i, Number(i.quantite))} ${i.variant_nom ? libelleCourt(produit, { nom: i.variant_nom }) : produit.name}`).join(' · ')}</p>
               )}
             </div>
           </div>
         ) : (
           /* Quantité et total (une variante) */
-          <div className={`rounded-2xl p-3 mb-4 border ${enPromo ? 'bg-orange-50/70 border-[#FF4500]/20' : 'bg-[#EDE3D5] border-[#D5C9B8]/50'}`}>
-            <div className="flex items-center justify-between gap-3 mb-2">
-              <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Quantité</span>
-              <div className="flex items-center bg-white rounded-xl shadow-sm border border-[#D5C9B8] overflow-hidden">
+          <div className="flex items-center justify-between gap-4 rounded-[20px] bg-[#F5EAE0] px-4 py-3.5 lg:px-[18px] lg:py-4">
+            <div>
+              <p className="mb-2 text-sm font-bold text-[#5C4030]">Quantité</p>
+              <div className="flex items-center w-[176px] lg:w-[190px] h-[52px] p-[3px] rounded-2xl bg-white border-[1.5px] border-[#E0D3C0]">
                 <button
+                  type="button"
                   onClick={() => changerQuantite(quantite - getStep(pv))}
                   disabled={quantite <= getMin(pv)}
                   aria-label="Diminuer la quantité"
-                  className="px-4 py-2 hover:bg-[#EDE3D5] text-slate-900 font-bold transition-colors disabled:text-slate-300 disabled:cursor-not-allowed"
-                >-</button>
-                <span className="w-20 text-center font-black text-sm tabular-nums">
-                  {pv.unite === 'g' ? formatGramLabel(quantite) : quantite}
-                </span>
+                  className="shrink-0 w-[46px] h-full rounded-xl bg-[#F5EAE0] text-[#3D2B1F] flex items-center justify-center active:scale-90 transition-transform disabled:text-[#C9BBAA] disabled:cursor-not-allowed"
+                ><Minus className="w-[18px] h-[18px]" strokeWidth={2.6} aria-hidden /></button>
+                <span aria-live="polite" className="flex-1 text-center text-base font-extrabold tabular-nums whitespace-nowrap">{libelleQuantite(pv, quantite)}</span>
                 <button
+                  type="button"
                   onClick={() => changerQuantite(quantite + getStep(pv))}
                   disabled={quantite >= stockRestant}
                   aria-label="Augmenter la quantité"
-                  className="px-4 py-2 hover:bg-[#EDE3D5] text-slate-900 font-bold transition-colors disabled:text-slate-300 disabled:cursor-not-allowed"
-                >+</button>
+                  className="shrink-0 w-[46px] h-full rounded-xl bg-[#3D2B1F] text-[#F5EAE0] flex items-center justify-center active:scale-90 transition-transform disabled:bg-[#C9BBAA] disabled:cursor-not-allowed"
+                ><Plus className="w-[18px] h-[18px]" strokeWidth={2.6} aria-hidden /></button>
               </div>
             </div>
-            <div className="flex justify-between items-center">
-              <div className="flex items-baseline gap-1.5">
-                <span className={`text-2xl font-black ${affiche.prixDegressifActif ? 'text-blue-600' : affiche.totalEconomy > 0.005 ? 'text-[#FF4500]' : 'text-slate-900'}`}>{affiche.totalPrice.toFixed(2)}€</span>
-                {(pv.promotion > 0 || affiche.prixDegressifActif || affiche.nbPremieresOffertes > 0) && (
-                  <span className="text-xs line-through text-slate-300 font-bold italic">{(prixBase * affiche.qteEffective).toFixed(2)}€</span>
-                )}
-              </div>
-              {affiche.totalEconomy > 0 && (
-                <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black ${affiche.prixDegressifActif ? 'text-blue-600 bg-blue-50' : 'text-green-600 bg-green-50'}`}>
-                  <TrendingDown className="w-3 h-3" />-{affiche.totalEconomy.toFixed(2)}€
-                </div>
+            <p className="text-right text-sm font-semibold text-[#6F5A4B] leading-tight">
+              Total
+              {affiche.totalEconomy > 0.005 && <s className="ml-2 text-[13px]">{formatPrix(totalSimpleSansPromo)}</s>}
+              <strong className={`block mt-0.5 text-[26px] font-black tracking-tight tabular-nums ${affiche.totalEconomy > 0.005 ? 'text-[#FF4500]' : 'text-[#3D2B1F]'}`}>{formatPrix(affiche.totalPrice)}</strong>
+              {affiche.totalEconomy > 0.005 && (
+                <span className="block mt-0.5 text-[13px] font-extrabold text-[#166534]">Économie : {formatPrix(affiche.totalEconomy)}</span>
               )}
-            </div>
+              {affiche.produitsOfferts > 0 && (
+                <span className="block mt-0.5 text-[13px] font-extrabold text-[#166534]">+ {affiche.produitsOfferts} offert{affiche.produitsOfferts > 1 ? 's' : ''} dans le panier</span>
+              )}
+            </p>
           </div>
         )}
 
         <div ref={zoneBouton}>
           <button
+            type="button"
             disabled={!peutAjouter}
             onClick={ajouter}
-            className={`w-full py-4 rounded-[1.25rem] font-black uppercase tracking-widest text-xs flex items-center justify-center gap-2 transition-all ${
-              peutAjouter ? 'bg-[#3D2B1F] text-white hover:bg-[#FF4500] shadow-xl active:scale-95' : 'bg-[#DDD0BF] text-slate-400 cursor-not-allowed'
+            className={`${bouton} ${
+              peutAjouter
+                ? 'bg-[#FF4500] text-white shadow-[0_18px_34px_-14px_rgba(255,69,0,0.55)] hover:bg-[#E63E00] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]'
+                : 'bg-[#EDE3D5] text-[#6F5A4B] cursor-not-allowed'
             }`}
           >
             {epuise ? (
-              <><Info className="w-4 h-4" /> Produit épuisé</>
+              <><Info className="w-5 h-5" aria-hidden /> Produit épuisé</>
             ) : cumul ? (
-              <><ShoppingCart className="w-4 h-4" /> {lignesSelection.length > 0 ? `Ajouter la sélection · ${calculSelection.total.toFixed(2)}€` : 'Choisissez vos variétés'}</>
+              <><ShoppingCart className="w-[22px] h-[22px]" aria-hidden /> {lignesSelection.length > 0 ? `Ajouter la sélection · ${formatPrix(calculSelection.total)}` : 'Choisissez vos variétés'}</>
             ) : (
-              <><ShoppingCart className="w-4 h-4" /> Ajouter {libelleQuantite} au panier</>
+              <><ShoppingCart className="w-[22px] h-[22px]" aria-hidden /> Ajouter au panier</>
             )}
           </button>
         </div>
 
         {!epuise && !cumul && stockDisponible(pv) < (pv.unite === 'g' ? 500 : 5) && (
-          <div className="flex mt-4 items-center justify-center gap-2">
-            <span className="w-1.5 h-1.5 bg-[#FF4500] rounded-full animate-pulse" />
-            <p className="text-[9px] font-black uppercase tracking-widest text-[#FF4500]">Derniers exemplaires !</p>
-          </div>
+          <p className="flex items-center justify-center gap-2 text-[13px] font-bold text-[#C73600]">
+            <span className="ss-pouls w-1.5 h-1.5 bg-[#FF4500] rounded-full" />
+            Derniers exemplaires !
+          </p>
         )}
       </div>
 
-      {/* Barre d'achat fixe (mobile) */}
+      {/* Barre d'achat fixe (mobile) : apparaît quand le bouton principal n'est plus à l'écran */}
       {!epuise && (
-        <div className={`lg:hidden fixed bottom-0 inset-x-0 z-[90] bg-white/95 backdrop-blur-md border-t border-[#D5C9B8] px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex items-center gap-3 shadow-[0_-10px_30px_rgba(0,0,0,0.08)] transition-transform duration-300 ${boutonVisible ? 'translate-y-full' : 'translate-y-0'}`}>
-          <div className="min-w-0">
-            <p className={`text-lg font-black leading-none ${cumul ? (economieSelection > 0.005 ? 'text-[#FF4500]' : 'text-slate-900') : (affiche.totalEconomy > 0.005 ? 'text-[#FF4500]' : 'text-slate-900')}`}>{totalBarre.toFixed(2)}€</p>
-            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest truncate">
-              {cumul ? `${lignesSelection.length} variété${lignesSelection.length > 1 ? 's' : ''}` : variante ? libelleCourt(produit, variante) : pv.unite === 'g' ? formatGramLabel(quantite) : `${quantite} ${unite}`}
+        <div className={`lg:hidden fixed bottom-0 inset-x-0 z-[90] bg-white/95 backdrop-blur-md border-t border-[#E8DCCB] px-3 pt-2.5 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex items-center gap-2.5 shadow-[0_-16px_30px_-22px_rgba(61,43,31,0.45)] transition-transform duration-300 ${boutonVisible ? 'translate-y-full' : 'translate-y-0'}`}>
+          {cumul ? (
+            <p className="shrink-0 pl-1 leading-tight">
+              <span className={`block text-lg font-black tabular-nums ${economieSelection > 0.005 ? 'text-[#FF4500]' : 'text-[#3D2B1F]'}`}>{formatPrix(totalBarre)}</span>
+              <span className="block text-xs font-semibold text-[#6F5A4B]">{lignesSelection.length} variété{lignesSelection.length > 1 ? 's' : ''}</span>
             </p>
-          </div>
+          ) : (
+            <div className="shrink-0 flex items-center h-[52px] p-[3px] rounded-2xl bg-[#F5EAE0]">
+              <button type="button" onClick={() => changerQuantite(quantite - getStep(pv))} disabled={quantite <= getMin(pv)} tabIndex={boutonVisible ? -1 : 0} aria-label="Diminuer la quantité" className="w-11 h-full rounded-[13px] bg-white text-[#3D2B1F] flex items-center justify-center active:scale-90 transition-transform disabled:text-[#C9BBAA]"><Minus className="w-[17px] h-[17px]" strokeWidth={2.6} aria-hidden /></button>
+              <span className="min-w-[46px] px-1 text-center text-sm font-extrabold tabular-nums whitespace-nowrap">{pv.unite === 'g' || pv.unite === 'kg' ? libelleQuantite(pv, quantite) : quantite}</span>
+              <button type="button" onClick={() => changerQuantite(quantite + getStep(pv))} disabled={quantite >= stockRestant} tabIndex={boutonVisible ? -1 : 0} aria-label="Augmenter la quantité" className="w-11 h-full rounded-[13px] bg-[#3D2B1F] text-[#F5EAE0] flex items-center justify-center active:scale-90 transition-transform disabled:bg-[#C9BBAA]"><Plus className="w-[17px] h-[17px]" strokeWidth={2.6} aria-hidden /></button>
+            </div>
+          )}
           <button
+            type="button"
             onClick={ajouter}
             disabled={!peutAjouter}
             tabIndex={boutonVisible ? -1 : 0}
-            className="flex-1 py-3.5 rounded-xl bg-[#3D2B1F] text-white font-black uppercase tracking-widest text-xs flex items-center justify-center gap-2 active:scale-95 hover:bg-[#FF4500] transition-all disabled:bg-[#DDD0BF] disabled:text-slate-400"
+            className="flex-1 min-w-0 h-[52px] px-4 rounded-2xl bg-[#FF4500] text-white text-[19px] font-extrabold flex items-center justify-between gap-2 active:scale-[0.98] transition-transform disabled:bg-[#EDE3D5] disabled:text-[#6F5A4B]"
           >
-            <ShoppingCart className="w-4 h-4" /> {cumul ? 'Ajouter la sélection' : 'Ajouter au panier'}
+            {cumul ? <span className="mx-auto text-base">Ajouter la sélection</span> : <><span>Ajouter</span><span className="tabular-nums">{formatPrix(totalBarre)}</span></>}
           </button>
         </div>
       )}
