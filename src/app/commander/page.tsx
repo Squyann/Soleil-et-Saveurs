@@ -1,28 +1,18 @@
 'use client';
 export const dynamic = 'force-dynamic';
 import React, { useState, useEffect, useCallback } from 'react';
-import { ArrowLeft, Plus, Minus, Info, Check, CheckCircle2, Search, X, Flame, BookOpen, ChevronDown, ShoppingBasket } from 'lucide-react';
+import { Plus, Minus, Info, Check, CheckCircle2, Search, X, Flame, BookOpen, ChevronDown, ShoppingBasket } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { estEnPromo, etiquettesPromo } from '@/lib/promos';
 import { getStep, getMin, formatQuantite, uniteAffichee, stockDisponible, stockMaxLigne, ligneDepuisProduit, ajouterUnPas, retirerUnPas, lirePanier, calculerPanier } from '@/lib/panier';
 import { variantesActives, prixVariante, imageVariante, nomVariante, libelleCourt, variantesCumulables, produitPourVariante } from '@/lib/variantes';
 import { prochainePromo } from '@/lib/prix';
-import { formatPrix, libelleUnite } from '@/lib/format';
+import { formatPrix, libelleUnite, libelleQuantite } from '@/lib/format';
 import { CLE_FILTRE, CLE_RECHERCHE, CLE_DEFILEMENT, lireSession, ecrireSession } from '@/lib/catalogue';
 import ChoixVariantes, { PanneauVariantes } from '@/components/ChoixVariantes';
 import ImageFondu from '@/components/ImageFondu';
 import BarrePanier from '@/components/BarrePanier';
-
-const PLURIELS: Record<string, string> = { pièce: 'pièces', botte: 'bottes', barquette: 'barquettes' };
-
-// Quantité en toutes lettres : « 2 pièces », « 1,5 kg », « 300 g »
-function libelleQuantite(produit: any, q: number): string {
-  if (produit.unite === 'g') return q < 1000 ? `${q} g` : `${String(q / 1000).replace('.', ',')} kg`;
-  if (produit.unite === 'kg') return `${String(q).replace('.', ',')} kg`;
-  const unite = produit.unite || 'pièce';
-  return `${q} ${q > 1 ? PLURIELS[unite] ?? unite : unite}`;
-}
 
 // Image et nom d'une carte : lien vers la page produit seulement si elle est
 // publiée, sinon simple bloc (comportement actuel). Défini hors de la page pour
@@ -158,6 +148,40 @@ export default function CommanderPage() {
     // Produits en promo en premier, l'ordre alphabétique est conservé ensuite
     .sort((a, b) => Number(enPromoProduit(b)) - Number(enPromoProduit(a)));
 
+  // Nombre de produits par filtre ; un rayon vide n'est pas proposé
+  const compter = (cat: string) => cat === 'all' ? produitsActifs.length
+    : cat === 'promos' ? produitsActifs.filter(enPromoProduit).length
+    : produitsActifs.filter(p => p.category?.toLowerCase() === cat.toLowerCase()).length;
+  const filtres = [
+    'all',
+    ...(promosDisponibles ? ['promos'] : []),
+    ...['Fruits', 'Légumes', 'Épicerie'].filter(c => (loading && c !== 'Épicerie') || compter(c) > 0 || filtreEffectif === c),
+  ];
+
+  const champRecherche = (
+    <div className="relative">
+      <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-[#6F5A4B] pointer-events-none" aria-hidden />
+      <input
+        type="search"
+        aria-label="Rechercher un produit, une provenance"
+        value={search}
+        onChange={(e) => choisirRecherche(e.target.value)}
+        placeholder="Rechercher un produit, une provenance..."
+        className="w-full h-[50px] lg:h-[52px] bg-white border border-[#E0D3C0] rounded-[15px] lg:rounded-2xl pl-12 pr-12 text-base font-semibold text-[#3D2B1F] placeholder:text-[#8C7867] placeholder:font-medium focus:outline-none focus:border-[#FF4500] transition-colors [&::-webkit-search-cancel-button]:hidden"
+      />
+      {search && (
+        <button
+          type="button"
+          onClick={() => choisirRecherche('')}
+          aria-label="Effacer la recherche"
+          className="absolute right-1.5 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center text-[#6F5A4B] hover:bg-[#F5EAE0] hover:text-[#3D2B1F] transition-colors"
+        >
+          <X className="w-[18px] h-[18px]" aria-hidden />
+        </button>
+      )}
+    </div>
+  );
+
   const choisirVariante = (product: any, id: string) => {
     setSelectedVariant(prev => ({ ...prev, [product.id]: id }));
   };
@@ -182,7 +206,7 @@ export default function CommanderPage() {
 
   return (
     <>
-    <main className="min-h-screen bg-[#EDE3D5] text-slate-900 pb-44 md:pb-36 pt-24 px-2 md:px-10">
+    <main className="min-h-screen bg-[#EDE3D5] text-[#3D2B1F] pb-44 md:pb-36">
 
       {showToast && (
         <div className="fixed top-28 left-1/2 -translate-x-1/2 z-[100] bg-[#3D2B1F] text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-300">
@@ -191,82 +215,87 @@ export default function CommanderPage() {
         </div>
       )}
 
-
-      <div className="max-w-7xl mx-auto">
-
-        <header className="mb-12">
-          <Link href="/" className="inline-flex items-center gap-2 text-slate-400 hover:text-[#FF4500] font-bold text-xs uppercase tracking-widest transition-colors mb-6 group">
-            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Retour
-          </Link>
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <div>
-              <h1 className="text-5xl md:text-7xl font-black tracking-tighter uppercase leading-none text-slate-900">
-                La <span className="text-[#FF4500]">Récolte</span>
-              </h1>
-              <p className="text-slate-500 font-medium mt-2 italic">Cultivé avec passion, livré avec soin.</p>
-            </div>
-            <div className="flex items-center gap-3 bg-white px-5 py-3 rounded-2xl border border-[#D5C9B8] shadow-sm">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-              <span className="text-xs font-black uppercase tracking-widest text-slate-600">Stock mis à jour</span>
-            </div>
+      {/* EN-TÊTE DE PAGE */}
+      <header className="bg-[#F5EAE0] border-b border-[#E3D6C4]">
+        <div className="max-w-7xl mx-auto px-5 md:px-10 pt-5 pb-5 md:pt-8 md:pb-7">
+          <nav aria-label="Fil d'Ariane" className="hidden md:flex items-center gap-2 mb-3.5 text-[13px] font-semibold text-[#6F5A4B]">
+            <Link href="/" className="hover:text-[#C73600] transition-colors">Accueil</Link>
+            <span aria-hidden>›</span>
+            <span aria-current="page" className="font-bold text-[#3D2B1F]">Boutique</span>
+          </nav>
+          <div className="flex items-end justify-between gap-3">
+            <h1 className="titre text-[44px] md:text-[64px] leading-none">
+              La <em className="text-[#FF4500]">Récolte</em>
+            </h1>
+            <p className="mb-1.5 inline-flex items-center gap-2 md:gap-2.5 px-3 py-1.5 md:px-4 md:py-2.5 rounded-full bg-white border border-[#E8DCCB] text-xs md:text-[13px] font-bold text-[#166534] whitespace-nowrap">
+              <span className="ss-pouls w-2 h-2 rounded-full bg-[#16A34A]" />
+              Stock mis à jour
+            </p>
           </div>
-        </header>
-
-        {/* BARRE DE RECHERCHE */}
-        <div className="relative mb-6">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => choisirRecherche(e.target.value)}
-            placeholder="Rechercher un produit, une provenance..."
-            className="w-full bg-white border border-[#D5C9B8] shadow-sm rounded-2xl pl-11 pr-10 py-3.5 text-sm font-bold text-slate-700 placeholder:text-slate-300 placeholder:font-medium focus:outline-none focus:border-[#FF4500] transition-colors"
-          />
-          {search && (
-            <button
-              onClick={() => choisirRecherche('')}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500 transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
+          <p className="mt-2 md:mt-2.5 text-[15px] md:text-[17px] leading-normal text-[#5C4030]">Cultivé avec passion, livré avec soin.</p>
         </div>
+      </header>
 
-        {/* FILTRES */}
-        <div className="flex flex-wrap gap-2 mb-10 overflow-x-auto pb-2 scrollbar-hide">
-          {['all', ...(promosDisponibles ? ['promos'] : []), 'Fruits', 'Légumes', 'Épicerie'].map((cat) => (
-            <button
-              key={cat}
-              onClick={() => choisirFiltre(cat)}
-              className={`px-6 py-2.5 rounded-xl font-bold text-sm uppercase tracking-tight transition-all whitespace-nowrap ${
-                filtreEffectif === cat
-                ? cat === 'promos' ? 'bg-[#FF4500] text-white shadow-md' : 'bg-[#3D2B1F] text-white shadow-md'
-                : cat === 'promos'
-                  ? 'bg-white text-[#FF4500] hover:bg-orange-50 border border-[#FF4500]/40 shadow-sm'
-                  : 'bg-white text-slate-500 hover:bg-[#EDE3D5] border border-[#D5C9B8] shadow-sm'
-              }`}
-            >
-              {cat === 'all' ? 'Tout voir' : cat === 'promos' ? (
-                <span className="inline-flex items-center gap-1.5"><Flame className="w-4 h-4" /> Promos</span>
-              ) : cat}
-            </button>
-          ))}
+      {/* RECHERCHE (mobile : défile avec la page, les filtres restent visibles) */}
+      <div className="lg:hidden px-4 pt-3">{champRecherche}</div>
+
+      {/* RECHERCHE ET FILTRES : restent visibles pendant le défilement */}
+      <div className="sticky top-14 z-40 bg-[#EDE3D5]/95 backdrop-blur-md border-b border-[#E3D6C4]">
+        <div className="max-w-7xl mx-auto px-4 md:px-10 py-2.5 lg:py-4 flex items-center gap-4">
+          <div className="hidden lg:block flex-1 min-w-0">{champRecherche}</div>
+          <div role="group" aria-label="Filtrer le catalogue" className="ss-ruban flex gap-1.5 md:gap-2 overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+            {filtres.map((cat) => {
+              const actif = filtreEffectif === cat;
+              return (
+                <button
+                  key={cat}
+                  type="button"
+                  aria-pressed={actif}
+                  onClick={() => choisirFiltre(cat)}
+                  className={`shrink-0 flex items-center gap-1.5 md:gap-2 h-11 md:h-12 px-2.5 md:px-[18px] rounded-[13px] md:rounded-[14px] border-[1.5px] text-[13.5px] md:text-[15px] font-bold whitespace-nowrap transition-colors ${
+                    actif
+                      ? cat === 'promos' ? 'bg-[#D43A00] border-[#D43A00] text-white' : 'bg-[#3D2B1F] border-[#3D2B1F] text-[#F5EAE0]'
+                      : cat === 'promos'
+                        ? 'bg-white border-[#FFB89A] text-[#C73600] hover:border-[#C73600]'
+                        : 'bg-white border-[#DDD0BF] text-[#3D2B1F] hover:border-[#3D2B1F]'
+                  }`}
+                >
+                  {cat === 'promos' && <Flame className="w-[15px] h-[15px] md:w-[17px] md:h-[17px]" aria-hidden />}
+                  {cat === 'all' ? <><span className="sm:hidden">Tout</span><span className="hidden sm:inline">Tout voir</span></> : cat === 'promos' ? 'Promos' : cat}
+                  {!loading && (
+                    <span className={`text-xs md:text-[13px] font-semibold ${actif ? 'opacity-80' : cat === 'promos' ? '' : 'text-[#6F5A4B]'}`}>{compter(cat)}</span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-2 md:px-10 pt-4 md:pt-6">
+
+        {!loading && filteredProducts.length > 0 && (
+          <p className="mx-2 md:mx-0 mb-3 md:mb-[18px] text-[13px] md:text-sm font-semibold text-[#6F5A4B]">
+            <strong className="font-extrabold text-[#3D2B1F]">{filteredProducts.length} produit{filteredProducts.length > 1 ? 's' : ''}</strong>
+            {filteredProducts.some(enPromoProduit) && filteredProducts.some(p => !enPromoProduit(p)) ? ' · les promotions en premier' : ''}
+          </p>
+        )}
 
         {loading ? (
-          <div className="flex justify-center py-20">
-            <div className="w-10 h-10 border-4 border-slate-200 border-t-[#FF4500] rounded-full animate-spin" />
+          <div className="flex justify-center py-20" role="status" aria-label="Chargement des produits">
+            <div className="w-10 h-10 border-4 border-[#DDD0BF] border-t-[#FF4500] rounded-full animate-spin" />
           </div>
         ) : filteredProducts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 text-center">
-            <div className="w-16 h-16 bg-[#EDE3D5] rounded-full flex items-center justify-center mb-4">
-              <Search className="w-7 h-7 text-slate-200" />
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <div className="w-16 h-16 bg-[#F5EAE0] rounded-full flex items-center justify-center mb-4 text-[#C9BBAA]">
+              <Search className="w-7 h-7" aria-hidden />
             </div>
-            <p className="font-black text-slate-300 uppercase tracking-widest text-sm">Aucun produit trouvé</p>
+            <p className="titre text-2xl text-[#3D2B1F]">Aucun produit trouvé</p>
             {search && (
               <button
+                type="button"
                 onClick={() => choisirRecherche('')}
-                className="mt-4 text-xs font-bold text-[#FF4500] hover:underline uppercase tracking-widest"
+                className="mt-4 min-h-11 px-5 rounded-full border-[1.5px] border-[#3D2B1F] text-sm font-bold text-[#3D2B1F] hover:bg-[#3D2B1F] hover:text-[#F5EAE0] transition-colors"
               >
                 Effacer la recherche
               </button>

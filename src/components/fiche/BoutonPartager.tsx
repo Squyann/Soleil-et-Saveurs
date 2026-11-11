@@ -25,10 +25,11 @@ export default function BoutonPartager({ titre }: { titre: string }) {
     <button
       type="button"
       onClick={partager}
-      className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-[#D5C9B8] text-[10px] font-black uppercase tracking-widest text-[#5C4030] hover:border-[#FF4500] hover:text-[#FF4500] transition-colors"
+      aria-label={copie ? 'Lien copié' : 'Partager'}
+      className="inline-flex items-center justify-center gap-2 w-11 sm:w-auto h-11 sm:px-4 rounded-full bg-white border-[1.5px] border-[#E8DCCB] text-sm font-bold text-[#3D2B1F] hover:border-[#3D2B1F] transition-colors"
     >
-      {copie ? <Check className="w-4 h-4 text-green-600" /> : <Share2 className="w-4 h-4" />}
-      {copie ? 'Lien copié' : 'Partager'}
+      {copie ? <Check className="w-[17px] h-[17px] text-[#15803D]" aria-hidden /> : <Share2 className="w-[17px] h-[17px]" aria-hidden />}
+      <span className="hidden sm:inline" aria-live="polite">{copie ? 'Lien copié' : 'Partager'}</span>
     </button>
   );
 }

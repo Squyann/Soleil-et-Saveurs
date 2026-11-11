@@ -2,6 +2,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Check, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { libelleCourt, prixVariante, produitPourVariante, uniteVariante, type Variante } from '@/lib/variantes';
+import { formatPrix } from '@/lib/format';
 
 const uniteTexte = (u: string | null | undefined) => (u === 'g' ? 'kg' : u || 'pièce');
 
@@ -91,21 +92,21 @@ export default function ChoixVariantes({
         aria-checked={actif}
         onClick={() => onChoisir(v.id)}
         className={`relative shrink-0 snap-start flex items-center gap-1.5 border transition-[background-color,border-color,color,box-shadow] duration-200 ${
-          compact ? 'h-9 sm:h-10 px-2.5 sm:px-3.5 rounded-[11px] sm:rounded-[13px] border-[1.5px] text-xs sm:text-[13px] font-bold' : 'px-3 py-2 rounded-xl text-[11px] font-black uppercase tracking-tight'
+          compact ? 'h-9 sm:h-10 px-2.5 sm:px-3.5 rounded-[11px] sm:rounded-[13px] border-[1.5px] text-xs sm:text-[13px] font-bold' : 'h-12 px-4 rounded-[15px] border-[1.5px] text-[15px] font-bold'
         } ${actif
-          ? compact ? 'bg-[#3D2B1F] border-[#3D2B1F] text-[#F5EAE0]' : 'bg-[#3D2B1F] border-[#3D2B1F] text-white shadow-md'
-          : compact ? 'bg-white border-[#DDD0BF] text-[#3D2B1F] hover:border-[#3D2B1F]' : 'bg-white border-[#D5C9B8] text-slate-500 hover:border-[#FF4500]/50 hover:text-[#3D2B1F]'}`}
+          ? 'bg-[#3D2B1F] border-[#3D2B1F] text-[#F5EAE0]'
+          : 'bg-white border-[#DDD0BF] text-[#3D2B1F] hover:border-[#3D2B1F]'}`}
       >
         {!compact && v.image_url && (
-          <img src={v.image_url} alt="" className="w-7 h-5 rounded object-cover -ml-1" />
+          <img src={v.image_url} alt="" className="w-9 h-6 rounded-md object-cover -ml-1.5" />
         )}
-        {actif && <Check className={compact ? 'w-3 h-3 sm:w-3.5 sm:h-3.5' : 'w-3.5 h-3.5'} strokeWidth={compact ? 3 : 2} />}
+        {actif && <Check className={compact ? 'w-3 h-3 sm:w-3.5 sm:h-3.5' : 'w-4 h-4'} strokeWidth={3} aria-hidden />}
         <span className="whitespace-nowrap">{libelleCourt(produit, v)}</span>
         {prixDifferents && !compact && (
-          <span className={`font-bold normal-case ${actif ? 'text-white/70' : 'text-slate-400'}`}>{infos[i].final.toFixed(2)}€/{infos[i].unite}</span>
+          <span className={`text-[13px] font-semibold ${actif ? 'text-[#E3D3C1]' : 'text-[#6F5A4B]'}`}>{formatPrix(infos[i].final)}/{infos[i].unite}</span>
         )}
         {dansPanier > 0 && (
-          <span className={`absolute -top-1.5 -right-1.5 px-1 rounded-full bg-[#D43A00] text-white font-black flex items-center justify-center ${compact ? 'min-w-[18px] h-[18px] text-[10px]' : 'min-w-4 h-4 text-[8px]'}`}>
+          <span className={`absolute -top-1.5 -right-1.5 px-1 rounded-full bg-[#D43A00] text-white font-black flex items-center justify-center ${compact ? 'min-w-[18px] h-[18px] text-[10px]' : 'min-w-5 h-5 text-[11px]'}`}>
             {uniteLigne === 'g' || uniteLigne === 'kg' ? '✓' : dansPanier}
           </span>
         )}
@@ -115,7 +116,7 @@ export default function ChoixVariantes({
 
   if (!compact) {
     return (
-      <div role="radiogroup" aria-label="Choisir une variante" className="flex flex-wrap gap-1.5" onPointerEnter={precharger} onTouchStart={precharger}>
+      <div role="radiogroup" aria-label="Choisir une variante" className="flex flex-wrap gap-2" onPointerEnter={precharger} onTouchStart={precharger}>
         {boutons}
       </div>
     );
@@ -178,9 +179,9 @@ export function PanneauVariantes({
       className="absolute inset-0 z-30 flex flex-col bg-white/95 backdrop-blur-md animate-in fade-in slide-in-from-bottom-2 duration-200 ease-out"
     >
       <div className="flex items-center justify-between gap-2 px-2.5 pt-2.5 pb-1.5 sm:px-4 sm:pt-4">
-        <p className="text-[9px] sm:text-[11px] font-black uppercase tracking-widest text-[#3D2B1F]">Choisir une variante</p>
-        <button type="button" onClick={onFermer} aria-label="Fermer" className="w-7 h-7 rounded-full bg-[#EDE3D5] text-[#3D2B1F] flex items-center justify-center hover:bg-[#DDD0BF] transition-colors">
-          <X className="w-3.5 h-3.5" />
+        <p className="text-xs sm:text-sm font-extrabold text-[#3D2B1F]">Choisir une variante</p>
+        <button type="button" onClick={onFermer} aria-label="Fermer" className="w-9 h-9 rounded-full bg-[#EDE3D5] text-[#3D2B1F] flex items-center justify-center hover:bg-[#DDD0BF] transition-colors">
+          <X className="w-4 h-4" aria-hidden />
         </button>
       </div>
       <div ref={liste} role="radiogroup" className="flex-1 overflow-y-auto overscroll-contain px-2 pb-2 sm:px-3 sm:pb-3 space-y-1">
@@ -200,14 +201,14 @@ export function PanneauVariantes({
                 actif ? 'border-[#3D2B1F] bg-[#FBF7F2]' : 'border-transparent hover:bg-[#FBF7F2]'}`}
             >
               <span className="relative w-10 h-7 sm:w-14 sm:h-9 shrink-0 rounded-lg overflow-hidden bg-[#EDE3D5] flex items-center justify-center">
-                {image ? <img src={image} alt="" className="w-full h-full object-cover" /> : <span className="text-sm grayscale opacity-30">🧺</span>}
+                {image && <img src={image} alt="" className="w-full h-full object-cover" />}
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block text-[9px] sm:text-xs font-black uppercase tracking-tight text-slate-800 truncate">{libelleCourt(produit, v)}</span>
-                <span className="block text-[8px] sm:text-[10px] font-bold text-slate-400">
-                  <span className={final < base ? 'text-[#FF4500]' : ''}>{final.toFixed(2)}€/{unite}</span>
-                  {final < base && <span className="line-through ml-1">{base.toFixed(2)}€</span>}
-                  {dansPanier > 0 && <span className="text-[#FF4500]"> · au panier</span>}
+                <span className="block text-xs sm:text-sm font-bold text-[#3D2B1F] truncate">{libelleCourt(produit, v)}</span>
+                <span className="block text-[11px] sm:text-xs font-semibold text-[#6F5A4B]">
+                  <span className={final < base ? 'font-bold text-[#C73600]' : ''}>{formatPrix(final)}/{unite}</span>
+                  {final < base && <span className="line-through ml-1">{formatPrix(base)}</span>}
+                  {dansPanier > 0 && <span className="font-bold text-[#166534]"> · au panier</span>}
                 </span>
               </span>
               {actif && <Check className="w-3.5 h-3.5 text-[#3D2B1F] shrink-0" />}
