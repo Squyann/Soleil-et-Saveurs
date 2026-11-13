@@ -2,11 +2,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import PointsRelais from '@/components/PointsRelais';
-import { 
-  Truck, MapPin, CheckCircle2, Clock, ShieldCheck, 
-  ArrowLeft, Search, Navigation, Package, RefreshCcw,
-  AlertCircle
-} from 'lucide-react';
+import { MapPin, Clock, Package, RefreshCcw, AlertCircle, Gift, Check, ArrowRight, Loader2 } from 'lucide-react';
 
 // --- EXEMPLES DE VILLES DESSERVIES (la livraison couvre tout le 78) ---
 const ELIGIBLE_ZONES = [
@@ -68,153 +64,144 @@ export default function LivraisonPage() {
     }
   };
 
+  const SURTITRE = 'text-[11px] md:text-xs font-extrabold uppercase tracking-[0.14em] text-[#C73600]';
+
   return (
-    <div className="min-h-screen bg-[#EDE3D5] text-slate-900 pb-20">
-      {/* Navbar Minimaliste */}
-      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-100 px-6 h-16 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-[#FF4500] transition-colors">
-          <ArrowLeft className="w-4 h-4" /> Retour Boutique
-        </Link>
-        <span className="text-[10px] font-black uppercase tracking-tighter text-slate-900 italic">Soleil et Saveurs — Logistique</span>
-      </nav>
+    <div className="min-h-screen bg-[#EDE3D5] text-[#3D2B1F] pb-4">
 
-      {/* Hero Section - Testeur d'éligibilité */}
-      <section className="bg-slate-900 py-20 px-6 relative overflow-hidden text-center">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[#FF4500]/10 via-transparent to-transparent opacity-50"></div>
-        
-        <div className="max-w-4xl mx-auto relative z-10">
-          <h1 className="text-4xl md:text-7xl font-black text-white uppercase tracking-tighter mb-6 italic">
-            LIVRAISON <span className="text-[#FF4500]">DANS LE 78</span>
-          </h1>
-          <p className="text-slate-400 text-sm md:text-base font-bold uppercase tracking-[0.2em] mb-12 max-w-2xl mx-auto">
-            Nous livrons dans tout le département des Yvelines (78), au départ de nos points relais.
-          </p>
+      {/* EN-TÊTE : vérification du code postal */}
+      <header className="bg-[#F5EAE0] border-b border-[#E3D6C4]">
+        <div className="max-w-[1240px] mx-auto px-5 pt-6 pb-[26px] md:pt-8 md:pb-12 grid lg:grid-cols-2 gap-x-14 gap-y-5 lg:items-end">
+          <div className="min-w-0">
+            <nav aria-label="Fil d'Ariane" className="hidden md:flex items-center gap-2 mb-3.5 text-[13px] font-semibold text-[#6F5A4B]">
+              <Link href="/" className="hover:text-[#C73600] transition-colors">Accueil</Link>
+              <span aria-hidden>›</span>
+              <span aria-current="page" className="font-bold text-[#3D2B1F]">Livraison</span>
+            </nav>
+            <p className={`${SURTITRE} mb-2 md:mb-2.5`}>Soleil et Saveurs — Logistique</p>
+            <h1 className="titre text-[44px] md:text-[64px] leading-none mb-3 md:mb-4">Livraison <em className="text-[#FF4500] whitespace-nowrap">dans le 78</em></h1>
+            <p className="text-base md:text-[17px] leading-normal text-[#5C4030] max-w-[520px]">
+              Nous livrons dans tout le département des Yvelines (78), au départ de nos points relais.
+            </p>
+          </div>
 
-          <form onSubmit={checkEligibility} className="max-w-md mx-auto relative">
-            <div className="flex bg-white rounded-2xl overflow-hidden p-1 shadow-2xl">
-              <div className="flex items-center px-4 text-slate-400">
-                <Navigation className="w-5 h-5" />
-              </div>
-              <input 
-                type="text" 
+          <div className="min-w-0">
+            <form onSubmit={checkEligibility} className="flex items-center gap-2 md:gap-2.5 p-1.5 pl-4 rounded-[18px] bg-white border border-[#E0D3C0] shadow-[0_14px_30px_-20px_rgba(61,43,31,0.35)] focus-within:border-[#FF4500] transition-colors">
+              <MapPin className="w-[18px] h-[18px] shrink-0 text-[#C73600]" aria-hidden />
+              <input
+                type="text"
+                inputMode="numeric"
                 maxLength={5}
+                aria-label="Votre code postal"
+                placeholder="Code postal (ex: 78400)"
+                className="flex-1 min-w-0 h-11 md:h-12 bg-transparent text-base md:text-[17px] font-semibold text-[#3D2B1F] placeholder:text-[#8C7867] placeholder:font-medium outline-none"
                 value={userCP}
                 onChange={(e) => setUserCP(e.target.value)}
-                placeholder="Entrez votre Code Postal (ex: 78400)" 
-                className="w-full py-4 text-sm font-bold focus:outline-none"
               />
-              <button disabled={checking} className="bg-[#FF4500] text-white px-8 rounded-xl font-black uppercase text-[10px] hover:bg-slate-900 transition-colors disabled:opacity-60">
-                {checking ? '...' : 'Vérifier'}
+              <button disabled={checking} className="shrink-0 h-11 md:h-12 min-w-[92px] px-4 md:px-5 rounded-[13px] bg-[#3D2B1F] text-[#F5EAE0] text-sm md:text-[15px] font-bold flex items-center justify-center hover:bg-[#FF4500] transition-colors disabled:opacity-80">
+                {checking ? <Loader2 className="w-4 h-4 animate-spin" aria-label="Vérification" /> : 'Vérifier'}
               </button>
-            </div>
+            </form>
 
             {/* Résultats du test */}
-            <div className="mt-6 animate-in fade-in slide-in-from-top-4 duration-500">
+            <div aria-live="polite">
               {status === 'eligible' && (
-                <div className="bg-green-500/10 border border-green-500/20 p-4 rounded-xl flex items-center gap-3 text-green-400">
-                  <CheckCircle2 className="w-5 h-5 shrink-0" />
-                  <p className="text-[10px] font-black uppercase text-left">Génial ! Vous êtes dans notre zone de livraison. Livraison dès le lendemain, selon les dates proposées.</p>
-                </div>
+                <p className="mt-3 flex gap-2.5 px-3.5 py-3 rounded-[14px] bg-[#ECF7EF] text-sm md:text-[15px] leading-snug font-bold text-[#166534] animate-in fade-in slide-in-from-top-1 duration-200">
+                  <Check className="w-[18px] h-[18px] shrink-0 mt-px" strokeWidth={2.6} aria-hidden />
+                  Génial ! Vous êtes dans notre zone de livraison. Livraison dès le lendemain, selon les dates proposées.
+                </p>
               )}
               {status === 'not-eligible' && (
-                <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-xl flex items-center gap-3 text-red-400">
-                  <AlertCircle className="w-5 h-5 shrink-0" />
-                  <p className="text-[10px] font-black uppercase text-left">Nous ne livrons pas encore chez vous. Écrivez-nous sur WhatsApp pour être prévenu(e) !</p>
-                </div>
+                <p className="mt-3 flex gap-2.5 px-3.5 py-3 rounded-[14px] bg-red-50 text-sm md:text-[15px] leading-snug font-bold text-red-700 animate-in fade-in slide-in-from-top-1 duration-200">
+                  <AlertCircle className="w-[18px] h-[18px] shrink-0 mt-px" aria-hidden />
+                  Nous ne livrons pas encore chez vous. Écrivez-nous sur WhatsApp pour être prévenu(e) !
+                </p>
               )}
             </div>
-          </form>
-        </div>
-      </section>
-
-      <div className="max-w-6xl mx-auto px-6 -mt-8 relative z-20">
-        {/* Bento Logistique */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-20">
-          <div className="bg-white p-8 rounded-[32px] shadow-xl border border-slate-50 flex flex-col items-center text-center">
-            <div className="w-14 h-14 bg-orange-50 rounded-2xl flex items-center justify-center mb-4 text-[#FF4500]">
-              <Clock className="w-7 h-7" />
-            </div>
-            <h3 className="font-black uppercase text-sm mb-2">Dès le lendemain</h3>
-            <p className="text-[11px] text-slate-500 font-medium leading-relaxed italic">Commandez avant minuit et choisissez votre date : livraison dès le lendemain, entre 15h et 20h, selon les jours proposés.</p>
-          </div>
-          <div className="bg-white p-8 rounded-[32px] shadow-xl border border-slate-100 flex flex-col items-center text-center">
-            <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center mb-4 text-blue-500">
-              <Package className="w-7 h-7" />
-            </div>
-            <h3 className="font-black uppercase text-sm mb-2">Cagette consignée</h3>
-            <p className="text-[11px] text-slate-500 font-medium leading-relaxed italic">Consigne gratuite : rendez votre cagette au livreur lors de la livraison suivante.</p>
-          </div>
-          <div className="bg-white p-8 rounded-[32px] shadow-xl border border-slate-50 flex flex-col items-center text-center">
-            <div className="w-14 h-14 bg-green-50 rounded-2xl flex items-center justify-center mb-4 text-green-500">
-              <ShieldCheck className="w-7 h-7" />
-            </div>
-            <h3 className="font-black uppercase text-sm mb-2">Frais de livraison</h3>
-            <p className="text-[11px] text-slate-500 font-medium leading-relaxed italic">Offerte à Chatou, Croissy-sur-Seine, Mareil-sur-Mauldre et Saint-Nom-la-Bretèche. Ailleurs : offerte dès 40€, sinon 3€ à 5€ selon la distance à nos points relais.</p>
           </div>
         </div>
+      </header>
 
-        {/* Section Carte et Rayon */}
-        <div className="grid lg:grid-cols-2 gap-12 items-center mb-24">
-          <div className="space-y-8">
-            <div className="inline-flex items-center gap-2 bg-[#FF4500]/10 text-[#FF4500] px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#FF4500] animate-pulse"></span>
-              Périmètre de sécurité fraîcheur
+      <div className="max-w-[1240px] mx-auto px-3 md:px-5">
+
+        {/* LES TROIS INFOS CLÉS */}
+        <section className="mt-3.5 md:mt-7 bg-white rounded-3xl md:rounded-[28px] border border-[#E8DCCB] overflow-hidden grid md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-[#F0E7DA]">
+          {[
+            { Icone: Clock, vert: false, titre: 'Dès le lendemain', texte: 'Commandez avant minuit et choisissez votre date : livraison dès le lendemain, entre 15h et 20h, selon les jours proposés.' },
+            { Icone: Package, vert: false, titre: 'Cagette consignée', texte: 'Consigne gratuite : rendez votre cagette au livreur lors de la livraison suivante.' },
+            { Icone: Gift, vert: true, titre: 'Frais de livraison', texte: 'Offerte à Chatou, Croissy-sur-Seine, Mareil-sur-Mauldre et Saint-Nom-la-Bretèche. Ailleurs : offerte dès 40€, sinon 3€ à 5€ selon la distance à nos points relais.', lien: true },
+          ].map(({ Icone, vert, titre, texte, lien }) => (
+            <div key={titre} className="flex gap-3.5 p-[18px] md:p-7">
+              <span className={`shrink-0 w-11 h-11 md:w-12 md:h-12 rounded-[14px] md:rounded-[15px] flex items-center justify-center ${vert ? 'bg-[#ECF7EF] text-[#15803D]' : 'bg-[#FFF1EA] text-[#FF4500]'}`} aria-hidden>
+                <Icone className="w-[21px] h-[21px] md:w-[22px] md:h-[22px]" />
+              </span>
+              <div>
+                <h2 className="text-base md:text-[17px] font-extrabold mb-1">{titre}</h2>
+                <p className="text-sm md:text-[15px] leading-normal text-[#5C4030]">{texte}</p>
+                {lien && (
+                  <Link href="/aide#frais-livraison" className="mt-1.5 inline-flex items-center min-h-8 text-sm font-extrabold text-[#C73600] hover:underline underline-offset-4">Voir le détail des frais</Link>
+                )}
+              </div>
             </div>
-            <h2 className="text-5xl font-black uppercase italic tracking-tighter leading-none">
-              POURQUOI LES <span className="text-[#FF4500]">YVELINES ?</span>
-            </h2>
-            <p className="text-slate-500 font-medium leading-relaxed italic">
-              Parce que la fraîcheur se joue aussi sur le dernier trajet. 
-              En concentrant nos livraisons sur le seul département des <span className="text-slate-900 font-bold">Yvelines (78)</span>, au départ de nos points relais, vos produits passent le moins de temps possible sur la route.
+          ))}
+        </section>
+
+        {/* POURQUOI LES YVELINES + POINTS RELAIS */}
+        <section className="mt-11 md:mt-20 md:bg-white md:rounded-[36px] md:border md:border-[#E8DCCB] md:overflow-hidden grid lg:grid-cols-2 gap-y-[26px]">
+          <div className="px-2 md:p-12 lg:p-[60px] flex flex-col justify-center">
+            <p className={`${SURTITRE} mb-2 md:mb-2.5`}>Périmètre de sécurité fraîcheur</p>
+            <h2 className="titre text-[34px] md:text-5xl lg:text-[54px] leading-none mb-3.5 md:mb-5">Pourquoi les <em className="text-[#FF4500]">Yvelines ?</em></h2>
+            <p className="text-[15.5px] md:text-base leading-relaxed text-[#5C4030] mb-[18px] md:mb-7">
+              Parce que la fraîcheur se joue aussi sur le dernier trajet.
+              En concentrant nos livraisons sur le seul département des <strong className="font-extrabold text-[#3D2B1F]">Yvelines (78)</strong>, au départ de nos points relais, vos produits passent le moins de temps possible sur la route.
             </p>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="flex gap-4 items-start p-4 bg-slate-50 rounded-2xl">
-                <div className="p-2 bg-white rounded-lg shadow-sm"><RefreshCcw className="w-4 h-4 text-[#FF4500]"/></div>
-                <div>
-                  <h4 className="text-[10px] font-black uppercase">Émissions Réduites</h4>
-                  <p className="text-[9px] text-slate-400 font-bold uppercase">Trajets courts = Impact minime</p>
-                </div>
-              </div>
-              <div className="flex gap-4 items-start p-4 bg-slate-50 rounded-2xl">
-                <div className="p-2 bg-white rounded-lg shadow-sm"><MapPin className="w-4 h-4 text-[#FF4500]"/></div>
-                <div>
-                  <h4 className="text-[10px] font-black uppercase">Livraison locale</h4>
-                  <p className="text-[9px] text-slate-400 font-bold uppercase">100% Yvelines (78)</p>
-                </div>
-              </div>
-            </div>
+            <ul className="grid grid-cols-2 gap-2.5 md:gap-3.5">
+              <li className="flex flex-col md:flex-row md:items-center gap-2 md:gap-3 p-3.5 md:p-4 rounded-[18px] bg-[#F5EAE0] border border-[#E3D6C4]">
+                <span className="shrink-0 w-9 h-9 md:w-10 md:h-10 rounded-xl bg-white text-[#15803D] flex items-center justify-center" aria-hidden><RefreshCcw className="w-[18px] h-[18px]" /></span>
+                <span><strong className="block text-[14.5px] font-extrabold">Émissions Réduites</strong><span className="block mt-0.5 text-[13px] leading-snug text-[#5C4030]">Trajets courts = Impact minime</span></span>
+              </li>
+              <li className="flex flex-col md:flex-row md:items-center gap-2 md:gap-3 p-3.5 md:p-4 rounded-[18px] bg-[#F5EAE0] border border-[#E3D6C4]">
+                <span className="shrink-0 w-9 h-9 md:w-10 md:h-10 rounded-xl bg-white text-[#FF4500] flex items-center justify-center" aria-hidden><MapPin className="w-[18px] h-[18px]" /></span>
+                <span><strong className="block text-[14.5px] font-extrabold">Livraison locale</strong><span className="block mt-0.5 text-[13px] leading-snug text-[#5C4030]">100% Yvelines (78)</span></span>
+              </li>
+            </ul>
           </div>
-
-          <div className="relative rounded-[40px] overflow-hidden shadow-2xl border-8 border-white">
+          <div className="rounded-3xl md:rounded-none overflow-hidden border border-[#E3D6C4] md:border-0">
             <PointsRelais />
           </div>
-        </div>
+        </section>
 
         {/* Liste des villes détaillées */}
-        <div className="bg-white rounded-[40px] p-12 shadow-sm border border-slate-100">
-           <h3 className="text-2xl font-black uppercase italic tracking-tighter mb-8 text-center">EXEMPLES DE VILLES <span className="text-[#FF4500]">DESSERVIES</span></h3>
-           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
-              {ELIGIBLE_ZONES.map((zone, i) => (
-                <div key={i} className="flex flex-col border-l-2 border-[#FF4500] pl-4">
-                  <span className="text-xs font-black text-slate-900 leading-none">{zone.city}</span>
-                  <span className="text-[10px] font-bold text-slate-400 uppercase mt-1">{zone.cp}</span>
-                </div>
-              ))}
-           </div>
-           <p className="mt-8 text-center text-[10px] text-slate-400 font-bold uppercase tracking-widest italic">
-             📍 Liste non exhaustive. Nous livrons dans toutes les communes des Yvelines (78) — vérifiez votre code postal ci-dessus.
-           </p>
-        </div>
-      </div>
+        <section className="mt-11 md:mt-20 px-2 md:px-0">
+          <h2 className="titre text-[30px] md:text-[40px] leading-[1.05] mb-4 md:mb-6">Exemples de villes <em className="text-[#FF4500]">desservies</em></h2>
+          <ul className="flex flex-wrap gap-2 md:gap-2.5">
+            {ELIGIBLE_ZONES.map((zone, i) => (
+              <li key={i} className="inline-flex items-baseline gap-1.5 px-3 py-2 md:px-3.5 md:py-2.5 rounded-[13px] bg-white border border-[#E8DCCB] text-sm md:text-[15px] font-bold">
+                {zone.city}
+                <span className="text-xs md:text-[13px] font-semibold text-[#6F5A4B]">{zone.cp}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-3.5 md:mt-5 text-[13.5px] md:text-[15px] leading-normal text-[#5C4030]">
+            Liste non exhaustive. Nous livrons dans toutes les communes des Yvelines (78) — vérifiez votre code postal ci-dessus.
+          </p>
+        </section>
 
-      {/* Footer CTA */}
-      <section className="mt-20 px-6 text-center">
-        <h2 className="text-3xl font-black uppercase italic tracking-tighter mb-8">VOUS ÊTES DANS <br/>LA ZONE ?</h2>
-        <Link href="/commander" className="inline-flex items-center gap-4 bg-[#FF4500] text-white px-10 py-5 rounded-[2rem] font-black uppercase text-xs hover:scale-105 transition-all shadow-xl shadow-[#FF4500]/20">
-          Lancer ma commande <Truck className="w-5 h-5" />
-        </Link>
-      </section>
+        {/* Appel final */}
+        <section className="mt-9 md:mt-20">
+          <div className="relative overflow-hidden rounded-[28px] md:rounded-[44px] bg-[#3D2B1F] text-[#F5EAE0] px-[22px] pt-11 pb-[26px] md:px-6 md:py-20 text-center">
+            <svg className="ss-rayons absolute -right-[130px] -top-[170px] w-[290px] h-[290px] md:-right-[180px] md:-top-[220px] md:w-[560px] md:h-[560px] pointer-events-none" viewBox="0 0 600 600" aria-hidden>
+              <circle cx="300" cy="300" r="100" fill="#FF4500" fillOpacity="0.9" />
+              <circle cx="300" cy="300" r="226" fill="none" stroke="#FF4500" strokeOpacity="0.7" strokeWidth="110" strokeDasharray="12 47.2" />
+            </svg>
+            <h2 className="relative titre text-4xl sm:text-6xl lg:text-[72px] leading-none mb-[22px] md:mb-9">Vous êtes dans<br /><em className="text-[#FF7A47]">la zone ?</em></h2>
+            <Link href="/commander" className="group relative flex md:inline-flex items-center justify-between md:justify-center gap-3 min-h-[60px] px-[22px] md:px-[34px] rounded-[18px] bg-[#FF4500] text-white text-[19px] font-extrabold shadow-[0_20px_40px_-16px_rgba(255,69,0,0.7)] transition-[background-color,transform] duration-200 hover:bg-[#E63E00] active:scale-[0.98]">
+              Lancer ma commande
+              <ArrowRight className="w-[22px] h-[22px] transition-transform duration-200 group-hover:translate-x-1" strokeWidth={2.4} aria-hidden />
+            </Link>
+          </div>
+        </section>
+      </div>
     </div>
   );
 }
