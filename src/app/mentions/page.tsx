@@ -63,14 +63,16 @@ export default function MentionsLegales() {
               1. Éditeur du site
             </h2>
             <div className="space-y-2 text-[#5C4030] font-medium text-sm leading-relaxed">
-              <p>Le site <strong className="text-[#3D2B1F]">Soleil et Saveurs</strong> est édité par une entreprise individuelle :</p>
+              <p>Le site <strong className="text-[#3D2B1F]">Soleil et Saveurs</strong> est édité par la société :</p>
               <div className="bg-[#F5EAE0] rounded-2xl p-5 mt-4 space-y-2 border border-[#E8DCCB]">
-                <p><span className="text-[#6F5A4B] text-xs uppercase font-extrabold tracking-wider mr-2">Responsable</span> Khaled Boulila</p>
+                <p><span className="text-[#6F5A4B] text-xs uppercase font-extrabold tracking-wider mr-2">Société</span> SOLEIL ET SAVEURS — SAS au capital de 1 000 €</p>
+                <p><span className="text-[#6F5A4B] text-xs uppercase font-extrabold tracking-wider mr-2">Représentant légal</span> Khaled Boulila, président</p>
                 <p><span className="text-[#6F5A4B] text-xs uppercase font-extrabold tracking-wider mr-2">Siège social</span> 6-8 AVENUE HENRIETTE, 93170 BAGNOLET</p>
+                <p><span className="text-[#6F5A4B] text-xs uppercase font-extrabold tracking-wider mr-2">Immatriculation</span> RCS Bobigny 821 324 324</p>
                 <p><span className="text-[#6F5A4B] text-xs uppercase font-extrabold tracking-wider mr-2">SIRET</span> 821 324 324 00028</p>
                 <p><span className="text-[#6F5A4B] text-xs uppercase font-extrabold tracking-wider mr-2">Email</span> soleiletsaveurs.livraison@gmail.com</p>
                 <p><span className="text-[#6F5A4B] text-xs uppercase font-extrabold tracking-wider mr-2">Téléphone</span> 07 59 72 00 83</p>
-                <p><span className="text-[#6F5A4B] text-xs uppercase font-extrabold tracking-wider mr-2">Statut TVA</span> TVA non applicable — Art. 293 B du CGI (micro-entreprise)</p>
+                <p><span className="text-[#6F5A4B] text-xs uppercase font-extrabold tracking-wider mr-2">TVA intracommunautaire</span> FR33821324324</p>
               </div>
             </div>
           </section>
@@ -80,7 +82,7 @@ export default function MentionsLegales() {
               2. Directeur de publication
             </h2>
             <p className="text-[#5C4030] font-medium text-sm leading-relaxed">
-              Le directeur de la publication du site est <strong className="text-[#3D2B1F]">Khaled Boulila</strong>, en sa qualité de responsable de l'entreprise individuelle Soleil et Saveurs.
+              Le directeur de la publication du site est <strong className="text-[#3D2B1F]">Khaled Boulila</strong>, en sa qualité de président de la société SOLEIL ET SAVEURS.
             </p>
           </section>
 

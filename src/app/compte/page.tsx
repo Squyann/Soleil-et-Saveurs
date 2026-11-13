@@ -2,7 +2,6 @@
 export const dynamic = 'force-dynamic';
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { premieresOffertes, qtePayantePremieresOffertes } from '@/lib/promos';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -13,6 +12,7 @@ import {
   KeyRound, Lock, Eye, EyeOff
 } from 'lucide-react';
 import { formatPrix } from '@/lib/format';
+import { htmlDocument, imprimerDocument, type FactureEmise } from '@/lib/facture';
 
 // --- TYPES ---
 interface Order {
@@ -57,6 +57,7 @@ export default function ComptePage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [ordersLoading, setOrdersLoading] = useState(true);
+  const [factures, setFactures] = useState<Record<number, FactureEmise>>({});
   const [activeTab, setActiveTab] = useState<'profil' | 'commandes' | 'adresses'>('profil');
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState<Partial<UserProfile>>({});
@@ -144,6 +145,10 @@ export default function ComptePage() {
         .order('created_at', { ascending: false });
 
       if (!error && data) setOrders(data as Order[]);
+
+      // Factures émises pour ces commandes (une par commande livrée)
+      const { data: emises } = await supabase.from('factures').select('*').eq('user_id', userId);
+      if (emises) setFactures(Object.fromEntries((emises as FactureEmise[]).map((f) => [f.commande_id, f])));
     } catch (e) {
       console.error(e);
     } finally {
@@ -239,173 +244,14 @@ export default function ComptePage() {
   };
 
   // --- FACTURE ---
-  const escapeHtml = (str: any) =>
-    String(str ?? '').replace(/[&<>"']/g, (c) => (
-      { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string
-    ));
-
+  // Le numéro, la date et les montants viennent de la facture émise par la
+  // base à la livraison (table « factures »), jamais d'un calcul du site.
   const imprimerFacture = (order: any) => {
-    const isRetrait = order.adresse_livraison?.includes('Retrait');
-    const dateCmd = new Date(order.created_at).toLocaleDateString('fr-FR');
-    const refFacture = `INV-${new Date(order.created_at).getFullYear()}-${String(order.id).slice(-4).toUpperCase()}`;
-    const items = order.contenu_panier || [];
-
-    const sousTotalProduits = items.reduce((acc: number, item: any) => {
-      // Montant de la ligne calculé par le serveur (promos regroupées par produit)
-      if (item.prixTotalLigne != null) return acc + parseFloat(item.prixTotalLigne);
-      const qte = parseFloat(item.quantite || item.quantity || 0);
-      const qteEffective = item.unite === 'g' ? qte / 1000 : qte;
-      let prixUnit = parseFloat(item.price || item.prix || 0);
-      if (item.promotion && item.promotion > 0) prixUnit *= (1 - item.promotion / 100);
-      const seuil = item.seuil_achat || 0;
-      const offert = item.quantite_offerte || 0;
-      if (seuil > 0 && offert > 0) {
-        const tailleLot = seuil + offert;
-        const nbLots = Math.floor(qteEffective / tailleLot);
-        const reste = qteEffective % tailleLot;
-        return acc + (nbLots * seuil + Math.min(reste, seuil)) * prixUnit;
-      }
-      if (premieresOffertes(item) > 0) return acc + qtePayantePremieresOffertes(item, qteEffective) * prixUnit;
-      return acc + qteEffective * prixUnit;
-    }, 0);
-
-    // On lit le frais réellement facturé (stocké en base). Fallback pour les
-    // anciennes commandes sans frais_livraison enregistré.
-    let fraisLivraison = 0;
-    if ((order as any).frais_livraison != null) {
-      fraisLivraison = Number((order as any).frais_livraison);
-    } else if (!isRetrait && sousTotalProduits > 0) {
-      fraisLivraison = sousTotalProduits >= 40 ? 0 : 2.50;
-    }
-
-    const totalFinal = parseFloat(order.total);
-    // Micro-entreprise en franchise de TVA (art. 293 B) : pas de ligne TVA.
-    // La remise (fidélité / parrainage / code promo) est le résidu qui fait
-    // que sous-total + livraison - remise = total réellement payé.
-    const remiseTotale = Math.round((sousTotalProduits + fraisLivraison - totalFinal) * 100) / 100;
-
-    const fenetre = window.open('', '', 'height=800,width=900');
-    if (!fenetre) return;
-    fenetre.document.write(`
-      <html>
-        <head>
-          <title>Facture ${refFacture}</title>
-          <style>
-            body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #2D3748; padding: 50px; line-height: 1.5; }
-            .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 60px; }
-            .brand h1 { font-size: 28px; font-weight: 900; margin: 0; letter-spacing: -1px; color: #16423C; }
-            .brand h1 span { color: #6A9C89; }
-            .brand p { font-size: 12px; color: #718096; margin: 5px 0 0 0; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
-            .invoice-details { text-align: right; }
-            .invoice-details h2 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 5px 0; color: #718096; }
-            .invoice-details p { font-size: 16px; font-weight: 800; margin: 0; color: #1A202C; }
-            .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 50px; }
-            .info-box h3 { font-size: 11px; text-transform: uppercase; color: #A0AEC0; margin-bottom: 10px; letter-spacing: 1px; border-bottom: 1px solid #EDF2F7; padding-bottom: 5px; }
-            .info-box p { font-size: 14px; margin: 0; font-weight: 600; }
-            table { width: 100%; border-collapse: collapse; margin-bottom: 40px; }
-            th { text-align: left; padding: 15px 10px; background: #F7FAFC; font-size: 11px; text-transform: uppercase; color: #718096; border-top: 2px solid #16423C; }
-            td { padding: 15px 10px; border-bottom: 1px solid #EDF2F7; font-size: 14px; }
-            .text-right { text-align: right; }
-            .totals-area { display: flex; justify-content: flex-end; }
-            .totals-table { width: 280px; }
-            .totals-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 14px; }
-            .totals-row.grand-total { border-top: 2px solid #16423C; margin-top: 10px; padding-top: 15px; font-size: 20px; font-weight: 900; color: #16423C; }
-            .footer-note { margin-top: 100px; text-align: center; font-size: 11px; color: #A0AEC0; border-top: 1px solid #EDF2F7; padding-top: 20px; }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <div class="brand">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 60" width="220" height="41" style="display:block;margin-bottom:6px;">
-                <circle cx="28" cy="30" r="9" fill="#F97316"/>
-                <line x1="28" y1="7" x2="28" y2="15" stroke="#F97316" stroke-width="2.5" stroke-linecap="round"/>
-                <line x1="28" y1="45" x2="28" y2="53" stroke="#F97316" stroke-width="2.5" stroke-linecap="round"/>
-                <line x1="5" y1="30" x2="13" y2="30" stroke="#F97316" stroke-width="2.5" stroke-linecap="round"/>
-                <line x1="43" y1="30" x2="51" y2="30" stroke="#F97316" stroke-width="2.5" stroke-linecap="round"/>
-                <line x1="44.3" y1="13.7" x2="38.5" y2="19.5" stroke="#F97316" stroke-width="2.5" stroke-linecap="round"/>
-                <line x1="11.7" y1="46.3" x2="17.5" y2="40.5" stroke="#F97316" stroke-width="2.5" stroke-linecap="round"/>
-                <line x1="11.7" y1="13.7" x2="17.5" y2="19.5" stroke="#F97316" stroke-width="2.5" stroke-linecap="round"/>
-                <line x1="44.3" y1="46.3" x2="38.5" y2="40.5" stroke="#F97316" stroke-width="2.5" stroke-linecap="round"/>
-                <text x="62" y="39" font-family="Georgia, 'Times New Roman', serif" font-size="26" font-weight="400" fill="#4a3b32" letter-spacing="0.3">Soleil et Saveurs</text>
-              </svg>
-              <p>Produits Frais</p>
-              <div style="font-size: 11px; color: #718096; margin-top: 10px; font-weight: normal; text-transform: none; line-height: 1.6;">
-                Khaled Boulila — Entreprise individuelle<br/>
-                Siège social : 6-8 Avenue Henriette, 93170 Bagnolet<br/>
-                SIRET : 821 324 324 00028<br/>
-                Livraison Yvelines (78)
-              </div>
-            </div>
-            <div class="invoice-details">
-              <h2>Référence Facture</h2>
-              <p>${refFacture}</p>
-              <h2 style="margin-top: 15px;">Date de commande</h2>
-              <p>${dateCmd}</p>
-            </div>
-          </div>
-          <div class="info-grid">
-            <div class="info-box">
-              <h3>Client</h3>
-              <p>${escapeHtml(order.nom_client || `${profile?.first_name || ''} ${profile?.last_name || ''}`)}</p>
-              <p style="font-weight: normal; margin-top: 4px;">${escapeHtml(profile?.email || '')}</p>
-            </div>
-            <div class="info-box">
-              <h3>Mode de livraison</h3>
-              <p>${isRetrait ? '📍 Retrait au centre' : '🚚 Livraison à domicile'}</p>
-              <p style="font-weight: normal; color: #4A5568; font-size: 13px; margin-top: 5px;">${escapeHtml(order.adresse_livraison)}</p>
-              ${order.date_livraison ? `<p style="font-weight: bold; color: #FF4500; font-size: 13px; margin-top: 8px;">📅 Livraison le : ${new Date(order.date_livraison + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</p>` : ''}
-            </div>
-          </div>
-          <table>
-            <thead>
-              <tr>
-                <th>Description des articles</th>
-                <th class="text-right">Quantité</th>
-                <th class="text-right">Prix Unit. TTC</th>
-                <th class="text-right">Total TTC</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${items.map((i: any) => {
-                const nomProduit = i.nom || i.name || 'Produit inconnu';
-                const qte = parseFloat(i.quantite || i.quantity || 0);
-                const unite = escapeHtml(i.unite || 'unité(s)');
-                const isGram = unite === 'g';
-                const qteEffective = isGram ? qte / 1000 : qte;
-                const prixUnit = parseFloat(i.prixUnitaire || i.price || 0);
-                const totalLigne = i.prixTotalLigne ? parseFloat(i.prixTotalLigne) : qteEffective * prixUnit;
-                const qteAffiche = isGram
-                  ? (qte < 1000 ? `${qte}g` : `${(qte / 1000).toFixed(2).replace('.', ',')} kg`)
-                  : `${qte} ${unite}`;
-                const prixAffiche = isGram ? `${prixUnit.toFixed(2)}€/kg` : `${prixUnit.toFixed(2)}€`;
-                return `
-                  <tr>
-                    <td style="font-weight: bold;">${escapeHtml(nomProduit)}</td>
-                    <td class="text-right">${qteAffiche}</td>
-                    <td class="text-right">${prixAffiche}</td>
-                    <td class="text-right" style="font-weight: bold;">${totalLigne.toFixed(2)}€</td>
-                  </tr>`;
-              }).join('')}
-            </tbody>
-          </table>
-          <div class="totals-area">
-            <div class="totals-table">
-              <div class="totals-row"><span>Sous-total</span><span>${sousTotalProduits.toFixed(2)}€</span></div>
-              ${remiseTotale >= 0.01 ? `<div class="totals-row"><span>Remise</span><span>-${remiseTotale.toFixed(2)}€</span></div>` : ''}
-              <div class="totals-row"><span>Frais de livraison</span><span style="font-weight: bold;">${fraisLivraison === 0 ? 'OFFERT' : fraisLivraison.toFixed(2) + '€'}</span></div>
-              <div class="totals-row grand-total"><span>TOTAL PAYÉ</span><span>${totalFinal.toFixed(2)}€</span></div>
-            </div>
-          </div>
-          <div class="footer-note">
-            Merci d'avoir choisi le circuit court avec Soleil et Saveurs.<br/>
-            <em>TVA non applicable, art. 293 B du CGI</em><br/>
-            Ce document fait office de bon de livraison et de facture.
-          </div>
-        </body>
-      </html>
-    `);
-    fenetre.document.close();
-    setTimeout(() => fenetre.print(), 500);
+    imprimerDocument(htmlDocument(
+      { ...order, email_client: order.email_client || profile?.email },
+      factures[order.id] ?? null,
+      'récapitulatif de commande',
+    ));
   };
 
   // --- FORMATAGE ---
