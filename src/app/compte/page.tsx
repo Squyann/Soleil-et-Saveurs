@@ -9,7 +9,7 @@ import {
   ShoppingBag, Package, CheckCircle2, Clock, XCircle, Check,
   Loader2, Edit3, Save, X, ChevronRight, Star, Truck,
   AlertCircle, Gift, Copy, Shield, Trash2, AlertTriangle, FileText,
-  KeyRound, Lock, Eye, EyeOff
+  KeyRound, Lock, Eye, EyeOff, Megaphone
 } from 'lucide-react';
 import { formatPrix } from '@/lib/format';
 import { htmlDocument, imprimerDocument, type FactureEmise } from '@/lib/facture';
@@ -53,12 +53,21 @@ const STATUS_CONFIG = {
 
 export default function ComptePage() {
   const [user, setUser] = useState<any>(null);
+  const [offresMail, setOffresMail] = useState<boolean | null>(null);
+  const [offresEnCours, setOffresEnCours] = useState(false);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [factures, setFactures] = useState<Record<number, FactureEmise>>({});
   const [activeTab, setActiveTab] = useState<'profil' | 'commandes' | 'adresses'>('profil');
+
+  // Lien direct depuis les e-mails : /compte?onglet=commandes
+  useEffect(() => {
+    const onglet = new URLSearchParams(window.location.search).get('onglet');
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (onglet === 'commandes' || onglet === 'adresses') setActiveTab(onglet);
+  }, []);
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState<Partial<UserProfile>>({});
   const [saveLoading, setSaveLoading] = useState(false);
@@ -101,6 +110,8 @@ export default function ComptePage() {
       setEditForm(p);
       setLoading(false);
       fetchOrders(user.id);
+      // Choix « offres et nouveautés par e-mail » (consentement daté côté base)
+      supabase.rpc('mes_preferences_mail').then(({ data }) => { if (data) setOffresMail(Boolean(data.accepte_offres)); });
       loadDBProfile(user.id);
       processReferral(user);
       fetch('/api/is-admin').then(r => r.json()).then(d => setIsAdmin(d.isAdmin === true));
@@ -534,6 +545,29 @@ export default function ComptePage() {
                     <span className="flex-1"><strong className="block text-base font-extrabold">Panel Admin</strong><span className="block text-sm text-[#6F5A4B]">Accès au tableau de bord</span></span>
                     <ChevronRight className="w-[18px] h-[18px] text-[#6F5A4B]" aria-hidden />
                   </Link>
+                )}
+                {/* OFFRES PAR E-MAIL (consentement, modifiable à tout moment) */}
+                {offresMail !== null && (
+                  <div className={ligneAction}>
+                    <span className="shrink-0 w-11 h-11 rounded-[14px] bg-[#ECF7EF] text-[#166534] flex items-center justify-center" aria-hidden><Megaphone className="w-5 h-5" /></span>
+                    <span className="flex-1 min-w-0" id="libelle-offres"><strong className="block text-base font-extrabold">Offres et nouveautés par e-mail</strong><span className="block text-sm text-[#6F5A4B]">{offresMail ? 'Vous les recevez · désactivable à tout moment' : 'Vous ne les recevez pas'}</span></span>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={offresMail}
+                      aria-labelledby="libelle-offres"
+                      disabled={offresEnCours}
+                      onClick={async () => {
+                        setOffresEnCours(true);
+                        const { data, error } = await supabase.rpc('definir_preferences_mail', { p_accepte: !offresMail });
+                        if (!error && data) setOffresMail(Boolean(data.accepte_offres));
+                        setOffresEnCours(false);
+                      }}
+                      className={`relative shrink-0 w-12 h-7 rounded-full transition-colors disabled:opacity-60 ${offresMail ? 'bg-[#166534]' : 'bg-[#DDD0BF]'}`}
+                    >
+                      <span className={`absolute top-[3px] w-[22px] h-[22px] rounded-full bg-white shadow transition-all ${offresMail ? 'left-[23px]' : 'left-[3px]'}`} />
+                    </button>
+                  </div>
                 )}
                 {/* MODIFIER LE MOT DE PASSE */}
                 <button

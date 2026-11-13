@@ -1,50 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth, consommerQuota, getSupabaseServerClient } from '@/lib/api-auth';
-
-function escapeHtml(str: string): string {
-  return String(str ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
-
-function getSiteUrl() {
-  if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
-  return 'http://localhost:3000';
-}
-
-function buildLignesHTML(panier: any[]) {
-  return panier.map((item: any) => {
-    const qte = Number(item.quantite) || 0;
-    const unite = item.unite === 'kg' ? ' kg' : item.unite === 'g' ? 'g' : 'x';
-    return `
-    <tr>
-      <td style="padding:10px 12px;border-bottom:1px solid #f0f0f0;">
-        ${qte}${unite} ${escapeHtml(item.name)}
-      </td>
-      <td style="padding:10px 12px;border-bottom:1px solid #f0f0f0;text-align:right;font-weight:bold;">
-        ${(Number(item.prix_ligne) || 0).toFixed(2)}€
-      </td>
-    </tr>`;
-  }).join('');
-}
-
-async function sendEmail(to: string, subject: string, html: string, apiKey: string, from: string): Promise<{ ok: boolean; detail?: string }> {
-  const res = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from, to, subject, html, reply_to: 'soleiletsaveurs.livraison@gmail.com' }),
-  });
-  if (!res.ok) {
-    const detail = await res.text();
-    console.error(`[notify-order] Resend error (to=${to}) status=${res.status}:`, detail);
-    return { ok: false, detail };
-  }
-  return { ok: true };
-}
+import { emailCommandeRecue, emailNouvelleCommande, type CommandeEmail } from '@/lib/email/commande';
+import { envoyerEmail } from '@/lib/email/envoi';
 
 export async function POST(req: NextRequest) {
   const { user, error: authError } = await requireAuth();
@@ -59,9 +16,8 @@ export async function POST(req: NextRequest) {
   try {
     // Le corps de la requête ne contient que le numéro de la commande : tout le
     // contenu de l'e-mail est relu dans la base (commande du client connecté,
-    // passée il y a moins de 30 minutes). Avant, l'e-mail était construit avec
-    // les données envoyées par le navigateur : un client pouvait faire envoyer
-    // à la boutique une fausse « nouvelle commande » au contenu inventé.
+    // passée il y a moins de 30 minutes). Un client ne peut donc pas faire
+    // envoyer à la boutique une fausse « nouvelle commande » au contenu inventé.
     const body = await req.json().catch(() => ({}));
     const commandeId = Number(body?.commande_id);
     if (!Number.isInteger(commandeId) || commandeId <= 0) {
@@ -70,7 +26,7 @@ export async function POST(req: NextRequest) {
     const supabase = await getSupabaseServerClient();
     const { data: cmd } = await supabase
       .from('commandes')
-      .select('id, user_id, nom_client, telephone_client, adresse_livraison, total, contenu_panier, date_livraison, code_promo, remise_code_pct, frais_livraison, created_at')
+      .select('id, user_id, nom_client, telephone_client, adresse_livraison, total, contenu_panier, date_livraison, code_promo, remise_code_pct, frais_livraison, distance_km, commentaire_client, created_at')
       .eq('id', commandeId)
       .eq('user_id', user!.id)
       .maybeSingle();
@@ -78,152 +34,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Commande introuvable' }, { status: 404 });
     }
 
-    const lignes = Array.isArray(cmd.contenu_panier) ? cmd.contenu_panier : [];
-    const sousTotal = lignes.reduce((s: number, l: any) => s + (Number(l.prixTotalLigne) || 0), 0);
-    const frais = Number(cmd.frais_livraison) || 0;
-    // Remise totale déduite des montants enregistrés (code promo, ou
-    // fidélité / parrainage — jamais cumulés avec un code)
-    const remiseTotale = Math.max(Math.round((sousTotal + frais - Number(cmd.total)) * 100) / 100, 0);
-    const avecCode = !!cmd.code_promo && remiseTotale > 0;
-    const commande = {
-      nom: escapeHtml(cmd.nom_client),
-      telephone: escapeHtml(cmd.telephone_client),
-      adresse: escapeHtml(cmd.adresse_livraison),
-      // L'email de destination du client vient toujours du compte authentifié
-      email_client: escapeHtml(user!.email ?? ''),
-      methode_paiement: escapeHtml('À la livraison (espèces ou carte)'),
-      creneau_livraison: null as string | null,
-      date_livraison: /^\d{4}-\d{2}-\d{2}$/.test(String(cmd.date_livraison ?? '')) ? cmd.date_livraison : null,
-      panier: lignes.map((l: any) => ({
-        name: escapeHtml(l.name ?? l.nom ?? ''),
-        quantite: Number(l.quantite) || 0,
-        unite: escapeHtml(l.unite ?? ''),
-        prix_ligne: Number(l.prixTotalLigne) || 0,
-      })),
-      remise_pct: !avecCode && remiseTotale > 0 && sousTotal > 0 ? Math.round((remiseTotale / sousTotal) * 100) : 0,
-      remise_montant: !avecCode ? remiseTotale : 0,
-      remise_code_pct: avecCode ? Number(cmd.remise_code_pct) || 0 : 0,
-      remise_code_montant: avecCode ? remiseTotale : 0,
-      frais_livraison: frais,
-      total: Number(cmd.total) || 0,
-    };
-    const siteUrl = getSiteUrl();
-    const adminUrl = `${siteUrl}/admin`;
-    const compteUrl = `${siteUrl}/compte`;
-    const adminEmail = process.env.ADMIN_EMAIL!;
-
-    const lignesHTML = buildLignesHTML(commande.panier || []);
-
-    const remiseHTML = Number(commande.remise_pct) > 0
-      ? `<tr>
-          <td style="padding:8px 12px;color:#16a34a;font-weight:bold;">Remise -${Number(commande.remise_pct)}%</td>
-          <td style="padding:8px 12px;text-align:right;color:#16a34a;font-weight:bold;">-${Number(commande.remise_montant).toFixed(2)}€</td>
-        </tr>`
-      : '';
-    // Le code promo est une remise distincte de fidélité / parrainage : sans cette
-    // ligne, les lignes de l'e-mail ne correspondaient pas au total facturé.
-    const remiseCodeHTML = Number(commande.remise_code_montant) > 0
-      ? `<tr>
-          <td style="padding:8px 12px;color:#16a34a;font-weight:bold;">Code promo -${Number(commande.remise_code_pct)}%</td>
-          <td style="padding:8px 12px;text-align:right;color:#16a34a;font-weight:bold;">-${Number(commande.remise_code_montant).toFixed(2)}€</td>
-        </tr>`
-      : '';
-
-    const livraisonLabel = Number(commande.frais_livraison) === 0 ? 'Gratuit' : `${Number(commande.frais_livraison).toFixed(2)}€`;
-
-    const tableCommande = `
-      <table style="width:100%;border-collapse:collapse;border:1px solid #f0f0f0;border-radius:12px;overflow:hidden;">
-        ${lignesHTML}
-        ${remiseHTML}
-        ${remiseCodeHTML}
-        <tr>
-          <td style="padding:10px 12px;color:#64748b;font-size:13px;">Livraison</td>
-          <td style="padding:10px 12px;text-align:right;font-size:13px;color:#64748b;">${livraisonLabel}</td>
-        </tr>
-        <tr style="background:#FF4500;">
-          <td style="padding:14px 16px;color:white;font-weight:900;font-size:16px;text-transform:uppercase;letter-spacing:1px;">Total</td>
-          <td style="padding:14px 16px;color:white;font-weight:900;font-size:20px;text-align:right;">${Number(commande.total).toFixed(2)}€</td>
-        </tr>
-      </table>`;
-
-    // --- EMAIL ADMIN ---
-    const adminHtml = `<!DOCTYPE html>
-<html lang="fr">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#f5f4f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
-  <div style="max-width:600px;margin:32px auto;background:white;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
-    <div style="background:#FF4500;padding:28px 32px;text-align:center;">
-      <p style="color:rgba(255,255,255,0.8);margin:0 0 4px;font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;">Soleil et Saveurs</p>
-      <h1 style="color:white;margin:0;font-size:24px;font-weight:900;">🛒 Nouvelle commande !</h1>
-    </div>
-    <div style="padding:32px;">
-      <h2 style="margin:0 0 16px;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:2px;color:#94a3b8;">Informations client</h2>
-      <table style="width:100%;border-collapse:collapse;background:#f9f8f6;border-radius:12px;overflow:hidden;">
-        <tr><td style="padding:10px 16px;color:#64748b;font-size:13px;font-weight:600;width:110px;">Client</td><td style="padding:10px 16px;font-weight:800;font-size:14px;">${commande.nom}</td></tr>
-        <tr style="background:white;"><td style="padding:10px 16px;color:#64748b;font-size:13px;font-weight:600;">Email</td><td style="padding:10px 16px;font-size:14px;">${commande.email_client || '—'}</td></tr>
-        <tr><td style="padding:10px 16px;color:#64748b;font-size:13px;font-weight:600;">Téléphone</td><td style="padding:10px 16px;font-size:14px;">${commande.telephone}</td></tr>
-        <tr style="background:white;"><td style="padding:10px 16px;color:#64748b;font-size:13px;font-weight:600;">Adresse</td><td style="padding:10px 16px;font-size:14px;">${commande.adresse}</td></tr>
-        <tr><td style="padding:10px 16px;color:#64748b;font-size:13px;font-weight:600;">Paiement</td><td style="padding:10px 16px;font-size:14px;">${commande.methode_paiement}</td></tr>
-        ${commande.date_livraison ? `<tr style="background:white;"><td style="padding:10px 16px;color:#64748b;font-size:13px;font-weight:600;">📅 Date</td><td style="padding:10px 16px;font-size:14px;font-weight:800;color:#FF4500;">${new Date(commande.date_livraison + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</td></tr>` : ''}
-        ${commande.creneau_livraison ? `<tr><td style="padding:10px 16px;color:#64748b;font-size:13px;font-weight:600;">Créneau</td><td style="padding:10px 16px;font-size:14px;font-weight:800;color:#FF4500;">🕐 ${commande.creneau_livraison}</td></tr>` : ''}
-      </table>
-      <h2 style="margin:28px 0 16px;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:2px;color:#94a3b8;">Détail de la commande</h2>
-      ${tableCommande}
-      <div style="margin-top:32px;text-align:center;">
-        <a href="${adminUrl}" style="display:inline-block;background:#1e293b;color:white;padding:16px 32px;border-radius:10px;text-decoration:none;font-weight:800;font-size:14px;letter-spacing:1px;text-transform:uppercase;">Accéder à la page admin →</a>
-      </div>
-    </div>
-    <div style="padding:16px 32px;background:#f9f8f6;text-align:center;">
-      <p style="margin:0;font-size:11px;color:#94a3b8;">Soleil et Saveurs · Livraison dans le 78</p>
-    </div>
-  </div>
-</body>
-</html>`;
-
-    // --- EMAIL CLIENT ---
-    const clientHtml = `<!DOCTYPE html>
-<html lang="fr">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#f5f4f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
-  <div style="max-width:600px;margin:32px auto;background:white;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
-    <div style="background:#FF4500;padding:28px 32px;text-align:center;">
-      <p style="color:rgba(255,255,255,0.8);margin:0 0 4px;font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;">Soleil et Saveurs</p>
-      <h1 style="color:white;margin:0;font-size:24px;font-weight:900;">✅ Commande reçue !</h1>
-    </div>
-    <div style="padding:32px;">
-      <p style="font-size:15px;font-weight:700;color:#1e293b;margin:0 0 8px;">Bonjour ${commande.nom},</p>
-      <p style="font-size:14px;color:#64748b;margin:0 0 28px;line-height:1.6;">Merci pour votre commande ! Nous l'avons bien reçue et nous la préparons avec soin. Vous serez notifié(e) par email dès qu'elle sera livrée.</p>
-      <h2 style="margin:0 0 16px;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:2px;color:#94a3b8;">Récapitulatif</h2>
-      ${tableCommande}
-      <div style="margin-top:24px;padding:16px;background:#f9f8f6;border-radius:12px;">
-        <p style="margin:0;font-size:13px;color:#64748b;font-weight:600;">📍 Livraison à : <strong style="color:#1e293b;">${commande.adresse}</strong></p>
-        ${commande.date_livraison ? `<p style="margin:8px 0 0;font-size:13px;color:#64748b;font-weight:600;">📅 Date de livraison : <strong style="color:#FF4500;">${new Date(commande.date_livraison + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</strong></p>` : ''}
-        <p style="margin:8px 0 0;font-size:13px;color:#64748b;font-weight:600;">💳 Paiement : <strong style="color:#1e293b;">${commande.methode_paiement}</strong></p>
-        ${commande.creneau_livraison ? `<p style="margin:8px 0 0;font-size:13px;color:#64748b;font-weight:600;">🕐 Créneau : <strong style="color:#FF4500;">${commande.creneau_livraison}</strong></p>` : ''}
-      </div>
-      <div style="margin-top:32px;text-align:center;">
-        <a href="${compteUrl}" style="display:inline-block;background:#1e293b;color:white;padding:16px 32px;border-radius:10px;text-decoration:none;font-weight:800;font-size:14px;letter-spacing:1px;text-transform:uppercase;">Suivre ma commande →</a>
-      </div>
-    </div>
-    <div style="padding:16px 32px;background:#f9f8f6;text-align:center;">
-      <p style="margin:0;font-size:11px;color:#94a3b8;">Soleil et Saveurs · Livraison dans le 78 · <a href="mailto:soleiletsaveurs.livraison@gmail.com" style="color:#FF4500;">soleiletsaveurs.livraison@gmail.com</a></p>
-    </div>
-  </div>
-</body>
-</html>`;
-
     if (!process.env.RESEND_API_KEY) {
       console.warn('[notify-order] RESEND_API_KEY non configuré — emails non envoyés');
       return NextResponse.json({ ok: true, skipped: true });
     }
 
-    const from = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+    const commande = cmd as CommandeEmail;
+    // L'adresse du client vient toujours du compte authentifié
+    const emailClient = user!.email ?? '';
 
-    const adminResult = await sendEmail(adminEmail, `🛒 Commande de ${commande.nom} — ${Number(commande.total).toFixed(2)}€`, adminHtml, process.env.RESEND_API_KEY, from);
-    let clientResult: { ok: boolean; detail?: string } = { ok: true, detail: 'no email_client' };
+    const boutique = emailNouvelleCommande(commande, emailClient);
+    const adminResult = await envoyerEmail({ to: process.env.ADMIN_EMAIL!, subject: boutique.objet, html: boutique.html, replyTo: emailClient || undefined }, 'notify-order');
 
-    if (commande.email_client) {
-      clientResult = await sendEmail(commande.email_client, `✅ Commande confirmée — Soleil et Saveurs`, clientHtml, process.env.RESEND_API_KEY, from);
+    let clientResult = { ok: true };
+    if (emailClient) {
+      const client = emailCommandeRecue(commande);
+      clientResult = await envoyerEmail({ to: emailClient, subject: client.objet, html: client.html }, 'notify-order');
     }
 
     // On ne renvoie jamais le corps d'erreur de Resend au client : il divulgue
