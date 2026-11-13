@@ -2,8 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
-import { Lock, ArrowRight, Loader2, CheckCircle2, Eye, EyeOff, ShieldCheck } from 'lucide-react';
+import { Lock, ArrowRight, Loader2, Check, Eye, EyeOff, ShieldCheck, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
+import GabaritConnexion, { etiquetteChamp, champAvecIcone, iconeChamp, boutonPrincipal, messageErreur } from '@/components/GabaritConnexion';
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState('');
@@ -49,129 +50,79 @@ export default function ResetPasswordPage() {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-[#EDE3D5] flex flex-col md:flex-row">
-
-      {/* GAUCHE — visuel */}
-      <div className="hidden md:flex md:w-1/2 bg-[#3D2B1F] relative overflow-hidden items-center justify-center p-12">
-        <div className="absolute top-[-10%] right-[-10%] w-96 h-96 bg-[#FF4500] rounded-full blur-[120px] opacity-20" />
-        <div className="absolute bottom-[-10%] left-[-10%] w-96 h-96 bg-orange-500 rounded-full blur-[120px] opacity-10" />
-        <div className="relative z-10 max-w-lg">
-          <Link href="/" className="inline-flex items-center text-slate-400 hover:text-white transition-colors mb-12 group text-sm font-bold">
-            ← Retour à la boutique
-          </Link>
-          <h1 className="text-6xl font-black text-white leading-none tracking-tighter mb-8">
-            NOUVEAU<br />
-            <span className="text-[#FF4500]">MOT DE PASSE.</span>
-          </h1>
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 bg-[#F5EAE0]/5 rounded-2xl flex items-center justify-center shrink-0 border border-white/10">
-              <ShieldCheck className="w-6 h-6 text-[#FF4500]" />
-            </div>
-            <div>
-              <h3 className="text-white font-bold uppercase tracking-wider text-sm">Compte sécurisé</h3>
-              <p className="text-slate-400 text-sm leading-relaxed">Choisissez un mot de passe fort d'au moins 8 caractères.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* DROITE — formulaire */}
-      <div className="flex-1 flex items-center justify-center p-6 md:p-12">
-        <div className="w-full max-w-[400px] space-y-8">
-
-          {success ? (
-            <div className="text-center space-y-6">
-              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-                <CheckCircle2 className="w-10 h-10 text-green-500" />
-              </div>
-              <div>
-                <h2 className="text-3xl font-black text-slate-900 tracking-tighter uppercase">Mot de passe mis à jour !</h2>
-                <p className="text-slate-500 text-sm mt-2">Redirection vers la connexion dans quelques secondes…</p>
-              </div>
-              <Link href="/login" className="inline-flex items-center gap-2 text-[#FF4500] font-black text-sm uppercase hover:underline">
-                Se connecter maintenant <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
-          ) : !ready ? (
-            <div className="text-center space-y-4">
-              <Loader2 className="w-10 h-10 animate-spin text-[#FF4500] mx-auto" />
-              <p className="text-slate-500 text-sm font-bold">Vérification du lien en cours…</p>
-              <p className="text-slate-400 text-xs">Si rien ne se passe, le lien est peut-être expiré.<br />
-                <Link href="/login" className="text-[#FF4500] font-black hover:underline">Retourner à la connexion</Link>
-              </p>
-            </div>
-          ) : (
-            <>
-              <div className="text-center md:text-left">
-                <p className="text-[#FF4500] font-black text-[10px] tracking-[0.3em] uppercase mb-2">Sécurité</p>
-                <h2 className="text-4xl font-black text-slate-900 tracking-tighter uppercase">Nouveau mot de passe</h2>
-                <p className="text-slate-500 text-sm mt-2 font-medium">Choisissez un mot de passe sécurisé.</p>
-              </div>
-
-              <form onSubmit={handleSubmit} className="space-y-4">
-                {error && (
-                  <div className="p-4 bg-red-50 border border-red-100 rounded-2xl text-red-600 text-xs font-bold flex items-center gap-3">
-                    <div className="w-2 h-2 bg-red-600 rounded-full animate-pulse shrink-0" />
-                    {error}
-                  </div>
-                )}
-
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase ml-4 tracking-widest">Nouveau mot de passe</label>
-                  <div className="relative group">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-[#FF4500] transition-colors" />
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      required
-                      placeholder="••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="w-full bg-[#F5EAE0] border border-[#D5C9B8] p-4 pl-12 pr-12 rounded-2xl font-bold text-sm focus:border-[#FF4500] focus:ring-4 focus:ring-[#FF4500]/5 outline-none transition-all shadow-sm"
-                    />
-                    <button type="button" onClick={() => setShowPassword(v => !v)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-600 transition-colors">
-                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase ml-4 tracking-widest">Confirmer le mot de passe</label>
-                  <div className="relative group">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-[#FF4500] transition-colors" />
-                    <input
-                      type={showConfirm ? 'text' : 'password'}
-                      required
-                      placeholder="••••••••"
-                      value={confirm}
-                      onChange={(e) => setConfirm(e.target.value)}
-                      className="w-full bg-[#F5EAE0] border border-[#D5C9B8] p-4 pl-12 pr-12 rounded-2xl font-bold text-sm focus:border-[#FF4500] focus:ring-4 focus:ring-[#FF4500]/5 outline-none transition-all shadow-sm"
-                    />
-                    <button type="button" onClick={() => setShowConfirm(v => !v)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-600 transition-colors">
-                      {showConfirm ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                    </button>
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-[#3D2B1F] text-white p-5 rounded-2xl font-black uppercase text-sm tracking-widest hover:bg-[#FF4500] transition-all shadow-xl shadow-slate-200 flex items-center justify-center gap-3 group disabled:bg-slate-200"
-                >
-                  {loading ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <>
-                      Enregistrer le mot de passe
-                      <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                    </>
-                  )}
-                </button>
-              </form>
-            </>
-          )}
-        </div>
+  const champMotDePasse = (id: string, libelle: string, valeur: string, changer: (v: string) => void, visible: boolean, basculer: () => void) => (
+    <div>
+      <label htmlFor={id} className={etiquetteChamp}>{libelle}</label>
+      <div className="relative">
+        <Lock className={iconeChamp} aria-hidden />
+        <input
+          id={id}
+          type={visible ? 'text' : 'password'}
+          required
+          autoComplete="new-password"
+          placeholder="••••••••"
+          value={valeur}
+          onChange={(e) => changer(e.target.value)}
+          className={`${champAvecIcone} pr-14`}
+        />
+        <button type="button" onClick={basculer} aria-label={visible ? 'Masquer le mot de passe' : 'Afficher le mot de passe'} className="absolute right-1.5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-xl flex items-center justify-center text-[#6F5A4B] hover:text-[#3D2B1F] transition-colors">
+          {visible ? <EyeOff className="w-[19px] h-[19px]" aria-hidden /> : <Eye className="w-[19px] h-[19px]" aria-hidden />}
+        </button>
       </div>
     </div>
+  );
+
+  return (
+    <GabaritConnexion
+      surtitre="Sécurité"
+      titre="Nouveau mot de passe"
+      sousTitre={success || !ready ? undefined : 'Choisissez un mot de passe sécurisé.'}
+      accroche={<>Nouveau<br /><em className="text-[#FF7A47]">mot de passe.</em></>}
+      arguments={[
+        { icone: <ShieldCheck className="w-[22px] h-[22px]" />, titre: 'Compte sécurisé', texte: "Choisissez un mot de passe fort d'au moins 8 caractères." },
+      ]}
+    >
+      {success ? (
+        <div className="flex flex-col items-center text-center gap-5 py-4">
+          <span className="ss-pop w-20 h-20 rounded-full bg-[#166534] text-white flex items-center justify-center"><Check className="w-10 h-10" strokeWidth={3} aria-hidden /></span>
+          <div>
+            <h2 className="titre text-3xl leading-tight">Mot de passe mis à jour !</h2>
+            <p className="mt-2 text-[15px] text-[#5C4030]">Redirection vers la connexion dans quelques secondes…</p>
+          </div>
+          <Link href="/login" className={boutonPrincipal}>
+            Se connecter maintenant <ArrowRight className="w-[22px] h-[22px]" strokeWidth={2.4} aria-hidden />
+          </Link>
+        </div>
+      ) : !ready ? (
+        <div className="flex flex-col items-center text-center gap-4 py-8">
+          <Loader2 className="w-10 h-10 animate-spin text-[#FF4500]" aria-hidden />
+          <p role="status" className="text-base font-bold">Vérification du lien en cours…</p>
+          <p className="text-sm leading-relaxed text-[#5C4030]">
+            Si rien ne se passe, le lien est peut-être expiré.<br />
+            <Link href="/login" className="font-extrabold text-[#C73600] underline underline-offset-4">Retourner à la connexion</Link>
+          </p>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4 lg:gap-[18px]">
+          {error && (
+            <p role="alert" className={messageErreur}>
+              <AlertCircle className="w-[18px] h-[18px] shrink-0" aria-hidden />{error}
+            </p>
+          )}
+          {champMotDePasse('nouveau-mdp', 'Nouveau mot de passe', password, setPassword, showPassword, () => setShowPassword(v => !v))}
+          {champMotDePasse('confirmer-mdp', 'Confirmer le mot de passe', confirm, setConfirm, showConfirm, () => setShowConfirm(v => !v))}
+          <button type="submit" disabled={loading} className={`${boutonPrincipal} mt-1 lg:mt-1.5`}>
+            {loading ? (
+              <Loader2 className="w-6 h-6 animate-spin mx-auto" aria-label="Enregistrement" />
+            ) : (
+              <>
+                Enregistrer le mot de passe
+                <ArrowRight className="w-[22px] h-[22px]" strokeWidth={2.4} aria-hidden />
+              </>
+            )}
+          </button>
+        </form>
+      )}
+    </GabaritConnexion>
   );
 }

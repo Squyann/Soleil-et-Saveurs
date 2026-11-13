@@ -2,20 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
-import {
-  Mail,
-  Lock,
-  ArrowRight,
-  Loader2,
-  ChevronLeft,
-  ShieldCheck,
-  Leaf,
-  Truck,
-  CheckCircle2,
-  Eye,
-  EyeOff
-} from 'lucide-react';
+import { Mail, Lock, ArrowRight, Loader2, Leaf, Truck, Banknote, Check, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
+import GabaritConnexion, { etiquetteChamp, champAvecIcone, iconeChamp, boutonPrincipal, messageErreur } from '@/components/GabaritConnexion';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -71,156 +60,92 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#EDE3D5] flex flex-col md:flex-row">
-      
-      {/* SECTION GAUCHE : VISUEL & ARGUMENTS (Caché sur mobile) */}
-      <div className="hidden md:flex md:w-1/2 bg-[#3D2B1F] relative overflow-hidden items-center justify-center p-12">
-        {/* Cercles décoratifs en arrière-plan */}
-        <div className="absolute top-[-10%] right-[-10%] w-96 h-96 bg-[#FF4500] rounded-full blur-[120px] opacity-20" />
-        <div className="absolute bottom-[-10%] left-[-10%] w-96 h-96 bg-orange-500 rounded-full blur-[120px] opacity-10" />
-        
-        <div className="relative z-10 max-w-lg">
-          <Link href="/" className="inline-flex items-center text-slate-400 hover:text-white transition-colors mb-12 group">
-            <ChevronLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" />
-            Retour à la boutique
-          </Link>
-          
-          <h1 className="text-6xl font-black text-white leading-none tracking-tighter mb-8">
-            VOS PRODUITS <br />
-            <span className="text-[#FF4500]">FRAIS, LIVRÉS CHEZ VOUS.</span>
-          </h1>
+    <GabaritConnexion
+      surtitre="Espace client"
+      titre="Connexion"
+      sousTitre="Bon retour parmi nous !"
+      accroche={<>Vos produits<br /><em className="text-[#FF7A47]">frais, livrés chez vous.</em></>}
+      arguments={[
+        { icone: <Leaf className="w-[22px] h-[22px]" />, titre: 'Qualité Premium', texte: 'Sélection rigoureuse de fruits et légumes frais chaque matin.' },
+        { icone: <Truck className="w-[22px] h-[22px]" />, titre: 'Livraison Rapide', texte: 'Livré dans tout le 78, dès le lendemain, à la date de votre choix.' },
+        { icone: <Banknote className="w-[22px] h-[22px]" />, titre: 'Paiement à la livraison', texte: 'En espèces ou par carte bancaire, directement au livreur.' },
+      ]}
+    >
+      <form onSubmit={handleLogin} className="flex flex-col gap-4 lg:gap-[18px]">
+        {error && (
+          <p role="alert" className={messageErreur}>
+            <AlertCircle className="w-[18px] h-[18px] shrink-0" aria-hidden />{error}
+          </p>
+        )}
 
-          <div className="space-y-6">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 bg-[#F5EAE0]/5 rounded-2xl flex items-center justify-center shrink-0 border border-white/10">
-                <Leaf className="w-6 h-6 text-green-400" />
-              </div>
-              <div>
-                <h3 className="text-white font-bold uppercase tracking-wider text-sm">Qualité Premium</h3>
-                <p className="text-slate-400 text-sm leading-relaxed">Sélection rigoureuse de fruits et légumes frais chaque matin.</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 bg-[#F5EAE0]/5 rounded-2xl flex items-center justify-center shrink-0 border border-white/10">
-                <Truck className="w-6 h-6 text-blue-400" />
-              </div>
-              <div>
-                <h3 className="text-white font-bold uppercase tracking-wider text-sm">Livraison Rapide</h3>
-                <p className="text-slate-400 text-sm leading-relaxed">Livré dans tout le 78, dès le lendemain, à la date de votre choix.</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 bg-[#F5EAE0]/5 rounded-2xl flex items-center justify-center shrink-0 border border-white/10">
-                <ShieldCheck className="w-6 h-6 text-[#FF4500]" />
-              </div>
-              <div>
-                <h3 className="text-white font-bold uppercase tracking-wider text-sm">Paiement à la livraison</h3>
-                <p className="text-slate-400 text-sm leading-relaxed">En espèces ou par carte bancaire, directement au livreur.</p>
-              </div>
-            </div>
+        <div>
+          <label htmlFor="connexion-email" className={etiquetteChamp}>Email</label>
+          <div className="relative">
+            <Mail className={iconeChamp} aria-hidden />
+            <input
+              id="connexion-email"
+              type="email"
+              required
+              autoComplete="email"
+              placeholder="exemple@mail.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className={champAvecIcone}
+            />
           </div>
         </div>
-      </div>
 
-      {/* SECTION DROITE : FORMULAIRE */}
-      <div className="flex-1 flex items-center justify-center p-6 md:p-12">
-        <div className="w-full max-w-[400px] space-y-8">
-          
-          <div className="text-center md:text-left">
-            <p className="text-[#FF4500] font-black text-[10px] tracking-[0.3em] uppercase mb-2">Espace Client</p>
-            <h2 className="text-4xl font-black text-slate-900 tracking-tighter uppercase">Connexion</h2>
-            <p className="text-slate-500 text-sm mt-2 font-medium">Bon retour parmi nous !</p>
-          </div>
-
-          <form onSubmit={handleLogin} className="space-y-4">
-            {error && (
-              <div className="p-4 bg-red-50 border border-red-100 rounded-2xl text-red-600 text-xs font-bold flex items-center gap-3 animate-shake">
-                <div className="w-2 h-2 bg-red-600 rounded-full animate-pulse" />
-                {error}
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase ml-4 tracking-widest">Email</label>
-              <div className="relative group">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-[#FF4500] transition-colors" />
-                <input 
-                  type="email" 
-                  required
-                  placeholder="exemple@mail.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-[#F5EAE0] border border-[#D5C9B8] p-4 pl-12 rounded-2xl font-bold text-sm focus:border-[#FF4500] focus:ring-4 focus:ring-[#FF4500]/5 outline-none transition-all shadow-sm"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex justify-between items-center ml-4">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Mot de passe</label>
-                <button
-                  type="button"
-                  onClick={handleForgotPassword}
-                  disabled={resetLoading || resetSent}
-                  className="text-[10px] font-black text-[#FF4500] uppercase hover:underline disabled:opacity-50"
-                >
-                  {resetLoading ? 'Envoi…' : resetSent ? 'Email envoyé ✓' : 'Oublié ?'}
-                </button>
-              </div>
-              <div className="relative group">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-[#FF4500] transition-colors" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-[#F5EAE0] border border-[#D5C9B8] p-4 pl-12 pr-12 rounded-2xl font-bold text-sm focus:border-[#FF4500] focus:ring-4 focus:ring-[#FF4500]/5 outline-none transition-all shadow-sm"
-                />
-                <button type="button" onClick={() => setShowPassword(v => !v)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-600 transition-colors">
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
-            </div>
-
-            <button 
-              type="submit" 
-              disabled={loading}
-              className="w-full bg-[#3D2B1F] text-white p-5 rounded-2xl font-black uppercase text-sm tracking-widest hover:bg-[#FF4500] transition-all shadow-xl shadow-slate-200 flex items-center justify-center gap-3 group disabled:bg-slate-200"
+        <div>
+          <div className="flex items-center justify-between gap-3 mb-1.5">
+            <label htmlFor="connexion-mdp" className={`${etiquetteChamp} !mb-0`}>Mot de passe</label>
+            <button
+              type="button"
+              onClick={handleForgotPassword}
+              disabled={resetLoading || resetSent}
+              className="min-h-7 text-[13.5px] lg:text-sm font-bold text-[#C73600] hover:underline underline-offset-4 disabled:text-[#166534] disabled:no-underline"
             >
-              {loading ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <>
-                  Accéder à mon compte
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </>
-              )}
+              {resetLoading ? 'Envoi…' : resetSent ? 'Email envoyé' : 'Oublié ?'}
             </button>
-          </form>
-
-          <div className="pt-8 text-center">
-            <p className="text-slate-400 text-xs font-bold uppercase tracking-tighter">
-              Pas encore de compte ? 
-              <Link href="/signup" className="text-[#FF4500] ml-2 hover:underline">Créer un profil</Link>
-            </p>
           </div>
-
-          <div className="flex items-center justify-center gap-8 pt-8 opacity-30 grayscale hover:grayscale-0 transition-all cursor-default">
-             <div className="flex items-center gap-1">
-                <CheckCircle2 className="w-3 h-3" />
-                <span className="text-[8px] font-black uppercase">RGPD Ready</span>
-             </div>
-             <div className="flex items-center gap-1">
-                <CheckCircle2 className="w-3 h-3" />
-                <span className="text-[8px] font-black uppercase">SSL Secure</span>
-             </div>
+          <div className="relative">
+            <Lock className={iconeChamp} aria-hidden />
+            <input
+              id="connexion-mdp"
+              type={showPassword ? 'text' : 'password'}
+              required
+              autoComplete="current-password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className={`${champAvecIcone} pr-14`}
+            />
+            <button type="button" onClick={() => setShowPassword(v => !v)} aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'} className="absolute right-1.5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-xl flex items-center justify-center text-[#6F5A4B] hover:text-[#3D2B1F] transition-colors">
+              {showPassword ? <EyeOff className="w-[19px] h-[19px]" aria-hidden /> : <Eye className="w-[19px] h-[19px]" aria-hidden />}
+            </button>
           </div>
-
         </div>
-      </div>
-    </div>
+
+        <button type="submit" disabled={loading} className={`${boutonPrincipal} mt-1 lg:mt-1.5`}>
+          {loading ? (
+            <Loader2 className="w-6 h-6 animate-spin mx-auto" aria-label="Connexion en cours" />
+          ) : (
+            <>
+              Accéder à mon compte
+              <ArrowRight className="w-[22px] h-[22px]" strokeWidth={2.4} aria-hidden />
+            </>
+          )}
+        </button>
+      </form>
+
+      <p className="mt-5 lg:mt-[26px] text-center text-[15px] font-semibold text-[#5C4030]">
+        Pas encore de compte ?{' '}
+        <Link href="/signup" className="font-extrabold text-[#C73600] underline underline-offset-4">Créer un profil</Link>
+      </p>
+
+      <p className="mt-6 lg:mt-[34px] pt-[18px] lg:pt-[22px] border-t border-[#E3D6C4] flex items-center justify-center gap-5 text-[12.5px] lg:text-[13px] font-bold text-[#6F5A4B]">
+        <span className="inline-flex items-center gap-1.5"><Check className="w-4 h-4 text-[#15803D]" strokeWidth={2.4} aria-hidden />RGPD Ready</span>
+        <span className="inline-flex items-center gap-1.5"><Check className="w-4 h-4 text-[#15803D]" strokeWidth={2.4} aria-hidden />SSL Secure</span>
+      </p>
+    </GabaritConnexion>
   );
 }

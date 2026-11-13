@@ -3,11 +3,9 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import confetti from 'canvas-confetti';
-import { 
-  Mail, Lock, ArrowRight, Loader2, ChevronLeft, User, Sparkles, Gift,
-  ShieldCheck, Calendar, Phone, MapPin, AlertCircle, Eye, EyeOff
-} from 'lucide-react';
+import { Mail, Lock, ArrowRight, Loader2, Gift, ShieldCheck, Calendar, Phone, MapPin, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
+import GabaritConnexion, { etiquetteChamp, champ, champAvecIcone, iconeChamp, boutonPrincipal, messageErreur } from '@/components/GabaritConnexion';
 
 export default function SignupPage() {
   const [email, setEmail] = useState('');
@@ -140,180 +138,137 @@ export default function SignupPage() {
     }
   };
 
+  const force = passwordStrength();
+  const caseACocher = 'shrink-0 mt-0.5 w-[22px] h-[22px] accent-[#FF4500]';
+
   return (
-    <div className="min-h-screen bg-[#EDE3D5] flex flex-col md:flex-row-reverse">
-      
-      {/* SECTION VISUELLE */}
-      <div className="hidden md:flex md:w-1/2 bg-[#3D2B1F] relative overflow-hidden items-center justify-center p-12">
-        <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-[#FF4500] rounded-full blur-[150px] opacity-10" />
-        <div className="relative z-10 max-w-lg space-y-8 text-center md:text-left">
-          <h2 className="text-6xl font-black text-white leading-none tracking-tighter uppercase">Soleil  <br /><span className="text-[#FF4500]">& Saveurs.</span></h2>
-          <div className="space-y-4">
-            <div className="bg-[#F5EAE0]/5 p-6 rounded-3xl border border-white/10 backdrop-blur-sm flex gap-4 items-center">
-              <Gift className="w-8 h-8 text-[#FF4500]" />
-              <p className="text-slate-300 text-xs font-black uppercase tracking-widest">-10% sur votre 1ère commande avec le code SOLEIL78</p>
-            </div>
-            <div className="bg-[#F5EAE0]/5 p-6 rounded-3xl border border-white/10 backdrop-blur-sm flex gap-4 items-center">
-              <ShieldCheck className="w-8 h-8 text-green-400" />
-              <p className="text-slate-300 text-xs font-black uppercase tracking-widest">Produits frais et premium</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* SECTION FORMULAIRE */}
-      <div className="flex-1 flex items-center justify-center p-6 md:p-12 overflow-y-auto">
-        <div className="w-full max-w-[480px] py-12 space-y-8">
-          <div className="text-center md:text-left">
-            <Link href="/login" className="inline-flex items-center text-[10px] font-black text-slate-400 hover:text-[#FF4500] transition-colors mb-6 uppercase tracking-widest">
-              <ChevronLeft className="w-4 h-4 mr-1" /> Retour
-            </Link>
-            <h2 className="text-4xl font-black text-slate-900 tracking-tighter uppercase">Créer un compte</h2>
-          </div>
-
-          <form onSubmit={handleSignup} className="space-y-4">
-            {error && (
-              <div className="p-4 bg-red-50 border border-red-100 rounded-2xl text-red-600 text-[10px] font-black uppercase flex items-center gap-3 animate-shake">
-                <AlertCircle className="w-4 h-4" /> {error}
-              </div>
-            )}
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <label className="text-[10px] font-black text-slate-400 uppercase ml-4">Nom</label>
-                <input type="text" required placeholder="NOM" value={lastName} onChange={(e) => setLastName(e.target.value)}
-                  className="w-full bg-[#F5EAE0] border border-[#D5C9B8] p-3 rounded-2xl font-bold text-sm uppercase outline-none focus:border-[#FF4500]" />
-              </div>
-              <div className="space-y-1">
-                <label className="text-[10px] font-black text-slate-400 uppercase ml-4">Prénom</label>
-                <input type="text" required placeholder="PRÉNOM" value={firstName} onChange={(e) => setFirstName(e.target.value)}
-                  className="w-full bg-[#F5EAE0] border border-[#D5C9B8] p-3 rounded-2xl font-bold text-sm uppercase outline-none focus:border-[#FF4500]" />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <label className="text-[10px] font-black text-slate-400 uppercase ml-4 flex justify-between">
-                  Naissance {birthDate && !isAdult && <span className="text-red-500">Majeur seul.</span>}
-                </label>
-                <div className="relative">
-                  <Calendar className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 ${birthDate && !isAdult ? 'text-red-500' : 'text-slate-300'}`} />
-                  <input type="date" required value={birthDate} onChange={(e) => setBirthDate(e.target.value)}
-                    className={`w-full bg-[#F5EAE0] border p-3 pl-10 rounded-2xl font-bold text-sm outline-none transition-all ${birthDate && !isAdult ? 'border-red-200 bg-red-50' : 'border-[#D5C9B8] focus:border-[#FF4500]'}`} />
-                </div>
-              </div>
-              <div className="space-y-1">
-                <label className="text-[10px] font-black text-slate-400 uppercase ml-4">Téléphone</label>
-                <div className="relative">
-                  <Phone className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 ${phone && !isPhoneValid ? 'text-red-500' : 'text-slate-300'}`} />
-                  <input type="tel" required placeholder="06XXXXXXXX" value={phone} onChange={(e) => setPhone(e.target.value)}
-                    className="w-full bg-[#F5EAE0] border border-[#D5C9B8] p-3 pl-10 rounded-2xl font-bold text-sm outline-none focus:border-[#FF4500]" />
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-1 relative">
-              <label className="text-[10px] font-black text-slate-400 uppercase ml-4">Adresse complète (Yvelines 78)</label>
-              <div className="relative">
-                <MapPin className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 ${address && !isEligibleZone ? 'text-red-500' : 'text-slate-300'}`} />
-                <input type="text" required placeholder="Tapez votre adresse..." value={address} onChange={(e) => { setAddress(e.target.value); setAddressDept(null); }}
-                  className={`w-full bg-[#F5EAE0] border p-3 pl-10 rounded-2xl font-bold text-sm outline-none transition-all uppercase ${address && isEligibleZone ? 'border-green-200 bg-green-50' : 'border-[#D5C9B8] focus:border-[#FF4500]'}`} />
-              </div>
-              {suggestions.length > 0 && (
-                <div className="absolute z-50 w-full bg-[#F5EAE0] border border-[#D5C9B8] rounded-2xl shadow-2xl mt-1 overflow-hidden">
-                  {suggestions.map((s: any) => (
-                    <button key={s.properties.id} type="button" onClick={() => { setAddress(s.properties.label); setSuggestions([]); setAddressDept(String(s.properties.citycode || s.properties.postcode || '')); }}
-                      className="w-full p-3 text-left text-[10px] font-black hover:bg-[#EDE3D5] border-b border-slate-50 last:border-0 flex items-center gap-2 uppercase tracking-tight">
-                      <MapPin className="w-3 h-3 text-[#FF4500]" /> {s.properties.label}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-[10px] font-black text-slate-400 uppercase ml-4">Email</label>
-              <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
-                <input type="email" required placeholder="votre@email.com" value={email} onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-[#F5EAE0] border border-[#D5C9B8] p-3 pl-10 rounded-2xl font-bold text-sm outline-none focus:border-[#FF4500]" />
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-[10px] font-black text-slate-400 uppercase ml-4">Mot de passe (8+ car.)</label>
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
-                <input type={showPassword ? 'text' : 'password'} required placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-[#F5EAE0] border border-[#D5C9B8] p-3 pl-10 pr-10 rounded-2xl font-bold text-sm outline-none focus:border-[#FF4500]" />
-                <button type="button" onClick={() => setShowPassword(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-600 transition-colors">
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-              <div className="flex gap-1 px-4 pt-1">
-                <div className={`h-1 flex-1 rounded-full transition-all ${passwordStrength() >= 1 ? (passwordStrength() === 1 ? 'bg-red-400' : passwordStrength() === 2 ? 'bg-orange-400' : 'bg-green-400') : 'bg-slate-100'}`} />
-                <div className={`h-1 flex-1 rounded-full transition-all ${passwordStrength() >= 2 ? (passwordStrength() === 2 ? 'bg-orange-400' : 'bg-green-400') : 'bg-slate-100'}`} />
-                <div className={`h-1 flex-1 rounded-full transition-all ${passwordStrength() >= 3 ? 'bg-green-400' : 'bg-slate-100'}`} />
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-[10px] font-black text-slate-400 uppercase ml-4">
-                Code parrainage <span className="text-slate-300 normal-case font-bold">(optionnel)</span>
-              </label>
-              <div className="relative">
-                <Gift className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
-                <input
-                  type="text"
-                  placeholder="EX: ABC12345"
-                  value={referralCodeInput}
-                  onChange={(e) => setReferralCodeInput(e.target.value.toUpperCase())}
-                  className="w-full bg-[#F5EAE0] border border-[#D5C9B8] p-3 pl-10 rounded-2xl font-bold text-sm uppercase outline-none focus:border-[#FF4500] tracking-widest"
-                />
-              </div>
-              <p className="text-[9px] text-slate-400 font-bold ml-4">Votre parrain reçoit -10% sur sa prochaine commande, et vous -10% sur votre 2e commande</p>
-            </div>
-
-            <label className="flex items-start gap-3 px-1 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={cgvAccepte}
-                onChange={(e) => setCgvAccepte(e.target.checked)}
-                className="w-4 h-4 mt-0.5 accent-[#FF4500] shrink-0"
-              />
-              <span className="text-[10px] font-bold text-slate-500 leading-snug">
-                J'ai lu et j'accepte les{' '}
-                <a href="/cgv" target="_blank" className="text-[#FF4500] underline">conditions générales de vente</a>
-                {' '}et la{' '}
-                <a href="/rgpd" target="_blank" className="text-[#FF4500] underline">politique de confidentialité</a>.
-              </span>
-            </label>
-
-            <label className="flex items-start gap-3 px-1 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={acceptsMarketing}
-                onChange={(e) => setAcceptsMarketing(e.target.checked)}
-                className="w-4 h-4 mt-0.5 accent-[#FF4500] shrink-0"
-              />
-              <span className="text-[10px] font-bold text-slate-500 leading-snug">
-                Je souhaite recevoir les offres et nouveautés de Soleil et Saveurs par e-mail <span className="text-slate-300 normal-case">(optionnel)</span>
-              </span>
-            </label>
-
-            <button type="submit"
-              disabled={loading || !isEligibleZone || !isPhoneValid || !isAdult || password.length < 8 || !cgvAccepte}
-              className="w-full bg-[#FF4500] text-white p-5 rounded-3xl font-black uppercase text-sm tracking-widest hover:bg-[#3D2B1F] transition-all shadow-xl disabled:bg-slate-200 mt-4 flex items-center justify-center gap-3 active:scale-95"
-            >
-              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Rejoindre Soleil et Saveurs <ArrowRight className="w-5 h-5" /></>}
-            </button>
-          </form>
-
-          <p className="text-center text-slate-400 text-[10px] font-black uppercase tracking-tighter pt-4">
-            Déjà membre ? <Link href="/login" className="text-[#FF4500] ml-2 hover:underline">Se connecter ici</Link>
+    <GabaritConnexion
+      titre="Créer un compte"
+      accroche={<>Soleil<br /><em className="text-[#FF7A47]">&amp; Saveurs.</em></>}
+      arguments={[
+        { icone: <Gift className="w-[22px] h-[22px]" />, texte: '-10% sur votre 1ère commande avec le code SOLEIL78' },
+        { icone: <ShieldCheck className="w-[22px] h-[22px]" />, texte: 'Produits frais et premium' },
+      ]}
+      retour={{ href: '/login', libelle: 'Retour' }}
+    >
+      <form onSubmit={handleSignup} className="flex flex-col gap-4">
+        {error && (
+          <p role="alert" className={messageErreur}>
+            <AlertCircle className="w-[18px] h-[18px] shrink-0" aria-hidden /> {error}
           </p>
+        )}
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label htmlFor="inscription-nom" className={etiquetteChamp}>Nom</label>
+            <input id="inscription-nom" type="text" required autoComplete="family-name" maxLength={80} value={lastName} onChange={(e) => setLastName(e.target.value)} className={champ} />
+          </div>
+          <div>
+            <label htmlFor="inscription-prenom" className={etiquetteChamp}>Prénom</label>
+            <input id="inscription-prenom" type="text" required autoComplete="given-name" maxLength={80} value={firstName} onChange={(e) => setFirstName(e.target.value)} className={champ} />
+          </div>
         </div>
-      </div>
-    </div>
+
+        <div className="grid sm:grid-cols-2 gap-4 sm:gap-3">
+          <div>
+            <label htmlFor="inscription-naissance" className={etiquetteChamp}>
+              Naissance {birthDate && !isAdult && <span className="font-extrabold text-red-700">Majeur seul.</span>}
+            </label>
+            <div className="relative">
+              <Calendar className={iconeChamp} aria-hidden />
+              <input id="inscription-naissance" type="date" required autoComplete="bday" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} className={champAvecIcone} />
+            </div>
+          </div>
+          <div>
+            <label htmlFor="inscription-telephone" className={etiquetteChamp}>Téléphone</label>
+            <div className="relative">
+              <Phone className={iconeChamp} aria-hidden />
+              <input id="inscription-telephone" type="tel" required autoComplete="tel" maxLength={20} placeholder="06XXXXXXXX" value={phone} onChange={(e) => setPhone(e.target.value)} className={champAvecIcone} />
+            </div>
+          </div>
+        </div>
+
+        <div className="relative">
+          <label htmlFor="inscription-adresse" className={etiquetteChamp}>Adresse complète (Yvelines 78)</label>
+          <div className="relative">
+            <MapPin className={iconeChamp} aria-hidden />
+            <input id="inscription-adresse" type="text" required autoComplete="off" maxLength={200} placeholder="Tapez votre adresse..." value={address} onChange={(e) => { setAddress(e.target.value); setAddressDept(null); }} className={champAvecIcone} />
+          </div>
+          {suggestions.length > 0 && (
+            <div className="absolute z-20 left-0 right-0 top-full mt-1.5 bg-white border border-[#E0D3C0] rounded-2xl shadow-2xl overflow-hidden">
+              {suggestions.map((s: any) => (
+                <button key={s.properties.id} type="button" onClick={() => { setAddress(s.properties.label); setSuggestions([]); setAddressDept(String(s.properties.citycode || s.properties.postcode || '')); }}
+                  className="w-full min-h-12 px-4 py-2.5 flex items-center gap-2.5 text-left text-sm font-semibold border-b border-[#F0E7DA] last:border-b-0 hover:bg-[#F5EAE0] transition-colors">
+                  <MapPin className="w-4 h-4 shrink-0 text-[#FF4500]" aria-hidden /> {s.properties.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div>
+          <label htmlFor="inscription-email" className={etiquetteChamp}>Email</label>
+          <div className="relative">
+            <Mail className={iconeChamp} aria-hidden />
+            <input id="inscription-email" type="email" required autoComplete="email" maxLength={320} placeholder="votre@email.com" value={email} onChange={(e) => setEmail(e.target.value)} className={champAvecIcone} />
+          </div>
+        </div>
+
+        <div>
+          <label htmlFor="inscription-mdp" className={etiquetteChamp}>Mot de passe (8+ car.)</label>
+          <div className="relative">
+            <Lock className={iconeChamp} aria-hidden />
+            <input id="inscription-mdp" type={showPassword ? 'text' : 'password'} required autoComplete="new-password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} className={`${champAvecIcone} pr-14`} />
+            <button type="button" onClick={() => setShowPassword(v => !v)} aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'} className="absolute right-1.5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-xl flex items-center justify-center text-[#6F5A4B] hover:text-[#3D2B1F] transition-colors">
+              {showPassword ? <EyeOff className="w-[19px] h-[19px]" aria-hidden /> : <Eye className="w-[19px] h-[19px]" aria-hidden />}
+            </button>
+          </div>
+          <div aria-hidden className="mt-2 grid grid-cols-3 gap-1.5">
+            {[1, 2, 3].map(n => (
+              <span key={n} className={`h-1.5 rounded-full transition-colors duration-300 ${force >= n ? (force === 1 ? 'bg-red-500' : force === 2 ? 'bg-[#FF7A47]' : 'bg-[#15803D]') : 'bg-[#E3D6C4]'}`} />
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <label htmlFor="inscription-parrainage" className={etiquetteChamp}>
+            Code parrainage <span className="font-semibold text-[#6F5A4B]">(optionnel)</span>
+          </label>
+          <div className="relative">
+            <Gift className={iconeChamp} aria-hidden />
+            <input id="inscription-parrainage" type="text" autoComplete="off" maxLength={40} placeholder="EX: ABC12345" value={referralCodeInput} onChange={(e) => setReferralCodeInput(e.target.value.toUpperCase())} className={`${champAvecIcone} uppercase`} />
+          </div>
+          <p className="mt-1.5 text-[13px] leading-snug font-semibold text-[#6F5A4B]">Votre parrain reçoit -10% sur sa prochaine commande, et vous -10% sur votre 2e commande</p>
+        </div>
+
+        <label className="flex items-start gap-3 cursor-pointer">
+          <input type="checkbox" checked={cgvAccepte} onChange={(e) => setCgvAccepte(e.target.checked)} className={caseACocher} />
+          <span className="text-sm leading-snug font-semibold text-[#5C4030]">
+            J&apos;ai lu et j&apos;accepte les{' '}
+            <a href="/cgv" target="_blank" className="font-extrabold text-[#C73600] underline underline-offset-2">conditions générales de vente</a>
+            {' '}et la{' '}
+            <a href="/rgpd" target="_blank" className="font-extrabold text-[#C73600] underline underline-offset-2">politique de confidentialité</a>.
+          </span>
+        </label>
+
+        <label className="flex items-start gap-3 cursor-pointer">
+          <input type="checkbox" checked={acceptsMarketing} onChange={(e) => setAcceptsMarketing(e.target.checked)} className={caseACocher} />
+          <span className="text-sm leading-snug font-semibold text-[#5C4030]">
+            Je souhaite recevoir les offres et nouveautés de Soleil et Saveurs par e-mail <span className="text-[#6F5A4B]">(optionnel)</span>
+          </span>
+        </label>
+
+        <button type="submit"
+          disabled={loading || !isEligibleZone || !isPhoneValid || !isAdult || password.length < 8 || !cgvAccepte}
+          className={`${boutonPrincipal} mt-1`}
+        >
+          {loading ? <Loader2 className="w-6 h-6 animate-spin mx-auto" aria-label="Création du compte" /> : <>Rejoindre Soleil et Saveurs <ArrowRight className="w-[22px] h-[22px] shrink-0" strokeWidth={2.4} aria-hidden /></>}
+        </button>
+      </form>
+
+      <p className="mt-5 text-center text-[15px] font-semibold text-[#5C4030]">
+        Déjà membre ? <Link href="/login" className="font-extrabold text-[#C73600] underline underline-offset-4">Se connecter ici</Link>
+      </p>
+    </GabaritConnexion>
   );
 }
