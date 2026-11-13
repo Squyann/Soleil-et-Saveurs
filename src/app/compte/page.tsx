@@ -6,12 +6,13 @@ import { premieresOffertes, qtePayantePremieresOffertes } from '@/lib/promos';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
-  User, Mail, Phone, MapPin, LogOut, ArrowLeft,
-  ShoppingBag, Package, CheckCircle2, Clock, XCircle,
+  User, Mail, Phone, MapPin, LogOut, ArrowRight,
+  ShoppingBag, Package, CheckCircle2, Clock, XCircle, Check,
   Loader2, Edit3, Save, X, ChevronRight, Star, Truck,
-  AlertCircle, Plus, Gift, Copy, Shield, Trash2, AlertTriangle, FileText,
+  AlertCircle, Gift, Copy, Shield, Trash2, AlertTriangle, FileText,
   KeyRound, Lock, Eye, EyeOff
 } from 'lucide-react';
+import { formatPrix } from '@/lib/format';
 
 // --- TYPES ---
 interface Order {
@@ -418,13 +419,8 @@ export default function ComptePage() {
   // --- LOADING ---
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#EDE3D5] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 bg-[#FF4500] rounded-2xl flex items-center justify-center animate-pulse">
-            <span className="text-white font-black text-lg">S</span>
-          </div>
-          <Loader2 className="w-6 h-6 text-[#FF4500] animate-spin" />
-        </div>
+      <div className="min-h-[70vh] bg-[#EDE3D5] flex items-center justify-center" role="status" aria-label="Chargement de votre compte">
+        <Loader2 className="w-9 h-9 text-[#FF4500] animate-spin" aria-hidden />
       </div>
     );
   }
@@ -448,252 +444,220 @@ export default function ComptePage() {
       alert("Une erreur est survenue lors de l'ajout au panier.");
     }
   };
- 
+
+  const points = dbProfile?.loyalty_points ?? 0;
+  const SURTITRE = 'text-[11px] md:text-xs font-extrabold uppercase tracking-[0.14em] text-[#C73600]';
+  const carte = 'bg-white rounded-3xl md:rounded-[28px] border border-[#E8DCCB]';
+  const etiquette = 'block mb-1.5 text-[13px] font-bold text-[#6F5A4B]';
+  const champ = 'w-full h-[52px] px-4 rounded-[14px] border-[1.5px] border-[#E0D3C0] bg-white text-base font-semibold text-[#3D2B1F] placeholder:text-[#8C7867] placeholder:font-medium outline-none focus:border-[#FF4500] transition-colors';
+  const valeur = 'px-[18px] py-4 rounded-2xl bg-[#F5EAE0]';
+  const boutonContour = 'inline-flex items-center justify-center gap-2 h-[46px] px-[18px] rounded-full border-[1.5px] border-[#3D2B1F] bg-white text-sm font-bold text-[#3D2B1F] hover:bg-[#3D2B1F] hover:text-[#F5EAE0] transition-colors';
+  const ligneAction = 'w-full min-h-[68px] px-[18px] py-3 flex items-center gap-3.5 text-left border-t border-[#F0E7DA] first:border-t-0 hover:bg-[#FFFBF7] transition-colors';
+  // Boutons « annuler / sauver » du mode édition (profil et adresse)
+  const boutonsEdition = (
+    <div className="flex items-center gap-2">
+      <button
+        type="button"
+        onClick={() => { setIsEditing(false); setEditForm(profile!); setAddressSuggestions([]); }}
+        aria-label="Annuler les modifications"
+        className="w-[46px] h-[46px] rounded-full border-[1.5px] border-[#DDD0BF] bg-white text-[#5C4030] flex items-center justify-center hover:border-[#3D2B1F] transition-colors"
+      >
+        <X className="w-[18px] h-[18px]" aria-hidden />
+      </button>
+      <button
+        type="button"
+        onClick={handleSave}
+        disabled={saveLoading}
+        className="inline-flex items-center justify-center gap-2 h-[46px] px-5 rounded-full bg-[#FF4500] text-white text-sm font-extrabold hover:bg-[#E63E00] transition-colors disabled:opacity-70"
+      >
+        {saveLoading ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden /> : <Save className="w-4 h-4" aria-hidden />}
+        Sauver
+      </button>
+    </div>
+  );
+  const STATUTS = {
+    en_attente: 'bg-[#FFF1EA] text-[#B83200]',
+    confirmee: 'bg-[#FFF1EA] text-[#B83200]',
+    livree: 'bg-[#ECF7EF] text-[#166534]',
+    annulee: 'bg-red-50 text-red-700',
+  };
 
   return (
-    <div className="min-h-screen bg-[#EDE3D5] text-slate-900 pb-20">
+    <div className="min-h-screen bg-[#EDE3D5] text-[#3D2B1F] pb-10">
 
-      {/* HERO HEADER */}
-      <div className="bg-[#3D2B1F] pt-20 pb-32 px-4 md:px-8 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#FF4500]/10 blur-[120px] rounded-full pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-blue-500/5 blur-[100px] rounded-full pointer-events-none" />
-
-        <div className="max-w-5xl mx-auto relative z-10">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-slate-400 hover:text-white transition-colors text-[10px] font-black uppercase tracking-widest mb-8 group"
-          >
-            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-            Boutique
-          </Link>
-
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <div className="flex items-center gap-5">
+      {/* EN-TÊTE */}
+      <header className="bg-[#F5EAE0] border-b border-[#E3D6C4]">
+        <div className="max-w-[1240px] mx-auto px-4 md:px-5 pt-[22px] md:pt-9">
+          <div className="flex items-center justify-between gap-x-8 gap-y-[18px] flex-wrap">
+            <div className="flex items-center gap-3.5 md:gap-[22px] min-w-0 px-1 md:px-0">
               {/* AVATAR */}
-              <div className="w-16 h-16 bg-[#FF4500] rounded-2xl flex items-center justify-center shadow-xl shadow-orange-900/30 shrink-0">
-                <span className="text-white font-black text-2xl uppercase">
-                  {profile?.first_name?.[0] || profile?.last_name?.[0] || '?'}
-                </span>
-              </div>
-              <div>
-                <p className="text-[10px] font-black text-[#FF4500] uppercase tracking-[0.3em] mb-1">Mon Compte</p>
-                <h1 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tighter leading-none">
+              <span aria-hidden className="titre shrink-0 w-[60px] h-[60px] md:w-[92px] md:h-[92px] rounded-full bg-[#FF4500] text-white flex items-center justify-center text-3xl md:text-[44px] leading-none uppercase">
+                {profile?.first_name?.[0] || profile?.last_name?.[0] || '?'}
+              </span>
+              <div className="min-w-0">
+                <p className={`${SURTITRE} mb-1 md:mb-1.5`}>Mon Compte</p>
+                <h1 className="titre text-3xl md:text-[52px] leading-[1.05] md:leading-none break-words">
                   {profile?.first_name} {profile?.last_name}
                 </h1>
-                <p className="text-slate-400 text-xs font-bold mt-1">{profile?.email}</p>
+                <p className="mt-1 md:mt-2 text-sm md:text-base text-[#5C4030] break-all">{profile?.email}</p>
               </div>
             </div>
 
             {/* STATS RAPIDES */}
-            <div className="flex gap-4">
-              <div className="bg-white/5 border border-white/10 rounded-2xl px-5 py-3 text-center">
-                <p className="text-2xl font-black text-white">{orders.length}</p>
-                <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Commandes</p>
-              </div>
-              <div className="bg-white/5 border border-white/10 rounded-2xl px-5 py-3 text-center">
-                <p className="text-2xl font-black text-[#FF4500]">{totalDepense.toFixed(0)}€</p>
-                <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Dépensé</p>
-              </div>
-              <div className="bg-white/5 border border-white/10 rounded-2xl px-5 py-3 text-center">
-                <p className="text-2xl font-black text-white">
-                  {orders.filter(o => o.statut?.toLowerCase().includes('livr')).length}
-                </p>
-                <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Livrées</p>
-              </div>
-            </div>
+            <dl className="w-full md:w-auto grid grid-cols-3 divide-x divide-[#F0E7DA] bg-white rounded-[20px] md:rounded-3xl border border-[#E8DCCB] overflow-hidden text-center md:text-left">
+              {[
+                { valeur: orders.length, libelle: 'Commandes' },
+                { valeur: `${totalDepense.toFixed(0)}€`, libelle: 'Dépensé' },
+                { valeur: orders.filter(o => o.statut?.toLowerCase().includes('livr')).length, libelle: 'Livrées' },
+              ].map(s => (
+                <div key={s.libelle} className="px-1.5 py-3.5 md:px-[30px] md:py-5 flex flex-col-reverse">
+                  <dt className="mt-1.5 md:mt-2 text-[11px] md:text-xs font-extrabold uppercase tracking-[0.08em] md:tracking-[0.12em] text-[#5C4030]">{s.libelle}</dt>
+                  <dd className="titre text-[26px] md:text-[38px] leading-none text-[#FF4500]">{s.valeur}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+
+          {/* ONGLETS */}
+          <div role="tablist" aria-label="Sections du compte" className="mt-4 md:mt-[30px] grid grid-cols-3 md:flex gap-1 md:gap-1.5 p-1 md:p-0 rounded-t-2xl bg-[#EDE3D5] md:bg-transparent">
+            {([
+              { id: 'profil',     label: 'Mon Profil',  icon: User },
+              { id: 'commandes', label: 'Commandes',   icon: ShoppingBag },
+              { id: 'adresses',  label: 'Adresses',    icon: MapPin },
+            ] as const).map(({ id, label, icon: Icon }) => {
+              const actif = activeTab === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  role="tab"
+                  aria-selected={actif}
+                  onClick={() => setActiveTab(id)}
+                  className={`flex items-center justify-center gap-2 h-11 md:h-[52px] md:px-[22px] rounded-xl md:rounded-b-none md:rounded-t-2xl text-[13.5px] md:text-[15px] transition-colors ${
+                    actif
+                      ? 'bg-[#3D2B1F] text-[#F5EAE0] font-extrabold md:bg-[#EDE3D5] md:text-[#3D2B1F] md:shadow-[inset_0_3px_0_#FF4500]'
+                      : 'text-[#5C4030] font-bold hover:text-[#3D2B1F] md:hover:bg-[#EDE3D5]/60'
+                  }`}
+                >
+                  <Icon className="hidden md:block w-[18px] h-[18px]" aria-hidden />
+                  {label}
+                  {id === 'commandes' && orders.length > 0 && (
+                    <span className="hidden md:inline-flex min-w-[22px] h-[22px] px-1.5 rounded-full bg-white border border-[#E0D3C0] text-xs font-extrabold text-[#3D2B1F] items-center justify-center">{orders.length}</span>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
-      </div>
+      </header>
 
       {/* CONTENU PRINCIPAL */}
-      <div className="max-w-5xl mx-auto px-4 md:px-8 -mt-16 relative z-10">
+      <div className="max-w-[1240px] mx-auto px-3 md:px-5 pt-3.5 md:pt-8">
 
-        {/* TABS */}
-        <div className="flex gap-2 mb-8 bg-white p-1.5 rounded-2xl shadow-xl shadow-slate-200/60 border border-[#D5C9B8] w-fit">
-          {([
-            { id: 'profil',     label: 'Mon Profil',  icon: User },
-            { id: 'commandes', label: 'Commandes',   icon: ShoppingBag },
-            { id: 'adresses',  label: 'Adresses',    icon: MapPin },
-          ] as const).map(({ id, label, icon: Icon }) => (
-            <button
-              key={id}
-              onClick={() => setActiveTab(id)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-[11px] uppercase tracking-tight transition-all ${
-                activeTab === id
-                  ? 'bg-[#3D2B1F] text-white shadow-md'
-                  : 'text-slate-400 hover:text-slate-700 hover:bg-[#EDE3D5]'
-              }`}
-            >
-              <Icon className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">{label}</span>
-            </button>
-          ))}
-        </div>
-
-        {/* ===== TAB : PROFIL ===== */}
+        {/* ===== ONGLET : PROFIL ===== */}
         {activeTab === 'profil' && (
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,480px)] gap-3.5 md:gap-7 items-start">
 
             {/* INFOS PERSONNELLES */}
-            <div className="bg-white rounded-[2rem] p-8 border border-[#D5C9B8] shadow-xl shadow-slate-100/50">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="font-black uppercase tracking-tight text-slate-900">Informations</h2>
+            <section className={`${carte} p-5 md:p-8`}>
+              <div className="flex items-center justify-between gap-4 mb-5 md:mb-[26px]">
+                <h2 className="titre text-[28px] md:text-[32px] leading-none">Informations</h2>
                 {!isEditing ? (
-                  <button
-                    onClick={() => { setIsEditing(true); setSaveError(null); }}
-                    className="flex items-center gap-1.5 text-[10px] font-black uppercase text-slate-400 hover:text-[#FF4500] transition-colors"
-                  >
-                    <Edit3 className="w-3.5 h-3.5" /> Modifier
+                  <button type="button" onClick={() => { setIsEditing(true); setSaveError(null); }} className={boutonContour}>
+                    <Edit3 className="w-4 h-4" aria-hidden /> Modifier
                   </button>
-                ) : (
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => { setIsEditing(false); setEditForm(profile!); setAddressSuggestions([]); }}
-                      className="p-2 hover:bg-[#EDE3D5] rounded-xl transition-colors text-slate-400"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={handleSave}
-                      disabled={saveLoading}
-                      className="flex items-center gap-1.5 bg-[#FF4500] text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase hover:bg-[#3D2B1F] transition-all disabled:opacity-50"
-                    >
-                      {saveLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-                      Sauver
-                    </button>
-                  </div>
-                )}
+                ) : boutonsEdition}
               </div>
 
               {saveSuccess && (
-                <div className="flex items-center gap-2 p-3 bg-green-50 rounded-xl text-green-600 mb-4 animate-in fade-in">
-                  <CheckCircle2 className="w-4 h-4" />
-                  <p className="text-[10px] font-black uppercase">Profil mis à jour !</p>
-                </div>
+                <p role="status" className="mb-4 flex items-center gap-2.5 px-3.5 py-3 rounded-[14px] bg-[#ECF7EF] text-sm font-bold text-[#166534]">
+                  <Check className="w-[18px] h-[18px] shrink-0" strokeWidth={2.6} aria-hidden />Profil mis à jour !
+                </p>
               )}
               {saveError && (
-                <div className="flex items-center gap-2 p-3 bg-red-50 rounded-xl text-red-600 mb-4">
-                  <AlertCircle className="w-4 h-4" />
-                  <p className="text-[10px] font-black uppercase">{saveError}</p>
-                </div>
+                <p role="alert" className="mb-4 flex items-center gap-2.5 px-3.5 py-3 rounded-[14px] bg-red-50 text-sm font-bold text-red-700">
+                  <AlertCircle className="w-[18px] h-[18px] shrink-0" aria-hidden />{saveError}
+                </p>
               )}
 
-              <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3 md:gap-4">
                 {/* NOM / PRÉNOM */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Nom</label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={editForm.last_name || ''}
-                        onChange={e => setEditForm(f => ({ ...f, last_name: e.target.value }))}
-                        className="w-full bg-[#EDE3D5] border border-[#D5C9B8] p-3 rounded-xl font-bold text-sm focus:border-[#FF4500] outline-none transition-all uppercase"
-                      />
-                    ) : (
-                      <div className="bg-[#EDE3D5] p-3 rounded-xl font-bold text-sm uppercase text-slate-700">
-                        {profile?.last_name || '—'}
-                      </div>
-                    )}
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Prénom</label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={editForm.first_name || ''}
-                        onChange={e => setEditForm(f => ({ ...f, first_name: e.target.value }))}
-                        className="w-full bg-[#EDE3D5] border border-[#D5C9B8] p-3 rounded-xl font-bold text-sm focus:border-[#FF4500] outline-none transition-all uppercase"
-                      />
-                    ) : (
-                      <div className="bg-[#EDE3D5] p-3 rounded-xl font-bold text-sm uppercase text-slate-700">
-                        {profile?.first_name || '—'}
-                      </div>
-                    )}
-                  </div>
-                </div>
+                {isEditing ? (
+                  <>
+                    <div>
+                      <label htmlFor="compte-nom" className={etiquette}>Nom</label>
+                      <input id="compte-nom" type="text" autoComplete="family-name" maxLength={80} value={editForm.last_name || ''} onChange={e => setEditForm(f => ({ ...f, last_name: e.target.value }))} className={champ} />
+                    </div>
+                    <div>
+                      <label htmlFor="compte-prenom" className={etiquette}>Prénom</label>
+                      <input id="compte-prenom" type="text" autoComplete="given-name" maxLength={80} value={editForm.first_name || ''} onChange={e => setEditForm(f => ({ ...f, first_name: e.target.value }))} className={champ} />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className={valeur}><p className="text-[13px] font-bold text-[#6F5A4B]">Nom</p><p className="mt-1 text-[17px] md:text-lg font-bold break-words">{profile?.last_name || '—'}</p></div>
+                    <div className={valeur}><p className="text-[13px] font-bold text-[#6F5A4B]">Prénom</p><p className="mt-1 text-[17px] md:text-lg font-bold break-words">{profile?.first_name || '—'}</p></div>
+                  </>
+                )}
 
                 {/* EMAIL (lecture seule) */}
-                <div className="space-y-1">
-                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Email</label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
-                    <div className="bg-[#EDE3D5] p-3 pl-10 rounded-xl font-bold text-sm text-slate-400 flex items-center justify-between">
-                      <span>{profile?.email}</span>
-                      <span className="text-[8px] font-black uppercase bg-[#DDD0BF] px-2 py-0.5 rounded-full text-slate-400">Non modifiable</span>
-                    </div>
-                  </div>
+                <div className={`${valeur} col-span-2`}>
+                  <p className="flex items-center justify-between gap-3 text-[13px] font-bold text-[#6F5A4B]">
+                    <span className="inline-flex items-center gap-1.5"><Mail className="w-3.5 h-3.5" aria-hidden />Email</span>
+                    <span className="px-2.5 py-0.5 rounded-full bg-white text-xs font-bold">Non modifiable</span>
+                  </p>
+                  <p className="mt-1 text-[17px] md:text-lg font-bold break-all">{profile?.email}</p>
                 </div>
 
                 {/* TÉLÉPHONE */}
-                <div className="space-y-1">
-                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Téléphone</label>
-                  {isEditing ? (
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
-                      <input
-                        type="tel"
-                        value={editForm.phone || ''}
-                        onChange={e => setEditForm(f => ({ ...f, phone: e.target.value }))}
-                        placeholder="06XXXXXXXX"
-                        className="w-full bg-[#EDE3D5] border border-[#D5C9B8] p-3 pl-10 rounded-xl font-bold text-sm focus:border-[#FF4500] outline-none transition-all"
-                      />
-                    </div>
-                  ) : (
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
-                      <div className="bg-[#EDE3D5] p-3 pl-10 rounded-xl font-bold text-sm text-slate-700">
-                        {profile?.phone || '—'}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                {isEditing ? (
+                  <div className="col-span-2">
+                    <label htmlFor="compte-telephone" className={etiquette}>Téléphone</label>
+                    <input id="compte-telephone" type="tel" autoComplete="tel" maxLength={20} value={editForm.phone || ''} onChange={e => setEditForm(f => ({ ...f, phone: e.target.value }))} placeholder="06XXXXXXXX" className={champ} />
+                  </div>
+                ) : (
+                  <div className={`${valeur} col-span-2`}>
+                    <p className="inline-flex items-center gap-1.5 text-[13px] font-bold text-[#6F5A4B]"><Phone className="w-3.5 h-3.5" aria-hidden />Téléphone</p>
+                    <p className="mt-1 text-[17px] md:text-lg font-bold">{profile?.phone || '—'}</p>
+                  </div>
+                )}
               </div>
-            </div>
+            </section>
 
-            {/* FIDÉLITÉ + PARRAINAGE + DÉCONNEXION */}
-            <div className="space-y-4">
+            {/* FIDÉLITÉ + PARRAINAGE + ACTIONS */}
+            <div className="flex flex-col gap-3.5 md:gap-5">
 
               {/* CARTE FIDÉLITÉ */}
-              <div className="bg-[#3D2B1F] rounded-[2rem] p-6 relative overflow-hidden shadow-xl">
-                <div className="absolute top-0 right-0 w-48 h-48 bg-[#FF4500]/20 blur-[60px] rounded-full pointer-events-none" />
-                <div className="relative z-10">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Star className="w-5 h-5 text-[#FF4500] fill-[#FF4500]" />
-                    <p className="text-[10px] font-black text-[#FF4500] uppercase tracking-widest">Fidélité</p>
-                  </div>
-                  <p className="text-white font-black text-3xl mb-1">
-                    {dbProfile?.loyalty_points ?? 0}
-                    <span className="text-slate-400 text-base font-bold ml-2">/ 100 pts</span>
-                  </p>
-                  <div className="mt-3 h-2 bg-white/10 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-[#FF4500] rounded-full transition-all duration-1000"
-                      style={{ width: `${Math.min(((dbProfile?.loyalty_points ?? 0) / 100) * 100, 100)}%` }}
-                    />
-                  </div>
-                  {(dbProfile?.loyalty_points ?? 0) >= 100 ? (
-                    <p className="text-[9px] font-black text-green-400 uppercase tracking-widest mt-2">
-                      ✓ Remise -10% disponible — activez-la dans le panier
-                    </p>
-                  ) : (
-                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-2">
-                      {100 - (dbProfile?.loyalty_points ?? 0)} pts avant votre remise de -10%
-                    </p>
-                  )}
+              <section className="relative overflow-hidden bg-[#3D2B1F] rounded-3xl md:rounded-[28px] p-6 md:p-7 text-[#F5EAE0]">
+                <svg viewBox="0 0 600 600" aria-hidden className="ss-rayons absolute -right-[110px] -top-[130px] w-[260px] h-[260px] pointer-events-none">
+                  <circle cx="300" cy="300" r="100" fill="#FF4500" fillOpacity="0.9" />
+                  <circle cx="300" cy="300" r="226" fill="none" stroke="#FF4500" strokeOpacity="0.7" strokeWidth="110" strokeDasharray="12 47.2" />
+                </svg>
+                <p className="relative mb-3 inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.14em] text-[#FF9466]"><Star className="w-4 h-4" aria-hidden />Fidélité</p>
+                <p className="relative mb-4 flex items-baseline gap-2.5">
+                  <span className="titre text-[60px] leading-none">{points}</span>
+                  <span className="text-[17px] font-semibold text-[#E1D2C2]">/ 100 pts</span>
+                </p>
+                <div role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.min(points, 100)} aria-label="Points de fidélité" className="relative h-2.5 rounded-full bg-[#5C4030] overflow-hidden">
+                  <div className="h-full rounded-full bg-[#FF7A47] transition-[width] duration-700 ease-out" style={{ width: `${Math.min((points / 100) * 100, 100)}%` }} />
                 </div>
-              </div>
+                <p className="relative mt-3.5 text-[15px] font-semibold text-[#E1D2C2]">
+                  {points >= 100 ? (
+                    <span className="inline-flex items-center gap-2 font-extrabold text-[#86EFAC]"><Check className="w-[18px] h-[18px] shrink-0" strokeWidth={2.6} aria-hidden />Remise -10% disponible — activez-la dans le panier</span>
+                  ) : (
+                    <>{100 - points} pts avant votre remise de -10%</>
+                  )}
+                </p>
+              </section>
 
               {/* CARTE PARRAINAGE */}
-              <div className="bg-white rounded-[2rem] p-6 border border-[#D5C9B8] shadow-sm">
-                <div className="flex items-center gap-2 mb-2">
-                  <Gift className="w-5 h-5 text-[#FF4500]" />
-                  <p className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Parrainage</p>
-                </div>
-                <p className="text-[10px] text-slate-400 font-bold mb-3 uppercase">Partagez votre code — vous gagnez tous les deux -10%</p>
-                <div className="flex items-center gap-2 bg-[#EDE3D5] rounded-xl p-3 border border-[#D5C9B8]">
-                  <p className="font-black text-lg text-slate-900 tracking-[0.2em] flex-1">{dbProfile?.referral_code ?? '—'}</p>
+              <section className={`${carte} p-6 md:p-7`}>
+                <p className={`${SURTITRE} mb-2 inline-flex items-center gap-2`}><Gift className="w-4 h-4" aria-hidden />Parrainage</p>
+                <p className="mb-4 text-[15px] md:text-base leading-normal text-[#5C4030]">Partagez votre code — vous gagnez tous les deux -10%</p>
+                <div className="flex items-center gap-2.5">
+                  <p className="flex-1 min-w-0 h-[54px] px-[18px] rounded-[15px] border-[1.5px] border-dashed border-[#C73600] flex items-center text-lg md:text-xl font-extrabold tracking-[0.14em] text-[#C73600] truncate">{dbProfile?.referral_code ?? '—'}</p>
                   <button
+                    type="button"
                     onClick={() => {
                       if (dbProfile?.referral_code) {
                         navigator.clipboard.writeText(dbProfile.referral_code);
@@ -701,111 +665,70 @@ export default function ComptePage() {
                         setTimeout(() => setReferralCopied(false), 2000);
                       }
                     }}
-                    className="flex items-center gap-1 bg-[#FF4500] text-white px-3 py-1.5 rounded-lg text-[9px] font-black uppercase hover:bg-[#3D2B1F] transition-all"
+                    className={`shrink-0 inline-flex items-center gap-2 h-[54px] px-5 rounded-[15px] text-[15px] font-bold text-[#F5EAE0] transition-colors ${referralCopied ? 'bg-[#166534]' : 'bg-[#3D2B1F] hover:bg-[#FF4500]'}`}
                   >
-                    <Copy className="w-3 h-3" />
-                    {referralCopied ? 'Copié !' : 'Copier'}
+                    {referralCopied ? <Check className="w-[17px] h-[17px]" strokeWidth={2.6} aria-hidden /> : <Copy className="w-[17px] h-[17px]" aria-hidden />}
+                    <span aria-live="polite">{referralCopied ? 'Copié !' : 'Copier'}</span>
                   </button>
                 </div>
                 {dbProfile?.has_referral_discount && (
-                  <div className="mt-3 flex items-center gap-2 p-3 bg-green-50 rounded-xl border border-green-100">
-                    <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
-                    <p className="text-[9px] font-black text-green-700 uppercase tracking-wide">Remise parrainage -10% dispo — activez-la dans le panier</p>
-                  </div>
+                  <p className="mt-3.5 flex items-center gap-2.5 px-3.5 py-3 rounded-[14px] bg-[#ECF7EF] text-sm font-bold text-[#166534]">
+                    <Check className="w-[18px] h-[18px] shrink-0" strokeWidth={2.6} aria-hidden />
+                    Remise parrainage -10% dispo — activez-la dans le panier
+                  </p>
                 )}
-              </div>
+              </section>
 
-              {/* PANEL ADMIN */}
-              {isAdmin && (
-                <Link
-                  href="/admin"
-                  className="w-full flex items-center justify-between bg-[#3D2B1F] border border-slate-800 p-6 rounded-[2rem] hover:bg-[#FF4500] transition-all group shadow-sm"
+              {/* ACTIONS DU COMPTE */}
+              <section className={`${carte} overflow-hidden`}>
+                {/* PANEL ADMIN */}
+                {isAdmin && (
+                  <Link href="/admin" className={ligneAction}>
+                    <span className="shrink-0 w-11 h-11 rounded-[14px] bg-[#3D2B1F] text-[#F5EAE0] flex items-center justify-center" aria-hidden><Shield className="w-5 h-5" /></span>
+                    <span className="flex-1"><strong className="block text-base font-extrabold">Panel Admin</strong><span className="block text-sm text-[#6F5A4B]">Accès au tableau de bord</span></span>
+                    <ChevronRight className="w-[18px] h-[18px] text-[#6F5A4B]" aria-hidden />
+                  </Link>
+                )}
+                {/* MODIFIER LE MOT DE PASSE */}
+                <button
+                  type="button"
+                  onClick={() => { setShowPasswordModal(true); setPasswordError(null); setPasswordSuccess(false); setNewPassword(''); setConfirmPassword(''); setShowNewPassword(false); }}
+                  className={ligneAction}
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center">
-                      <Shield className="w-5 h-5 text-white" />
-                    </div>
-                    <div className="text-left">
-                      <p className="font-black uppercase text-sm text-white">Panel Admin</p>
-                      <p className="text-[10px] text-slate-400 font-bold uppercase">Accès au tableau de bord</p>
-                    </div>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-white group-hover:translate-x-1 transition-all" />
-                </Link>
-              )}
-
-              {/* MODIFIER LE MOT DE PASSE */}
-              <button
-                onClick={() => { setShowPasswordModal(true); setPasswordError(null); setPasswordSuccess(false); setNewPassword(''); setConfirmPassword(''); setShowNewPassword(false); }}
-                className="w-full flex items-center justify-between bg-white border border-[#D5C9B8] p-6 rounded-[2rem] hover:border-[#FF4500]/30 hover:bg-orange-50/30 transition-all group shadow-sm"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-[#EDE3D5] rounded-xl flex items-center justify-center">
-                    <KeyRound className="w-5 h-5 text-[#FF4500]" />
-                  </div>
-                  <div className="text-left">
-                    <p className="font-black uppercase text-sm text-slate-700 group-hover:text-[#FF4500] transition-colors">Modifier le mot de passe</p>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase">Sécurisez votre compte</p>
-                  </div>
-                </div>
-                <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-[#FF4500] group-hover:translate-x-1 transition-all" />
-              </button>
-
-              {/* DÉCONNEXION */}
-              <button
-                onClick={handleLogout}
-                className="w-full flex items-center justify-between bg-white border border-[#D5C9B8] p-6 rounded-[2rem] hover:border-red-100 hover:bg-red-50/30 transition-all group shadow-sm"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center">
-                    <LogOut className="w-5 h-5 text-red-400" />
-                  </div>
-                  <div className="text-left">
-                    <p className="font-black uppercase text-sm text-slate-700 group-hover:text-red-600 transition-colors">Se déconnecter</p>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase">Fermer la session</p>
-                  </div>
-                </div>
-                <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-red-400 group-hover:translate-x-1 transition-all" />
-              </button>
-
-              {/* SUPPRESSION DU COMPTE */}
-              <button
-                onClick={() => { setShowDeleteConfirm(true); setDeleteError(null); }}
-                className="w-full flex items-center justify-between bg-white border border-red-100 p-6 rounded-[2rem] hover:border-red-200 hover:bg-red-50/40 transition-all group shadow-sm"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center">
-                    <Trash2 className="w-5 h-5 text-red-500" />
-                  </div>
-                  <div className="text-left">
-                    <p className="font-black uppercase text-sm text-red-600">Supprimer mon compte</p>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase">Action définitive et irréversible</p>
-                  </div>
-                </div>
-                <ChevronRight className="w-4 h-4 text-red-300 group-hover:text-red-500 group-hover:translate-x-1 transition-all" />
-              </button>
+                  <span className="shrink-0 w-11 h-11 rounded-[14px] bg-[#FFF1EA] text-[#FF4500] flex items-center justify-center" aria-hidden><KeyRound className="w-5 h-5" /></span>
+                  <span className="flex-1"><strong className="block text-base font-extrabold">Modifier le mot de passe</strong><span className="block text-sm text-[#6F5A4B]">Sécurisez votre compte</span></span>
+                  <ChevronRight className="w-[18px] h-[18px] text-[#6F5A4B]" aria-hidden />
+                </button>
+                {/* DÉCONNEXION */}
+                <button type="button" onClick={handleLogout} className={ligneAction}>
+                  <span className="shrink-0 w-11 h-11 rounded-[14px] bg-[#F5EAE0] text-[#3D2B1F] flex items-center justify-center" aria-hidden><LogOut className="w-5 h-5" /></span>
+                  <span className="flex-1"><strong className="block text-base font-extrabold">Se déconnecter</strong><span className="block text-sm text-[#6F5A4B]">Fermer la session</span></span>
+                  <ChevronRight className="w-[18px] h-[18px] text-[#6F5A4B]" aria-hidden />
+                </button>
+                {/* SUPPRESSION DU COMPTE */}
+                <button type="button" onClick={() => { setShowDeleteConfirm(true); setDeleteError(null); }} className={ligneAction}>
+                  <span className="shrink-0 w-11 h-11 rounded-[14px] bg-red-50 text-red-700 flex items-center justify-center" aria-hidden><Trash2 className="w-5 h-5" /></span>
+                  <span className="flex-1"><strong className="block text-base font-extrabold text-red-700">Supprimer mon compte</strong><span className="block text-sm text-[#6F5A4B]">Action définitive et irréversible</span></span>
+                  <ChevronRight className="w-[18px] h-[18px] text-[#6F5A4B]" aria-hidden />
+                </button>
+              </section>
             </div>
           </div>
         )}
 
-        {/* ===== TAB : COMMANDES ===== */}
+        {/* ===== ONGLET : COMMANDES ===== */}
         {activeTab === 'commandes' && (
-          <div className="space-y-4">
+          <div className="grid lg:grid-cols-2 gap-3 md:gap-6 items-start">
             {ordersLoading ? (
-              <div className="flex items-center justify-center py-20">
-                <Loader2 className="w-8 h-8 text-[#FF4500] animate-spin" />
+              <div className="lg:col-span-2 flex justify-center py-20" role="status" aria-label="Chargement des commandes">
+                <Loader2 className="w-9 h-9 text-[#FF4500] animate-spin" aria-hidden />
               </div>
             ) : orders.length === 0 ? (
-              <div className="bg-white rounded-[2.5rem] p-16 text-center border border-[#D5C9B8] shadow-sm">
-                <div className="w-20 h-20 bg-[#EDE3D5] rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Package className="w-8 h-8 text-slate-200" />
-                </div>
-                <p className="font-black uppercase text-sm text-slate-400 tracking-widest mb-6">Aucune commande pour l'instant</p>
-                <Link
-                  href="/commander"
-                  className="inline-flex items-center gap-2 bg-[#FF4500] text-white px-6 py-3 rounded-xl font-black uppercase text-[11px] hover:bg-[#3D2B1F] transition-all"
-                >
-                  Voir la récolte du jour <ChevronRight className="w-4 h-4" />
+              <div className={`${carte} lg:col-span-2 px-5 py-14 flex flex-col items-center text-center`}>
+                <span className="w-20 h-20 rounded-full bg-[#F5EAE0] text-[#C9BBAA] flex items-center justify-center mb-4"><Package className="w-9 h-9" aria-hidden /></span>
+                <p className="titre text-2xl mb-5">Aucune commande pour l&apos;instant</p>
+                <Link href="/commander" className="group inline-flex items-center gap-3 min-h-14 px-7 rounded-[18px] bg-[#FF4500] text-white text-[17px] font-extrabold hover:bg-[#E63E00] transition-colors">
+                  Voir la récolte du jour <ArrowRight className="w-5 h-5 transition-transform duration-200 group-hover:translate-x-1" aria-hidden />
                 </Link>
               </div>
             ) : (
@@ -817,294 +740,229 @@ export default function ComptePage() {
                                 currentStatus.includes('confirme') ? 'confirmee' :
                                 currentStatus.includes('livre') ? 'livree' :
                                 currentStatus.includes('annule') ? 'annulee' : 'en_attente';
-
                 const statusCfg = STATUS_CONFIG[statusKey as keyof typeof STATUS_CONFIG] || STATUS_CONFIG.en_attente;
                 const StatusIcon = statusCfg.icon;
-                
+                const etapeCourante = statusKey === 'en_attente' ? 0 : statusKey === 'confirmee' ? 1 : 2;
+
                 return (
-                  <div key={order.id} className="bg-white rounded-[2rem] p-6 md:p-8 border border-[#DDD0BF] shadow-xl shadow-slate-100/50 hover:shadow-slate-200/60 transition-all">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-[#EDE3D5] rounded-2xl flex items-center justify-center shrink-0">
-                          <Truck className="w-5 h-5 text-slate-400" />
-                        </div>
+                  <article key={order.id} className={`${carte} overflow-hidden`}>
+                    <div className="px-[18px] pt-[18px] pb-4 md:px-6 md:pt-6">
+                      <div className="flex items-start justify-between gap-2.5">
                         <div>
-                          <p className="font-black uppercase text-sm text-slate-800 tracking-tight">
-                            {/* CORRECTION ID : AJOUT DE String() */}
-                            Commande #{String(order.id).slice(-6).toUpperCase()}
-                          </p>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
-                            {formatDate(order.created_at)}
-                          </p>
+                          <h2 className="text-[17px] md:text-lg font-extrabold">Commande #{String(order.id).slice(-6).toUpperCase()}</h2>
+                          <p className="mt-0.5 text-[13px] md:text-sm font-semibold text-[#6F5A4B]">{formatDate(order.created_at)}</p>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[10px] font-black uppercase tracking-tight ${statusCfg.bg} ${statusCfg.color} ${statusCfg.border}`}>
-                          <StatusIcon className="w-3.5 h-3.5" />
-                          {order.statut || statusCfg.label}
+                        <span className={`shrink-0 inline-flex items-center gap-1.5 px-[11px] py-1.5 rounded-full text-[12.5px] font-extrabold first-letter:uppercase ${STATUTS[statusKey as keyof typeof STATUTS]}`}>
+                          <StatusIcon className="w-3.5 h-3.5" strokeWidth={2.4} aria-hidden />
+                          <span className="first-letter:uppercase">{order.statut || statusCfg.label}</span>
                         </span>
-                        <span className="font-black text-xl text-slate-900">{(order.total || 0).toFixed(2)}€</span>
                       </div>
+                      {/* ARTICLES (via description_commande) */}
+                      <p className="mt-3.5 px-3.5 py-3 rounded-[14px] bg-[#F5EAE0] text-sm leading-normal text-[#5C4030] whitespace-pre-line">
+                        {order.description_commande || "Détail indisponible"}
+                      </p>
                     </div>
 
-                    {/* ARTICLES (Via description_commande) */}
-                    <div className="border-t border-[#DDD0BF] pt-4">
-                      <div className="bg-[#EDE3D5]/50 p-4 rounded-2xl border border-[#D5C9B8]/50">
-                        <p className="text-[11px] font-bold text-slate-600 leading-relaxed uppercase tracking-tight">
-                          {order.description_commande || "Détail indisponible"}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* TIMELINE SUIVI */}
+                    {/* SUIVI */}
                     {!statusKey.includes('annule') && (
-                      <div className="mt-5 pt-4 border-t border-[#DDD0BF]">
-                        <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-3">Suivi de commande</p>
-                        <div className="flex items-center">
-                          {([
-                            { key: 'en_attente', label: 'Reçue', order: 0 },
-                            { key: 'confirmee',  label: 'En prépa', order: 1 },
-                            { key: 'livree',     label: 'Livrée', order: 2 },
-                          ] as const).map((step, idx, arr) => {
-                            const currentOrder = statusKey === 'en_attente' ? 0 : statusKey === 'confirmee' ? 1 : 2;
-                            const done = step.order <= currentOrder;
-                            const isLast = idx === arr.length - 1;
+                      <div className="px-[18px] pb-[18px] md:px-6">
+                        <p className="mb-3 text-xs font-extrabold uppercase tracking-[0.12em] text-[#C73600]">Suivi de commande</p>
+                        <ol className="flex items-start">
+                          {(['Reçue', 'En prépa', 'Livrée'] as const).map((libelle, idx) => {
+                            const faite = idx <= etapeCourante;
                             return (
-                              <React.Fragment key={step.key}>
-                                <div className="flex flex-col items-center gap-1 shrink-0">
-                                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-black transition-all ${done ? (step.key === 'livree' ? 'bg-green-500 text-white' : 'bg-[#FF4500] text-white') : 'bg-[#DDD0BF] text-slate-300'}`}>
-                                    {done ? '✓' : idx + 1}
-                                  </div>
-                                  <span className={`text-[8px] font-black uppercase tracking-tight text-center ${done ? 'text-slate-600' : 'text-slate-300'}`}>{step.label}</span>
-                                </div>
-                                {!isLast && (
-                                  <div className={`flex-1 h-0.5 mb-3 mx-1 transition-all ${arr[idx + 1].order <= currentOrder ? 'bg-[#FF4500]' : 'bg-[#DDD0BF]'}`} />
-                                )}
+                              <React.Fragment key={libelle}>
+                                {idx > 0 && <li aria-hidden className={`flex-1 h-[3px] mt-[15px] rounded-full ${faite ? 'bg-[#166534]' : 'bg-[#E3D6C4]'}`} />}
+                                <li aria-current={idx === etapeCourante ? 'step' : undefined} className={`shrink-0 w-16 flex flex-col items-center gap-1.5 text-[12.5px] ${faite ? 'font-extrabold text-[#166534]' : 'font-bold text-[#6F5A4B]'}`}>
+                                  <span className={`w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-extrabold ${faite ? 'bg-[#166534] text-white' : 'bg-white border-2 border-[#DDD0BF]'}`}>
+                                    {faite ? <Check className="w-4 h-4" strokeWidth={3} aria-hidden /> : idx + 1}
+                                  </span>
+                                  {libelle}
+                                </li>
                               </React.Fragment>
                             );
                           })}
-                        </div>
+                        </ol>
                       </div>
                     )}
-
-                    {/* BOUTONS : FACTURE + COMMANDER À NOUVEAU */}
-                    {/* La facture n'est accessible qu'une fois la commande livrée. */}
-                    <div className="mt-6 pt-4 border-t border-[#DDD0BF] flex flex-col sm:flex-row gap-2">
-                      {statusKey === 'livree' ? (
-                        <button
-                          onClick={() => imprimerFacture(order)}
-                          className="sm:w-auto py-4 px-5 bg-white border border-[#D5C9B8] text-slate-700 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:border-[#FF4500] hover:text-[#FF4500] transition-all active:scale-95"
-                        >
-                          <FileText className="w-4 h-4" />
-                          Facture
-                        </button>
-                      ) : (
-                        <div
-                          title="Disponible après la livraison"
-                          className="sm:w-auto py-4 px-5 bg-[#EDE3D5] border border-[#D5C9B8] text-slate-400 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 cursor-not-allowed"
-                        >
-                          <FileText className="w-4 h-4" />
-                          Facture après livraison
-                        </div>
-                      )}
-                      <button
-                        onClick={() => commanderANouveau((order as any).contenu_panier)}
-                        className="flex-1 py-4 bg-[#FF4500] text-white rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[#3D2B1F] transition-all shadow-lg shadow-orange-900/10 active:scale-95"
-                      >
-                        <ShoppingBag className="w-4 h-4" />
-                        Commander à nouveau
-                      </button>
-                    </div>
 
                     {/* ADRESSE */}
                     {order.adresse_livraison && (
-                      <div className="mt-4 flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase">
-                        <MapPin className="w-3 h-3 text-[#FF4500]" />
+                      <p className="px-[18px] md:px-6 py-3 border-t border-[#F0E7DA] flex items-center gap-2 text-[13.5px] font-semibold text-[#5C4030]">
+                        <MapPin className="w-4 h-4 shrink-0 text-[#C73600]" aria-hidden />
                         {order.adresse_livraison}
-                      </div>
+                      </p>
                     )}
-                  </div>
+
+                    {/* TOTAL, FACTURE ET COMMANDER À NOUVEAU */}
+                    {/* La facture n'est accessible qu'une fois la commande livrée. */}
+                    <div className="px-[18px] md:px-6 pt-3.5 pb-[18px] md:pb-6 border-t border-[#F0E7DA] flex flex-col gap-3">
+                      <p className="flex items-baseline justify-between gap-3">
+                        <span className="text-sm font-semibold text-[#6F5A4B]">Total</span>
+                        <strong className="text-2xl font-black tracking-tight tabular-nums">{formatPrix(order.total || 0)}</strong>
+                      </p>
+                      <div className="grid grid-cols-2 gap-2">
+                        {statusKey === 'livree' ? (
+                          <button type="button" onClick={() => imprimerFacture(order)} className="inline-flex items-center justify-center gap-2 min-h-[52px] rounded-2xl border-[1.5px] border-[#3D2B1F] bg-white text-[15px] font-extrabold hover:bg-[#3D2B1F] hover:text-[#F5EAE0] transition-colors">
+                            <FileText className="w-[17px] h-[17px]" aria-hidden />
+                            Facture
+                          </button>
+                        ) : (
+                          <p title="Disponible après la livraison" className="inline-flex items-center justify-center gap-2 min-h-[52px] px-2 rounded-2xl border-[1.5px] border-dashed border-[#C9BBAA] text-[13px] leading-tight font-bold text-[#5C4030] text-center">
+                            <FileText className="w-4 h-4 shrink-0" aria-hidden />
+                            Facture après livraison
+                          </p>
+                        )}
+                        <button type="button" onClick={() => commanderANouveau((order as any).contenu_panier)} className="inline-flex items-center justify-center gap-2 min-h-[52px] px-2 rounded-2xl bg-[#3D2B1F] text-[#F5EAE0] text-[14.5px] leading-tight font-extrabold hover:bg-[#FF4500] transition-colors">
+                          <ShoppingBag className="hidden sm:block w-[17px] h-[17px] shrink-0" aria-hidden />
+                          Commander à nouveau
+                        </button>
+                      </div>
+                    </div>
+                  </article>
                 );
               })
             )}
-            
           </div>
         )}
 
-        {/* ===== TAB : ADRESSES ===== */}
+        {/* ===== ONGLET : ADRESSES ===== */}
         {activeTab === 'adresses' && (
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,480px)] gap-3.5 md:gap-7 items-start">
 
             {/* ADRESSE PRINCIPALE */}
-            <div className="bg-white rounded-[2rem] p-8 border border-[#D5C9B8] shadow-xl shadow-slate-100/50">
-              <div className="flex items-center justify-between mb-6">
+            <section className={`${carte} p-5 md:p-8`}>
+              <div className="flex items-start justify-between gap-4 mb-5 md:mb-[26px]">
                 <div>
-                  <h2 className="font-black uppercase tracking-tight text-slate-900">Adresse principale</h2>
-                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Utilisée pour vos livraisons</p>
+                  <h2 className="titre text-[28px] md:text-[32px] leading-none">Adresse principale</h2>
+                  <p className="mt-2 text-sm md:text-[15px] text-[#5C4030]">Utilisée pour vos livraisons</p>
                 </div>
                 {!isEditing ? (
-                  <button
-                    onClick={() => setIsEditing(true)}
-                    className="flex items-center gap-1.5 text-[10px] font-black uppercase text-slate-400 hover:text-[#FF4500] transition-colors"
-                  >
-                    <Edit3 className="w-3.5 h-3.5" /> Modifier
+                  <button type="button" onClick={() => setIsEditing(true)} className={boutonContour}>
+                    <Edit3 className="w-4 h-4" aria-hidden /> Modifier
                   </button>
-                ) : (
-                  <div className="flex gap-2">
-                    <button onClick={() => { setIsEditing(false); setEditForm(profile!); setAddressSuggestions([]); }} className="p-2 hover:bg-[#EDE3D5] rounded-xl text-slate-400">
-                      <X className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={handleSave}
-                      disabled={saveLoading}
-                      className="flex items-center gap-1.5 bg-[#FF4500] text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase hover:bg-[#3D2B1F] transition-all disabled:opacity-50"
-                    >
-                      {saveLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-                      Sauver
-                    </button>
-                  </div>
-                )}
+                ) : boutonsEdition}
               </div>
 
-              <div className="space-y-4">
-                {isEditing ? (
-                  <div className="space-y-1 relative">
-                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Adresse (Yvelines 78)</label>
-                    <div className="relative">
-                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
-                      <input
-                        type="text"
-                        value={editForm.address || ''}
-                        onChange={e => handleAddressInput(e.target.value)}
-                        placeholder="Tapez votre adresse..."
-                        className="w-full bg-[#EDE3D5] border border-[#D5C9B8] p-3 pl-10 rounded-xl font-bold text-sm focus:border-[#FF4500] outline-none transition-all"
-                      />
+              {saveSuccess && (
+                <p role="status" className="mb-4 flex items-center gap-2.5 px-3.5 py-3 rounded-[14px] bg-[#ECF7EF] text-sm font-bold text-[#166534]">
+                  <Check className="w-[18px] h-[18px] shrink-0" strokeWidth={2.6} aria-hidden />Profil mis à jour !
+                </p>
+              )}
+              {saveError && (
+                <p role="alert" className="mb-4 flex items-center gap-2.5 px-3.5 py-3 rounded-[14px] bg-red-50 text-sm font-bold text-red-700">
+                  <AlertCircle className="w-[18px] h-[18px] shrink-0" aria-hidden />{saveError}
+                </p>
+              )}
+
+              {isEditing ? (
+                <div className="relative">
+                  <label htmlFor="compte-adresse" className={etiquette}>Adresse (Yvelines 78)</label>
+                  <div className="relative">
+                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-[#6F5A4B] pointer-events-none" aria-hidden />
+                    <input id="compte-adresse" type="text" autoComplete="off" maxLength={200} value={editForm.address || ''} onChange={e => handleAddressInput(e.target.value)} placeholder="Tapez votre adresse..." className={`${champ} pl-[46px]`} />
+                  </div>
+                  {addressSuggestions.length > 0 && (
+                    <div className="absolute z-20 left-0 right-0 top-full mt-1.5 bg-white border border-[#E0D3C0] rounded-2xl shadow-2xl overflow-hidden">
+                      {addressSuggestions.map((s, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => { setEditForm(f => ({ ...f, address: s.properties.label })); setAddressSuggestions([]); }}
+                          className="w-full min-h-12 px-4 py-2.5 flex items-center gap-2.5 text-left text-sm font-semibold border-b border-[#F0E7DA] last:border-b-0 hover:bg-[#F5EAE0] transition-colors"
+                        >
+                          <MapPin className="w-4 h-4 shrink-0 text-[#FF4500]" aria-hidden />
+                          {s.properties.label}
+                        </button>
+                      ))}
                     </div>
-                    {addressSuggestions.length > 0 && (
-                      <div className="absolute z-50 w-full bg-white border border-[#D5C9B8] rounded-2xl shadow-2xl mt-1 overflow-hidden">
-                        {addressSuggestions.map((s, i) => (
-                          <button
-                            key={i}
-                            onClick={() => { setEditForm(f => ({ ...f, address: s.properties.label })); setAddressSuggestions([]); }}
-                            className="w-full p-3 text-left text-[10px] font-black uppercase border-b border-[#DDD0BF] hover:bg-[#EDE3D5] flex items-center gap-2"
-                          >
-                            <MapPin className="w-3 h-3 text-[#FF4500] shrink-0" />
-                            {s.properties.label}
-                          </button>
-                        ))}
-                      </div>
+                  )}
+                </div>
+              ) : (
+                <div className={`${valeur} flex items-start gap-3.5`}>
+                  <span className="shrink-0 w-11 h-11 rounded-[14px] bg-white text-[#FF4500] flex items-center justify-center" aria-hidden><MapPin className="w-5 h-5" /></span>
+                  <div className="min-w-0">
+                    <p className="text-[17px] md:text-lg font-bold leading-snug break-words">{profile?.address || 'Aucune adresse renseignée'}</p>
+                    {profile?.address && (
+                      <p className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#ECF7EF] text-[13px] font-bold text-[#166534]">
+                        <Check className="w-3.5 h-3.5" strokeWidth={2.6} aria-hidden />Zone 78 — Livrable
+                      </p>
                     )}
                   </div>
-                ) : (
-                  <div className="flex items-start gap-4 p-5 bg-gradient-to-br from-orange-50 to-white rounded-2xl border border-orange-100">
-                    <div className="w-10 h-10 bg-[#FF4500] rounded-xl flex items-center justify-center shrink-0">
-                      <MapPin className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                      <p className="font-black text-sm text-slate-800 uppercase">{profile?.address || 'Aucune adresse renseignée'}</p>
-                      {profile?.address && (
-                        <div className="flex items-center gap-1 mt-2">
-                          <CheckCircle2 className="w-3 h-3 text-green-500" />
-                          <span className="text-[9px] font-black text-green-600 uppercase tracking-widest">Zone 78 — Livrable</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
+                </div>
+              )}
+            </section>
 
-            {/* CTA COMMANDER */}
-            <div className="bg-[#3D2B1F] rounded-[2rem] p-8 relative overflow-hidden shadow-xl flex flex-col justify-between">
-              <div className="absolute bottom-0 right-0 w-56 h-56 bg-[#FF4500]/15 blur-[80px] rounded-full pointer-events-none" />
-              <div className="relative z-10">
-                <Truck className="w-8 h-8 text-[#FF4500] mb-4" />
-                <h3 className="text-xl font-black text-white uppercase tracking-tighter italic mb-2">Livraison dès le lendemain</h3>
-                <p className="text-slate-400 text-xs font-bold leading-relaxed mb-6">
-                  Entre 15h et 20h, à la date de votre choix. Offerte dans nos villes relais, et partout dès 40€.
-                </p>
-                <Link
-                  href="/commander"
-                  className="inline-flex items-center gap-2 bg-[#FF4500] text-white px-5 py-3 rounded-xl font-black uppercase text-[11px] hover:scale-105 transition-all shadow-lg shadow-orange-900/30 group"
-                >
-                  Commander maintenant
-                  <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </Link>
-              </div>
-            </div>
+            {/* APPEL À COMMANDER */}
+            <section className="relative overflow-hidden bg-[#3D2B1F] rounded-3xl md:rounded-[28px] p-6 md:p-8 text-[#F5EAE0]">
+              <svg viewBox="0 0 600 600" aria-hidden className="ss-rayons absolute -right-[110px] -top-[130px] w-[260px] h-[260px] pointer-events-none">
+                <circle cx="300" cy="300" r="100" fill="#FF4500" fillOpacity="0.9" />
+                <circle cx="300" cy="300" r="226" fill="none" stroke="#FF4500" strokeOpacity="0.7" strokeWidth="110" strokeDasharray="12 47.2" />
+              </svg>
+              <span className="relative w-12 h-12 rounded-[15px] bg-[#F5EAE0]/10 text-[#FF7A47] flex items-center justify-center mb-4" aria-hidden><Truck className="w-[22px] h-[22px]" /></span>
+              <h3 className="relative titre text-[28px] leading-[1.05] mb-2.5">Livraison dès le lendemain</h3>
+              <p className="relative mb-6 text-[15px] leading-relaxed text-[#E1D2C2]">
+                Entre 15h et 20h, à la date de votre choix. Offerte dans nos villes relais, et partout dès 40€.
+              </p>
+              <Link href="/commander" className="group relative flex items-center justify-between gap-3 min-h-[60px] px-[22px] rounded-[18px] bg-[#FF4500] text-white text-[19px] font-extrabold hover:bg-[#E63E00] transition-colors">
+                Commander maintenant
+                <ArrowRight className="w-[22px] h-[22px] transition-transform duration-200 group-hover:translate-x-1" strokeWidth={2.4} aria-hidden />
+              </Link>
+            </section>
           </div>
         )}
       </div>
 
-      {/* MODAL MODIFICATION MOT DE PASSE */}
+      {/* FENÊTRE : MODIFICATION DU MOT DE PASSE */}
       {showPasswordModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white rounded-[2rem] p-8 max-w-md w-full shadow-2xl border border-[#D5C9B8] animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between mb-6">
+        <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-3 sm:p-4 bg-[#3D2B1F]/55 backdrop-blur-sm animate-in fade-in duration-200" onClick={(e) => { if (e.target === e.currentTarget) setShowPasswordModal(false); }}>
+          <div role="dialog" aria-modal="true" aria-labelledby="titre-mdp" className="ss-pop w-full max-w-md bg-white rounded-[28px] p-6 md:p-7 shadow-2xl">
+            <div className="flex items-center justify-between gap-3 mb-5">
               <div className="flex items-center gap-3">
-                <div className="w-11 h-11 bg-[#EDE3D5] rounded-2xl flex items-center justify-center">
-                  <KeyRound className="w-5 h-5 text-[#FF4500]" />
-                </div>
-                <h3 className="font-black uppercase text-lg text-slate-900 tracking-tight">Nouveau mot de passe</h3>
+                <span className="w-11 h-11 rounded-[14px] bg-[#FFF1EA] text-[#FF4500] flex items-center justify-center" aria-hidden><KeyRound className="w-5 h-5" /></span>
+                <h3 id="titre-mdp" className="titre text-[26px] leading-none">Nouveau mot de passe</h3>
               </div>
-              <button onClick={() => setShowPasswordModal(false)} className="p-2 hover:bg-[#EDE3D5] rounded-xl text-slate-400">
-                <X className="w-4 h-4" />
+              <button type="button" onClick={() => setShowPasswordModal(false)} aria-label="Fermer" className="shrink-0 w-11 h-11 rounded-full bg-[#F5EAE0] text-[#3D2B1F] flex items-center justify-center hover:bg-[#EAD9C8] transition-colors">
+                <X className="w-5 h-5" aria-hidden />
               </button>
             </div>
 
             {passwordSuccess ? (
-              <div className="flex flex-col items-center text-center py-6">
-                <div className="w-14 h-14 bg-green-50 rounded-2xl flex items-center justify-center mb-4">
-                  <CheckCircle2 className="w-7 h-7 text-green-500" />
-                </div>
-                <p className="font-black uppercase text-sm text-slate-900">Mot de passe mis à jour !</p>
+              <div role="status" className="flex flex-col items-center text-center gap-3 py-6">
+                <span className="ss-pop w-16 h-16 rounded-full bg-[#166534] text-white flex items-center justify-center"><Check className="w-8 h-8" strokeWidth={3} aria-hidden /></span>
+                <p className="titre text-2xl">Mot de passe mis à jour !</p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="flex flex-col gap-4">
                 {passwordError && (
-                  <div className="flex items-center gap-2 p-3 bg-red-50 rounded-xl text-red-600">
-                    <AlertCircle className="w-4 h-4 shrink-0" />
-                    <p className="text-[10px] font-black uppercase">{passwordError}</p>
-                  </div>
+                  <p role="alert" className="flex items-center gap-2.5 px-3.5 py-3 rounded-[14px] bg-red-50 text-sm font-bold text-red-700">
+                    <AlertCircle className="w-[18px] h-[18px] shrink-0" aria-hidden />{passwordError}
+                  </p>
                 )}
-
-                <div className="space-y-1">
-                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Nouveau mot de passe</label>
+                <div>
+                  <label htmlFor="compte-nouveau-mdp" className={etiquette}>Nouveau mot de passe</label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
-                    <input
-                      type={showNewPassword ? 'text' : 'password'}
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      placeholder="••••••••"
-                      className="w-full bg-[#EDE3D5] border border-[#D5C9B8] p-3 pl-10 pr-10 rounded-xl font-bold text-sm focus:border-[#FF4500] outline-none transition-all"
-                    />
-                    <button type="button" onClick={() => setShowNewPassword(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-600">
-                      {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-[#6F5A4B] pointer-events-none" aria-hidden />
+                    <input id="compte-nouveau-mdp" type={showNewPassword ? 'text' : 'password'} autoComplete="new-password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="••••••••" className={`${champ} pl-[46px] pr-14`} />
+                    <button type="button" onClick={() => setShowNewPassword(v => !v)} aria-label={showNewPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'} className="absolute right-1 top-1/2 -translate-y-1/2 w-11 h-11 rounded-xl flex items-center justify-center text-[#6F5A4B] hover:text-[#3D2B1F] transition-colors">
+                      {showNewPassword ? <EyeOff className="w-[19px] h-[19px]" aria-hidden /> : <Eye className="w-[19px] h-[19px]" aria-hidden />}
                     </button>
                   </div>
                 </div>
-
-                <div className="space-y-1">
-                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Confirmer le mot de passe</label>
+                <div>
+                  <label htmlFor="compte-confirmer-mdp" className={etiquette}>Confirmer le mot de passe</label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
-                    <input
-                      type={showNewPassword ? 'text' : 'password'}
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="••••••••"
-                      className="w-full bg-[#EDE3D5] border border-[#D5C9B8] p-3 pl-10 rounded-xl font-bold text-sm focus:border-[#FF4500] outline-none transition-all"
-                    />
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-[#6F5A4B] pointer-events-none" aria-hidden />
+                    <input id="compte-confirmer-mdp" type={showNewPassword ? 'text' : 'password'} autoComplete="new-password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="••••••••" className={`${champ} pl-[46px]`} />
                   </div>
                 </div>
-
                 <button
+                  type="button"
                   onClick={handleChangePassword}
                   disabled={passwordLoading || !newPassword || !confirmPassword}
-                  className="w-full flex items-center justify-center gap-2 bg-[#3D2B1F] text-white p-4 rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-[#FF4500] transition-all disabled:opacity-40 mt-2"
+                  className="mt-1 min-h-14 rounded-[17px] bg-[#FF4500] text-white text-[17px] font-extrabold flex items-center justify-center gap-2.5 hover:bg-[#E63E00] transition-colors disabled:bg-[#EDE3D5] disabled:text-[#6F5A4B]"
                 >
-                  {passwordLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                  {passwordLoading ? <Loader2 className="w-5 h-5 animate-spin" aria-hidden /> : <Save className="w-[18px] h-[18px]" aria-hidden />}
                   Enregistrer
                 </button>
               </div>
@@ -1113,43 +971,28 @@ export default function ComptePage() {
         </div>
       )}
 
-      {/* MODAL CONFIRMATION SUPPRESSION COMPTE */}
+      {/* FENÊTRE : CONFIRMATION DE SUPPRESSION DU COMPTE */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white rounded-[2rem] p-8 max-w-md w-full shadow-2xl border border-[#D5C9B8] animate-in zoom-in-95 duration-200">
-            <div className="flex flex-col items-center text-center">
-              <div className="w-14 h-14 bg-red-50 rounded-2xl flex items-center justify-center mb-4">
-                <AlertTriangle className="w-7 h-7 text-red-500" />
-              </div>
-              <h3 className="font-black uppercase text-lg text-slate-900 tracking-tight mb-2">Supprimer votre compte ?</h3>
-              <p className="text-xs font-bold text-slate-500 leading-relaxed mb-6">
-                Cette action est <span className="text-red-600">définitive</span>. Votre compte, votre profil et vos points de fidélité seront supprimés. Vous ne pourrez pas récupérer ces données.
+        <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-3 sm:p-4 bg-[#3D2B1F]/55 backdrop-blur-sm animate-in fade-in duration-200">
+          <div role="alertdialog" aria-modal="true" aria-labelledby="titre-suppression" className="ss-pop w-full max-w-md bg-white rounded-[28px] p-6 md:p-7 shadow-2xl text-center">
+            <span className="mx-auto mb-4 w-16 h-16 rounded-full bg-red-50 text-red-700 flex items-center justify-center" aria-hidden><AlertTriangle className="w-8 h-8" /></span>
+            <h3 id="titre-suppression" className="titre text-[28px] leading-tight mb-3">Supprimer votre compte ?</h3>
+            <p className="mb-5 text-[15px] leading-relaxed text-[#5C4030]">
+              Cette action est <span className="font-extrabold text-red-700">définitive</span>. Votre compte, votre profil et vos points de fidélité seront supprimés. Vous ne pourrez pas récupérer ces données.
+            </p>
+            {deleteError && (
+              <p role="alert" className="mb-4 flex items-center gap-2.5 px-3.5 py-3 rounded-[14px] bg-red-50 text-left text-sm font-bold text-red-700">
+                <AlertCircle className="w-[18px] h-[18px] shrink-0" aria-hidden />{deleteError}
               </p>
-
-              {deleteError && (
-                <div className="flex items-center gap-2 p-3 bg-red-50 rounded-xl text-red-600 mb-4 w-full">
-                  <AlertCircle className="w-4 h-4 shrink-0" />
-                  <p className="text-[10px] font-black uppercase text-left">{deleteError}</p>
-                </div>
-              )}
-
-              <div className="flex gap-3 w-full">
-                <button
-                  onClick={() => setShowDeleteConfirm(false)}
-                  disabled={deleteLoading}
-                  className="flex-1 py-3.5 bg-[#EDE3D5] text-slate-600 rounded-xl font-black text-[11px] uppercase tracking-widest hover:bg-[#DDD0BF] transition-all disabled:opacity-50"
-                >
-                  Annuler
-                </button>
-                <button
-                  onClick={handleDeleteAccount}
-                  disabled={deleteLoading}
-                  className="flex-1 py-3.5 bg-red-600 text-white rounded-xl font-black text-[11px] uppercase tracking-widest hover:bg-red-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {deleteLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-                  Supprimer
-                </button>
-              </div>
+            )}
+            <div className="grid grid-cols-2 gap-2.5">
+              <button type="button" onClick={() => setShowDeleteConfirm(false)} disabled={deleteLoading} className="min-h-14 rounded-[17px] border-[1.5px] border-[#3D2B1F] bg-white text-base font-extrabold hover:bg-[#F5EAE0] transition-colors disabled:opacity-60">
+                Annuler
+              </button>
+              <button type="button" onClick={handleDeleteAccount} disabled={deleteLoading} className="min-h-14 rounded-[17px] bg-red-700 text-white text-base font-extrabold flex items-center justify-center gap-2 hover:bg-red-800 transition-colors disabled:opacity-70">
+                {deleteLoading ? <Loader2 className="w-5 h-5 animate-spin" aria-hidden /> : <Trash2 className="w-[18px] h-[18px]" aria-hidden />}
+                Supprimer
+              </button>
             </div>
           </div>
         </div>
