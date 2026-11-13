@@ -1,11 +1,8 @@
 'use client';
 import React, { useState, useMemo, useEffect } from 'react';
-import { 
-  MessageCircle, Phone, Mail, Clock, HelpCircle, 
-  ShieldCheck, Truck, ChevronRight, ArrowLeft, 
-  Search, CreditCard, Box, RefreshCcw, Star,
-  ArrowRight, Loader2, Send, Leaf, Gift, UserCheck, 
-  MapPin, AlertCircle, Sparkles
+import {
+  MessageCircle, Phone, ShieldCheck, Truck, Search, CreditCard, RefreshCcw, Star,
+  ArrowRight, Loader2, Send, Leaf, Gift, UserCheck, MapPin, AlertCircle, Check, ChevronDown,
 } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
@@ -116,6 +113,8 @@ export default function AidePage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [formStatus, setFormStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+  // Thème de FAQ affiché (« toutes » ou l'identifiant d'une catégorie)
+  const [theme, setTheme] = useState('toutes');
   
   const [contactName, setContactName] = useState('');
   const [contactEmail, setContactEmail] = useState('');
@@ -172,262 +171,248 @@ export default function AidePage() {
     }
   };
 
+  // Filtre par thème (« Toutes » par défaut) ; une recherche porte sur tous les thèmes
+  const categoriesAffichees = searchTerm.trim() || theme === 'toutes'
+    ? filteredCategories
+    : filteredCategories.filter(c => c.id === theme);
+
+  const SURTITRE = 'text-[11px] md:text-xs font-extrabold uppercase tracking-[0.14em] text-[#C73600]';
+  const etiquette = 'block mb-1.5 text-[13px] font-bold text-[#5C4030]';
+  const champ = 'w-full h-[52px] px-4 rounded-[14px] border-[1.5px] border-[#E0D3C0] bg-white text-base font-semibold text-[#3D2B1F] placeholder:text-[#8C7867] placeholder:font-medium outline-none focus:border-[#FF4500] transition-colors';
+
   return (
-    <div className="min-h-screen bg-[#EDE3D5] pb-20">
-      {/* Header */}
-      <div className="bg-white border-b border-slate-100 sticky top-14 z-40 px-6 py-4">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-[#FF4500] transition-colors">
-            <ArrowLeft className="w-4 h-4" /> Boutique
-          </Link>
-          <div className="flex items-center gap-4 text-[9px] font-bold text-slate-400 uppercase tracking-tighter">
-            <span className="flex items-center gap-1"><MapPin className="w-3 h-3 text-[#FF4500]"/> 78 uniquement</span>
-            <span className="flex items-center gap-1"><ShieldCheck className="w-3 h-3 text-green-500"/> Garanti frais</span>
+    <div className="min-h-screen bg-[#EDE3D5] text-[#3D2B1F] pb-10">
+
+      {/* EN-TÊTE DE PAGE */}
+      <header className="bg-[#F5EAE0] border-b border-[#E3D6C4]">
+        <div className="max-w-[1240px] mx-auto px-5 pt-5 pb-6 md:pt-8 md:pb-[38px]">
+          <nav aria-label="Fil d'Ariane" className="hidden md:flex items-center gap-2 mb-3.5 text-[13px] font-semibold text-[#6F5A4B]">
+            <Link href="/" className="hover:text-[#C73600] transition-colors">Accueil</Link>
+            <span aria-hidden>›</span>
+            <span aria-current="page" className="font-bold text-[#3D2B1F]">Aide</span>
+          </nav>
+          <div className="flex items-end justify-between gap-x-6 gap-y-3 flex-wrap">
+            <div>
+              <h1 className="titre text-[44px] md:text-[64px] leading-none">Aide <em className="text-[#FF4500]">&amp; infos</em></h1>
+              <p className="mt-2 md:mt-2.5 text-[15px] md:text-[17px] text-[#5C4030]">Soleil et Saveurs — Votre Service Client Local</p>
+            </div>
+            <p className="md:mb-1.5 flex gap-2">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 md:px-3.5 md:py-2 rounded-full bg-white border border-[#E8DCCB] text-xs md:text-[13px] font-bold text-[#C73600]"><MapPin className="w-[15px] h-[15px]" aria-hidden />78 uniquement</span>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 md:px-3.5 md:py-2 rounded-full bg-white border border-[#E8DCCB] text-xs md:text-[13px] font-bold text-[#166534]"><ShieldCheck className="w-[15px] h-[15px]" aria-hidden />Garanti frais</span>
+            </p>
+          </div>
+          <div className="mt-5 md:mt-[26px] flex items-center gap-3 md:gap-3.5 h-[54px] md:h-[60px] px-4 md:px-[22px] rounded-2xl md:rounded-[18px] bg-white border border-[#E0D3C0] shadow-[0_14px_30px_-22px_rgba(61,43,31,0.35)] focus-within:border-[#FF4500] transition-colors">
+            {isSearching ? <Loader2 className="w-5 h-5 shrink-0 animate-spin text-[#FF4500]" aria-hidden /> : <Search className="w-5 h-5 shrink-0 text-[#6F5A4B]" aria-hidden />}
+            <input
+              type="search"
+              aria-label="Rechercher dans l'aide"
+              placeholder="Tapez votre question (ex: Livraison, Bio, Remboursement...)"
+              className="flex-1 min-w-0 bg-transparent text-base md:text-[17px] font-semibold text-[#3D2B1F] placeholder:text-[#8C7867] placeholder:font-medium outline-none [&::-webkit-search-cancel-button]:hidden"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* Hero */}
-      <div className="bg-slate-900 py-24 px-6 text-center relative overflow-hidden">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[#FF4500]/20 via-transparent to-transparent opacity-50 animate-pulse"></div>
-        <h1 className="text-5xl md:text-8xl font-black text-white uppercase tracking-tighter mb-4 relative italic">
-          AIDE<span className="text-[#FF4500]">&</span>INFOS
-        </h1>
-        <p className="text-slate-400 text-sm md:text-base font-bold uppercase tracking-[0.2em] mb-12">Soleil et Saveurs — Votre Service Client Local</p>
+      <div className="max-w-[1240px] mx-auto px-3 md:px-5">
 
-        <div className="max-w-2xl mx-auto relative group">
-          <div className="absolute left-6 top-1/2 -translate-y-1/2">
-            {isSearching ? <Loader2 className="w-6 h-6 text-[#FF4500] animate-spin" /> : <Search className="text-slate-500 w-6 h-6" />}
-          </div>
-          <input 
-            type="text" 
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Tapez votre question (ex: Livraison, Bio, Remboursement...)" 
-            className="w-full bg-white/10 border-2 border-white/5 rounded-[2rem] py-6 pl-16 pr-8 text-white placeholder:text-slate-500 focus:outline-none focus:bg-white focus:text-slate-900 focus:border-[#FF4500] transition-all shadow-2xl text-lg font-medium"
-          />
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-6 -mt-10 relative z-10">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-20">
+        {/* RACCOURCIS */}
+        <div className="pt-4 md:pt-7 grid grid-cols-2 lg:grid-cols-4 gap-2.5 md:gap-5">
           {[
-            { icon: <MessageCircle className="text-green-500"/>, label: "WhatsApp", sub: "Réponse < 15min", link: "https://wa.me/33759720083" },
-            { icon: <Phone className="text-blue-500"/>, label: "Téléphone", sub: "9h-19h Non-stop", link: "tel:+33759720083" },
-            { icon: <Star className="text-purple-500"/>, label: "Fidélité", sub: "-10% dès 100 pts", link: "/compte" },
-            { icon: <AlertCircle className="text-[#FF4500]"/>, label: "Litige", sub: "Photo & Crédit", link: "mailto:soleiletsaveurs.livraison@gmail.com" }
+            { icon: <MessageCircle className="w-[22px] h-[22px]" />, vert: true, label: "WhatsApp", sub: "Réponse < 15min", link: "https://wa.me/33759720083" },
+            { icon: <Phone className="w-[22px] h-[22px]" />, vert: false, label: "Téléphone", sub: "9h-19h Non-stop", link: "tel:+33759720083" },
+            { icon: <Star className="w-[22px] h-[22px]" />, vert: false, label: "Fidélité", sub: "-10% dès 100 pts", link: "/compte" },
+            { icon: <AlertCircle className="w-[22px] h-[22px]" />, vert: false, label: "Litige", sub: "Photo & Crédit", link: "mailto:soleiletsaveurs.livraison@gmail.com" }
           ].map((action, i) => (
-            <a 
-              key={i} 
-              href={action.link} 
+            <a
+              key={i}
+              href={action.link}
               target={action.link.startsWith('http') ? "_blank" : undefined}
               rel={action.link.startsWith('http') ? "noopener noreferrer" : undefined}
-              className="bg-white p-6 rounded-[32px] shadow-xl border border-slate-50 flex flex-col items-center text-center hover:translate-y-[-5px] transition-all group"
+              className="flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-3.5 p-4 md:p-5 rounded-[20px] md:rounded-[22px] bg-white border border-[#E8DCCB] transition-[transform,box-shadow] duration-300 ease-out md:hover:-translate-y-1 md:hover:shadow-[0_26px_44px_-28px_rgba(61,43,31,0.5)]"
             >
-              <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">{action.icon}</div>
-              <h3 className="font-black uppercase text-[10px] tracking-widest text-slate-900">{action.label}</h3>
-              <p className="text-[9px] text-slate-400 font-bold mt-1 uppercase">{action.sub}</p>
+              <span className={`shrink-0 w-11 h-11 md:w-12 md:h-12 rounded-[14px] md:rounded-[15px] flex items-center justify-center ${action.vert ? 'bg-[#ECF7EF] text-[#15803D]' : 'bg-[#FFF1EA] text-[#FF4500]'}`} aria-hidden>{action.icon}</span>
+              <span>
+                <strong className="block text-[15px] md:text-[17px] font-extrabold">{action.label}</strong>
+                <span className="block text-[13px] md:text-sm font-semibold text-[#6F5A4B]">{action.sub}</span>
+              </span>
             </a>
           ))}
         </div>
 
         {/* FRAIS DE LIVRAISON : conditions et tarifs (mêmes règles que le calcul de la commande) */}
-        <section id="frais-livraison" className="mb-16 bg-white rounded-[40px] border border-slate-100 shadow-xl p-6 sm:p-10 scroll-mt-32">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-12 h-12 bg-[#FF4500] text-white rounded-2xl flex items-center justify-center shadow-lg shadow-[#FF4500]/20 shrink-0"><Truck className="w-5 h-5" /></div>
-            <div>
-              <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tighter text-slate-900 italic">Frais de livraison</h2>
-              <p className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-widest">Partout dans les Yvelines (78)</p>
-            </div>
-          </div>
-
-          <div className="grid md:grid-cols-[1.1fr_1fr] gap-6 md:gap-10 items-start">
-            <div>
-              <div className="rounded-3xl bg-green-50 border border-green-100 px-5 py-4 mb-4 flex items-center gap-3">
-                <Gift className="w-6 h-6 text-green-600 shrink-0" />
-                <p className="text-sm font-black text-green-800">Livraison <span className="uppercase">offerte</span> à Chatou, Croissy-sur-Seine, Mareil-sur-Mauldre et Saint-Nom-la-Bretèche, quel que soit le montant</p>
-              </div>
-              <div className="rounded-3xl bg-green-50/60 border border-green-100 px-5 py-3 mb-4 flex items-center gap-3">
-                <Gift className="w-5 h-5 text-green-600 shrink-0" />
-                <p className="text-sm font-black text-green-800">Ailleurs dans le 78 : offerte dès 40€ de produits</p>
-              </div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 px-1">En dessous de 40€, hors villes relais, selon la distance</p>
-              <div className="rounded-3xl border border-slate-100 overflow-hidden">
+        <section id="frais-livraison" className="scroll-mt-32 mt-4 md:mt-7 bg-white rounded-3xl md:rounded-[32px] border border-[#E8DCCB] p-5 md:p-10 grid lg:grid-cols-2 gap-6 lg:gap-12">
+          <div>
+            <p className={`${SURTITRE} mb-2 md:mb-2.5`}>Partout dans les Yvelines (78)</p>
+            <h2 className="titre text-[32px] md:text-[40px] leading-none mb-4 md:mb-[22px]">Frais de <em className="text-[#FF4500]">livraison</em></h2>
+            <p className="mb-2.5 flex gap-3 px-3.5 py-3 md:px-4 md:py-3.5 rounded-2xl bg-[#ECF7EF] text-sm md:text-[15px] leading-snug font-semibold text-[#166534]">
+              <Gift className="w-5 h-5 shrink-0 mt-px" aria-hidden />
+              <span>Livraison <strong className="font-extrabold">offerte</strong> à Chatou, Croissy-sur-Seine, Mareil-sur-Mauldre et Saint-Nom-la-Bretèche, quel que soit le montant</span>
+            </p>
+            <p className="mb-5 md:mb-[22px] flex gap-3 px-3.5 py-3 md:px-4 md:py-3.5 rounded-2xl bg-[#ECF7EF] text-sm md:text-[15px] leading-snug font-semibold text-[#166534]">
+              <Gift className="w-5 h-5 shrink-0 mt-px" aria-hidden />
+              <span>Ailleurs dans le 78 : offerte dès 40€ de produits</span>
+            </p>
+            <p className="mb-2.5 text-sm font-bold text-[#5C4030]">En dessous de 40€, hors villes relais, selon la distance</p>
+            <table className="w-full border-separate border-spacing-0 rounded-2xl overflow-hidden border border-[#E8DCCB] text-[15px] md:text-base">
+              <tbody>
                 {[
                   { distance: "Jusqu'à 3 km", prix: '3€' },
                   { distance: 'De 3 à 6 km', prix: '4€' },
                   { distance: 'Au-delà de 6 km', prix: '5€' },
                 ].map((palier, i) => (
-                  <div key={palier.distance} className={`flex items-center justify-between px-5 py-3.5 ${i > 0 ? 'border-t border-slate-100' : ''}`}>
-                    <span className="flex items-center gap-2 text-sm font-bold text-slate-600"><MapPin className="w-4 h-4 text-[#FF4500]" />{palier.distance}</span>
-                    <span className="text-lg font-black text-slate-900 tabular-nums">{palier.prix}</span>
+                  <tr key={palier.distance}>
+                    <th scope="row" className={`px-4 py-3 md:px-[18px] md:py-3.5 text-left font-semibold text-[#5C4030] ${i < 2 ? 'border-b border-[#F0E7DA]' : ''}`}>{palier.distance}</th>
+                    <td className={`px-4 py-3 md:px-[18px] md:py-3.5 text-right text-[19px] font-black ${i < 2 ? 'border-b border-[#F0E7DA]' : ''}`}>{palier.prix}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <p className="mt-3 text-[13px] leading-normal text-[#6F5A4B]">
+              Distance à vol d&apos;oiseau entre votre adresse et notre point relais le plus proche : Chatou, Croissy-sur-Seine, Mareil-sur-Mauldre ou Saint-Nom-la-Bretèche.
+            </p>
+          </div>
+          <ul className="rounded-[20px] md:rounded-3xl bg-[#F5EAE0] p-[18px] md:p-7 flex flex-col gap-3.5 md:gap-4 text-sm md:text-[15px] leading-normal text-[#5C4030]">
+            {[
+              { titre: 'Seuil de 40€ avant remises', texte: 'Un code promo, la remise fidélité ou le parrainage ne vous font jamais perdre la livraison offerte.' },
+              { titre: 'Minimum de commande : 10€', texte: 'Montant de vos produits après remises, hors frais de livraison.' },
+              { titre: 'Toutes les communes du 78', texte: "Votre adresse est vérifiée à la commande. Nous ne livrons pas en dehors des Yvelines." },
+              { titre: 'Frais affichés avant de valider', texte: "Le montant exact apparaît dans votre panier dès que vous choisissez votre adresse. S'il ne peut pas être vérifié au moment de la commande, le tarif de 5€ s'applique." },
+              { titre: 'Livraison dès le lendemain, de 15h à 20h', texte: 'À la date de votre choix parmi les jours proposés dans le panier. Paiement à la livraison, en espèces ou par carte.' },
+            ].map(c => (
+              <li key={c.titre} className="flex gap-3">
+                <Check className="w-[19px] h-[19px] shrink-0 mt-0.5 text-[#C73600]" strokeWidth={2.4} aria-hidden />
+                <span><strong className="font-extrabold text-[#3D2B1F]">{c.titre}.</strong> {c.texte}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <div className="pt-10 md:pt-14 grid lg:grid-cols-[minmax(0,1fr)_minmax(0,440px)] gap-8 lg:gap-10 items-start">
+
+          {/* QUESTIONS FRÉQUENTES */}
+          <section className="min-w-0">
+            <h2 className="titre text-[32px] md:text-[40px] leading-none mb-3.5 md:mb-[18px] px-2 md:px-0">Questions <em className="text-[#FF4500]">fréquentes</em></h2>
+            {!searchTerm.trim() && (
+              <div role="group" aria-label="Filtrer par thème" className="ss-ruban flex md:flex-wrap gap-2 mb-5 md:mb-[22px] overflow-x-auto -mx-3 px-3 md:mx-0 md:px-0">
+                {[{ id: 'toutes', title: 'Toutes' }, ...FAQ_CATEGORIES].map(c => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    aria-pressed={theme === c.id}
+                    onClick={() => setTheme(c.id)}
+                    className={`shrink-0 h-11 px-4 rounded-[13px] border-[1.5px] text-sm font-bold whitespace-nowrap transition-colors ${
+                      theme === c.id ? 'bg-[#3D2B1F] border-[#3D2B1F] text-[#F5EAE0]' : 'bg-white border-[#DDD0BF] text-[#3D2B1F] hover:border-[#3D2B1F]'}`}
+                  >
+                    {c.title}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {categoriesAffichees.length > 0 ? (
+              <div className="flex flex-col gap-6 md:gap-[26px]">
+                {categoriesAffichees.map((cat) => (
+                  <div key={cat.id}>
+                    <h3 className="flex items-center gap-2 mb-2.5 px-2 md:px-0 text-xs md:text-[13px] font-extrabold uppercase tracking-[0.12em] text-[#C73600]">
+                      <span aria-hidden className="[&>svg]:w-4 [&>svg]:h-4">{cat.icon}</span>{cat.title}
+                    </h3>
+                    <div className="bg-white rounded-[22px] border border-[#E8DCCB] overflow-hidden divide-y divide-[#F0E7DA]">
+                      {cat.questions.map((item, i) => (
+                        <details key={i} open={searchTerm.length > 0} className="group">
+                          <summary className="list-none [&::-webkit-details-marker]:hidden cursor-pointer min-h-[60px] px-[18px] md:px-5 py-3 flex items-center justify-between gap-4 text-[15px] md:text-base font-bold hover:bg-[#FFFBF7] transition-colors">
+                            <span>{item.q}</span>
+                            <ChevronDown className="w-[18px] h-[18px] shrink-0 transition-transform duration-200 group-open:rotate-180" strokeWidth={2.4} aria-hidden />
+                          </summary>
+                          <p className="px-[18px] md:px-5 pb-5 text-[15px] md:text-base leading-relaxed text-[#5C4030] whitespace-pre-line">{item.a}</p>
+                        </details>
+                      ))}
+                    </div>
                   </div>
                 ))}
               </div>
-              <p className="text-[11px] font-medium text-slate-400 mt-2 px-1 leading-relaxed">
-                Distance à vol d&apos;oiseau entre votre adresse et notre point relais le plus proche : Chatou, Croissy-sur-Seine, Mareil-sur-Mauldre ou Saint-Nom-la-Bretèche.
-              </p>
-            </div>
-
-            <ul className="space-y-3 text-sm text-slate-600 leading-relaxed">
-              {[
-                { titre: 'Seuil de 40€ avant remises', texte: 'Un code promo, la remise fidélité ou le parrainage ne vous font jamais perdre la livraison offerte.' },
-                { titre: 'Minimum de commande : 10€', texte: 'Montant de vos produits après remises, hors frais de livraison.' },
-                { titre: 'Toutes les communes du 78', texte: "Votre adresse est vérifiée à la commande. Nous ne livrons pas en dehors des Yvelines." },
-                { titre: 'Frais affichés avant de valider', texte: "Le montant exact apparaît dans votre panier dès que vous choisissez votre adresse. S'il ne peut pas être vérifié au moment de la commande, le tarif de 5€ s'applique." },
-                { titre: 'Livraison dès le lendemain, de 15h à 20h', texte: 'À la date de votre choix parmi les jours proposés dans le panier. Paiement à la livraison, en espèces ou par carte.' },
-              ].map(c => (
-                <li key={c.titre} className="flex gap-3">
-                  <span className="mt-1 w-5 h-5 rounded-full bg-orange-50 text-[#FF4500] flex items-center justify-center shrink-0"><ShieldCheck className="w-3 h-3" /></span>
-                  <span><strong className="font-black text-slate-800">{c.titre}.</strong> {c.texte}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </section>
-
-        <div className="grid lg:grid-cols-3 gap-12">
-          <div className="lg:col-span-2 space-y-16">
-            {filteredCategories.length > 0 ? (
-              filteredCategories.map((cat) => (
-                <div key={cat.id} className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-[#FF4500] text-white rounded-2xl flex items-center justify-center shadow-lg shadow-[#FF4500]/20">{cat.icon}</div>
-                    <h2 className="text-3xl font-black uppercase tracking-tighter text-slate-900 italic">{cat.title}</h2>
-                  </div>
-                  <div className="grid gap-4">
-                    {cat.questions.map((item, i) => (
-                      <details key={i} open={searchTerm.length > 0} className="group bg-white border border-slate-100 rounded-[2.5rem] overflow-hidden transition-all hover:border-[#FF4500]/40 shadow-sm">
-                        <summary className="list-none p-8 flex items-center justify-between cursor-pointer select-none">
-                          <span className="font-extrabold text-base text-slate-800 pr-4">{item.q}</span>
-                          <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-[#FF4500]/10 transition-colors">
-                            <ChevronRight className="w-5 h-5 text-slate-400 group-open:rotate-90 transition-transform" />
-                          </div>
-                        </summary>
-                        <div className="px-8 pb-8 text-sm font-medium text-slate-500 leading-relaxed border-t border-slate-50 pt-6 italic whitespace-pre-line">
-                          {item.a}
-                        </div>
-                      </details>
-                    ))}
-                  </div>
-                </div>
-              ))
             ) : (
-              <div className="bg-white rounded-[50px] p-20 text-center border-2 border-dashed border-slate-100">
-                <Search className="w-16 h-16 text-slate-200 mx-auto mb-6" />
-                <h3 className="text-xl font-black uppercase text-slate-400">Aucun résultat trouvé</h3>
-                <button onClick={() => setSearchTerm('')} className="mt-4 text-[#FF4500] font-black uppercase text-xs underline decoration-2">Tout afficher</button>
+              <div className="bg-white rounded-[22px] border border-[#E8DCCB] px-5 py-12 flex flex-col items-center text-center">
+                <span className="w-16 h-16 rounded-full bg-[#F5EAE0] text-[#C9BBAA] flex items-center justify-center mb-4"><Search className="w-7 h-7" aria-hidden /></span>
+                <h3 className="titre text-2xl mb-4">Aucun résultat trouvé</h3>
+                <button type="button" onClick={() => setSearchTerm('')} className="min-h-11 px-5 rounded-full border-[1.5px] border-[#3D2B1F] text-sm font-bold hover:bg-[#3D2B1F] hover:text-[#F5EAE0] transition-colors">Tout afficher</button>
               </div>
             )}
-          </div>
+          </section>
 
-          <div className="space-y-8">
+          <aside className="min-w-0 lg:sticky lg:top-20 flex flex-col gap-4 md:gap-5">
             {/* FORMULAIRE DE CONTACT */}
-            <div className="bg-white rounded-[40px] p-10 shadow-2xl border border-slate-50 sticky top-24">
-              <div className="w-12 h-12 bg-slate-900 text-white rounded-2xl flex items-center justify-center mb-6"><Mail className="w-6 h-6"/></div>
-              <h3 className="font-black uppercase text-2xl tracking-tighter text-slate-900 mb-2 leading-none">VOTRE QUESTION <br/>EST <span className="text-[#FF4500]">UNIQUE ?</span></h3>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-8">On vous répond personnellement</p>
-              
+            <section className="bg-white rounded-3xl md:rounded-[28px] border border-[#E8DCCB] p-5 md:p-7">
+              <h2 className="titre text-[28px] md:text-[30px] leading-[1.05] mb-1.5">Votre question est <em className="text-[#FF4500]">unique ?</em></h2>
+              <p className="mb-5 text-[15px] text-[#5C4030]">On vous répond personnellement</p>
+
               {formStatus === 'sent' ? (
-                <div className="bg-green-50 border border-green-100 p-8 rounded-[32px] text-center animate-in zoom-in duration-300">
-                  <Sparkles className="w-10 h-10 text-green-500 mx-auto mb-4" />
-                  <p className="font-black uppercase text-xs text-green-700">Message reçu !</p>
-                  <p className="text-[10px] mt-2 font-bold text-green-600/70 uppercase">L'équipe vous répond très vite.</p>
-                  <button
-                    onClick={() => setFormStatus('idle')}
-                    className="mt-4 text-[10px] font-black text-green-700 underline uppercase"
-                  >
+                <div role="status" className="flex flex-col items-center text-center gap-2 py-6">
+                  <span className="ss-pop w-16 h-16 rounded-full bg-[#166534] text-white flex items-center justify-center mb-2"><Check className="w-8 h-8" strokeWidth={3} aria-hidden /></span>
+                  <p className="titre text-2xl">Message reçu !</p>
+                  <p className="text-[15px] text-[#5C4030]">L&apos;équipe vous répond très vite.</p>
+                  <button type="button" onClick={() => setFormStatus('idle')} className="mt-3 min-h-11 px-5 rounded-full border-[1.5px] border-[#3D2B1F] text-sm font-bold hover:bg-[#3D2B1F] hover:text-[#F5EAE0] transition-colors">
                     Envoyer un autre message
                   </button>
                 </div>
               ) : (
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <input
-                    required
-                    value={contactName}
-                    onChange={(e) => setContactName(e.target.value)}
-                    type="text"
-                    maxLength={200}
-                    placeholder="Votre nom"
-                    className="w-full bg-slate-50 border-2 border-transparent rounded-2xl py-4 px-6 text-xs font-bold focus:border-[#FF4500]/20 focus:bg-white outline-none transition-all"
-                  />
-                  <input
-                    required
-                    value={contactEmail}
-                    onChange={(e) => setContactEmail(e.target.value)}
-                    type="email"
-                    maxLength={320}
-                    placeholder="Email de contact"
-                    className="w-full bg-slate-50 border-2 border-transparent rounded-2xl py-4 px-6 text-xs font-bold focus:border-[#FF4500]/20 focus:bg-white outline-none transition-all"
-                  />
-                  <textarea
-                    required
-                    value={contactMessage}
-                    onChange={(e) => setContactMessage(e.target.value)}
-                    placeholder="Détaillez votre demande..."
-                    maxLength={5000}
-                    rows={4}
-                    className="w-full bg-slate-50 border-2 border-transparent rounded-2xl py-4 px-6 text-xs font-bold focus:border-[#FF4500]/20 focus:bg-white outline-none transition-all resize-none"
-                  />
-
+                <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+                  <div>
+                    <label htmlFor="aide-nom" className={etiquette}>Votre nom</label>
+                    <input id="aide-nom" required type="text" autoComplete="name" maxLength={200} value={contactName} onChange={(e) => setContactName(e.target.value)} className={champ} />
+                  </div>
+                  <div>
+                    <label htmlFor="aide-email" className={etiquette}>Email de contact</label>
+                    <input id="aide-email" required type="email" autoComplete="email" maxLength={320} value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} className={champ} />
+                  </div>
+                  <div>
+                    <label htmlFor="aide-message" className={etiquette}>Votre message</label>
+                    <textarea
+                      id="aide-message"
+                      required
+                      placeholder="Détaillez votre demande..."
+                      maxLength={5000}
+                      rows={4}
+                      value={contactMessage}
+                      onChange={(e) => setContactMessage(e.target.value)}
+                      className="w-full px-4 py-3.5 rounded-[14px] border-[1.5px] border-[#E0D3C0] bg-white text-base font-medium text-[#3D2B1F] placeholder:text-[#8C7867] resize-none outline-none focus:border-[#FF4500] transition-colors"
+                    />
+                  </div>
                   {/* Le détail technique reste dans la console, pas affiché au client */}
                   {formStatus === 'error' && (
-                    <div className="bg-red-50 border border-red-100 rounded-2xl p-4">
-                      <p className="text-[10px] font-black text-red-600 uppercase mb-1">Erreur d'envoi</p>
-                      <p className="text-[10px] text-red-500 font-bold">Votre message n'a pas pu être envoyé. Réessayez, ou écrivez-nous sur WhatsApp au 07 59 72 00 83.</p>
+                    <div role="alert" className="px-3.5 py-3 rounded-[14px] bg-red-50 text-red-700">
+                      <p className="text-sm font-extrabold">Erreur d&apos;envoi</p>
+                      <p className="text-[13.5px] font-semibold">Votre message n&apos;a pas pu être envoyé. Réessayez, ou écrivez-nous sur WhatsApp au 07 59 72 00 83.</p>
                     </div>
                   )}
-
-                  <button 
-                    type="submit"
-                    disabled={formStatus === 'sending'}
-                    className="w-full bg-slate-900 text-white py-5 rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-[#FF4500] hover:shadow-xl hover:shadow-[#FF4500]/20 transition-all disabled:opacity-50"
-                  >
-                    {formStatus === 'sending' ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Send className="w-4 h-4" /> Envoyer</>}
+                  <button type="submit" disabled={formStatus === 'sending'} className="mt-1 min-h-14 rounded-[17px] bg-[#FF4500] text-white text-[19px] font-extrabold flex items-center justify-center gap-2.5 transition-[background-color,transform] duration-200 hover:bg-[#E63E00] active:scale-[0.98] disabled:opacity-70">
+                    {formStatus === 'sending' ? <Loader2 className="w-6 h-6 animate-spin" aria-label="Envoi en cours" /> : <><Send className="w-[19px] h-[19px]" aria-hidden /> Envoyer</>}
                   </button>
                 </form>
               )}
-            </div>
+            </section>
 
-            {/* CORRECTION : Fidélité redirige vers /compte */}
-            <Link href="/compte" className="block">
-              <div className="bg-[#FF4500] rounded-[40px] p-10 text-white relative overflow-hidden group shadow-xl shadow-[#FF4500]/30 cursor-pointer hover:scale-[1.02] transition-all duration-300">
-                <div className="absolute -right-4 -top-4 opacity-10 group-hover:scale-110 transition-transform duration-700">
-                  <Star className="w-40 h-40" />
-                </div>
-                <h4 className="font-black uppercase text-xl italic tracking-tighter mb-4 leading-none">FIDÉLITÉ <br/>RÉCOMPENSÉE</h4>
-                <p className="text-[11px] font-bold opacity-80 mb-8 italic">1€ dépensé = 1 point. Dès 100 points, débloquez -10% sur votre prochaine commande. Votre solde est visible dans votre espace client.</p>
-                <div className="inline-flex items-center gap-3 bg-white text-[#FF4500] px-6 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest group-hover:scale-105 transition-all">
-                  Voir mon compteur <ArrowRight className="w-4 h-4" />
-                </div>
-              </div>
+            {/* Fidélité : renvoie vers le compte */}
+            <Link href="/compte" className="group block bg-[#3D2B1F] rounded-3xl md:rounded-[28px] p-6 md:p-7 text-[#F5EAE0]">
+              <h2 className="titre text-[26px] md:text-[28px] leading-[1.05] mb-2.5">Fidélité <em className="text-[#FF7A47]">récompensée</em></h2>
+              <p className="mb-[18px] text-[15px] leading-relaxed text-[#E1D2C2]">1€ dépensé = 1 point. Dès 100 points, débloquez -10% sur votre prochaine commande. Votre solde est visible dans votre espace client.</p>
+              <span className="inline-flex items-center gap-2.5 text-[15px] font-extrabold text-[#FF9466]">
+                Voir mon compteur <ArrowRight className="w-[18px] h-[18px] transition-transform duration-200 group-hover:translate-x-1" aria-hidden />
+              </span>
             </Link>
-          </div>
+
+            <section className="bg-[#F5EAE0] rounded-[22px] md:rounded-3xl border border-[#E3D6C4] px-6 py-5 md:px-[26px] md:py-[22px]">
+              <h2 className={`${SURTITRE} mb-2`}>Horaires</h2>
+              <p className="text-[15px] leading-[1.7] font-semibold text-[#5C4030]">WhatsApp : 07h — 22h<br />Standard : 09h — 19h</p>
+              <p className="mt-3 pt-3 border-t border-[#E3D6C4] flex flex-wrap gap-x-4 gap-y-1 text-[13px] font-bold text-[#6F5A4B]">
+                <span className="inline-flex items-center gap-1.5"><Check className="w-4 h-4 text-[#15803D]" strokeWidth={2.4} aria-hidden />Paiement sécurisé</span>
+                <span className="inline-flex items-center gap-1.5"><Check className="w-4 h-4 text-[#15803D]" strokeWidth={2.4} aria-hidden />SSL Verified</span>
+              </p>
+            </section>
+          </aside>
         </div>
       </div>
-      
-      <footer className="mt-32 pt-20 border-t border-slate-100 text-center px-6">
-        <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-12 text-left mb-20">
-          <div>
-            <h5 className="font-black uppercase text-xs mb-4">Soleil et Saveurs</h5>
-            <p className="text-[11px] text-slate-400 font-medium leading-relaxed italic">Fruits & légumes frais livrés dans les Yvelines.</p>
-          </div>
-          <div>
-            <h5 className="font-black uppercase text-xs mb-4">Horaires</h5>
-            <p className="text-[11px] text-slate-400 font-medium leading-relaxed italic">WhatsApp : 07h — 22h<br/>Standard : 09h — 19h</p>
-          </div>
-          <div>
-            <h5 className="font-black uppercase text-xs mb-4">Sécurité</h5>
-            <div className="flex gap-4">
-              <div className="bg-slate-100 px-3 py-1 rounded-md text-[9px] font-bold text-slate-400 uppercase">Paiement sécurisé</div>
-              <div className="bg-slate-100 px-3 py-1 rounded-md text-[9px] font-bold text-slate-400 uppercase">SSL Verified</div>
-            </div>
-          </div>
-        </div>
-        <p className="text-[9px] font-black uppercase tracking-[0.5em] text-slate-200 pb-10">
-          © 2026 SOLEIL ET SAVEURS — TOUS DROITS RÉSERVÉS
-        </p>
-      </footer>
     </div>
   );
 }

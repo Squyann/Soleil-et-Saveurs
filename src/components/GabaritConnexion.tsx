@@ -47,7 +47,7 @@ export default function GabaritConnexion({
 
       {/* Panneau (ordinateur) */}
       <aside className="hidden lg:flex relative overflow-hidden flex-1 bg-[#3D2B1F] text-[#F5EAE0] px-14 xl:px-16 py-14 flex-col justify-between gap-12">
-        <Soleil className="ss-rayons absolute -right-[220px] -top-[240px] w-[640px] h-[640px] pointer-events-none" />
+        <Soleil className="ss-rayons absolute -right-[240px] -top-[360px] w-[640px] h-[640px] pointer-events-none" />
         {lienRetour}
         <div className="relative">
           <p className="titre text-[52px] xl:text-[68px] leading-none mb-11">{accroche}</p>
