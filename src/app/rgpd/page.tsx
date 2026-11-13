@@ -75,7 +75,7 @@ export default function RGPDPage() {
               1. Responsable du traitement
             </h2>
             <div className="bg-[#F5EAE0] rounded-2xl p-5 border border-[#E8DCCB] space-y-2 text-[#5C4030] font-medium">
-              <p><span className="text-[#6F5A4B] text-xs uppercase font-extrabold tracking-wider mr-2">Entité</span> Soleil et Saveurs (entreprise individuelle)</p>
+              <p><span className="text-[#6F5A4B] text-xs uppercase font-extrabold tracking-wider mr-2">Entité</span> SOLEIL ET SAVEURS (SAS au capital de 1 000 €, RCS Bobigny 821 324 324)</p>
               <p><span className="text-[#6F5A4B] text-xs uppercase font-extrabold tracking-wider mr-2">Responsable</span> Khaled Boulila</p>
               <p><span className="text-[#6F5A4B] text-xs uppercase font-extrabold tracking-wider mr-2">Adresse</span> 6-8 AVENUE HENRIETTE, 93170 BAGNOLET</p>
               <p><span className="text-[#6F5A4B] text-xs uppercase font-extrabold tracking-wider mr-2">Email</span> soleiletsaveurs.livraison@gmail.com</p>

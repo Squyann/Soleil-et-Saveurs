@@ -94,7 +94,7 @@ export default function CGVPage() {
               3. Prix
             </h2>
             <p className="text-[#5C4030] font-medium leading-relaxed mb-4">
-              Les prix sont indiqués en euros (€), toutes taxes comprises (TTC). La TVA n'est pas applicable conformément à l'article 293 B du CGI (régime de la micro-entreprise).
+              Les prix sont indiqués en euros (€), toutes taxes comprises (TTC), TVA incluse au taux en vigueur.
             </p>
             <div className="bg-[#F5EAE0] rounded-2xl p-5 border border-[#E8DCCB] space-y-3">
               <div className="flex justify-between items-center">
