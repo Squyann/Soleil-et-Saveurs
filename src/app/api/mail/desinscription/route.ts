@@ -18,6 +18,7 @@ export async function POST(req: NextRequest) {
   const { jeton, campagne } = parametres(req);
   if (!jeton) return NextResponse.json({ error: 'Lien invalide' }, { status: 400 });
   const { data, error } = await clientAnonyme().rpc('desinscription_mail', { p_jeton: jeton, p_campagne: campagne });
+  if (error) console.error('[mail/desinscription] desinscription_mail :', error.message);
   if (error || !data?.ok) return NextResponse.json({ error: 'Lien invalide' }, { status: error ? 500 : 404 });
   return NextResponse.json({ ok: true });
 }
