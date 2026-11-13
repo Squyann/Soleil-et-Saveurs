@@ -147,39 +147,42 @@ END;
 $function$;
 REVOKE ALL ON FUNCTION public.controler_code_promo(uuid, uuid) FROM PUBLIC, anon, authenticated;
 
--- creer_commande : seul le bloc « code promo » change.
+-- creer_commande : seul le bloc « code promo » change. La recherche tolère
+-- les différences d'espaces et de fins de ligne (texte enregistré depuis un
+-- autre éditeur) ; chaque morceau doit être trouvé exactement une fois.
 DO $commande$
 DECLARE
   v_def text;
-  v_ancien text := $ancien$    SELECT id, reduction_pct INTO v_code_id, v_code_pct
-      FROM codes_promo WHERE code = v_code AND actif = true;
-    IF v_code_id IS NULL THEN RAISE EXCEPTION 'Code promo invalide'; END IF;
-    BEGIN
-      INSERT INTO codes_promo_utilisations (user_id, code_promo_id) VALUES (v_uid, v_code_id);
-    EXCEPTION WHEN unique_violation THEN
-      RAISE EXCEPTION 'Code promo déjà utilisé';
-    END;$ancien$;
-  v_nouveau text := $nouveau$    -- Code verrouillé jusqu'à la fin de la commande : la limite par client
-    -- ne peut pas être dépassée par deux commandes simultanées.
-    SELECT id, reduction_pct INTO v_code_id, v_code_pct
-      FROM codes_promo WHERE code = v_code AND actif = true FOR UPDATE;
-    IF v_code_id IS NULL THEN RAISE EXCEPTION 'Ce code promotionnel n''existe pas ou n''est plus actif.'; END IF;
-    PERFORM controler_code_promo(v_code_id, v_uid);
-    INSERT INTO codes_promo_utilisations (user_id, code_promo_id) VALUES (v_uid, v_code_id);$nouveau$;
+  v_nb integer;
+  -- 1. le code est verrouillé pendant la commande
+  v_m1 text := 'FROM\s+codes_promo\s+WHERE\s+code\s*=\s*v_code\s+AND\s+actif\s*=\s*true\s*;';
+  -- 2. message plus clair pour un code inconnu
+  v_m2 text := 'RAISE\s+EXCEPTION\s+''Code promo invalide''\s*;';
+  -- 3. l'unicité (client, code) est remplacée par le contrôle détaillé
+  v_m3 text := 'BEGIN\s+INSERT\s+INTO\s+codes_promo_utilisations\s*\(\s*user_id\s*,\s*code_promo_id\s*\)\s*VALUES\s*\(\s*v_uid\s*,\s*v_code_id\s*\)\s*;\s*EXCEPTION\s+WHEN\s+unique_violation\s+THEN\s+RAISE\s+EXCEPTION\s+''[^'']*''\s*;\s*END\s*;';
 BEGIN
   SELECT pg_get_functiondef(p.oid) INTO v_def
     FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
    WHERE n.nspname = 'public' AND p.proname = 'creer_commande'
      AND pg_get_function_identity_arguments(p.oid) = 'p_items jsonb, p_infos jsonb';
   IF v_def IS NULL THEN RAISE EXCEPTION 'creer_commande(jsonb, jsonb) introuvable — migration annulée'; END IF;
-  IF position('PERFORM controler_code_promo(v_code_id, v_uid);' in v_def) > 0 THEN
+  IF position('controler_code_promo(v_code_id, v_uid)' in v_def) > 0 THEN
     RAISE NOTICE 'creer_commande déjà à jour';
     RETURN;
   END IF;
-  IF (length(v_def) - length(replace(v_def, v_ancien, ''))) / length(v_ancien) <> 1 THEN
-    RAISE EXCEPTION 'creer_commande n''a pas la forme attendue (bloc code promo). Rien n''a été changé.';
-  END IF;
-  EXECUTE replace(v_def, v_ancien, v_nouveau);
+
+  SELECT count(*) INTO v_nb FROM regexp_matches(v_def, v_m1, 'g');
+  IF v_nb <> 1 THEN RAISE EXCEPTION 'creer_commande : verrouillage du code introuvable (% trouvé(s)). Rien n''a été changé. Extrait : %', v_nb, substring(v_def from position('IF v_code IS NOT NULL' in v_def) for 600); END IF;
+  SELECT count(*) INTO v_nb FROM regexp_matches(v_def, v_m2, 'g');
+  IF v_nb <> 1 THEN RAISE EXCEPTION 'creer_commande : message « Code promo invalide » introuvable (% trouvé(s)). Rien n''a été changé. Extrait : %', v_nb, substring(v_def from position('IF v_code IS NOT NULL' in v_def) for 600); END IF;
+  SELECT count(*) INTO v_nb FROM regexp_matches(v_def, v_m3, 'g');
+  IF v_nb <> 1 THEN RAISE EXCEPTION 'creer_commande : bloc d''utilisation du code introuvable (% trouvé(s)). Rien n''a été changé. Extrait : %', v_nb, substring(v_def from position('IF v_code IS NOT NULL' in v_def) for 600); END IF;
+
+  v_def := regexp_replace(v_def, v_m1, 'FROM codes_promo WHERE code = v_code AND actif = true FOR UPDATE;');
+  v_def := regexp_replace(v_def, v_m2, $r$RAISE EXCEPTION 'Ce code promotionnel n''existe pas ou n''est plus actif.';$r$);
+  v_def := regexp_replace(v_def, v_m3, E'PERFORM controler_code_promo(v_code_id, v_uid);
+    INSERT INTO codes_promo_utilisations (user_id, code_promo_id) VALUES (v_uid, v_code_id);');
+  EXECUTE v_def;
 END
 $commande$;
 
