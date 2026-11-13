@@ -546,30 +546,33 @@ export default function CommanderPage() {
 
     <BarrePanier panier={panier} />
 
-    {/* MODAL DESCRIPTION PRODUIT */}
+    {/* FENÊTRE : DESCRIPTION DU PRODUIT */}
     {infoProduct && (
-      <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-4" onClick={() => setInfoProduct(null)}>
-        <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+      <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-3 sm:p-4" onClick={() => setInfoProduct(null)}>
+        <div className="absolute inset-0 bg-[#3D2B1F]/55 backdrop-blur-sm" />
         <div
-          className="relative bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden animate-in slide-in-from-bottom duration-300"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="titre-description"
+          className="relative bg-white rounded-[28px] shadow-2xl w-full max-w-sm overflow-hidden animate-in slide-in-from-bottom duration-300"
           onClick={(e) => e.stopPropagation()}
         >
           {infoProduct.image_url && (
-            <div className="aspect-[3/2] overflow-hidden">
+            <div className="aspect-[3/2] overflow-hidden bg-white">
               <img src={infoProduct.image_url} alt={infoProduct.name} className="w-full h-full object-cover" />
             </div>
           )}
           <div className="p-6">
-            <div className="flex items-start justify-between mb-2">
-              <h3 className="font-black uppercase text-base tracking-tight text-slate-900 leading-tight">{infoProduct.name}</h3>
-              <button type="button" onClick={() => setInfoProduct(null)} className="p-1.5 hover:bg-slate-100 rounded-xl transition-colors ml-3 shrink-0">
-                <X className="w-5 h-5 text-slate-400" />
+            <div className="flex items-start justify-between gap-3 mb-2">
+              <h3 id="titre-description" className="titre text-[26px] leading-tight text-[#3D2B1F]">{infoProduct.name}</h3>
+              <button type="button" onClick={() => setInfoProduct(null)} aria-label="Fermer" className="shrink-0 -mt-1 -mr-1 w-11 h-11 rounded-full bg-[#F5EAE0] text-[#3D2B1F] flex items-center justify-center hover:bg-[#EAD9C8] transition-colors">
+                <X className="w-5 h-5" aria-hidden />
               </button>
             </div>
             {infoProduct.provenance && (
-              <span className="inline-block text-[10px] font-bold text-[#FF4500] bg-orange-50 px-2 py-0.5 rounded-md uppercase mb-3">{infoProduct.provenance}</span>
+              <span className="inline-block mb-3 px-2.5 py-1 rounded-full bg-[#FFF1EA] text-xs font-bold text-[#C73600]">{infoProduct.provenance}</span>
             )}
-            <p className="text-sm text-slate-600 leading-relaxed">{infoProduct.description}</p>
+            <p className="text-[15px] text-[#5C4030] leading-relaxed whitespace-pre-line">{infoProduct.description}</p>
           </div>
         </div>
       </div>
