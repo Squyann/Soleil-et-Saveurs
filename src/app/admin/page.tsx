@@ -23,6 +23,7 @@ import {
 const EditeurFiche = nextDynamic(() => import('@/components/admin/EditeurFiche'), { ssr: false });
 const GestionVariantes = nextDynamic(() => import('@/components/admin/GestionVariantes'), { ssr: false });
 const CodesPromo = nextDynamic(() => import('@/components/admin/CodesPromo'), { ssr: false });
+const MailAdmin = nextDynamic(() => import('@/components/admin/Mail'), { ssr: false });
 
 interface StatsType {
   total: number;
@@ -36,7 +37,7 @@ export default function AdminPage() {
   const [messages, setMessages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [recherche, setRecherche] = useState('');
-  const [onglet, setOnglet] = useState<'commandes' | 'produits' | 'messages' | 'stats' | 'calendrier' | 'promos'>('commandes');
+  const [onglet, setOnglet] = useState<'commandes' | 'produits' | 'messages' | 'stats' | 'calendrier' | 'promos' | 'mail'>('commandes');
   const [filtreStatut, setFiltreStatut] = useState<'Toutes' | 'À préparer' | 'livrée'>('Toutes');
   const [uploading, setUploading] = useState(false);
   const [erreurNomProduit, setErreurNomProduit] = useState('');
@@ -531,6 +532,9 @@ export default function AdminPage() {
           </button>
           <button onClick={() => setOnglet('promos')} className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${onglet === 'promos' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}>
             <Tag className="w-3 h-3" /> Codes Promo
+          </button>
+          <button onClick={() => setOnglet('mail')} className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${onglet === 'mail' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}>
+            <Mail className="w-3 h-3" /> Mail
           </button>
         </nav>
 
@@ -1564,6 +1568,7 @@ export default function AdminPage() {
 
       {/* --- SECTION CODES PROMO --- */}
       {onglet === 'promos' && <CodesPromo />}
+      {onglet === 'mail' && <MailAdmin />}
 
     </main>
 
