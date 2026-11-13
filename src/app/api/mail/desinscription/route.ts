@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { urlSite } from '@/lib/email/gabarit';
 import { clientAnonyme } from '@/lib/email/serveur';
 
 // Désinscription en un clic depuis la messagerie (en-têtes List-Unsubscribe
@@ -17,13 +18,16 @@ export async function POST(req: NextRequest) {
   const { jeton, campagne } = parametres(req);
   if (!jeton) return NextResponse.json({ error: 'Lien invalide' }, { status: 400 });
   const { data, error } = await clientAnonyme().rpc('desinscription_mail', { p_jeton: jeton, p_campagne: campagne });
+  if (error) console.error('[mail/desinscription] desinscription_mail :', error.message);
   if (error || !data?.ok) return NextResponse.json({ error: 'Lien invalide' }, { status: error ? 500 : 404 });
   return NextResponse.json({ ok: true });
 }
 
 export async function GET(req: NextRequest) {
   const { jeton, campagne } = parametres(req);
-  const url = new URL('/desinscription', req.nextUrl.origin);
+  // Adresse publique du site (derrière l'hébergeur, l'origine de la requête
+  // est l'adresse interne du serveur)
+  const url = new URL('/desinscription', urlSite());
   if (jeton) url.searchParams.set('j', jeton);
   if (campagne) url.searchParams.set('c', campagne);
   return NextResponse.redirect(url, 303);
