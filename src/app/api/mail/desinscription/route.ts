@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { urlSite } from '@/lib/email/gabarit';
 import { clientAnonyme } from '@/lib/email/serveur';
 
 // Désinscription en un clic depuis la messagerie (en-têtes List-Unsubscribe
@@ -23,7 +24,9 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   const { jeton, campagne } = parametres(req);
-  const url = new URL('/desinscription', req.nextUrl.origin);
+  // Adresse publique du site (derrière l'hébergeur, l'origine de la requête
+  // est l'adresse interne du serveur)
+  const url = new URL('/desinscription', urlSite());
   if (jeton) url.searchParams.set('j', jeton);
   if (campagne) url.searchParams.set('c', campagne);
   return NextResponse.redirect(url, 303);
