@@ -1,12 +1,13 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { X, Trash2, ShoppingBag, ShoppingBasket, MapPin, CreditCard, Banknote, Phone, Loader2, AlertCircle, LogIn, Gift, ChevronLeft, ChevronRight, Mail, Check, Minus, Plus, Truck, ArrowLeft, ArrowRight } from 'lucide-react';
+import { X, Trash2, ShoppingBag, ShoppingBasket, MapPin, CreditCard, Banknote, Phone, Loader2, AlertCircle, LogIn, Gift, ChevronLeft, ChevronRight, Mail, Check, Clock, Minus, Plus, Truck, ArrowLeft, ArrowRight } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { premieresOffertes, libellePremieresOffertes } from '@/lib/promos';
 import { calculerPanier, rafraichirPanier } from '@/lib/panier';
 import { prochainePromo } from '@/lib/prix';
 import { formatPrix, libelleQuantite } from '@/lib/format';
+import { messageCode, type EtatCode } from '@/lib/codesPromo';
 import { distanceAuRelais, estDansLesYvelines, estVilleRelais, fraisLivraison as calculerFraisLivraison, SEUIL_LIVRAISON_OFFERTE } from '@/lib/livraison';
 
 // Géocode une adresse : distance au relais le plus proche (pour les frais),
@@ -55,6 +56,8 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
   const [moisCal, setMoisCal] = useState<{ annee: number; mois: number }>({ annee: new Date().getFullYear(), mois: new Date().getMonth() });
   const [codePromo, setCodePromo] = useState('');
   const [codeStatut, setCodeStatut] = useState<'idle' | 'loading' | 'valid' | 'invalid' | 'used'>('idle');
+  // Réponse détaillée de la base (limite, dates) pour le message affiché
+  const [etatCode, setEtatCode] = useState<EtatCode>({});
   const [remiseCode, setRemiseCode] = useState(0);
   const [codePromoId, setCodePromoId] = useState<string | null>(null);
   const [commentaireClient, setCommentaireClient] = useState('');
@@ -263,6 +266,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
     // codes actifs publiquement). On interroge une fonction serveur qui ne renvoie
     // que le verdict du code soumis, pour l'utilisateur connecté.
     const { data, error } = await supabase.rpc('verifier_code_promo', { p_code: code });
+    setEtatCode(error ? {} : (data as EtatCode) || {});
 
     if (error || !data?.valide) {
       setRemiseCode(0);
@@ -871,7 +875,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
                         placeholder="Votre code"
                         value={codePromo}
                         onChange={(e) => { setCodePromo(e.target.value.toUpperCase()); setCodeStatut('idle'); setRemiseCode(0); setCodePromoId(null); }}
-                        disabled={codeStatut === 'valid' || codeStatut === 'used' || applyLoyalty || applyReferral}
+                        disabled={codeStatut === 'valid' || applyLoyalty || applyReferral}
                         className={`${champ} flex-1 min-w-0 uppercase placeholder:normal-case ${
                           codeStatut === 'valid' ? '!border-[#166534] !bg-[#ECF7EF] !text-[#166534]' :
                           codeStatut === 'invalid' || codeStatut === 'used' ? '!border-red-300' :
@@ -888,15 +892,21 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
                         </button>
                       )}
                     </div>
-                    {codeStatut === 'valid' && (
-                      <p className="mt-2 flex items-center gap-2 text-[13.5px] font-bold text-[#166534]"><Check className="w-4 h-4 shrink-0" strokeWidth={2.6} aria-hidden />Code valide — -{remiseCode}% appliqué !</p>
-                    )}
-                    {codeStatut === 'invalid' && (
-                      <p role="alert" className="mt-2 flex items-center gap-2 text-[13.5px] font-bold text-red-700"><AlertCircle className="w-4 h-4 shrink-0" aria-hidden />Code invalide ou expiré.</p>
-                    )}
-                    {codeStatut === 'used' && (
-                      <p role="alert" className="mt-2 flex items-center gap-2 text-[13.5px] font-bold text-red-700"><AlertCircle className="w-4 h-4 shrink-0" aria-hidden />Vous avez déjà utilisé ce code promo.</p>
-                    )}
+                    {(codeStatut === 'valid' || codeStatut === 'invalid' || codeStatut === 'used') && (() => {
+                      const etat: EtatCode = codeStatut === 'valid' ? { ...etatCode, statut: 'ok', reduction_pct: remiseCode }
+                        : codeStatut === 'used' ? { ...etatCode, statut: 'limite' }
+                        : etatCode.statut === 'pas_encore' || etatCode.statut === 'expire' ? etatCode : { statut: 'inconnu' };
+                      const m = messageCode(etat);
+                      const ok = codeStatut === 'valid';
+                      const neutre = etat.statut === 'pas_encore' || etat.statut === 'expire';
+                      const Icone = ok ? Check : neutre ? Clock : AlertCircle;
+                      return (
+                        <p role={ok ? 'status' : 'alert'} className={`mt-2 flex gap-2.5 px-3.5 py-3 rounded-xl text-[13.5px] leading-snug ${ok ? 'bg-[#ECF7EF] text-[#166534]' : neutre ? 'bg-[#F1ECE6] text-[#5C4030]' : 'bg-[#FFF1EA] text-[#B83200]'}`}>
+                          <Icone className="w-4 h-4 shrink-0 mt-0.5" strokeWidth={ok ? 2.6 : 2.2} aria-hidden />
+                          <span><strong className="block font-extrabold">{m.titre}</strong>{m.detail && <span className="font-medium">{m.detail}</span>}</span>
+                        </p>
+                      );
+                    })()}
                   </div>
                 </section>
 

@@ -15,13 +15,14 @@ import {
   RefreshCcw, Printer, Phone, MessageSquare,
   Trash2, Plus, Truck, CheckCircle2, Clock, Mail, Save, Edit3, X,
   Inbox, Send, Eye, EyeOff, ChevronDown, ChevronUp,
-  BarChart2, Calendar, TrendingUp, ToggleLeft, ToggleRight, Tag, Loader2, ChevronLeft, ChevronRight, AlertTriangle,
+  BarChart2, Calendar, TrendingUp, Tag, Loader2, ChevronLeft, ChevronRight, AlertTriangle,
   FileText, ExternalLink
 } from 'lucide-react';
 
 // Éditeur des pages produits : chargé seulement à son ouverture
 const EditeurFiche = nextDynamic(() => import('@/components/admin/EditeurFiche'), { ssr: false });
 const GestionVariantes = nextDynamic(() => import('@/components/admin/GestionVariantes'), { ssr: false });
+const CodesPromo = nextDynamic(() => import('@/components/admin/CodesPromo'), { ssr: false });
 
 interface StatsType {
   total: number;
@@ -77,10 +78,6 @@ export default function AdminPage() {
   const [moisAdmin, setMoisAdmin] = useState<{ annee: number; mois: number }>({ annee: new Date().getFullYear(), mois: new Date().getMonth() });
   const [selectedDateAdmin, setSelectedDateAdmin] = useState<string | null>(null);
   const [savingCal, setSavingCal] = useState(false);
-  const [codesPromo, setCodesPromo] = useState<any[]>([]);
-  const [nouveauCode, setNouveauCode] = useState('');
-  const [nouveauReductionPct, setNouveauReductionPct] = useState(10);
-  const [savingCode, setSavingCode] = useState(false);
 
   const [nouveauProd, setNouveauProd] = useState({
     name: '', price: 0, category: 'Légumes', image_url: '', stock: 0,
@@ -124,8 +121,6 @@ export default function AdminPage() {
       if (cfgCal) setConfigCal(cfgCal);
       const { data: excs } = await supabase.from('dates_livraison_exceptions').select('*').order('date', { ascending: true });
       if (excs) setExceptions(excs);
-      const { data: codes } = await supabase.from('codes_promo').select('*').order('created_at', { ascending: false });
-      if (codes) setCodesPromo(codes);
       const { data: variantesData } = await supabase.from('product_variants').select('*').order('ordre', { ascending: true });
       if (variantesData) setVariantes(variantesData);
       // Table absente (migration pas encore lancée) : aucune fiche, rien ne casse
@@ -215,17 +210,11 @@ export default function AdminPage() {
         chargerFactures();
         const cmd = commandes.find(c => c.id === id);
         if (cmd?.email_client) {
+          // Le serveur relit la commande et sa facture en base
           fetch('/api/notify-delivery', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              commande: {
-                email_client: cmd.email_client,
-                nom: cmd.nom_client,
-                adresse: cmd.adresse_livraison,
-                total: cmd.total,
-              },
-            }),
+            body: JSON.stringify({ commande_id: cmd.id }),
           }).catch(err => console.error('notify-delivery failed:', err));
         }
       }
@@ -464,29 +453,6 @@ export default function AdminPage() {
       const { data } = await supabase.from('dates_livraison_exceptions').insert({ date: dateStr, ferme: isRecurring }).select().single();
       if (data) setExceptions(prev => [...prev, data]);
     }
-  }
-
-  async function ajouterCodePromo() {
-    const code = nouveauCode.trim().toUpperCase();
-    if (!code || nouveauReductionPct < 1 || nouveauReductionPct > 100) return;
-    setSavingCode(true);
-    const { data } = await supabase
-      .from('codes_promo')
-      .insert([{ code, reduction_pct: nouveauReductionPct }])
-      .select()
-      .single();
-    if (data) { setCodesPromo(prev => [data, ...prev]); setNouveauCode(''); setNouveauReductionPct(10); }
-    setSavingCode(false);
-  }
-
-  async function toggleCodePromo(id: string, actif: boolean) {
-    await supabase.from('codes_promo').update({ actif: !actif }).eq('id', id);
-    setCodesPromo(prev => prev.map(c => c.id === id ? { ...c, actif: !actif } : c));
-  }
-
-  async function supprimerCodePromo(id: string) {
-    await supabase.from('codes_promo').delete().eq('id', id);
-    setCodesPromo(prev => prev.filter(c => c.id !== id));
   }
 
   const calculerBesoinStock = () => {
@@ -1597,94 +1563,7 @@ export default function AdminPage() {
       })()}
 
       {/* --- SECTION CODES PROMO --- */}
-      {onglet === 'promos' && (
-        <div className="space-y-8 animate-in fade-in duration-500">
-          <div>
-            <p className="text-[10px] font-black uppercase text-[#FF4500] tracking-widest mb-1">Gestion</p>
-            <h2 className="text-3xl font-black uppercase italic tracking-tighter">Codes <span className="text-[#FF4500]">Promo</span></h2>
-          </div>
-
-          {/* Créer un code */}
-          <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm space-y-4">
-            <h3 className="font-black uppercase text-sm tracking-widest text-slate-900">Créer un code</h3>
-            <div className="flex flex-col md:flex-row gap-3">
-              <div className="relative flex-1">
-                <Tag className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
-                <input
-                  type="text"
-                  placeholder="CODE (ex: ETE2026)"
-                  value={nouveauCode}
-                  onChange={e => setNouveauCode(e.target.value.toUpperCase())}
-                  onKeyDown={e => e.key === 'Enter' && ajouterCodePromo()}
-                  className="w-full border border-slate-200 rounded-2xl p-4 pl-12 text-sm font-bold uppercase focus:ring-2 focus:ring-[#FF4500] outline-none"
-                />
-              </div>
-              <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-2xl px-4">
-                <input
-                  type="number"
-                  min={1}
-                  max={100}
-                  value={nouveauReductionPct}
-                  onChange={e => setNouveauReductionPct(Math.min(100, Math.max(1, parseInt(e.target.value) || 1)))}
-                  className="w-16 bg-transparent text-center font-black text-lg outline-none"
-                />
-                <span className="font-black text-slate-400 text-sm">%</span>
-              </div>
-              <button
-                onClick={ajouterCodePromo}
-                disabled={savingCode || !nouveauCode.trim()}
-                className="flex items-center gap-2 px-6 py-4 bg-[#3D2B1F] text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:opacity-90 disabled:opacity-40 transition-all"
-              >
-                {savingCode ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-                Créer
-              </button>
-            </div>
-          </div>
-
-          {/* Liste des codes */}
-          <div className="space-y-3">
-            {codesPromo.length === 0 ? (
-              <div className="bg-white rounded-3xl p-10 border border-slate-100 text-center">
-                <Tag className="w-8 h-8 text-slate-200 mx-auto mb-3" />
-                <p className="text-sm font-black text-slate-300 uppercase tracking-widest">Aucun code promo créé</p>
-              </div>
-            ) : (
-              codesPromo.map(c => (
-                <div key={c.id} className={`flex items-center justify-between p-5 rounded-2xl border transition-all ${c.actif ? 'bg-white border-slate-100 shadow-sm' : 'bg-slate-50 border-slate-100 opacity-60'}`}>
-                  <div className="flex items-center gap-4">
-                    <button onClick={() => toggleCodePromo(c.id, c.actif)}>
-                      {c.actif
-                        ? <ToggleRight className="w-7 h-7 text-green-500" />
-                        : <ToggleLeft className="w-7 h-7 text-slate-300" />}
-                    </button>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-black text-sm text-slate-900 tracking-widest">{c.code}</span>
-                        <span className="px-2 py-0.5 bg-[#FF4500]/10 text-[#FF4500] text-[10px] font-black rounded-full uppercase">-{c.reduction_pct}%</span>
-                        {!c.actif && <span className="px-2 py-0.5 bg-slate-100 text-slate-400 text-[10px] font-black rounded-full uppercase">Désactivé</span>}
-                      </div>
-                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">
-                        Utilisé {c.usage_count} fois · Créé le {new Date(c.created_at).toLocaleDateString('fr-FR')}
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => supprimerCodePromo(c.id)}
-                    className="w-8 h-8 bg-white border border-slate-100 rounded-xl flex items-center justify-center text-slate-300 hover:text-red-500 hover:border-red-200 transition-all"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              ))
-            )}
-          </div>
-
-          <div className="bg-amber-50 border border-amber-100 rounded-3xl p-6">
-            <p className="text-[10px] font-black text-amber-700 uppercase tracking-widest mb-1">Comment ça marche</p>
-            <p className="text-xs text-amber-600 font-medium leading-relaxed">Créez des codes promo et envoyez-les à vos clients par email. Lors de la commande, le client saisit son code dans le panier — la réduction est appliquée immédiatement sur le sous-total. Vous pouvez désactiver un code à tout moment sans le supprimer.</p>
-          </div>
-        </div>
-      )}
+      {onglet === 'promos' && <CodesPromo />}
 
     </main>
 

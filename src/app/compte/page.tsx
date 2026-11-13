@@ -59,6 +59,13 @@ export default function ComptePage() {
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [factures, setFactures] = useState<Record<number, FactureEmise>>({});
   const [activeTab, setActiveTab] = useState<'profil' | 'commandes' | 'adresses'>('profil');
+
+  // Lien direct depuis les e-mails : /compte?onglet=commandes
+  useEffect(() => {
+    const onglet = new URLSearchParams(window.location.search).get('onglet');
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (onglet === 'commandes' || onglet === 'adresses') setActiveTab(onglet);
+  }, []);
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState<Partial<UserProfile>>({});
   const [saveLoading, setSaveLoading] = useState(false);
