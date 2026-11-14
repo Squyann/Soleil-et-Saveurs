@@ -352,7 +352,7 @@ export default function ComptePage() {
                 {profile?.first_name?.[0] || profile?.last_name?.[0] || '?'}
               </span>
               <div className="min-w-0">
-                <p className={`${SURTITRE} mb-1 md:mb-1.5`}>Mon Compte</p>
+                <p className={`${SURTITRE} mb-1 md:mb-1.5`}>Mon compte</p>
                 <h1 className="titre text-3xl md:text-[52px] leading-[1.05] md:leading-none break-words">
                   {profile?.first_name} {profile?.last_name}
                 </h1>
@@ -364,7 +364,7 @@ export default function ComptePage() {
             <dl className="w-full md:w-auto grid grid-cols-3 divide-x divide-[#F0E7DA] bg-white rounded-[20px] md:rounded-3xl border border-[#E8DCCB] overflow-hidden text-center md:text-left">
               {[
                 { valeur: orders.length, libelle: 'Commandes' },
-                { valeur: `${totalDepense.toFixed(0)}€`, libelle: 'Dépensé' },
+                { valeur: `${totalDepense.toFixed(0)} €`, libelle: 'Dépensé' },
                 { valeur: orders.filter(o => o.statut?.toLowerCase().includes('livr')).length, libelle: 'Livrées' },
               ].map(s => (
                 <div key={s.libelle} className="px-1.5 py-3.5 md:px-[30px] md:py-5 flex flex-col-reverse">
@@ -378,7 +378,7 @@ export default function ComptePage() {
           {/* ONGLETS */}
           <div role="tablist" aria-label="Sections du compte" className="mt-4 md:mt-[30px] grid grid-cols-3 md:flex gap-1 md:gap-1.5 p-1 md:p-0 rounded-t-2xl bg-[#EDE3D5] md:bg-transparent">
             {([
-              { id: 'profil',     label: 'Mon Profil',  icon: User },
+              { id: 'profil',     label: 'Mon profil',  icon: User },
               { id: 'commandes', label: 'Commandes',   icon: ShoppingBag },
               { id: 'adresses',  label: 'Adresses',    icon: MapPin },
             ] as const).map(({ id, label, icon: Icon }) => {
@@ -460,7 +460,7 @@ export default function ComptePage() {
                 {/* EMAIL (lecture seule) */}
                 <div className={`${valeur} col-span-2`}>
                   <p className="flex items-center justify-between gap-3 text-[13px] font-bold text-[#6F5A4B]">
-                    <span className="inline-flex items-center gap-1.5"><Mail className="w-3.5 h-3.5" aria-hidden />Email</span>
+                    <span className="inline-flex items-center gap-1.5"><Mail className="w-3.5 h-3.5" aria-hidden />E-mail</span>
                     <span className="px-2.5 py-0.5 rounded-full bg-white text-xs font-bold">Non modifiable</span>
                   </p>
                   <p className="mt-1 text-[17px] md:text-lg font-bold break-all">{profile?.email}</p>
@@ -500,9 +500,9 @@ export default function ComptePage() {
                 </div>
                 <p className="relative mt-3.5 text-[15px] font-semibold text-[#E1D2C2]">
                   {points >= 100 ? (
-                    <span className="inline-flex items-center gap-2 font-extrabold text-[#86EFAC]"><Check className="w-[18px] h-[18px] shrink-0" strokeWidth={2.6} aria-hidden />Remise -10% disponible — activez-la dans le panier</span>
+                    <span className="inline-flex items-center gap-2 font-extrabold text-[#86EFAC]"><Check className="w-[18px] h-[18px] shrink-0" strokeWidth={2.6} aria-hidden />Remise -10 % disponible — activez-la dans le panier</span>
                   ) : (
-                    <>{100 - points} pts avant votre remise de -10%</>
+                    <>{100 - points} pts avant votre remise de -10 %</>
                   )}
                 </p>
               </section>
@@ -510,7 +510,7 @@ export default function ComptePage() {
               {/* CARTE PARRAINAGE */}
               <section className={`${carte} p-6 md:p-7`}>
                 <p className={`${SURTITRE} mb-2 inline-flex items-center gap-2`}><Gift className="w-4 h-4" aria-hidden />Parrainage</p>
-                <p className="mb-4 text-[15px] md:text-base leading-normal text-[#5C4030]">Partagez votre code — vous gagnez tous les deux -10%</p>
+                <p className="mb-4 text-[15px] md:text-base leading-normal text-[#5C4030]">Partagez votre code — vous gagnez tous les deux -10 %</p>
                 <div className="flex items-center gap-2.5">
                   <p className="flex-1 min-w-0 h-[54px] px-[18px] rounded-[15px] border-[1.5px] border-dashed border-[#C73600] flex items-center text-lg md:text-xl font-extrabold tracking-[0.14em] text-[#C73600] truncate">{dbProfile?.referral_code ?? '—'}</p>
                   <button
@@ -531,7 +531,7 @@ export default function ComptePage() {
                 {dbProfile?.has_referral_discount && (
                   <p className="mt-3.5 flex items-center gap-2.5 px-3.5 py-3 rounded-[14px] bg-[#ECF7EF] text-sm font-bold text-[#166534]">
                     <Check className="w-[18px] h-[18px] shrink-0" strokeWidth={2.6} aria-hidden />
-                    Remise parrainage -10% dispo — activez-la dans le panier
+                    Remise parrainage de 10 % disponible — activez-la dans le panier
                   </p>
                 )}
               </section>
@@ -542,7 +542,7 @@ export default function ComptePage() {
                 {isAdmin && (
                   <Link href="/admin" className={ligneAction}>
                     <span className="shrink-0 w-11 h-11 rounded-[14px] bg-[#3D2B1F] text-[#F5EAE0] flex items-center justify-center" aria-hidden><Shield className="w-5 h-5" /></span>
-                    <span className="flex-1"><strong className="block text-base font-extrabold">Panel Admin</strong><span className="block text-sm text-[#6F5A4B]">Accès au tableau de bord</span></span>
+                    <span className="flex-1"><strong className="block text-base font-extrabold">Espace administrateur</strong><span className="block text-sm text-[#6F5A4B]">Accès au tableau de bord</span></span>
                     <ChevronRight className="w-[18px] h-[18px] text-[#6F5A4B]" aria-hidden />
                   </Link>
                 )}
@@ -740,7 +740,7 @@ export default function ComptePage() {
                   <label htmlFor="compte-adresse" className={etiquette}>Adresse (Yvelines 78)</label>
                   <div className="relative">
                     <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-[#6F5A4B] pointer-events-none" aria-hidden />
-                    <input id="compte-adresse" type="text" autoComplete="off" maxLength={200} value={editForm.address || ''} onChange={e => handleAddressInput(e.target.value)} placeholder="Tapez votre adresse..." className={`${champ} pl-[46px]`} />
+                    <input id="compte-adresse" type="text" autoComplete="off" maxLength={200} value={editForm.address || ''} onChange={e => handleAddressInput(e.target.value)} placeholder="Tapez votre adresse…" className={`${champ} pl-[46px]`} />
                   </div>
                   {addressSuggestions.length > 0 && (
                     <div className="absolute z-20 left-0 right-0 top-full mt-1.5 bg-white border border-[#E0D3C0] rounded-2xl shadow-2xl overflow-hidden">
@@ -782,7 +782,7 @@ export default function ComptePage() {
               <span className="relative w-12 h-12 rounded-[15px] bg-[#F5EAE0]/10 text-[#FF7A47] flex items-center justify-center mb-4" aria-hidden><Truck className="w-[22px] h-[22px]" /></span>
               <h3 className="relative titre text-[28px] leading-[1.05] mb-2.5">Livraison dès le lendemain</h3>
               <p className="relative mb-6 text-[15px] leading-relaxed text-[#E1D2C2]">
-                Entre 15h et 20h, à la date de votre choix. Offerte dans nos villes relais, et partout dès 40€.
+                Entre 15h et 20h, à la date de votre choix. Offerte dans nos villes relais, et partout dès 40 €.
               </p>
               <Link href="/commander" className="group relative flex items-center justify-between gap-3 min-h-[60px] px-[22px] rounded-[18px] bg-[#FF4500] text-white text-[19px] font-extrabold hover:bg-[#E63E00] transition-colors">
                 Commander maintenant

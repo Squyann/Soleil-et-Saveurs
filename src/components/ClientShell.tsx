@@ -160,8 +160,8 @@ export default function ClientShell({ children }: { children: React.ReactNode })
             <h2 className="mb-3 text-xs font-extrabold uppercase tracking-[0.14em] text-[#5C4030]">Nous joindre</h2>
             <ul className="flex flex-col text-[15px] font-semibold">
               <li><a href="https://wa.me/33759720083" target="_blank" rel="noopener noreferrer" className="inline-flex items-center min-h-10 hover:text-[#C73600] transition-colors">WhatsApp · 07 59 72 00 83</a></li>
-              <li className="py-1 text-sm font-medium text-[#5C4030]">WhatsApp : 07h — 22h</li>
-              <li className="py-1 text-sm font-medium text-[#5C4030]">Standard : 09h — 19h</li>
+              <li className="py-1 text-sm font-medium text-[#5C4030]">WhatsApp : 7h – 22h</li>
+              <li className="py-1 text-sm font-medium text-[#5C4030]">Standard : 9h – 19h</li>
               <li><Link href="/aide" className="inline-flex items-center min-h-10 hover:text-[#C73600] transition-colors">Support</Link></li>
             </ul>
           </div>

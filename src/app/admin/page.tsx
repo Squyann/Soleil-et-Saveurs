@@ -1205,7 +1205,7 @@ export default function AdminPage() {
                         <textarea
                           value={reponseTexte}
                           onChange={e => setReponseTexte(e.target.value)}
-                          placeholder={`Bonjour ${msg.nom},\n\nEcrivez votre réponse ici...`}
+                          placeholder={`Bonjour ${msg.nom},\n\nÉcrivez votre réponse ici…`}
                           rows={5}
                           className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm font-medium text-slate-700 focus:border-[#FF4500] focus:ring-0 outline-none resize-none transition-all"
                         />

@@ -33,7 +33,7 @@ export default function RGPDPage() {
             <span className="text-[#C73600] font-extrabold text-xs uppercase tracking-[0.14em]">Protection des données</span>
           </div>
           <h1 className="titre text-[44px] md:text-[64px] text-[#3D2B1F] leading-none">
-            Politique de<br /><span className="italic font-medium text-[#FF4500]">Confidentialité</span>
+            Politique de<br /><span className="italic font-medium text-[#FF4500]">confidentialité</span>
           </h1>
           <p className="text-[#6F5A4B] text-sm font-semibold mt-3">Dernière mise à jour : 25 octobre 2026 — Conforme au RGPD (UE) 2016/679</p>
         </div>
@@ -78,7 +78,7 @@ export default function RGPDPage() {
               <p><span className="text-[#6F5A4B] text-xs uppercase font-extrabold tracking-wider mr-2">Entité</span> SOLEIL ET SAVEURS (SAS au capital de 1 000 €, RCS Bobigny 821 324 324)</p>
               <p><span className="text-[#6F5A4B] text-xs uppercase font-extrabold tracking-wider mr-2">Responsable</span> Khaled Boulila</p>
               <p><span className="text-[#6F5A4B] text-xs uppercase font-extrabold tracking-wider mr-2">Adresse</span> 6-8 AVENUE HENRIETTE, 93170 BAGNOLET</p>
-              <p><span className="text-[#6F5A4B] text-xs uppercase font-extrabold tracking-wider mr-2">Email</span> soleiletsaveurs.livraison@gmail.com</p>
+              <p><span className="text-[#6F5A4B] text-xs uppercase font-extrabold tracking-wider mr-2">E-mail</span> soleiletsaveurs.livraison@gmail.com</p>
             </div>
           </section>
 
@@ -93,7 +93,7 @@ export default function RGPDPage() {
               <div className="bg-white border border-[#E8DCCB] rounded-2xl p-5">
                 <p className="font-extrabold text-xs uppercase text-[#3D2B1F] tracking-widest mb-3">Lors de la création de compte</p>
                 <ul className="space-y-1.5 text-[#5C4030] font-medium">
-                  <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-[#FF4500] rounded-full flex-shrink-0" />Adresse email</li>
+                  <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-[#FF4500] rounded-full flex-shrink-0" />Adresse e-mail</li>
                   <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-[#FF4500] rounded-full flex-shrink-0" />Mot de passe (chiffré, non accessible)</li>
                   <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-[#FF4500] rounded-full flex-shrink-0" />Prénom et nom</li>
                   <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-[#FF4500] rounded-full flex-shrink-0" />Date de naissance (vérification de la majorité)</li>
@@ -174,7 +174,7 @@ export default function RGPDPage() {
               </table>
             </div>
             <p className="text-[#5C4030] font-medium leading-relaxed mt-4">
-              Nous ne faisons aucun profilage commercial et ne vendons jamais vos données. Les offres par e-mail ne sont envoyées qu'aux clients qui l'ont accepté à l'inscription ; vous pouvez retirer ce consentement à tout moment par simple e-mail.
+              Nous ne faisons aucun profilage commercial et ne vendons jamais vos données. Les offres par e-mail ne sont envoyées qu'aux clients qui l'ont accepté à l'inscription ; vous pouvez retirer ce consentement à tout moment depuis Mon compte, par le lien de désinscription présent dans chaque e-mail ou par simple e-mail.
             </p>
           </section>
 
@@ -228,7 +228,7 @@ export default function RGPDPage() {
                 <div className="w-10 h-10 bg-[#F5EAE0] rounded-xl flex items-center justify-center flex-shrink-0 font-extrabold text-xs text-[#3D2B1F]">RS</div>
                 <div>
                   <p className="font-extrabold text-xs uppercase text-[#3D2B1F] mb-1">Resend</p>
-                  <p className="text-[#5C4030] font-medium text-[13px]">Envoi des e-mails de confirmation et de livraison (adresse e-mail, nom, adresse et contenu de la commande).</p>
+                  <p className="text-[#5C4030] font-medium text-[13px]">Envoi des e-mails de commande et de livraison, et de nos offres si vous les avez acceptées (adresse e-mail, nom, adresse et contenu de la commande).</p>
                 </div>
               </div>
               <div className="bg-white border border-[#E8DCCB] rounded-2xl p-5 flex items-start gap-4">
@@ -280,7 +280,7 @@ export default function RGPDPage() {
             <div className="bg-[#3D2B1F] rounded-2xl p-5 mt-5 text-[#F5EAE0]">
               <p className="font-extrabold text-xs uppercase tracking-widest text-[#C73600] mb-2">Exercer vos droits</p>
               <p className="font-medium text-sm leading-relaxed text-[#E1D2C2]">
-                Adressez votre demande par email à <strong className="text-[#F5EAE0]">soleiletsaveurs.livraison@gmail.com</strong> en précisant votre identité. Nous répondrons dans un délai maximum d'<strong className="text-[#F5EAE0]">un mois</strong>.
+                Adressez votre demande par e-mail à <strong className="text-[#F5EAE0]">soleiletsaveurs.livraison@gmail.com</strong> en précisant votre identité. Nous répondrons dans un délai maximum d'<strong className="text-[#F5EAE0]">un mois</strong>.
               </p>
             </div>
           </section>
@@ -356,7 +356,7 @@ export default function RGPDPage() {
               Pour toute question ou demande relative à vos données personnelles :
             </p>
             <div className="bg-[#F5EAE0] rounded-2xl p-5 border border-[#E8DCCB] space-y-2 text-[#5C4030] font-medium">
-              <p><span className="text-[#6F5A4B] text-xs uppercase font-extrabold tracking-wider mr-2">Email</span> soleiletsaveurs.livraison@gmail.com</p>
+              <p><span className="text-[#6F5A4B] text-xs uppercase font-extrabold tracking-wider mr-2">E-mail</span> soleiletsaveurs.livraison@gmail.com</p>
               <p><span className="text-[#6F5A4B] text-xs uppercase font-extrabold tracking-wider mr-2">WhatsApp</span> 07 59 72 00 83</p>
             </div>
             <p className="text-[#5C4030] font-medium leading-relaxed mt-4">

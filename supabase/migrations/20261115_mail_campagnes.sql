@@ -105,23 +105,51 @@ END;
 $function$;
 REVOKE ALL ON FUNCTION public.consentement_a_l_inscription() FROM PUBLIC, anon, authenticated;
 
-DROP TRIGGER IF EXISTS trg_consentement_a_l_inscription ON auth.users;
-CREATE TRIGGER trg_consentement_a_l_inscription
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION public.consentement_a_l_inscription();
+-- Certains projets Supabase n'autorisent pas les déclencheurs sur auth.users :
+-- dans ce cas, les choix des nouveaux comptes sont repris par
+-- reprendre_preferences_mail() (appelée à chaque envoi) et lus directement
+-- dans le compte en attendant.
+DO $declencheur$
+BEGIN
+  DROP TRIGGER IF EXISTS trg_consentement_a_l_inscription ON auth.users;
+  CREATE TRIGGER trg_consentement_a_l_inscription
+    AFTER INSERT ON auth.users
+    FOR EACH ROW EXECUTE FUNCTION public.consentement_a_l_inscription();
+EXCEPTION WHEN insufficient_privilege OR feature_not_supported OR object_not_in_prerequisite_state THEN
+  RAISE NOTICE 'Déclencheur sur auth.users non autorisé (%), reprise à chaque envoi', SQLERRM;
+END
+$declencheur$;
 
--- Comptes existants : choix fait à l'inscription, daté de l'inscription
-INSERT INTO public.preferences_mail (user_id, accepte_offres, maj_le)
-SELECT u.id, coalesce(u.raw_user_meta_data ->> 'accepts_marketing', 'false') = 'true', u.created_at
-  FROM auth.users u
- WHERE coalesce(u.raw_app_meta_data ->> 'role', '') <> 'admin'
-ON CONFLICT (user_id) DO NOTHING;
+-- Comptes sans préférence enregistrée : choix fait à l'inscription, daté de
+-- l'inscription (comptes existants, ou nouveaux comptes si le déclencheur
+-- n'a pas pu être créé)
+CREATE OR REPLACE FUNCTION public.reprendre_preferences_mail()
+ RETURNS integer
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+DECLARE
+  v_nb integer;
+BEGIN
+  INSERT INTO public.consentements_mail (user_id, email, accepte, source, created_at)
+  SELECT u.id, u.email, coalesce(u.raw_user_meta_data ->> 'accepts_marketing', 'false') = 'true', 'inscription', u.created_at
+    FROM auth.users u
+   WHERE coalesce(u.raw_app_meta_data ->> 'role', '') <> 'admin'
+     AND NOT EXISTS (SELECT 1 FROM public.preferences_mail p WHERE p.user_id = u.id)
+     AND NOT EXISTS (SELECT 1 FROM public.consentements_mail c WHERE c.user_id = u.id);
+  INSERT INTO public.preferences_mail (user_id, accepte_offres, maj_le)
+  SELECT u.id, coalesce(u.raw_user_meta_data ->> 'accepts_marketing', 'false') = 'true', u.created_at
+    FROM auth.users u
+   WHERE coalesce(u.raw_app_meta_data ->> 'role', '') <> 'admin'
+  ON CONFLICT (user_id) DO NOTHING;
+  GET DIAGNOSTICS v_nb = ROW_COUNT;
+  RETURN v_nb;
+END;
+$function$;
+REVOKE ALL ON FUNCTION public.reprendre_preferences_mail() FROM PUBLIC, anon, authenticated;
 
-INSERT INTO public.consentements_mail (user_id, email, accepte, source, created_at)
-SELECT u.id, u.email, coalesce(u.raw_user_meta_data ->> 'accepts_marketing', 'false') = 'true', 'inscription', u.created_at
-  FROM auth.users u
- WHERE coalesce(u.raw_app_meta_data ->> 'role', '') <> 'admin'
-   AND NOT EXISTS (SELECT 1 FROM public.consentements_mail c WHERE c.user_id = u.id);
+SELECT public.reprendre_preferences_mail();
 
 -- Client connecté : lire et changer son choix (Mon compte)
 CREATE OR REPLACE FUNCTION public.mes_preferences_mail()
@@ -137,7 +165,8 @@ DECLARE
 BEGIN
   IF v_uid IS NULL THEN RAISE EXCEPTION 'Connexion requise'; END IF;
   SELECT * INTO v_p FROM public.preferences_mail WHERE user_id = v_uid;
-  RETURN jsonb_build_object('accepte_offres', coalesce(v_p.accepte_offres, false), 'maj_le', v_p.maj_le);
+  RETURN jsonb_build_object('accepte_offres', coalesce(v_p.accepte_offres,
+    (SELECT raw_user_meta_data ->> 'accepts_marketing' = 'true' FROM auth.users WHERE id = v_uid), false), 'maj_le', v_p.maj_le);
 END;
 $function$;
 REVOKE ALL ON FUNCTION public.mes_preferences_mail() FROM PUBLIC, anon;
@@ -154,7 +183,8 @@ DECLARE
 BEGIN
   IF v_uid IS NULL THEN RAISE EXCEPTION 'Connexion requise'; END IF;
   IF p_accepte IS NULL THEN RAISE EXCEPTION 'Choix manquant'; END IF;
-  IF p_accepte IS DISTINCT FROM (SELECT accepte_offres FROM public.preferences_mail WHERE user_id = v_uid) THEN
+  IF p_accepte IS DISTINCT FROM ((public.mes_preferences_mail()) ->> 'accepte_offres')::boolean
+     OR NOT EXISTS (SELECT 1 FROM public.preferences_mail WHERE user_id = v_uid) THEN
     PERFORM public.enregistrer_consentement_mail(v_uid, p_accepte, 'mon_compte');
   END IF;
   RETURN public.mes_preferences_mail();
@@ -315,7 +345,7 @@ AS $function$
      AND u.email_confirmed_at IS NOT NULL
      AND coalesce(u.raw_app_meta_data ->> 'role', '') <> 'admin'
      AND NOT EXISTS (SELECT 1 FROM public.adresses_bloquees b WHERE b.email = lower(u.email))
-     AND (p_type = 'info' OR coalesce(p.accepte_offres, false));
+     AND (p_type = 'info' OR coalesce(p.accepte_offres, u.raw_user_meta_data ->> 'accepts_marketing' = 'true', false));
 $function$;
 REVOKE ALL ON FUNCTION public.mail_eligibles(text) FROM PUBLIC, anon, authenticated;
 
@@ -444,6 +474,7 @@ DECLARE
   v_lot jsonb;
 BEGIN
   IF public.mail_autorise(p_cle) IS NOT TRUE THEN RAISE EXCEPTION 'Non autorisé'; END IF;
+  PERFORM public.reprendre_preferences_mail();
 
   SELECT * INTO v_c FROM public.campagnes
    WHERE statut = 'en_cours' OR (statut = 'programmee' AND programmee_pour <= now())

@@ -56,11 +56,11 @@ export type EtiquettePromo = { cle: 'remise' | 'lot' | 'degressif' | 'offertes';
 export function etiquettesPromo(p: ProduitEnPromo): EtiquettePromo[] {
   const etiquettes: EtiquettePromo[] = [];
   const pct = Number(p.promotion) || 0;
-  if (pct > 0) etiquettes.push({ cle: 'remise', texte: `-${pct}%`, court: `-${pct}%` });
+  if (pct > 0) etiquettes.push({ cle: 'remise', texte: `-${pct} %`, court: `-${pct} %` });
   const seuil = Number(p.seuil_achat) || 0;
   const offert = Number(p.quantite_offerte) || 0;
   if (seuil > 0 && offert > 0) {
-    etiquettes.push({ cle: 'lot', texte: `${seuil} achetés = ${offert} offert${offert > 1 ? 's' : ''}`, court: `${seuil}+${offert} offert${offert > 1 ? 's' : ''}` });
+    etiquettes.push({ cle: 'lot', texte: `${seuil} acheté${seuil > 1 ? 's' : ''} = ${offert} offert${offert > 1 ? 's' : ''}`, court: `${seuil}+${offert} offert${offert > 1 ? 's' : ''}` });
   }
   const seuilQte = Number(p.seuil_promo_qte) || 0;
   const prixPromo = Number(p.prix_promo) || 0;

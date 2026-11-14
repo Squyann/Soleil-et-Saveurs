@@ -283,8 +283,8 @@ export default function AchatProduit({
               </div>
             </div>
             <p className="text-right text-sm font-semibold text-[#6F5A4B] leading-tight">
-              Total
-              {affiche.totalEconomy > 0.005 && <s className="ml-2 text-[13px]">{formatPrix(totalSimpleSansPromo)}</s>}
+              Total{' '}
+              {affiche.totalEconomy > 0.005 && <s className="ml-1 text-[13px]">{formatPrix(totalSimpleSansPromo)}</s>}
               <strong className={`block mt-0.5 text-[26px] font-black tracking-tight tabular-nums ${affiche.totalEconomy > 0.005 ? 'text-[#FF4500]' : 'text-[#3D2B1F]'}`}>{formatPrix(affiche.totalPrice)}</strong>
               {affiche.totalEconomy > 0.005 && (
                 <span className="block mt-0.5 text-[13px] font-extrabold text-[#166534]">Économie : {formatPrix(affiche.totalEconomy)}</span>

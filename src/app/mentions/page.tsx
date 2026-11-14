@@ -70,7 +70,7 @@ export default function MentionsLegales() {
                 <p><span className="text-[#6F5A4B] text-xs uppercase font-extrabold tracking-wider mr-2">Siège social</span> 6-8 AVENUE HENRIETTE, 93170 BAGNOLET</p>
                 <p><span className="text-[#6F5A4B] text-xs uppercase font-extrabold tracking-wider mr-2">Immatriculation</span> RCS Bobigny 821 324 324</p>
                 <p><span className="text-[#6F5A4B] text-xs uppercase font-extrabold tracking-wider mr-2">SIRET</span> 821 324 324 00028</p>
-                <p><span className="text-[#6F5A4B] text-xs uppercase font-extrabold tracking-wider mr-2">Email</span> soleiletsaveurs.livraison@gmail.com</p>
+                <p><span className="text-[#6F5A4B] text-xs uppercase font-extrabold tracking-wider mr-2">E-mail</span> soleiletsaveurs.livraison@gmail.com</p>
                 <p><span className="text-[#6F5A4B] text-xs uppercase font-extrabold tracking-wider mr-2">Téléphone</span> 07 59 72 00 83</p>
                 <p><span className="text-[#6F5A4B] text-xs uppercase font-extrabold tracking-wider mr-2">TVA intracommunautaire</span> FR33821324324</p>
               </div>
@@ -132,7 +132,7 @@ export default function MentionsLegales() {
               6. Données personnelles
             </h2>
             <p className="text-[#5C4030] font-medium text-sm leading-relaxed mb-4">
-              Les données personnelles collectées lors de votre utilisation du site (nom, adresse email, téléphone, adresse de livraison) sont traitées conformément au Règlement Général sur la Protection des Données (RGPD).
+              Les données personnelles collectées lors de votre utilisation du site (nom, adresse e-mail, téléphone, adresse de livraison) sont traitées conformément au règlement général sur la protection des données (RGPD).
               Pour en savoir plus, consultez notre <Link href="/rgpd" className="text-[#C73600] hover:underline font-bold">Politique de confidentialité</Link>.
             </p>
             <p className="text-[#5C4030] font-medium text-sm leading-relaxed">

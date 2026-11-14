@@ -152,7 +152,7 @@ export default function CGVPage() {
               </li>
             </ol>
             <p className="text-[#5C4030] font-medium leading-relaxed mt-4">
-              La validation de la commande implique l'acceptation des présentes CGV. Un message de confirmation est envoyé par WhatsApp ou email. La commande est ferme et définitive après validation.
+              La validation de la commande implique l'acceptation des présentes CGV. Un message de confirmation est envoyé par WhatsApp ou e-mail. La commande est ferme et définitive après validation.
             </p>
           </section>
 
@@ -213,7 +213,7 @@ export default function CGVPage() {
               </p>
             </div>
             <p className="text-[#5C4030] font-medium leading-relaxed">
-              Toutefois, si vous recevez un produit non conforme (avarie, erreur de produit), nous vous invitons à nous contacter immédiatement par WhatsApp ou email afin d'apporter une solution (remplacement, avoir ou remboursement).
+              Toutefois, si vous recevez un produit non conforme (avarie, erreur de produit), nous vous invitons à nous contacter immédiatement par WhatsApp ou e-mail afin d'apporter une solution (remplacement, avoir ou remboursement).
             </p>
           </section>
 

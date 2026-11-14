@@ -98,7 +98,7 @@ export default function ResetPasswordPage() {
           <Loader2 className="w-10 h-10 animate-spin text-[#FF4500]" aria-hidden />
           <p role="status" className="text-base font-bold">Vérification du lien en cours…</p>
           <p className="text-sm leading-relaxed text-[#5C4030]">
-            Si rien ne se passe, le lien est peut-être expiré.<br />
+            Si rien ne se passe, le lien a peut-être expiré.<br />
             <Link href="/login" className="font-extrabold text-[#C73600] underline underline-offset-4">Retourner à la connexion</Link>
           </p>
         </div>

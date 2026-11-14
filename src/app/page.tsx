@@ -18,20 +18,20 @@ import {
 // Points relais, zone et frais : src/lib/livraison.ts (mêmes règles que le serveur)
 
 const ANNONCES = [
-  'Livraison offerte dès 40€ de produits',
+  'Livraison offerte dès 40 € de produits',
   `Offerte à ${listeVillesRelais()}`,
-  '-10% sur votre 1ère commande avec le code SOLEIL78',
+  '-10 % sur votre 1re commande avec le code SOLEIL78',
   'Livraison dès le lendemain, entre 15h et 20h',
 ];
 
 const PROMESSES = [
   { numero: '01', etiquette: 'Le choix', titre: 'Choisis à maturité', texte: 'Nous sélectionnons des fruits et légumes à point, en privilégiant les producteurs français de saison.', Icone: Clock },
-  { numero: '02', etiquette: 'La sélection', titre: 'Tri Sélectif', texte: 'Nous vérifions chaque pièce manuellement. Seul le meilleur arrive dans votre cagette.', Icone: ShieldCheck },
+  { numero: '02', etiquette: 'La sélection', titre: 'Tri sélectif', texte: 'Nous vérifions chaque pièce manuellement. Seul le meilleur arrive dans votre cagette.', Icone: ShieldCheck },
   { numero: '03', etiquette: 'La livraison', titre: 'Livré à partir de 15h', texte: 'Directement à votre porte, sans perdre aucune fraîcheur !', Icone: Truck },
 ];
 
 const CHIFFRES = [
-  { valeur: '100%', libelle: 'Fraîcheur', detail: '' },
+  { valeur: '100 %', libelle: 'Fraîcheur', detail: '' },
   { valeur: 'Optim.', libelle: 'Maturité', detail: 'Choisis à point' },
   { valeur: 'Claire', libelle: 'Origine', detail: 'Sur chaque fiche' },
 ];
@@ -135,7 +135,7 @@ export default function Home() {
   const [showResult, setShowResult] = useState(false);
   const [distanceValide, setDistanceValide] = useState<boolean | null>(null);
   const [adresseIntrouvable, setAdresseIntrouvable] = useState(false);
-  // Frais de livraison pour l'adresse testée (sous 40€ de produits)
+  // Frais de livraison pour l'adresse testée (sous 40 € de produits)
   const [infoLivraison, setInfoLivraison] = useState<{ villeRelais: boolean; frais: number } | null>(null);
 
   // Produits affichés sur l'accueil : promos du moment et rayons
@@ -271,7 +271,7 @@ export default function Home() {
               <p className="text-[15px] font-semibold text-[#5C4030] mb-6 leading-snug">
                 {infoLivraison.villeRelais
                   ? <><span className="text-[#15803D] font-extrabold">Livraison offerte</span> chez vous, quel que soit le montant.</>
-                  : <>Livraison {infoLivraison.frais.toFixed(0)}€, <span className="text-[#15803D] font-extrabold">offerte dès 40€</span> de produits.</>}
+                  : <>Livraison {infoLivraison.frais.toFixed(0)} €, <span className="text-[#15803D] font-extrabold">offerte dès 40 €</span> de produits.</>}
               </p>
             )}
             <div className="space-y-2">
@@ -320,7 +320,7 @@ export default function Home() {
                 href="/commander"
                 className="group flex items-center justify-between gap-4 min-h-[60px] px-5 sm:px-6 rounded-[18px] bg-[#FF4500] text-white text-[17px] sm:text-[19px] font-extrabold shadow-[0_18px_34px_-14px_rgba(255,69,0,0.55)] transition-[background-color,transform] duration-200 hover:bg-[#E63E00] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]"
               >
-                Accéder au catalogue direct
+                Accéder directement au catalogue
                 <ArrowRight className="w-[22px] h-[22px] transition-transform duration-200 group-hover:translate-x-1" strokeWidth={2.4} aria-hidden />
               </Link>
 
@@ -332,7 +332,7 @@ export default function Home() {
                     id="adresse-accueil"
                     type="text"
                     autoComplete="off"
-                    placeholder="Saisissez votre adresse..."
+                    placeholder="Saisissez votre adresse…"
                     className="flex-1 min-w-0 h-11 bg-transparent text-base font-semibold text-[#3D2B1F] placeholder:text-[#8C7867] placeholder:font-medium focus:outline-none"
                     value={address}
                     onChange={(e) => handleAddressChange(e.target.value)}
@@ -378,7 +378,7 @@ export default function Home() {
 
             <ul className="order-5 hidden lg:flex ss-monte flex-wrap gap-x-6 gap-y-2.5 mt-1 text-sm font-semibold text-[#5C4030] [animation-delay:280ms]">
               <li className="flex items-center gap-2"><Clock className="w-[18px] h-[18px] text-[#C73600]" aria-hidden />Dès le lendemain, 15h – 20h</li>
-              <li className="flex items-center gap-2"><Gift className="w-[18px] h-[18px] text-[#C73600]" aria-hidden />Offerte dès 40€</li>
+              <li className="flex items-center gap-2"><Gift className="w-[18px] h-[18px] text-[#C73600]" aria-hidden />Offerte dès 40 €</li>
               <li className="flex items-center gap-2"><Banknote className="w-[18px] h-[18px] text-[#C73600]" aria-hidden />Paiement à la livraison</li>
             </ul>
           </div>
@@ -408,7 +408,7 @@ export default function Home() {
                 <div className="absolute left-3 right-3 bottom-3 md:left-[18px] md:right-[18px] md:bottom-[18px] flex items-center justify-between pl-4 pr-2 py-1.5 rounded-2xl bg-[#3D2B1F]/60 backdrop-blur-md text-white">
                   <span className="flex items-center gap-2 text-[11px] md:text-xs font-extrabold uppercase tracking-[0.12em]">
                     <span className="ss-pouls w-2 h-2 rounded-full bg-[#FF4500]" />
-                    Live du champ
+                    En direct du champ
                   </span>
                   <button
                     type="button"
@@ -462,7 +462,7 @@ export default function Home() {
           {[
             { Icone: Truck, titre: 'Livraison rapide', texte: 'Dès le lendemain, à la date de votre choix, entre 15h et 20h.', vert: false, href: '/livraison' },
             { Icone: MapPin, titre: 'Zone 78', texte: 'Livraison dans tout le département des Yvelines (78).', vert: false },
-            { Icone: Gift, titre: 'Livraison offerte', texte: `Dès 40€ de produits, et dans nos ${RELAIS.length} villes relais quel que soit le montant.`, vert: true },
+            { Icone: Gift, titre: 'Livraison offerte', texte: `Dès 40 € de produits, et dans nos ${RELAIS.length} villes relais quel que soit le montant.`, vert: true },
             { Icone: Banknote, titre: 'Paiement à la livraison', texte: 'En espèces ou par carte, à la réception de votre commande.', vert: false },
           ].map(({ Icone, titre, texte, vert, href }) => {
             const contenu = (
@@ -549,7 +549,7 @@ export default function Home() {
                 <circle cx="300" cy="300" r="92" fill="#fff" fillOpacity="0.16" />
                 <circle cx="300" cy="300" r="210" fill="none" stroke="#fff" strokeOpacity="0.22" strokeWidth="90" strokeDasharray="9 46" />
               </svg>
-              <span className="relative self-start mb-2.5 px-3 py-1.5 rounded-full bg-white text-[#C73600] text-xs font-extrabold uppercase tracking-[0.1em]">Jusqu&apos;à -{remiseMax}%</span>
+              <span className="relative self-start mb-2.5 px-3 py-1.5 rounded-full bg-white text-[#C73600] text-xs font-extrabold uppercase tracking-[0.1em]">Jusqu&apos;à -{remiseMax} %</span>
               <span className="relative titre flex items-center gap-3 text-[40px] leading-[1.05]">
                 Promos
                 <ArrowRight className="w-[26px] h-[26px] transition-transform duration-200 group-hover:translate-x-1" aria-hidden />
@@ -620,13 +620,13 @@ export default function Home() {
         </div>
         <div className="ss-ruban flex gap-3.5 overflow-x-auto snap-x snap-mandatory scroll-px-5 px-5 pb-5 lg:grid lg:grid-cols-3 lg:gap-6 lg:overflow-visible">
           {[
-            { titre: 'Bienvenue', texte: '-10% sur votre 1ère commande avec le code', code: 'SOLEIL78', fond: 'bg-[#FF4500] text-white' },
-            { titre: 'Fidélité', texte: 'Chaque euro de commande vous rapporte 1 point. Dès 100 points, activez une remise de -10% dans le panier.', fond: 'bg-[#3D2B1F] text-[#F5EAE0]' },
-            { titre: 'Parrainage', texte: 'Votre parrain reçoit -10% sur sa prochaine commande, et vous -10% sur votre 2e commande.', fond: 'bg-[#15803D] text-white' },
+            { titre: 'Bienvenue', texte: '-10 % sur votre 1re commande avec le code', code: 'SOLEIL78', fond: 'bg-[#FF4500] text-white' },
+            { titre: 'Fidélité', texte: 'Chaque euro de commande vous rapporte 1 point. Dès 100 points, activez une remise de -10 % dans le panier.', fond: 'bg-[#3D2B1F] text-[#F5EAE0]' },
+            { titre: 'Parrainage', texte: 'Votre parrain reçoit -10 % sur sa prochaine commande, et vous -10 % sur votre 2e commande.', fond: 'bg-[#15803D] text-white' },
           ].map(a => (
             <div key={a.titre} className="shrink-0 snap-start w-[300px] lg:w-auto flex bg-white rounded-[22px] lg:rounded-3xl border border-[#E8DCCB] overflow-hidden">
               <div className={`shrink-0 w-[88px] lg:w-28 flex items-center justify-center border-r-2 border-dashed border-[#F5EAE0] ${a.fond}`}>
-                <span className="titre text-[27px] lg:text-[34px] leading-none">-10%</span>
+                <span className="titre text-[27px] lg:text-[34px] leading-none">-10 %</span>
               </div>
               <div className="p-4 lg:p-[22px]">
                 <h3 className="text-base lg:text-[17px] font-extrabold mb-1 lg:mb-1.5">{a.titre}</h3>
