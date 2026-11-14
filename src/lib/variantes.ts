@@ -1,3 +1,5 @@
+import { creerSlug } from '@/lib/fiches';
+
 // Variantes d'un produit (ex. Ananas doux : entier / préparé ; Salade :
 // laitue, batavia…). Les champs vides d'une variante reprennent ceux du
 // produit parent. Mêmes règles que creer_commande côté serveur.
@@ -97,4 +99,10 @@ export function produitPourVariante<T extends Record<string, any>>(produit: T, v
     stock: v.stock != null ? Number(v.stock) : stockPartage,
     ...(memeUnite ? {} : { seuil_achat: 0, quantite_offerte: 0, seuil_promo_qte: 0, prix_promo: 0, premieres_offertes: 0 }),
   };
+}
+
+// Identifiant lisible d'une variante dans l'adresse de la page produit :
+// /produits/ananas-doux?variete=prepare
+export function slugVariante(produit: { name: string }, v: Pick<Variante, 'nom'>): string {
+  return creerSlug(libelleCourt(produit, v)) || creerSlug(v.nom);
 }

@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { estEnPromo, etiquettesPromo } from '@/lib/promos';
 import { getStep, getMin, formatQuantite, uniteAffichee, stockDisponible, stockMaxLigne, ligneDepuisProduit, ajouterUnPas, retirerUnPas, lirePanier, calculerPanier } from '@/lib/panier';
-import { variantesActives, prixVariante, imageVariante, nomVariante, libelleCourt, variantesCumulables, produitPourVariante } from '@/lib/variantes';
+import { variantesActives, prixVariante, imageVariante, nomVariante, libelleCourt, variantesCumulables, produitPourVariante, slugVariante } from '@/lib/variantes';
 import { prochainePromo } from '@/lib/prix';
 import { formatPrix, libelleUnite, libelleQuantite } from '@/lib/format';
 import { CLE_FILTRE, CLE_RECHERCHE, CLE_DEFILEMENT, lireSession, ecrireSession } from '@/lib/catalogue';
@@ -313,7 +313,10 @@ export default function CommanderPage() {
               const nomCarte = nomVariante(product, variante);
               const descriptionCarte = variante?.description || product.description;
               const productVariants = getVariants(product);
-              const slug = slugs[product.id];
+              // « Voir la fiche » ouvre directement la variante affichée sur la carte
+              const slug = slugs[product.id] && variante && productVariants.length > 1
+                ? `${slugs[product.id]}?variete=${encodeURIComponent(slugVariante(product, variante))}`
+                : slugs[product.id];
               const pas = getStep(pv);
 
               // Déjà dans le panier pour ce produit (toutes variantes)

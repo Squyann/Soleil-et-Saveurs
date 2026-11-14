@@ -1,11 +1,15 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
+import nextDynamic from 'next/dynamic';
 import {
-  X, Plus, Trash2, ArrowUp, ArrowDown, ImagePlus, Save, Loader2, Layers, CircleDot, Import, AlertTriangle,
+  X, Plus, Trash2, ArrowUp, ArrowDown, ImagePlus, Save, Loader2, Layers, CircleDot, Import, AlertTriangle, FileText,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import CadrageImage from '@/components/CadrageImage';
 import { nomVariante, UNITES, type Variante } from '@/lib/variantes';
+import { rubriquesPropres, type Fiche, type FicheVariante } from '@/lib/fiches';
+
+const EditeurFicheVariante = nextDynamic(() => import('@/components/admin/EditeurFicheVariante'), { ssr: false });
 
 const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif'];
 const TAILLE_MAX_SOURCE = 20 * 1024 * 1024;
@@ -53,6 +57,20 @@ export default function GestionVariantes({
   const [enCours, setEnCours] = useState<string | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
   const [cadrage, setCadrage] = useState<{ src: string; varianteId: string } | null>(null);
+  // Fiches : celle du produit (rubriques reprises) et celles des variantes
+  const [ficheProduit, setFicheProduit] = useState<Fiche | null>(null);
+  const [fichesVariantes, setFichesVariantes] = useState<Record<string, FicheVariante>>({});
+  const [ficheOuverte, setFicheOuverte] = useState<string | null>(null);
+  const chargerFiches = useCallback(async () => {
+    const [{ data: fp }, { data: fv }] = await Promise.all([
+      supabase.from('fiches_produits').select('*').eq('product_id', produit.id).maybeSingle(),
+      liste.length ? supabase.from('fiches_variantes').select('*').in('variant_id', liste.map(v => v.id)) : Promise.resolve({ data: [] }),
+    ]);
+    setFicheProduit((fp as Fiche) ?? null);
+    setFichesVariantes(Object.fromEntries(((fv as FicheVariante[] | null) ?? []).map(f => [f.variant_id, f])));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [produit.id, liste.map(v => v.id).join(',')]);
+  useEffect(() => { chargerFiches(); }, [chargerFiches]);
 
   const cumulables = produit.variantes_cumulables !== false;
   const saisie = (v: Variante) => saisies[v.id] ?? versSaisie(v);
@@ -193,6 +211,20 @@ export default function GestionVariantes({
         ordre: ordreMax + (premierRegroupement ? 2 : 1),
       }]);
       if (ins.error) return ins;
+      // Son ancienne page détaillée devient la fiche de la variante
+      const { data: nouvelle } = await supabase.from('product_variants').select('id').eq('product_id', String(produit.id)).eq('source_product_id', source.id).order('created_at', { ascending: false }).limit(1).maybeSingle();
+      const { data: ancienne } = await supabase.from('fiches_produits').select('*').eq('product_id', source.id).maybeSingle();
+      if (nouvelle && ancienne) {
+        const t = (x: string | null) => (x && x.trim() ? x : null);
+        await supabase.from('fiches_variantes').upsert({
+          variant_id: nouvelle.id,
+          accroche: t(ancienne.accroche), description: t(ancienne.description), origine_detail: t(ancienne.origine_detail),
+          caracteristiques: t(ancienne.caracteristiques), gout: t(ancienne.gout), conservation: t(ancienne.conservation), preparation: t(ancienne.preparation),
+          saison_mois: ancienne.saison_mois?.length ? ancienne.saison_mois : null,
+          photos: ancienne.photos?.length ? ancienne.photos : null,
+          recettes: ancienne.recettes?.length ? ancienne.recettes : null,
+        }, { onConflict: 'variant_id' });
+      }
       setAImporter('');
       return supabase.from('products').update({ actif: false }).eq('id', source.id);
     });
@@ -367,6 +399,9 @@ export default function GestionVariantes({
                         Regroupé · Dégrouper
                       </button>
                     )}
+                    <button type="button" onClick={() => setFicheOuverte(v.id)} className={`inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest px-2.5 py-1.5 rounded-full ${fichesVariantes[v.id] ? 'bg-slate-900 text-white' : 'bg-white border border-dashed border-slate-300 text-slate-500'} hover:bg-[#FF4500] hover:text-white hover:border-[#FF4500]`} title="Fiche propre à cette variante sur la page du produit">
+                      <FileText className="w-3 h-3" />{fichesVariantes[v.id] ? `Fiche · ${rubriquesPropres(fichesVariantes[v.id])} propre${rubriquesPropres(fichesVariantes[v.id]) > 1 ? 's' : ''}` : 'Créer sa fiche'}
+                    </button>
                     <button type="button" role="switch" aria-checked={!inactive} onClick={() => basculerActif(v)} className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-slate-500 mr-auto">
                       <span className={`relative w-9 h-5 rounded-full transition-colors ${inactive ? 'bg-slate-200' : 'bg-green-500'}`}>
                         <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${inactive ? '' : 'translate-x-4'}`} />
@@ -429,6 +464,20 @@ export default function GestionVariantes({
       </div>
 
       {cadrage && <CadrageImage src={cadrage.src} onAnnuler={fermerCadrage} onValider={envoyerPhoto} />}
+      {ficheOuverte && liste.find(v => v.id === ficheOuverte) && (
+        <EditeurFicheVariante
+          produit={produit}
+          variante={liste.find(v => v.id === ficheOuverte)!}
+          ficheProduit={ficheProduit}
+          ficheVariante={fichesVariantes[ficheOuverte] ?? null}
+          onFermer={() => setFicheOuverte(null)}
+          onEnregistre={(fv) => setFichesVariantes(prev => {
+            const suite = { ...prev };
+            if (fv) suite[fv.variant_id] = fv; else delete suite[ficheOuverte];
+            return suite;
+          })}
+        />
+      )}
     </div>
   );
 }
