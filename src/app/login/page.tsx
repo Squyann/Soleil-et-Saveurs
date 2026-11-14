@@ -25,7 +25,7 @@ export default function LoginPage() {
 
   const handleForgotPassword = async () => {
     if (!email) {
-      setError('Entrez votre email ci-dessus puis cliquez sur "Oublié ?".');
+      setError('Entrez votre e-mail ci-dessus puis cliquez sur « Oublié ? ».');
       return;
     }
     setResetLoading(true);
@@ -66,8 +66,8 @@ export default function LoginPage() {
       sousTitre="Bon retour parmi nous !"
       accroche={<>Vos produits<br /><em className="text-[#FF7A47]">frais, livrés chez vous.</em></>}
       arguments={[
-        { icone: <Leaf className="w-[22px] h-[22px]" />, titre: 'Qualité Premium', texte: 'Sélection rigoureuse de fruits et légumes frais chaque matin.' },
-        { icone: <Truck className="w-[22px] h-[22px]" />, titre: 'Livraison Rapide', texte: 'Livré dans tout le 78, dès le lendemain, à la date de votre choix.' },
+        { icone: <Leaf className="w-[22px] h-[22px]" />, titre: 'Qualité premium', texte: 'Sélection rigoureuse de fruits et légumes frais chaque matin.' },
+        { icone: <Truck className="w-[22px] h-[22px]" />, titre: 'Livraison rapide', texte: 'Livré dans tout le 78, dès le lendemain, à la date de votre choix.' },
         { icone: <Banknote className="w-[22px] h-[22px]" />, titre: 'Paiement à la livraison', texte: 'En espèces ou par carte bancaire, directement au livreur.' },
       ]}
     >
@@ -79,7 +79,7 @@ export default function LoginPage() {
         )}
 
         <div>
-          <label htmlFor="connexion-email" className={etiquetteChamp}>Email</label>
+          <label htmlFor="connexion-email" className={etiquetteChamp}>E-mail</label>
           <div className="relative">
             <Mail className={iconeChamp} aria-hidden />
             <input
@@ -104,7 +104,7 @@ export default function LoginPage() {
               disabled={resetLoading || resetSent}
               className="min-h-7 text-[13.5px] lg:text-sm font-bold text-[#C73600] hover:underline underline-offset-4 disabled:text-[#166534] disabled:no-underline"
             >
-              {resetLoading ? 'Envoi…' : resetSent ? 'Email envoyé' : 'Oublié ?'}
+              {resetLoading ? 'Envoi…' : resetSent ? 'E-mail envoyé' : 'Oublié ?'}
             </button>
           </div>
           <div className="relative">
@@ -143,8 +143,8 @@ export default function LoginPage() {
       </p>
 
       <p className="mt-6 lg:mt-[34px] pt-[18px] lg:pt-[22px] border-t border-[#E3D6C4] flex items-center justify-center gap-5 text-[12.5px] lg:text-[13px] font-bold text-[#6F5A4B]">
-        <span className="inline-flex items-center gap-1.5"><Check className="w-4 h-4 text-[#15803D]" strokeWidth={2.4} aria-hidden />RGPD Ready</span>
-        <span className="inline-flex items-center gap-1.5"><Check className="w-4 h-4 text-[#15803D]" strokeWidth={2.4} aria-hidden />SSL Secure</span>
+        <span className="inline-flex items-center gap-1.5"><Check className="w-4 h-4 text-[#15803D]" strokeWidth={2.4} aria-hidden />Conforme au RGPD</span>
+        <span className="inline-flex items-center gap-1.5"><Check className="w-4 h-4 text-[#15803D]" strokeWidth={2.4} aria-hidden />Connexion sécurisée</span>
       </p>
     </GabaritConnexion>
   );

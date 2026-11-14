@@ -166,7 +166,7 @@ export default function CommanderPage() {
         aria-label="Rechercher un produit, une provenance"
         value={search}
         onChange={(e) => choisirRecherche(e.target.value)}
-        placeholder="Rechercher un produit, une provenance..."
+        placeholder="Rechercher un produit, une provenance…"
         className="w-full h-[50px] lg:h-[52px] bg-white border border-[#E0D3C0] rounded-[15px] lg:rounded-2xl pl-12 pr-12 text-base font-semibold text-[#3D2B1F] placeholder:text-[#8C7867] placeholder:font-medium focus:outline-none focus:border-[#FF4500] transition-colors [&::-webkit-search-cancel-button]:hidden"
       />
       {search && (
@@ -225,7 +225,7 @@ export default function CommanderPage() {
           </nav>
           <div className="flex items-end justify-between gap-3">
             <h1 className="titre text-[44px] md:text-[64px] leading-none">
-              La <em className="text-[#FF4500]">Récolte</em>
+              La <em className="text-[#FF4500]">récolte</em>
             </h1>
             <p className="mb-1.5 inline-flex items-center gap-2 md:gap-2.5 px-3 py-1.5 md:px-4 md:py-2.5 rounded-full bg-white border border-[#E8DCCB] text-xs md:text-[13px] font-bold text-[#166534] whitespace-nowrap">
               <span className="ss-pouls w-2 h-2 rounded-full bg-[#16A34A]" />

@@ -11,7 +11,7 @@ const FAQ_CATEGORIES = [
   {
     id: 'delivery',
     icon: <Truck className="w-5 h-5" />,
-    title: "Livraison & Zones",
+    title: "Livraison & zones",
     questions: [
       {
         q: "Quels sont vos délais exacts de livraison ?",
@@ -27,7 +27,7 @@ const FAQ_CATEGORIES = [
       },
       {
         q: "Combien coûtent les frais de livraison ? Sont-ils gratuits ?",
-        a: "La livraison est OFFERTE, quel que soit le montant, si vous habitez dans une ville de nos points relais : Chatou, Croissy-sur-Seine, Mareil-sur-Mauldre ou Saint-Nom-la-Bretèche.\n\nAilleurs dans les Yvelines, elle est OFFERTE dès 40€ de produits. En dessous, les frais dépendent de la distance (à vol d'oiseau) entre votre adresse et notre point relais le plus proche :\n• jusqu'à 3 km : 3€\n• de 3 à 6 km : 4€\n• au-delà de 6 km : 5€\n\nLe seuil de 40€ se calcule sur vos produits avant remises : un code promo, la remise fidélité ou le parrainage ne vous font jamais perdre la livraison offerte. Le minimum de commande est de 10€ (après remises, hors frais de livraison). Les frais exacts s'affichent dans votre panier avant validation ; ils sont payés avec la commande, à la livraison."
+        a: "La livraison est OFFERTE, quel que soit le montant, si vous habitez dans une ville de nos points relais : Chatou, Croissy-sur-Seine, Mareil-sur-Mauldre ou Saint-Nom-la-Bretèche.\n\nAilleurs dans les Yvelines, elle est OFFERTE dès 40 € de produits. En dessous, les frais dépendent de la distance (à vol d'oiseau) entre votre adresse et notre point relais le plus proche :\n• jusqu'à 3 km : 3 €\n• de 3 à 6 km : 4 €\n• au-delà de 6 km : 5 €\n\nLe seuil de 40 € se calcule sur vos produits avant remises : un code promo, la remise fidélité ou le parrainage ne vous font jamais perdre la livraison offerte. Le minimum de commande est de 10 € (après remises, hors frais de livraison). Les frais exacts s'affichent dans votre panier avant validation ; ils sont payés avec la commande, à la livraison."
       },
       {
         q: "Puis-je choisir un créneau horaire précis ?",
@@ -38,10 +38,10 @@ const FAQ_CATEGORIES = [
   {
     id: 'products',
     icon: <Leaf className="w-5 h-5" />,
-    title: "Qualité & Agriculture",
+    title: "Qualité & agriculture",
     questions: [
       {
-        q: "Pourquoi certains fruits ne sont pas disponibles toute l'année ?",
+        q: "Pourquoi certains fruits ne sont-ils pas disponibles toute l'année ?",
         a: "Nous suivons les saisons et privilégions les producteurs français. Certains fruits (agrumes, ananas, mangues…) viennent de plus loin : l'origine de chaque produit est toujours indiquée sur sa fiche. Un produit hors saison ou introuvable en qualité suffisante sort simplement du catalogue."
       },
     ]
@@ -49,19 +49,19 @@ const FAQ_CATEGORIES = [
   {
     id: 'account',
     icon: <UserCheck className="w-5 h-5" />,
-    title: "Mon Compte & Fidélité",
+    title: "Mon compte & fidélité",
     questions: [
       {
         q: "Comment fonctionne le programme de fidélité ?",
-        a: "C'est automatique : chaque euro de commande (hors frais de livraison, après remises) vous rapporte 1 point. Dès 100 points, vous pouvez activer une remise de -10% dans le panier ; l'utiliser consomme la totalité de vos points. La remise fidélité ne se cumule ni avec le parrainage ni avec un code promo. Votre solde est visible dans votre espace client."
+        a: "C'est automatique : chaque euro de commande (hors frais de livraison, après remises) vous rapporte 1 point. Dès 100 points, vous pouvez activer une remise de -10 % dans le panier ; l'utiliser consomme la totalité de vos points. La remise fidélité ne se cumule ni avec le parrainage ni avec un code promo. Votre solde est visible dans votre espace client."
       },
       {
         q: "Puis-je modifier mon adresse après avoir passé une commande ?",
-        a: "Contactez-nous au plus vite sur WhatsApp : tant que la commande n'est pas partie en livraison, nous la modifions pour vous. L'onglet 'Adresses' de votre espace client sert à mettre à jour l'adresse utilisée pour vos prochaines commandes."
+        a: "Contactez-nous au plus vite sur WhatsApp : tant que la commande n'est pas partie en livraison, nous la modifions pour vous. L'onglet « Adresses » de votre espace client sert à mettre à jour l'adresse utilisée pour vos prochaines commandes."
       },
       {
         q: "Proposez-vous des abonnements ou des paniers récurrents ?",
-        a: "Nous y travaillons activement ! Des 'Paniers de Saison' hebdomadaires automatisés sont prévus pour simplifier votre quotidien tout en soutenant les producteurs locaux. Restez connecté à votre compte pour être parmi les premiers informés."
+        a: "Nous y travaillons activement ! Des « paniers de saison » hebdomadaires automatisés sont prévus pour simplifier votre quotidien tout en soutenant les producteurs locaux. Restez connecté à votre compte pour être parmi les premiers informés."
       },
       {
         q: "Comment créer ou accéder à mon compte ?",
@@ -72,7 +72,7 @@ const FAQ_CATEGORIES = [
   {
     id: 'billing',
     icon: <CreditCard className="w-5 h-5" />,
-    title: "Paiement & Sécurité",
+    title: "Paiement & sécurité",
     questions: [
       {
         q: "Est-ce que le paiement est sécurisé ?",
@@ -91,7 +91,7 @@ const FAQ_CATEGORIES = [
   {
     id: 'eco',
     icon: <RefreshCcw className="w-5 h-5" />,
-    title: "Écologie & Réclamations",
+    title: "Écologie & réclamations",
     questions: [
       {
         q: "Que faire de ma cagette vide ?",
@@ -99,11 +99,11 @@ const FAQ_CATEGORIES = [
       },
       {
         q: "Un produit est arrivé abîmé, que faire ?",
-        a: "Prenez une photo et envoyez-la nous via WhatsApp ou ce formulaire dans les 24h suivant la livraison (idéalement dans les 2h). Nous vous créditons la valeur du produit, sans discussion. Votre satisfaction est non négociable."
+        a: "Prenez une photo et envoyez-la-nous via WhatsApp ou ce formulaire dans les 24h suivant la livraison (idéalement dans les 2h). Nous vous créditons la valeur du produit, sans discussion. Votre satisfaction est non négociable."
       },
       {
         q: "Comment réduisez-vous votre empreinte carbone ?",
-        a: "Nos tournées de livraison partent de 5 points relais au cœur des Yvelines et sont optimisées par zone pour réduire les kilomètres parcourus. Nos cagettes sont consignées et réutilisées, et nous privilégions les produits français de saison."
+        a: "Nos tournées de livraison partent de nos 4 points relais au cœur des Yvelines et sont optimisées par zone pour réduire les kilomètres parcourus. Nos cagettes sont consignées et réutilisées, et nous privilégions les produits français de saison."
       }
     ]
   }
@@ -194,7 +194,7 @@ export default function AidePage() {
           <div className="flex items-end justify-between gap-x-6 gap-y-3 flex-wrap">
             <div>
               <h1 className="titre text-[44px] md:text-[64px] leading-none">Aide <em className="text-[#FF4500]">&amp; infos</em></h1>
-              <p className="mt-2 md:mt-2.5 text-[15px] md:text-[17px] text-[#5C4030]">Soleil et Saveurs — Votre Service Client Local</p>
+              <p className="mt-2 md:mt-2.5 text-[15px] md:text-[17px] text-[#5C4030]">Soleil et Saveurs — votre service client local</p>
             </div>
             <p className="md:mb-1.5 flex gap-2">
               <span className="inline-flex items-center gap-1.5 px-3 py-1.5 md:px-3.5 md:py-2 rounded-full bg-white border border-[#E8DCCB] text-xs md:text-[13px] font-bold text-[#C73600]"><MapPin className="w-[15px] h-[15px]" aria-hidden />78 uniquement</span>
@@ -206,7 +206,7 @@ export default function AidePage() {
             <input
               type="search"
               aria-label="Rechercher dans l'aide"
-              placeholder="Tapez votre question (ex: Livraison, Bio, Remboursement...)"
+              placeholder="Tapez votre question (ex. : livraison, bio, remboursement…)"
               className="flex-1 min-w-0 bg-transparent text-base md:text-[17px] font-semibold text-[#3D2B1F] placeholder:text-[#8C7867] placeholder:font-medium outline-none [&::-webkit-search-cancel-button]:hidden"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -220,10 +220,10 @@ export default function AidePage() {
         {/* RACCOURCIS */}
         <div className="pt-4 md:pt-7 grid grid-cols-2 lg:grid-cols-4 gap-2.5 md:gap-5">
           {[
-            { icon: <MessageCircle className="w-[22px] h-[22px]" />, vert: true, label: "WhatsApp", sub: "Réponse < 15min", link: "https://wa.me/33759720083" },
-            { icon: <Phone className="w-[22px] h-[22px]" />, vert: false, label: "Téléphone", sub: "9h-19h Non-stop", link: "tel:+33759720083" },
-            { icon: <Star className="w-[22px] h-[22px]" />, vert: false, label: "Fidélité", sub: "-10% dès 100 pts", link: "/compte" },
-            { icon: <AlertCircle className="w-[22px] h-[22px]" />, vert: false, label: "Litige", sub: "Photo & Crédit", link: "mailto:soleiletsaveurs.livraison@gmail.com" }
+            { icon: <MessageCircle className="w-[22px] h-[22px]" />, vert: true, label: "WhatsApp", sub: "Réponse en moins de 15 min", link: "https://wa.me/33759720083" },
+            { icon: <Phone className="w-[22px] h-[22px]" />, vert: false, label: "Téléphone", sub: "9h – 19h sans interruption", link: "tel:+33759720083" },
+            { icon: <Star className="w-[22px] h-[22px]" />, vert: false, label: "Fidélité", sub: "-10 % dès 100 pts", link: "/compte" },
+            { icon: <AlertCircle className="w-[22px] h-[22px]" />, vert: false, label: "Litige", sub: "Photo & crédit", link: "mailto:soleiletsaveurs.livraison@gmail.com" }
           ].map((action, i) => (
             <a
               key={i}
@@ -252,15 +252,15 @@ export default function AidePage() {
             </p>
             <p className="mb-5 md:mb-[22px] flex gap-3 px-3.5 py-3 md:px-4 md:py-3.5 rounded-2xl bg-[#ECF7EF] text-sm md:text-[15px] leading-snug font-semibold text-[#166534]">
               <Gift className="w-5 h-5 shrink-0 mt-px" aria-hidden />
-              <span>Ailleurs dans le 78 : offerte dès 40€ de produits</span>
+              <span>Ailleurs dans le 78 : offerte dès 40 € de produits</span>
             </p>
-            <p className="mb-2.5 text-sm font-bold text-[#5C4030]">En dessous de 40€, hors villes relais, selon la distance</p>
+            <p className="mb-2.5 text-sm font-bold text-[#5C4030]">En dessous de 40 €, hors villes relais, selon la distance</p>
             <table className="w-full border-separate border-spacing-0 rounded-2xl overflow-hidden border border-[#E8DCCB] text-[15px] md:text-base">
               <tbody>
                 {[
-                  { distance: "Jusqu'à 3 km", prix: '3€' },
-                  { distance: 'De 3 à 6 km', prix: '4€' },
-                  { distance: 'Au-delà de 6 km', prix: '5€' },
+                  { distance: "Jusqu'à 3 km", prix: '3 €' },
+                  { distance: 'De 3 à 6 km', prix: '4 €' },
+                  { distance: 'Au-delà de 6 km', prix: '5 €' },
                 ].map((palier, i) => (
                   <tr key={palier.distance}>
                     <th scope="row" className={`px-4 py-3 md:px-[18px] md:py-3.5 text-left font-semibold text-[#5C4030] ${i < 2 ? 'border-b border-[#F0E7DA]' : ''}`}>{palier.distance}</th>
@@ -275,10 +275,10 @@ export default function AidePage() {
           </div>
           <ul className="rounded-[20px] md:rounded-3xl bg-[#F5EAE0] p-[18px] md:p-7 flex flex-col gap-3.5 md:gap-4 text-sm md:text-[15px] leading-normal text-[#5C4030]">
             {[
-              { titre: 'Seuil de 40€ avant remises', texte: 'Un code promo, la remise fidélité ou le parrainage ne vous font jamais perdre la livraison offerte.' },
-              { titre: 'Minimum de commande : 10€', texte: 'Montant de vos produits après remises, hors frais de livraison.' },
+              { titre: 'Seuil de 40 € avant remises', texte: 'Un code promo, la remise fidélité ou le parrainage ne vous font jamais perdre la livraison offerte.' },
+              { titre: 'Minimum de commande : 10 €', texte: 'Montant de vos produits après remises, hors frais de livraison.' },
               { titre: 'Toutes les communes du 78', texte: "Votre adresse est vérifiée à la commande. Nous ne livrons pas en dehors des Yvelines." },
-              { titre: 'Frais affichés avant de valider', texte: "Le montant exact apparaît dans votre panier dès que vous choisissez votre adresse. S'il ne peut pas être vérifié au moment de la commande, le tarif de 5€ s'applique." },
+              { titre: 'Frais affichés avant de valider', texte: "Le montant exact apparaît dans votre panier dès que vous choisissez votre adresse. S'il ne peut pas être vérifié au moment de la commande, le tarif de 5 € s'applique." },
               { titre: 'Livraison dès le lendemain, de 15h à 20h', texte: 'À la date de votre choix parmi les jours proposés dans le panier. Paiement à la livraison, en espèces ou par carte.' },
             ].map(c => (
               <li key={c.titre} className="flex gap-3">
@@ -363,7 +363,7 @@ export default function AidePage() {
                     <input id="aide-nom" required type="text" autoComplete="name" maxLength={200} value={contactName} onChange={(e) => setContactName(e.target.value)} className={champ} />
                   </div>
                   <div>
-                    <label htmlFor="aide-email" className={etiquette}>Email de contact</label>
+                    <label htmlFor="aide-email" className={etiquette}>E-mail de contact</label>
                     <input id="aide-email" required type="email" autoComplete="email" maxLength={320} value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} className={champ} />
                   </div>
                   <div>
@@ -371,7 +371,7 @@ export default function AidePage() {
                     <textarea
                       id="aide-message"
                       required
-                      placeholder="Détaillez votre demande..."
+                      placeholder="Détaillez votre demande…"
                       maxLength={5000}
                       rows={4}
                       value={contactMessage}
@@ -396,7 +396,7 @@ export default function AidePage() {
             {/* Fidélité : renvoie vers le compte */}
             <Link href="/compte" className="group block bg-[#3D2B1F] rounded-3xl md:rounded-[28px] p-6 md:p-7 text-[#F5EAE0]">
               <h2 className="titre text-[26px] md:text-[28px] leading-[1.05] mb-2.5">Fidélité <em className="text-[#FF7A47]">récompensée</em></h2>
-              <p className="mb-[18px] text-[15px] leading-relaxed text-[#E1D2C2]">1€ dépensé = 1 point. Dès 100 points, débloquez -10% sur votre prochaine commande. Votre solde est visible dans votre espace client.</p>
+              <p className="mb-[18px] text-[15px] leading-relaxed text-[#E1D2C2]">1 € dépensé = 1 point. Dès 100 points, débloquez -10 % sur votre prochaine commande. Votre solde est visible dans votre espace client.</p>
               <span className="inline-flex items-center gap-2.5 text-[15px] font-extrabold text-[#FF9466]">
                 Voir mon compteur <ArrowRight className="w-[18px] h-[18px] transition-transform duration-200 group-hover:translate-x-1" aria-hidden />
               </span>
@@ -404,10 +404,10 @@ export default function AidePage() {
 
             <section className="bg-[#F5EAE0] rounded-[22px] md:rounded-3xl border border-[#E3D6C4] px-6 py-5 md:px-[26px] md:py-[22px]">
               <h2 className={`${SURTITRE} mb-2`}>Horaires</h2>
-              <p className="text-[15px] leading-[1.7] font-semibold text-[#5C4030]">WhatsApp : 07h — 22h<br />Standard : 09h — 19h</p>
+              <p className="text-[15px] leading-[1.7] font-semibold text-[#5C4030]">WhatsApp : 7h – 22h<br />Standard : 9h – 19h</p>
               <p className="mt-3 pt-3 border-t border-[#E3D6C4] flex flex-wrap gap-x-4 gap-y-1 text-[13px] font-bold text-[#6F5A4B]">
                 <span className="inline-flex items-center gap-1.5"><Check className="w-4 h-4 text-[#15803D]" strokeWidth={2.4} aria-hidden />Paiement sécurisé</span>
-                <span className="inline-flex items-center gap-1.5"><Check className="w-4 h-4 text-[#15803D]" strokeWidth={2.4} aria-hidden />SSL Verified</span>
+                <span className="inline-flex items-center gap-1.5"><Check className="w-4 h-4 text-[#15803D]" strokeWidth={2.4} aria-hidden />Connexion sécurisée</span>
               </p>
             </section>
           </aside>

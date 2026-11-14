@@ -146,7 +146,7 @@ export default function SignupPage() {
       titre="Créer un compte"
       accroche={<>Soleil<br /><em className="text-[#FF7A47]">&amp; Saveurs.</em></>}
       arguments={[
-        { icone: <Gift className="w-[22px] h-[22px]" />, texte: '-10% sur votre 1ère commande avec le code SOLEIL78' },
+        { icone: <Gift className="w-[22px] h-[22px]" />, texte: '-10 % sur votre 1re commande avec le code SOLEIL78' },
         { icone: <ShieldCheck className="w-[22px] h-[22px]" />, texte: 'Produits frais et premium' },
       ]}
       retour={{ href: '/login', libelle: 'Retour' }}
@@ -172,7 +172,7 @@ export default function SignupPage() {
         <div className="grid sm:grid-cols-2 gap-4 sm:gap-3">
           <div>
             <label htmlFor="inscription-naissance" className={etiquetteChamp}>
-              Naissance {birthDate && !isAdult && <span className="font-extrabold text-red-700">Majeur seul.</span>}
+              Date de naissance {birthDate && !isAdult && <span className="font-extrabold text-red-700">Réservé aux majeurs.</span>}
             </label>
             <div className="relative">
               <Calendar className={iconeChamp} aria-hidden />
@@ -192,7 +192,7 @@ export default function SignupPage() {
           <label htmlFor="inscription-adresse" className={etiquetteChamp}>Adresse complète (Yvelines 78)</label>
           <div className="relative">
             <MapPin className={iconeChamp} aria-hidden />
-            <input id="inscription-adresse" type="text" required autoComplete="off" maxLength={200} placeholder="Tapez votre adresse..." value={address} onChange={(e) => { setAddress(e.target.value); setAddressDept(null); }} className={champAvecIcone} />
+            <input id="inscription-adresse" type="text" required autoComplete="off" maxLength={200} placeholder="Tapez votre adresse…" value={address} onChange={(e) => { setAddress(e.target.value); setAddressDept(null); }} className={champAvecIcone} />
           </div>
           {suggestions.length > 0 && (
             <div className="absolute z-20 left-0 right-0 top-full mt-1.5 bg-white border border-[#E0D3C0] rounded-2xl shadow-2xl overflow-hidden">
@@ -207,7 +207,7 @@ export default function SignupPage() {
         </div>
 
         <div>
-          <label htmlFor="inscription-email" className={etiquetteChamp}>Email</label>
+          <label htmlFor="inscription-email" className={etiquetteChamp}>E-mail</label>
           <div className="relative">
             <Mail className={iconeChamp} aria-hidden />
             <input id="inscription-email" type="email" required autoComplete="email" maxLength={320} placeholder="votre@email.com" value={email} onChange={(e) => setEmail(e.target.value)} className={champAvecIcone} />
@@ -215,7 +215,7 @@ export default function SignupPage() {
         </div>
 
         <div>
-          <label htmlFor="inscription-mdp" className={etiquetteChamp}>Mot de passe (8+ car.)</label>
+          <label htmlFor="inscription-mdp" className={etiquetteChamp}>Mot de passe (8 caractères minimum)</label>
           <div className="relative">
             <Lock className={iconeChamp} aria-hidden />
             <input id="inscription-mdp" type={showPassword ? 'text' : 'password'} required autoComplete="new-password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} className={`${champAvecIcone} pr-14`} />
@@ -232,13 +232,13 @@ export default function SignupPage() {
 
         <div>
           <label htmlFor="inscription-parrainage" className={etiquetteChamp}>
-            Code parrainage <span className="font-semibold text-[#6F5A4B]">(optionnel)</span>
+            Code de parrainage <span className="font-semibold text-[#6F5A4B]">(optionnel)</span>
           </label>
           <div className="relative">
             <Gift className={iconeChamp} aria-hidden />
-            <input id="inscription-parrainage" type="text" autoComplete="off" maxLength={40} placeholder="EX: ABC12345" value={referralCodeInput} onChange={(e) => setReferralCodeInput(e.target.value.toUpperCase())} className={`${champAvecIcone} uppercase`} />
+            <input id="inscription-parrainage" type="text" autoComplete="off" maxLength={40} placeholder="Ex. : ABC12345" value={referralCodeInput} onChange={(e) => setReferralCodeInput(e.target.value.toUpperCase())} className={`${champAvecIcone} uppercase`} />
           </div>
-          <p className="mt-1.5 text-[13px] leading-snug font-semibold text-[#6F5A4B]">Votre parrain reçoit -10% sur sa prochaine commande, et vous -10% sur votre 2e commande</p>
+          <p className="mt-1.5 text-[13px] leading-snug font-semibold text-[#6F5A4B]">Votre parrain reçoit -10 % sur sa prochaine commande, et vous -10 % sur votre 2e commande</p>
         </div>
 
         <label className="flex items-start gap-3 cursor-pointer">

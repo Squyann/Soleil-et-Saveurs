@@ -129,7 +129,7 @@ export default function LivraisonPage() {
           {[
             { Icone: Clock, vert: false, titre: 'Dès le lendemain', texte: 'Commandez avant minuit et choisissez votre date : livraison dès le lendemain, entre 15h et 20h, selon les jours proposés.' },
             { Icone: Package, vert: false, titre: 'Cagette consignée', texte: 'Consigne gratuite : rendez votre cagette au livreur lors de la livraison suivante.' },
-            { Icone: Gift, vert: true, titre: 'Frais de livraison', texte: 'Offerte à Chatou, Croissy-sur-Seine, Mareil-sur-Mauldre et Saint-Nom-la-Bretèche. Ailleurs : offerte dès 40€, sinon 3€ à 5€ selon la distance à nos points relais.', lien: true },
+            { Icone: Gift, vert: true, titre: 'Frais de livraison', texte: 'Offerte à Chatou, Croissy-sur-Seine, Mareil-sur-Mauldre et Saint-Nom-la-Bretèche. Ailleurs : offerte dès 40 €, sinon 3 € à 5 € selon la distance à nos points relais.', lien: true },
           ].map(({ Icone, vert, titre, texte, lien }) => (
             <div key={titre} className="flex gap-3.5 p-[18px] md:p-7">
               <span className={`shrink-0 w-11 h-11 md:w-12 md:h-12 rounded-[14px] md:rounded-[15px] flex items-center justify-center ${vert ? 'bg-[#ECF7EF] text-[#15803D]' : 'bg-[#FFF1EA] text-[#FF4500]'}`} aria-hidden>
@@ -158,11 +158,11 @@ export default function LivraisonPage() {
             <ul className="grid grid-cols-2 gap-2.5 md:gap-3.5">
               <li className="flex flex-col md:flex-row md:items-center gap-2 md:gap-3 p-3.5 md:p-4 rounded-[18px] bg-[#F5EAE0] border border-[#E3D6C4]">
                 <span className="shrink-0 w-9 h-9 md:w-10 md:h-10 rounded-xl bg-white text-[#15803D] flex items-center justify-center" aria-hidden><RefreshCcw className="w-[18px] h-[18px]" /></span>
-                <span><strong className="block text-[14.5px] font-extrabold">Émissions Réduites</strong><span className="block mt-0.5 text-[13px] leading-snug text-[#5C4030]">Trajets courts = Impact minime</span></span>
+                <span><strong className="block text-[14.5px] font-extrabold">Émissions réduites</strong><span className="block mt-0.5 text-[13px] leading-snug text-[#5C4030]">Trajets courts, impact minime</span></span>
               </li>
               <li className="flex flex-col md:flex-row md:items-center gap-2 md:gap-3 p-3.5 md:p-4 rounded-[18px] bg-[#F5EAE0] border border-[#E3D6C4]">
                 <span className="shrink-0 w-9 h-9 md:w-10 md:h-10 rounded-xl bg-white text-[#FF4500] flex items-center justify-center" aria-hidden><MapPin className="w-[18px] h-[18px]" /></span>
-                <span><strong className="block text-[14.5px] font-extrabold">Livraison locale</strong><span className="block mt-0.5 text-[13px] leading-snug text-[#5C4030]">100% Yvelines (78)</span></span>
+                <span><strong className="block text-[14.5px] font-extrabold">Livraison locale</strong><span className="block mt-0.5 text-[13px] leading-snug text-[#5C4030]">100 % Yvelines (78)</span></span>
               </li>
             </ul>
           </div>

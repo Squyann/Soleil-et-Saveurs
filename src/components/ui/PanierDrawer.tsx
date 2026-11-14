@@ -294,9 +294,9 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
   const remiseMontant = sousTotalFinal * remisePct / 100;
   const remiseCodeMontant = codeStatut === 'valid' ? Math.round(sousTotalFinal * remiseCode / 100 * 100) / 100 : 0;
   const totalApresRemise = sousTotalFinal - remiseMontant - remiseCodeMontant;
-  // Livraison offerte dans les villes des points relais, ou dès 40€ de produits
+  // Livraison offerte dans les villes des points relais, ou dès 40 € de produits
   // avant remise (une remise ne fait pas perdre la livraison offerte). Sinon
-  // 3€ / 4€ / 5€ selon la distance au relais le plus proche. Le serveur
+  // 3 € / 4 € / 5 € selon la distance au relais le plus proche. Le serveur
   // recalcule le montant en géocodant lui-même l'adresse.
   const fraisLivraison = calculerFraisLivraison({ sousTotal: sousTotalFinal, distance: distanceRelais, villeRelais });
   const totalFinal = totalApresRemise + fraisLivraison;
@@ -419,7 +419,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
       )}
       {minimumNonAtteint && (
         <p role="alert" className="flex items-center gap-2.5 px-3.5 py-3 rounded-[14px] bg-[#FFF1EA] text-[#B83200] text-[13.5px] font-bold">
-          <AlertCircle className="w-[18px] h-[18px] shrink-0" aria-hidden />Minimum de commande : 10€ (encore {formatPrix(10 - totalApresRemise)})
+          <AlertCircle className="w-[18px] h-[18px] shrink-0" aria-hidden />Minimum de commande : 10 € (encore {formatPrix(10 - totalApresRemise)})
         </p>
       )}
     </>
@@ -592,7 +592,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
                                 <h3 className="text-[15px] font-extrabold leading-tight">{item.name}</h3>
                                 <p className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[12.5px] font-semibold text-[#6F5A4B]">
                                   {item.promotion > 0 && !prixDegressifActif && (
-                                    <span className="px-1.5 py-0.5 rounded-full bg-[#D43A00] text-white text-[11px] font-extrabold">-{item.promotion}%</span>
+                                    <span className="px-1.5 py-0.5 rounded-full bg-[#D43A00] text-white text-[11px] font-extrabold">-{item.promotion} %</span>
                                   )}
                                   {prixDegressifActif && (
                                     <span className="px-1.5 py-0.5 rounded-full bg-[#ECF7EF] text-[#166534] text-[11px] font-extrabold">Prix dès {String(item.seuil_promo_qte).replace('.', ',')}</span>
@@ -685,7 +685,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
                       <LogIn className="w-[22px] h-[22px]" aria-hidden />
                     </button>
                   )}
-                  <p className="text-center text-[12.5px] font-semibold text-[#6F5A4B]">Minimum de commande : 10€ · Paiement à la livraison</p>
+                  <p className="text-center text-[12.5px] font-semibold text-[#6F5A4B]">Minimum de commande : 10 € · Paiement à la livraison</p>
                 </footer>
               )}
             </>
@@ -807,7 +807,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
                     <div className="flex items-center gap-3 px-3 py-3 rounded-[14px] bg-[#FFF8E6] text-[#92400E]">
                       <Gift className="w-5 h-5 shrink-0" aria-hidden />
                       <div>
-                        <p className="text-sm font-extrabold">Bon parrainage -10% en attente</p>
+                        <p className="text-sm font-extrabold">Bon parrainage -10 % en attente</p>
                         <p className="text-[12.5px] font-semibold">Validez cette commande pour débloquer votre bon</p>
                       </div>
                     </div>
@@ -832,8 +832,8 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
                             className="shrink-0 w-[22px] h-[22px] accent-[#FF4500]"
                           />
                           <span className="flex-1 min-w-0">
-                            <span className="block text-[14.5px] font-extrabold">Remise fidélité -10%</span>
-                            <span className="block text-[12.5px] font-semibold text-[#6F5A4B]">{dbProfile?.loyalty_points} points · réinitialise à 0</span>
+                            <span className="block text-[14.5px] font-extrabold">Remise fidélité -10 %</span>
+                            <span className="block text-[12.5px] font-semibold text-[#6F5A4B]">{dbProfile?.loyalty_points} points · le solde repart à 0</span>
                           </span>
                           <span className="shrink-0 text-[14.5px] font-extrabold text-[#166534] tabular-nums">-{formatPrix(sousTotalFinal * 0.1)}</span>
                         </label>
@@ -854,7 +854,7 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
                             className="shrink-0 w-[22px] h-[22px] accent-[#FF4500]"
                           />
                           <span className="flex-1 min-w-0">
-                            <span className="block text-[14.5px] font-extrabold">Remise parrainage -10%</span>
+                            <span className="block text-[14.5px] font-extrabold">Remise parrainage -10 %</span>
                             <span className="block text-[12.5px] font-semibold text-[#6F5A4B]">Programme de parrainage</span>
                           </span>
                           <span className="shrink-0 text-[14.5px] font-extrabold text-[#166534] tabular-nums">-{formatPrix(sousTotalFinal * 0.1)}</span>
@@ -957,10 +957,10 @@ export default function PanierDrawer({ isOpen, onClose, user: propUser }: Panier
                     <div className="flex justify-between gap-3 font-extrabold text-[#166534]"><dt>Économie promo</dt><dd className="tabular-nums">-{formatPrix(economie)}</dd></div>
                   )}
                   {remiseMontant > 0 && (
-                    <div className="flex justify-between gap-3 font-extrabold text-[#166534]"><dt>Remise -{remisePct}%</dt><dd className="tabular-nums">-{formatPrix(remiseMontant)}</dd></div>
+                    <div className="flex justify-between gap-3 font-extrabold text-[#166534]"><dt>Remise -{remisePct} %</dt><dd className="tabular-nums">-{formatPrix(remiseMontant)}</dd></div>
                   )}
                   {remiseCodeMontant > 0 && (
-                    <div className="flex justify-between gap-3 font-extrabold text-[#166534]"><dt>Code promo -{remiseCode}%</dt><dd className="tabular-nums">-{formatPrix(remiseCodeMontant)}</dd></div>
+                    <div className="flex justify-between gap-3 font-extrabold text-[#166534]"><dt>Code promo -{remiseCode} %</dt><dd className="tabular-nums">-{formatPrix(remiseCodeMontant)}</dd></div>
                   )}
                   {totalApresRemise >= 10 && (
                     <div className="flex justify-between gap-3">

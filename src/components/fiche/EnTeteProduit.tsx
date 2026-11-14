@@ -35,7 +35,7 @@ export default function EnTeteProduit({
       <div className="relative lg:col-start-1">
         <GaleriePhotos photos={photosAffichees} alt={titreAffiche} />
         {remise > 0 && (
-          <span className="absolute left-3 top-3 lg:left-[18px] lg:top-[18px] px-3 py-1.5 lg:px-3.5 lg:py-2 rounded-full bg-[#D43A00] text-white text-sm lg:text-base font-extrabold pointer-events-none">-{remise}%</span>
+          <span className="absolute left-3 top-3 lg:left-[18px] lg:top-[18px] px-3 py-1.5 lg:px-3.5 lg:py-2 rounded-full bg-[#D43A00] text-white text-sm lg:text-base font-extrabold pointer-events-none">-{remise} %</span>
         )}
         <div className="absolute right-3 top-3 lg:right-[18px] lg:top-[18px]">
           <BoutonPartager titre={titre} />
@@ -70,7 +70,7 @@ export default function EnTeteProduit({
 
         <ul className="flex flex-col gap-2.5 lg:gap-3 rounded-[18px] bg-[#F5EAE0] px-4 py-3.5 lg:rounded-none lg:bg-transparent lg:px-0 lg:pb-0 lg:pt-5 lg:border-t lg:border-[#F0E7DA] text-[13.5px] lg:text-[15px] font-semibold text-[#5C4030]">
           <li className="flex items-center gap-2.5 lg:gap-3"><Truck className="w-[17px] h-[17px] lg:w-[19px] lg:h-[19px] shrink-0 text-[#C73600]" aria-hidden />Livraison dès le lendemain, entre 15h et 20h</li>
-          <li className="flex items-center gap-2.5 lg:gap-3"><Gift className="w-[17px] h-[17px] lg:w-[19px] lg:h-[19px] shrink-0 text-[#C73600]" aria-hidden />Livraison offerte dès 40€ de produits</li>
+          <li className="flex items-center gap-2.5 lg:gap-3"><Gift className="w-[17px] h-[17px] lg:w-[19px] lg:h-[19px] shrink-0 text-[#C73600]" aria-hidden />Livraison offerte dès 40 € de produits</li>
           <li className="flex items-center gap-2.5 lg:gap-3"><Banknote className="w-[17px] h-[17px] lg:w-[19px] lg:h-[19px] shrink-0 text-[#C73600]" aria-hidden />Paiement à la livraison, en espèces ou par carte</li>
         </ul>
       </aside>

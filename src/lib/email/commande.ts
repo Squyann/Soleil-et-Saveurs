@@ -72,7 +72,7 @@ function libellePrixUnitaire(l: LigneCommande): string {
 function badge(l: LigneCommande): string | undefined {
   const offerts = n(l.offerts);
   if (n(l.promotion) > 0) return `−${n(l.promotion)}&nbsp;%`;
-  if (offerts > 0 && n(l.seuil_achat) > 0 && n(l.quantite_offerte) > 0) return `${n(l.seuil_achat)} achetés + ${n(l.quantite_offerte)} offert${n(l.quantite_offerte) > 1 ? 's' : ''}`;
+  if (offerts > 0 && n(l.seuil_achat) > 0 && n(l.quantite_offerte) > 0) return `${n(l.seuil_achat)} acheté${n(l.seuil_achat) > 1 ? 's' : ''} + ${n(l.quantite_offerte)} offert${n(l.quantite_offerte) > 1 ? 's' : ''}`;
   if (offerts > 0) return 'Offert';
   if (l.prixUnitaire != null && n(l.prixUnitaire) < n(l.price) - 0.001) return 'Prix dégressif';
   return undefined;
