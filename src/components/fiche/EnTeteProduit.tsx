@@ -1,32 +1,66 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { MapPin, Leaf, Truck, Gift, Banknote } from 'lucide-react';
 import GaleriePhotos from '@/components/fiche/GaleriePhotos';
 import AchatProduit from '@/components/fiche/AchatProduit';
 import BoutonPartager from '@/components/fiche/BoutonPartager';
-import { nomVariante, produitPourVariante, type Variante } from '@/lib/variantes';
+import ContenuFiche from '@/components/fiche/ContenuFiche';
+import { produitPourVariante, type Variante } from '@/lib/variantes';
+import type { FicheAffichee } from '@/lib/fiches';
 
-// Haut de la page produit : photos, nom et achat. Le choix d'une variante
-// change aussitôt la photo, le nom et le prix, sans recharger la page.
-// Ordinateur : photos et contenu (children) à gauche, bloc d'achat à droite,
-// qui reste visible pendant la lecture. Mobile : photos, achat, puis contenu.
+// Page produit : photos, nom, achat, puis le contenu de la fiche. Le choix
+// d'une variante change aussitôt photos, titre, accroche, rubriques,
+// saisonnalité et recettes (fiche de la variante, rubriques vides = celles du
+// produit), sans recharger la page. L'adresse suit le choix (?variete=…) et le
+// bouton retour du navigateur revient à la variante précédente.
+// Ordinateur : photos et contenu à gauche, bloc d'achat à droite, qui reste
+// visible pendant la lecture. Mobile : photos, achat, puis contenu.
 export default function EnTeteProduit({
-  produit, variantes, photos, titre, accroche, deSaison, children,
+  produit, variantes, affichages, slugs, selectionInitiale, moisCourant, slugPage,
 }: {
   produit: any;
   variantes: Variante[];
-  photos: string[];
-  titre: string;
-  accroche: string | null;
-  deSaison: boolean;
-  children?: React.ReactNode;
+  affichages: Record<string, FicheAffichee>;
+  slugs: Record<string, string>;
+  selectionInitiale: string | null;
+  moisCourant: number;
+  slugPage: string;
 }) {
-  const [selection, setSelection] = useState<string | null>(variantes[0]?.id ?? null);
+  const [selection, setSelection] = useState<string | null>(selectionInitiale);
   const variante = variantes.find(v => v.id === selection) ?? null;
+  const fiche = affichages[variante?.id ?? ''] ?? affichages[''];
 
-  const titreAffiche = variante ? nomVariante(produit, variante) : titre;
-  const photosAffichees = (variante?.image_url ? [variante.image_url, ...photos] : photos)
-    .filter((u, i, t) => !!u && t.indexOf(u) === i);
+  // Choix d'une variante par le client : nouvelle entrée d'historique
+  const choisir = useCallback((id: string) => {
+    setSelection(id);
+    const s = slugs[id];
+    if (!s) return;
+    const url = `/produits/${slugPage}?variete=${encodeURIComponent(s)}`;
+    if (`${window.location.pathname}${window.location.search}` !== url) window.history.pushState({ variete: id }, '', url);
+  }, [slugs, slugPage]);
+
+  // Bouton retour / suivant du navigateur : on relit la variante dans l'adresse
+  useEffect(() => {
+    const relire = () => {
+      const s = new URLSearchParams(window.location.search).get('variete');
+      const id = Object.keys(slugs).find(k => slugs[k] === s) ?? variantes[0]?.id ?? null;
+      setSelection(id);
+    };
+    window.addEventListener('popstate', relire);
+    return () => window.removeEventListener('popstate', relire);
+  }, [slugs, variantes]);
+
+  // Titre de l'onglet du navigateur, une fois qu'une variante a été choisie
+  const premierRendu = useRef(true);
+  useEffect(() => {
+    if (premierRendu.current) { premierRendu.current = false; return; }
+    document.title = `${fiche.titre} — Soleil et Saveurs`;
+  }, [fiche.titre]);
+
+  const titreAffiche = fiche.titre;
+  const photosAffichees = fiche.photos;
+  const accroche = fiche.accroche;
+  const deSaison = fiche.saison_mois.includes(moisCourant);
   const remise = Number(produitPourVariante(produit, variante).promotion) || 0;
 
   return (
@@ -38,7 +72,7 @@ export default function EnTeteProduit({
           <span className="absolute left-3 top-3 lg:left-[18px] lg:top-[18px] px-3 py-1.5 lg:px-3.5 lg:py-2 rounded-full bg-[#D43A00] text-white text-sm lg:text-base font-extrabold pointer-events-none">-{remise} %</span>
         )}
         <div className="absolute right-3 top-3 lg:right-[18px] lg:top-[18px]">
-          <BoutonPartager titre={titre} />
+          <BoutonPartager titre={titreAffiche} />
         </div>
       </div>
 
@@ -66,7 +100,7 @@ export default function EnTeteProduit({
           )}
         </div>
 
-        <AchatProduit produit={produit} variantes={variantes} selection={selection} onSelection={setSelection} />
+        <AchatProduit produit={produit} variantes={variantes} selection={selection} onSelection={choisir} />
 
         <ul className="flex flex-col gap-2.5 lg:gap-3 rounded-[18px] bg-[#F5EAE0] px-4 py-3.5 lg:rounded-none lg:bg-transparent lg:px-0 lg:pb-0 lg:pt-5 lg:border-t lg:border-[#F0E7DA] text-[13.5px] lg:text-[15px] font-semibold text-[#5C4030]">
           <li className="flex items-center gap-2.5 lg:gap-3"><Truck className="w-[17px] h-[17px] lg:w-[19px] lg:h-[19px] shrink-0 text-[#C73600]" aria-hidden />Livraison dès le lendemain, entre 15h et 20h</li>
@@ -75,11 +109,9 @@ export default function EnTeteProduit({
         </ul>
       </aside>
 
-      {children && (
-        <div className="lg:col-start-1 min-w-0 flex flex-col gap-3 lg:gap-[22px] mt-1.5 lg:mt-0">
-          {children}
-        </div>
-      )}
+      <div key={variante?.id ?? 'produit'} className="lg:col-start-1 min-w-0 flex flex-col gap-3 lg:gap-[22px] mt-1.5 lg:mt-0 ss-monte">
+        <ContenuFiche fiche={fiche} moisCourant={moisCourant} />
+      </div>
     </div>
   );
 }

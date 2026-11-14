@@ -7,7 +7,9 @@ export default function BoutonPartager({ titre }: { titre: string }) {
   const [copie, setCopie] = useState(false);
 
   const partager = async () => {
-    const url = window.location.href.split('?')[0];
+    // Adresse de la page, avec la variante choisie si elle y figure
+    const variete = new URLSearchParams(window.location.search).get('variete');
+    const url = `${window.location.origin}${window.location.pathname}${variete ? `?variete=${encodeURIComponent(variete)}` : ''}`;
     if (navigator.share) {
       try { await navigator.share({ title: titre, url }); } catch {}
       return;
