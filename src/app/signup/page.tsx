@@ -139,12 +139,12 @@ export default function SignupPage() {
   };
 
   const force = passwordStrength();
-  const caseACocher = 'shrink-0 mt-0.5 w-[22px] h-[22px] accent-[#FF4500]';
+  const caseACocher = 'shrink-0 mt-0.5 w-[22px] h-[22px] accent-terre-cuite';
 
   return (
     <GabaritConnexion
       titre="Créer un compte"
-      accroche={<>Soleil<br /><em className="text-[#FF7A47]">&amp; Saveurs.</em></>}
+      accroche={<>Soleil<br /><em className="text-halo">&amp; Saveurs.</em></>}
       arguments={[
         { icone: <Gift className="w-[22px] h-[22px]" />, texte: '-10 % sur votre 1re commande avec le code SOLEIL78' },
         { icone: <ShieldCheck className="w-[22px] h-[22px]" />, texte: 'Produits frais et premium' },
@@ -198,8 +198,8 @@ export default function SignupPage() {
             <div className="absolute z-20 left-0 right-0 top-full mt-1.5 bg-white border border-[#E0D3C0] rounded-2xl shadow-2xl overflow-hidden">
               {suggestions.map((s: any) => (
                 <button key={s.properties.id} type="button" onClick={() => { setAddress(s.properties.label); setSuggestions([]); setAddressDept(String(s.properties.citycode || s.properties.postcode || '')); }}
-                  className="w-full min-h-12 px-4 py-2.5 flex items-center gap-2.5 text-left text-sm font-semibold border-b border-[#F0E7DA] last:border-b-0 hover:bg-[#F5EAE0] transition-colors">
-                  <MapPin className="w-4 h-4 shrink-0 text-[#FF4500]" aria-hidden /> {s.properties.label}
+                  className="w-full min-h-12 px-4 py-2.5 flex items-center gap-2.5 text-left text-sm font-semibold border-b border-[#F0E7DA] last:border-b-0 hover:bg-lin transition-colors">
+                  <MapPin className="w-4 h-4 shrink-0 text-terre-cuite" aria-hidden /> {s.properties.label}
                 </button>
               ))}
             </div>
@@ -219,42 +219,42 @@ export default function SignupPage() {
           <div className="relative">
             <Lock className={iconeChamp} aria-hidden />
             <input id="inscription-mdp" type={showPassword ? 'text' : 'password'} required autoComplete="new-password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} className={`${champAvecIcone} pr-14`} />
-            <button type="button" onClick={() => setShowPassword(v => !v)} aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'} className="absolute right-1.5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-xl flex items-center justify-center text-[#6F5A4B] hover:text-[#3D2B1F] transition-colors">
+            <button type="button" onClick={() => setShowPassword(v => !v)} aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'} className="absolute right-1.5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-xl flex items-center justify-center text-olivier-gris hover:text-olivier transition-colors">
               {showPassword ? <EyeOff className="w-[19px] h-[19px]" aria-hidden /> : <Eye className="w-[19px] h-[19px]" aria-hidden />}
             </button>
           </div>
           <div aria-hidden className="mt-2 grid grid-cols-3 gap-1.5">
             {[1, 2, 3].map(n => (
-              <span key={n} className={`h-1.5 rounded-full transition-colors duration-300 ${force >= n ? (force === 1 ? 'bg-red-500' : force === 2 ? 'bg-[#FF7A47]' : 'bg-[#15803D]') : 'bg-[#E3D6C4]'}`} />
+              <span key={n} className={`h-1.5 rounded-full transition-colors duration-300 ${force >= n ? (force === 1 ? 'bg-red-500' : force === 2 ? 'bg-halo' : 'bg-[#15803D]') : 'bg-[#E3D6C4]'}`} />
             ))}
           </div>
         </div>
 
         <div>
           <label htmlFor="inscription-parrainage" className={etiquetteChamp}>
-            Code de parrainage <span className="font-semibold text-[#6F5A4B]">(optionnel)</span>
+            Code de parrainage <span className="font-semibold text-olivier-gris">(optionnel)</span>
           </label>
           <div className="relative">
             <Gift className={iconeChamp} aria-hidden />
             <input id="inscription-parrainage" type="text" autoComplete="off" maxLength={40} placeholder="Ex. : ABC12345" value={referralCodeInput} onChange={(e) => setReferralCodeInput(e.target.value.toUpperCase())} className={`${champAvecIcone} uppercase`} />
           </div>
-          <p className="mt-1.5 text-[13px] leading-snug font-semibold text-[#6F5A4B]">Votre parrain reçoit -10 % sur sa prochaine commande, et vous -10 % sur votre 2e commande</p>
+          <p className="mt-1.5 text-[13px] leading-snug font-semibold text-olivier-gris">Votre parrain reçoit -10 % sur sa prochaine commande, et vous -10 % sur votre 2e commande</p>
         </div>
 
         <label className="flex items-start gap-3 cursor-pointer">
           <input type="checkbox" checked={cgvAccepte} onChange={(e) => setCgvAccepte(e.target.checked)} className={caseACocher} />
-          <span className="text-sm leading-snug font-semibold text-[#5C4030]">
+          <span className="text-sm leading-snug font-semibold text-olivier-doux">
             J&apos;ai lu et j&apos;accepte les{' '}
-            <a href="/cgv" target="_blank" className="font-extrabold text-[#C73600] underline underline-offset-2">conditions générales de vente</a>
+            <a href="/cgv" target="_blank" className="font-extrabold text-brique underline underline-offset-2">conditions générales de vente</a>
             {' '}et la{' '}
-            <a href="/rgpd" target="_blank" className="font-extrabold text-[#C73600] underline underline-offset-2">politique de confidentialité</a>.
+            <a href="/rgpd" target="_blank" className="font-extrabold text-brique underline underline-offset-2">politique de confidentialité</a>.
           </span>
         </label>
 
         <label className="flex items-start gap-3 cursor-pointer">
           <input type="checkbox" checked={acceptsMarketing} onChange={(e) => setAcceptsMarketing(e.target.checked)} className={caseACocher} />
-          <span className="text-sm leading-snug font-semibold text-[#5C4030]">
-            Je souhaite recevoir les offres et nouveautés de Soleil et Saveurs par e-mail <span className="text-[#6F5A4B]">(optionnel)</span>
+          <span className="text-sm leading-snug font-semibold text-olivier-doux">
+            Je souhaite recevoir les offres et nouveautés de Soleil et Saveurs par e-mail <span className="text-olivier-gris">(optionnel)</span>
           </span>
         </label>
 
@@ -266,8 +266,8 @@ export default function SignupPage() {
         </button>
       </form>
 
-      <p className="mt-5 text-center text-[15px] font-semibold text-[#5C4030]">
-        Déjà membre ? <Link href="/login" className="font-extrabold text-[#C73600] underline underline-offset-4">Se connecter ici</Link>
+      <p className="mt-5 text-center text-[15px] font-semibold text-olivier-doux">
+        Déjà membre ? <Link href="/login" className="font-extrabold text-brique underline underline-offset-4">Se connecter ici</Link>
       </p>
     </GabaritConnexion>
   );

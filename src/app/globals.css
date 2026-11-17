@@ -3,6 +3,21 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Palette de la marque (charte graphique Soleil et Saveurs, novembre 2026).
+   Utilisée dans les classes : bg-olivier, text-brique, border-lin, etc. */
+@theme {
+  --color-olivier: #2F4A2B;
+  --color-terre-cuite: #C2602D;
+  --color-brique: #A94E25;
+  --color-safran: #ECAD44;
+  --color-lin: #F3E8D6;
+  --color-halo: #D7803F;
+  --color-olivier-doux: #44583F;
+  --color-olivier-gris: #56654F;
+  --color-olivier-pale: #7A8570;
+  --color-terre-pale: #F8EADF;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -49,19 +64,19 @@
 
 :root {
   --background: oklch(0.91 0.02 60);
-  --foreground: oklch(0.22 0.04 55);
+  --foreground: oklch(0.37 0.06 140);
   --card: oklch(0.94 0.02 65);
-  --card-foreground: oklch(0.22 0.04 55);
+  --card-foreground: oklch(0.37 0.06 140);
   --popover: oklch(0.94 0.02 65);
-  --popover-foreground: oklch(0.22 0.04 55);
-  --primary: oklch(0.22 0.04 55);
+  --popover-foreground: oklch(0.37 0.06 140);
+  --primary: oklch(0.37 0.06 140);
   --primary-foreground: oklch(0.94 0.02 65);
   --secondary: oklch(0.88 0.025 60);
-  --secondary-foreground: oklch(0.22 0.04 55);
+  --secondary-foreground: oklch(0.37 0.06 140);
   --muted: oklch(0.88 0.025 60);
   --muted-foreground: oklch(0.52 0.04 55);
   --accent: oklch(0.88 0.025 60);
-  --accent-foreground: oklch(0.22 0.04 55);
+  --accent-foreground: oklch(0.37 0.06 140);
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.82 0.03 60);
   --input: oklch(0.82 0.03 60);

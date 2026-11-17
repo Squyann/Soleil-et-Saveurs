@@ -36,7 +36,7 @@ export default function AdminLogin() {
             <Lock className="w-10 h-10" />
           </div>
           <h1 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900">
-            ADMIN<span className="text-[#FF4500]">ISTRATION</span>
+            ADMIN<span className="text-terre-cuite">ISTRATION</span>
           </h1>
           <p className="text-[10px] font-black text-slate-400 mt-3 uppercase tracking-[0.3em]">Accès sécurisé Soleil et Saveurs</p>
         </div>
@@ -48,7 +48,7 @@ export default function AdminLogin() {
               type="email" 
               placeholder="Email administrateur"
               required
-              className="w-full p-6 bg-slate-100 rounded-[24px] font-black border-none text-sm focus:ring-2 focus:ring-[#FF4500] transition-all placeholder:text-slate-300"
+              className="w-full p-6 bg-slate-100 rounded-[24px] font-black border-none text-sm focus:ring-2 focus:ring-terre-cuite transition-all placeholder:text-slate-300"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
@@ -61,7 +61,7 @@ export default function AdminLogin() {
                 type={showPassword ? 'text' : 'password'}
                 placeholder="••••••••••••"
                 required
-                className="w-full p-6 pr-14 bg-slate-100 rounded-[24px] font-black border-none text-sm focus:ring-2 focus:ring-[#FF4500] transition-all placeholder:text-slate-300"
+                className="w-full p-6 pr-14 bg-slate-100 rounded-[24px] font-black border-none text-sm focus:ring-2 focus:ring-terre-cuite transition-all placeholder:text-slate-300"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
@@ -74,7 +74,7 @@ export default function AdminLogin() {
           <button 
             type="submit" 
             disabled={loading}
-            className="w-full bg-slate-900 text-white py-6 rounded-[24px] font-black uppercase tracking-[0.2em] shadow-xl hover:bg-[#FF4500] hover:scale-[1.02] active:scale-95 transition-all mt-6 disabled:opacity-50 disabled:hover:scale-100"
+            className="w-full bg-slate-900 text-white py-6 rounded-[24px] font-black uppercase tracking-[0.2em] shadow-xl hover:bg-terre-cuite hover:scale-[1.02] active:scale-95 transition-all mt-6 disabled:opacity-50 disabled:hover:scale-100"
           >
             {loading ? 'VÉRIFICATION...' : 'SE CONNECTER'}
           </button>

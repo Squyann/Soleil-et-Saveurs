@@ -5,23 +5,23 @@
 // textes venant de la base ou d'un client passent par echapper().
 
 export const COULEURS = {
-  fond: '#F5EAE0',
+  fond: '#F3E8D6',
   carte: '#FFFFFF',
   creme: '#F8F1E8',
-  brun: '#3D2B1F',
-  brunMoyen: '#5C4030',
-  gris: '#6F5A4B',
+  brun: '#2F4A2B',
+  brunMoyen: '#44583F',
+  gris: '#56654F',
   bord: '#E3D6C4',
   bordClair: '#F0E7DA',
-  orange: '#FF4500',
-  orangeTexte: '#C73600',
-  orangePale: '#FFF1EA',
+  orange: '#C2602D',
+  orangeTexte: '#A94E25',
+  orangePale: '#F8EADF',
   vert: '#166534',
   vertPale: '#ECF7EF',
 };
 
 const C = COULEURS;
-const POLICE = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
+const POLICE = "'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
 const SERIF = "Georgia,'Times New Roman',serif";
 
 export const VENDEUR_PIED =
@@ -135,7 +135,7 @@ export function totaux(lignes: { libelle: string; montant: string; vert?: boolea
 }
 
 export function bouton(texte: string, lien: string, style: 'orange' | 'brun' | 'contour' = 'orange', marge = '26px 0 0'): string {
-  const fond = style === 'orange' ? C.orange : style === 'brun' ? C.brun : '#FFFFFF';
+  const fond = style === 'orange' ? C.orangeTexte : style === 'brun' ? C.brun : '#FFFFFF';
   const couleur = style === 'contour' ? C.brun : '#FFFFFF';
   const bord = style === 'contour' ? `border:2px solid ${C.brun};` : `border:2px solid ${fond};`;
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:${marge};"><tr>
@@ -165,7 +165,7 @@ export function coquille(o: {
   const logo = `${urlSite()}/email/logo.png`;
   const enTete = o.enTete ?? `<tr><td style="padding:20px 32px;border-bottom:1px solid ${C.bordClair};">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
-        <td valign="middle"><a href="${urlSite()}" style="text-decoration:none;"><img src="${logo}" width="200" height="38" alt="Soleil et Saveurs" style="display:block;width:200px;height:38px;border:0;"></a></td>
+        <td valign="middle"><a href="${urlSite()}" style="text-decoration:none;"><img src="${logo}" width="260" height="70" alt="Soleil et Saveurs, primeur · fruits &amp; légumes" style="display:block;width:260px;height:70px;border:0;"></a></td>
         ${o.reference ? `<td valign="middle" align="right" style="font-family:${POLICE};font-size:13px;font-weight:700;color:${C.gris};white-space:nowrap;">${o.reference}</td>` : ''}
       </tr></table>
     </td></tr>`;

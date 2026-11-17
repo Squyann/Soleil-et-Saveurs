@@ -69,20 +69,20 @@ export default function EnTeteProduit({
       <div className="relative lg:col-start-1">
         <GaleriePhotos photos={photosAffichees} alt={titreAffiche} />
         {remise > 0 && (
-          <span className="absolute left-3 top-3 lg:left-[18px] lg:top-[18px] px-3 py-1.5 lg:px-3.5 lg:py-2 rounded-full bg-[#D43A00] text-white text-sm lg:text-base font-extrabold pointer-events-none">-{remise} %</span>
+          <span className="absolute left-3 top-3 lg:left-[18px] lg:top-[18px] px-3 py-1.5 lg:px-3.5 lg:py-2 rounded-full bg-brique text-white text-sm lg:text-base font-extrabold pointer-events-none">-{remise} %</span>
         )}
         <div className="absolute right-3 top-3 lg:right-[18px] lg:top-[18px]">
           <BoutonPartager titre={titreAffiche} />
         </div>
       </div>
 
-      <aside className="lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto flex flex-col gap-4 lg:gap-[22px] px-2 lg:p-8 lg:bg-white lg:rounded-[32px] lg:border lg:border-[#E8DCCB] lg:shadow-[0_30px_60px_-40px_rgba(61,43,31,0.45)]">
+      <aside className="lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto flex flex-col gap-4 lg:gap-[22px] px-2 lg:p-8 lg:bg-white lg:rounded-[32px] lg:border lg:border-[#E8DCCB] lg:shadow-[0_30px_60px_-40px_rgba(47,74,43,0.45)]">
         <div className="flex flex-wrap items-center gap-1.5 lg:gap-2">
           {produit.category && (
-            <span className="px-3 py-1 lg:py-1.5 rounded-full bg-white border border-[#DDD0BF] text-xs lg:text-[13px] font-bold text-[#5C4030]">{produit.category}</span>
+            <span className="px-3 py-1 lg:py-1.5 rounded-full bg-white border border-[#DDD0BF] text-xs lg:text-[13px] font-bold text-olivier-doux">{produit.category}</span>
           )}
           {produit.provenance && (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 lg:py-1.5 rounded-full bg-[#FFF1EA] text-xs lg:text-[13px] font-bold text-[#C73600]">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 lg:py-1.5 rounded-full bg-terre-pale text-xs lg:text-[13px] font-bold text-brique">
               <MapPin className="w-3.5 h-3.5" aria-hidden />{produit.provenance}
             </span>
           )}
@@ -94,18 +94,18 @@ export default function EnTeteProduit({
         </div>
 
         <div>
-          <h1 className="titre text-[42px] lg:text-[54px] leading-none text-[#3D2B1F]">{titreAffiche}</h1>
+          <h1 className="titre text-[42px] lg:text-[54px] leading-none text-olivier">{titreAffiche}</h1>
           {accroche && (
-            <p className="mt-3 text-base lg:text-[17px] leading-relaxed text-[#5C4030]">{accroche}</p>
+            <p className="mt-3 text-base lg:text-[17px] leading-relaxed text-olivier-doux">{accroche}</p>
           )}
         </div>
 
         <AchatProduit produit={produit} variantes={variantes} selection={selection} onSelection={choisir} />
 
-        <ul className="flex flex-col gap-2.5 lg:gap-3 rounded-[18px] bg-[#F5EAE0] px-4 py-3.5 lg:rounded-none lg:bg-transparent lg:px-0 lg:pb-0 lg:pt-5 lg:border-t lg:border-[#F0E7DA] text-[13.5px] lg:text-[15px] font-semibold text-[#5C4030]">
-          <li className="flex items-center gap-2.5 lg:gap-3"><Truck className="w-[17px] h-[17px] lg:w-[19px] lg:h-[19px] shrink-0 text-[#C73600]" aria-hidden />Livraison dès le lendemain, entre 15h et 20h</li>
-          <li className="flex items-center gap-2.5 lg:gap-3"><Gift className="w-[17px] h-[17px] lg:w-[19px] lg:h-[19px] shrink-0 text-[#C73600]" aria-hidden />Livraison offerte dès 40 € de produits</li>
-          <li className="flex items-center gap-2.5 lg:gap-3"><Banknote className="w-[17px] h-[17px] lg:w-[19px] lg:h-[19px] shrink-0 text-[#C73600]" aria-hidden />Paiement à la livraison, en espèces ou par carte</li>
+        <ul className="flex flex-col gap-2.5 lg:gap-3 rounded-[18px] bg-lin px-4 py-3.5 lg:rounded-none lg:bg-transparent lg:px-0 lg:pb-0 lg:pt-5 lg:border-t lg:border-[#F0E7DA] text-[13.5px] lg:text-[15px] font-semibold text-olivier-doux">
+          <li className="flex items-center gap-2.5 lg:gap-3"><Truck className="w-[17px] h-[17px] lg:w-[19px] lg:h-[19px] shrink-0 text-brique" aria-hidden />Livraison dès le lendemain, entre 15h et 20h</li>
+          <li className="flex items-center gap-2.5 lg:gap-3"><Gift className="w-[17px] h-[17px] lg:w-[19px] lg:h-[19px] shrink-0 text-brique" aria-hidden />Livraison offerte dès 40 € de produits</li>
+          <li className="flex items-center gap-2.5 lg:gap-3"><Banknote className="w-[17px] h-[17px] lg:w-[19px] lg:h-[19px] shrink-0 text-brique" aria-hidden />Paiement à la livraison, en espèces ou par carte</li>
         </ul>
       </aside>
 

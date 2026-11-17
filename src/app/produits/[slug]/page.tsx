@@ -132,25 +132,25 @@ export default async function PageProduit({ params, searchParams }: { params: Pr
   const suggestions = await chargerSuggestions(produit.id, produit.category);
 
   return (
-    <main className="min-h-screen bg-[#EDE3D5] text-[#3D2B1F] pt-2 lg:pt-7 pb-28 lg:pb-20 px-3 md:px-10">
+    <main className="min-h-screen bg-[#EDE3D5] text-olivier pt-2 lg:pt-7 pb-28 lg:pb-20 px-3 md:px-10">
       <div className="max-w-[1240px] mx-auto">
         {apercu && (
-          <div className="mt-2 mb-3 flex items-center gap-3 bg-[#3D2B1F] text-white rounded-2xl px-4 py-3 shadow-lg">
-            <Eye className="w-5 h-5 text-[#FF7A47] shrink-0" aria-hidden />
+          <div className="mt-2 mb-3 flex items-center gap-3 bg-olivier text-white rounded-2xl px-4 py-3 shadow-lg">
+            <Eye className="w-5 h-5 text-halo shrink-0" aria-hidden />
             <p className="text-[13px] font-bold leading-snug">
               Aperçu administrateur — {produit.actif === false ? 'produit désactivé' : 'page non publiée'} : les clients ne la voient pas.
             </p>
           </div>
         )}
 
-        <Link href="/commander" className="lg:hidden inline-flex items-center gap-2 min-h-11 px-1 text-sm font-bold text-[#5C4030] active:text-[#C73600]">
+        <Link href="/commander" className="lg:hidden inline-flex items-center gap-2 min-h-11 px-1 text-sm font-bold text-olivier-doux active:text-brique">
           <ArrowLeft className="w-[17px] h-[17px]" strokeWidth={2.2} aria-hidden /> Retour au catalogue
         </Link>
-        <nav aria-label="Fil d'Ariane" className="hidden lg:flex items-center gap-2 mb-[22px] text-[13px] font-semibold text-[#6F5A4B]">
-          <Link href="/commander" className="hover:text-[#C73600] transition-colors">Boutique</Link>
+        <nav aria-label="Fil d'Ariane" className="hidden lg:flex items-center gap-2 mb-[22px] text-[13px] font-semibold text-olivier-gris">
+          <Link href="/commander" className="hover:text-brique transition-colors">Boutique</Link>
           {produit.category && <><span aria-hidden>›</span><span>{produit.category}</span></>}
           <span aria-hidden>›</span>
-          <span aria-current="page" className="font-bold text-[#3D2B1F]">{titre}</span>
+          <span aria-current="page" className="font-bold text-olivier">{titre}</span>
         </nav>
 
         {/* EN-TÊTE ET CONTENU : photos, nom, variantes, achat, puis la fiche de
@@ -170,9 +170,9 @@ export default async function PageProduit({ params, searchParams }: { params: Pr
           <section className="mt-9 lg:mt-[88px]">
             <div className="flex items-end justify-between gap-5 flex-wrap mb-3.5 lg:mb-7 px-2 lg:px-0">
               <h2 className="titre text-[32px] lg:text-[46px] leading-none">
-                Vous aimerez <em className="text-[#FF4500]">aussi</em>
+                Vous aimerez <em className="text-terre-cuite">aussi</em>
               </h2>
-              <Link href="/commander" className="group hidden lg:inline-flex items-center gap-2.5 px-5 py-3 rounded-full border-[1.5px] border-[#3D2B1F] text-sm font-bold hover:bg-[#3D2B1F] hover:text-[#F5EAE0] transition-colors">
+              <Link href="/commander" className="group hidden lg:inline-flex items-center gap-2.5 px-5 py-3 rounded-full border-[1.5px] border-olivier text-sm font-bold hover:bg-olivier hover:text-lin transition-colors">
                 Retour au catalogue
                 <ArrowRight className="w-[18px] h-[18px] transition-transform duration-200 group-hover:translate-x-1" aria-hidden />
               </Link>
@@ -182,22 +182,22 @@ export default async function PageProduit({ params, searchParams }: { params: Pr
                 const etiquette = etiquettesPromo(s)[0];
                 const prix = s.promotion > 0 ? s.price * (1 - s.promotion / 100) : Number(s.price);
                 return (
-                  <Link key={s.id} href={`/produits/${s.slug}`} className="group flex flex-col bg-white rounded-[18px] lg:rounded-3xl border border-[#E8DCCB] p-1.5 lg:p-2.5 transition-[transform,box-shadow] duration-300 ease-out lg:hover:-translate-y-1 lg:hover:shadow-[0_26px_44px_-28px_rgba(61,43,31,0.5)]">
+                  <Link key={s.id} href={`/produits/${s.slug}`} className="group flex flex-col bg-white rounded-[18px] lg:rounded-3xl border border-[#E8DCCB] p-1.5 lg:p-2.5 transition-[transform,box-shadow] duration-300 ease-out lg:hover:-translate-y-1 lg:hover:shadow-[0_26px_44px_-28px_rgba(47,74,43,0.5)]">
                     <div className="relative aspect-[3/2] bg-white rounded-xl lg:rounded-2xl overflow-hidden">
                       {s.image_url ? (
                         <img src={s.image_url} alt="" className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105" loading="lazy" />
                       ) : (
-                        <span className="absolute inset-0 flex items-center justify-center bg-[#F5EAE0] text-[#C9BBAA]"><ShoppingBasket className="w-10 h-10" aria-hidden /></span>
+                        <span className="absolute inset-0 flex items-center justify-center bg-lin text-[#C9BBAA]"><ShoppingBasket className="w-10 h-10" aria-hidden /></span>
                       )}
                       {etiquette && (
-                        <span className={`absolute left-1.5 top-1.5 lg:left-2 lg:top-2 px-2 py-1 lg:px-2.5 rounded-full text-white text-[11px] lg:text-[13px] font-extrabold ${etiquette.cle === 'offertes' ? 'bg-[#166534]' : etiquette.cle === 'lot' ? 'bg-[#3D2B1F]' : 'bg-[#D43A00]'}`}>{etiquette.court}</span>
+                        <span className={`absolute left-1.5 top-1.5 lg:left-2 lg:top-2 px-2 py-1 lg:px-2.5 rounded-full text-white text-[11px] lg:text-[13px] font-extrabold ${etiquette.cle === 'offertes' ? 'bg-[#166534]' : etiquette.cle === 'lot' ? 'bg-olivier' : 'bg-brique'}`}>{etiquette.court}</span>
                       )}
                     </div>
                     <div className="px-1 lg:px-1.5 pt-2.5 lg:pt-3.5 pb-1.5">
                       <p className="text-sm lg:text-[17px] font-extrabold leading-tight line-clamp-2 group-hover:underline">{s.name}</p>
-                      <p className="mt-0.5 text-xs lg:text-[13px] font-semibold text-[#6F5A4B]">{s.provenance ? `${s.provenance} · ` : ''}{libelleUnite(s.unite)}</p>
-                      <p className={`mt-2 lg:mt-2.5 text-lg lg:text-[22px] font-black tracking-tight ${s.promotion > 0 ? 'text-[#FF4500]' : ''}`}>
-                        {formatPrix(prix)}<span className="text-xs lg:text-[13px] font-bold tracking-normal text-[#6F5A4B]"> /{s.unite === 'g' ? 'kg' : s.unite || 'pièce'}</span>
+                      <p className="mt-0.5 text-xs lg:text-[13px] font-semibold text-olivier-gris">{s.provenance ? `${s.provenance} · ` : ''}{libelleUnite(s.unite)}</p>
+                      <p className={`mt-2 lg:mt-2.5 text-lg lg:text-[22px] font-black tracking-tight ${s.promotion > 0 ? 'text-terre-cuite' : ''}`}>
+                        {formatPrix(prix)}<span className="text-xs lg:text-[13px] font-bold tracking-normal text-olivier-gris"> /{s.unite === 'g' ? 'kg' : s.unite || 'pièce'}</span>
                       </p>
                     </div>
                   </Link>

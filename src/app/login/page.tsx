@@ -64,7 +64,7 @@ export default function LoginPage() {
       surtitre="Espace client"
       titre="Connexion"
       sousTitre="Bon retour parmi nous !"
-      accroche={<>Vos produits<br /><em className="text-[#FF7A47]">frais, livrés chez vous.</em></>}
+      accroche={<>Vos produits<br /><em className="text-halo">frais, livrés chez vous.</em></>}
       arguments={[
         { icone: <Leaf className="w-[22px] h-[22px]" />, titre: 'Qualité premium', texte: 'Sélection rigoureuse de fruits et légumes frais chaque matin.' },
         { icone: <Truck className="w-[22px] h-[22px]" />, titre: 'Livraison rapide', texte: 'Livré dans tout le 78, dès le lendemain, à la date de votre choix.' },
@@ -102,7 +102,7 @@ export default function LoginPage() {
               type="button"
               onClick={handleForgotPassword}
               disabled={resetLoading || resetSent}
-              className="min-h-7 text-[13.5px] lg:text-sm font-bold text-[#C73600] hover:underline underline-offset-4 disabled:text-[#166534] disabled:no-underline"
+              className="min-h-7 text-[13.5px] lg:text-sm font-bold text-brique hover:underline underline-offset-4 disabled:text-[#166534] disabled:no-underline"
             >
               {resetLoading ? 'Envoi…' : resetSent ? 'E-mail envoyé' : 'Oublié ?'}
             </button>
@@ -119,7 +119,7 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               className={`${champAvecIcone} pr-14`}
             />
-            <button type="button" onClick={() => setShowPassword(v => !v)} aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'} className="absolute right-1.5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-xl flex items-center justify-center text-[#6F5A4B] hover:text-[#3D2B1F] transition-colors">
+            <button type="button" onClick={() => setShowPassword(v => !v)} aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'} className="absolute right-1.5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-xl flex items-center justify-center text-olivier-gris hover:text-olivier transition-colors">
               {showPassword ? <EyeOff className="w-[19px] h-[19px]" aria-hidden /> : <Eye className="w-[19px] h-[19px]" aria-hidden />}
             </button>
           </div>
@@ -137,12 +137,12 @@ export default function LoginPage() {
         </button>
       </form>
 
-      <p className="mt-5 lg:mt-[26px] text-center text-[15px] font-semibold text-[#5C4030]">
+      <p className="mt-5 lg:mt-[26px] text-center text-[15px] font-semibold text-olivier-doux">
         Pas encore de compte ?{' '}
-        <Link href="/signup" className="font-extrabold text-[#C73600] underline underline-offset-4">Créer un profil</Link>
+        <Link href="/signup" className="font-extrabold text-brique underline underline-offset-4">Créer un profil</Link>
       </p>
 
-      <p className="mt-6 lg:mt-[34px] pt-[18px] lg:pt-[22px] border-t border-[#E3D6C4] flex items-center justify-center gap-5 text-[12.5px] lg:text-[13px] font-bold text-[#6F5A4B]">
+      <p className="mt-6 lg:mt-[34px] pt-[18px] lg:pt-[22px] border-t border-[#E3D6C4] flex items-center justify-center gap-5 text-[12.5px] lg:text-[13px] font-bold text-olivier-gris">
         <span className="inline-flex items-center gap-1.5"><Check className="w-4 h-4 text-[#15803D]" strokeWidth={2.4} aria-hidden />Conforme au RGPD</span>
         <span className="inline-flex items-center gap-1.5"><Check className="w-4 h-4 text-[#15803D]" strokeWidth={2.4} aria-hidden />Connexion sécurisée</span>
       </p>

@@ -7,6 +7,7 @@
 // Tous les calculs se font en centimes entiers.
 import { formatPrix, libelleQuantite } from '@/lib/format';
 import { premieresOffertes, qtePayantePremieresOffertes } from '@/lib/promos';
+import { LOGO_IMPRESSION } from '@/lib/logoImpression';
 
 // Fruits et légumes frais, et frais de livraison accessoires à la vente
 export const TAUX_TVA = 5.5;
@@ -232,48 +233,39 @@ function fraisCommande(commande: CommandeDocument): number {
   return produits > 0 && produits < 4000 ? 2.5 : 0;
 }
 
-const LOGO = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 60" width="224" height="42" role="img" aria-label="Soleil et Saveurs">
-<circle cx="28" cy="30" r="9" fill="#F97316"/>
-<g stroke="#F97316" stroke-width="2.5" stroke-linecap="round">
-<line x1="28" y1="7" x2="28" y2="15"/><line x1="28" y1="45" x2="28" y2="53"/>
-<line x1="5" y1="30" x2="13" y2="30"/><line x1="43" y1="30" x2="51" y2="30"/>
-<line x1="44.3" y1="13.7" x2="38.5" y2="19.5"/><line x1="11.7" y1="46.3" x2="17.5" y2="40.5"/>
-<line x1="11.7" y1="13.7" x2="17.5" y2="19.5"/><line x1="44.3" y1="46.3" x2="38.5" y2="40.5"/>
-</g>
-<text x="62" y="39" font-family="Georgia, 'Times New Roman', serif" font-size="26" fill="#4a3b32" letter-spacing="0.3">Soleil et Saveurs</text>
-</svg>`;
+const LOGO = LOGO_IMPRESSION;
 
 const STYLES = `
 @page { size: A4; margin: 12mm 13mm; }
 * { box-sizing: border-box; }
 html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-body { margin: 0; background: #fff; color: #3D2B1F; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; line-height: 1.4; }
+body { margin: 0; background: #fff; color: #2F4A2B; font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; line-height: 1.4; }
 .page { display: flex; flex-direction: column; min-height: 270mm; }
 @media screen { body { background: #EDE3D5; } .page { width: 210mm; max-width: 100%; margin: 16px auto; padding: 12mm 13mm; background: #fff; } }
 .titre { font-family: Georgia, 'Times New Roman', serif; font-weight: 400; letter-spacing: -0.01em; }
 .entete { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }
-.entete .accroche { margin: 8px 0 0 3px; font-size: 13px; color: #5C4030; }
+.entete .accroche { margin: 8px 0 0 3px; font-size: 13px; color: #44583F; }
 .entete h1 { margin: 0; font-size: 46px; line-height: 0.95; text-align: right; }
-.entete .numero { margin: 8px 0 0; font-size: 16px; font-weight: 800; letter-spacing: 0.04em; color: #C73600; text-align: right; }
-.entete .remplace { margin: 4px 0 0; font-size: 12px; color: #5C4030; text-align: right; }
-.reperes { margin: 18px 0 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1.5px solid #3D2B1F; border-bottom: 1px solid #E3D6C4; }
+.entete .numero { margin: 8px 0 0; font-size: 16px; font-weight: 800; letter-spacing: 0.04em; color: #A94E25; text-align: right; }
+.entete .remplace { margin: 4px 0 0; font-size: 12px; color: #44583F; text-align: right; }
+.reperes { margin: 18px 0 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1.5px solid #2F4A2B; border-bottom: 1px solid #E3D6C4; }
 .reperes div { padding: 9px 14px; border-left: 1px solid #E3D6C4; }
 .reperes div:first-child { padding-left: 0; border-left: 0; }
 .reperes div:last-child { padding-right: 0; }
-.reperes dt, th { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #5C4030; }
+.reperes dt, th { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #44583F; }
 .reperes dd { margin: 3px 0 0; font-size: 15px; font-weight: 700; }
 .parties { margin-top: 16px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
 .bloc { padding: 13px 18px; border-radius: 14px; border: 1px solid #E3D6C4; }
 .bloc.vendeur { border-color: #F8F1E8; background: #F8F1E8; }
-.bloc h2 { margin: 0 0 6px; font-size: 12px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #C73600; }
+.bloc h2 { margin: 0 0 6px; font-size: 12px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #A94E25; }
 .bloc .nom { margin: 0; font-size: 16px; font-weight: 800; }
-.bloc .texte { margin: 4px 0 0; font-size: 13px; line-height: 1.5; color: #5C4030; overflow-wrap: anywhere; }
+.bloc .texte { margin: 4px 0 0; font-size: 13px; line-height: 1.5; color: #44583F; overflow-wrap: anywhere; }
 table { margin-top: 20px; border-collapse: collapse; width: 100%; }
-th { text-align: right; padding: 0 0 8px 10px; border-bottom: 1.5px solid #3D2B1F; white-space: nowrap; }
+th { text-align: right; padding: 0 0 8px 10px; border-bottom: 1.5px solid #2F4A2B; white-space: nowrap; }
 td { padding: 7px 0 7px 10px; border-bottom: 1px solid #E3D6C4; text-align: right; vertical-align: top; font-variant-numeric: tabular-nums; white-space: nowrap; }
 th:first-child, td:first-child { text-align: left; padding-left: 0; white-space: normal; }
 td strong { font-weight: 700; }
-td .detail { display: block; margin-top: 1px; font-size: 12px; color: #5C4030; }
+td .detail { display: block; margin-top: 1px; font-size: 12px; color: #44583F; }
 td.remise { color: #166534; font-weight: 700; }
 td.total { font-weight: 700; }
 thead { display: table-header-group; }
@@ -283,17 +275,17 @@ tr, .bas, footer { break-inside: avoid; page-break-inside: avoid; }
 .acquittee { display: inline-block; margin: 10px 0 0; padding: 6px 14px; border: 2px solid #166534; border-radius: 8px; font-size: 13px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #166534; }
 .totaux { flex: none; width: 300px; margin: 0; font-variant-numeric: tabular-nums; }
 .totaux div { display: flex; justify-content: space-between; gap: 12px; padding: 4px 0; }
-.totaux dt { color: #5C4030; }
+.totaux dt { color: #44583F; }
 .totaux dd { margin: 0; font-weight: 600; white-space: nowrap; }
 .totaux .remise dt, .totaux .remise dd { color: #166534; font-weight: 700; }
 .totaux .ht { margin-top: 5px; padding-top: 8px; border-top: 1px solid #E3D6C4; }
-.totaux .ttc { align-items: baseline; margin-top: 7px; padding: 11px 16px; border-radius: 12px; background: #3D2B1F; }
+.totaux .ttc { align-items: baseline; margin-top: 7px; padding: 11px 16px; border-radius: 12px; background: #2F4A2B; }
 .totaux .ttc dt { color: #fff; font-weight: 700; }
 .totaux .ttc dd { color: #fff; font-size: 28px; line-height: 1; font-weight: 400; }
 footer { margin-top: auto; padding-top: 20px; }
-footer p { margin: 0; font-size: 12px; line-height: 1.5; color: #5C4030; }
-footer .mentions { padding-top: 10px; border-top: 1.5px solid #3D2B1F; }
-footer .mentions strong { color: #3D2B1F; font-weight: 800; }
+footer p { margin: 0; font-size: 12px; line-height: 1.5; color: #44583F; }
+footer .mentions { padding-top: 10px; border-top: 1.5px solid #2F4A2B; }
+footer .mentions strong { color: #2F4A2B; font-weight: 800; }
 footer .identite { margin-top: 8px; padding-top: 8px; border-top: 1px solid #E3D6C4; }
 `;
 

@@ -20,9 +20,9 @@ export default function Rubrique({
   return (
     <section
       className={`border-t border-[#F0E7DA] lg:border lg:rounded-[28px] lg:p-7 ${
-        teinte ? 'lg:bg-[#FFF6F0] lg:border-[#F6DFD2]' : 'lg:bg-white lg:border-[#E8DCCB]'} ${large ? 'lg:col-span-2' : ''}`}
+        teinte ? 'lg:bg-[#FAF1E9] lg:border-[#F0DCCD]' : 'lg:bg-white lg:border-[#E8DCCB]'} ${large ? 'lg:col-span-2' : ''}`}
     >
-      <span className={`hidden lg:flex w-[46px] h-[46px] rounded-[14px] items-center justify-center mb-4 text-[#FF4500] ${teinte ? 'bg-white' : 'bg-[#FFF1EA]'}`} aria-hidden>
+      <span className={`hidden lg:flex w-[46px] h-[46px] rounded-[14px] items-center justify-center mb-4 text-terre-cuite ${teinte ? 'bg-white' : 'bg-terre-pale'}`} aria-hidden>
         {icone}
       </span>
       <h2 className="lg:mb-2.5">
@@ -31,7 +31,7 @@ export default function Rubrique({
           aria-expanded={ouverte}
           aria-controls={id}
           onClick={() => setOuverte(o => !o)}
-          className="titre-lg w-full min-h-[58px] lg:min-h-0 px-5 lg:px-0 flex items-center justify-between gap-3 text-left text-base font-extrabold text-[#3D2B1F] lg:text-2xl lg:leading-[1.1] lg:pointer-events-none"
+          className="titre-lg w-full min-h-[58px] lg:min-h-0 px-5 lg:px-0 flex items-center justify-between gap-3 text-left text-base font-extrabold text-olivier lg:text-2xl lg:leading-[1.1] lg:pointer-events-none"
         >
           {titre}
           <ChevronDown className={`lg:hidden shrink-0 w-[18px] h-[18px] transition-transform duration-200 ${ouverte ? 'rotate-180' : ''}`} strokeWidth={2.4} aria-hidden />

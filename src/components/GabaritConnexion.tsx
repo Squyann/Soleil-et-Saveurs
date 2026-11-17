@@ -9,18 +9,18 @@ import { ArrowLeft } from 'lucide-react';
 export type ArgumentConnexion = { icone: React.ReactNode; titre?: string; texte: string };
 
 // Styles partagés des formulaires de ces pages
-export const etiquetteChamp = 'block mb-1.5 text-[13.5px] lg:text-sm font-bold text-[#5C4030]';
-export const champ = 'w-full h-[54px] lg:h-14 px-4 rounded-[15px] lg:rounded-2xl border-[1.5px] border-[#E0D3C0] bg-white text-base font-semibold text-[#3D2B1F] placeholder:text-[#8C7867] placeholder:font-medium outline-none focus:border-[#FF4500] transition-colors';
+export const etiquetteChamp = 'block mb-1.5 text-[13.5px] lg:text-sm font-bold text-olivier-doux';
+export const champ = 'w-full h-[54px] lg:h-14 px-4 rounded-[15px] lg:rounded-2xl border-[1.5px] border-[#E0D3C0] bg-white text-base font-semibold text-olivier placeholder:text-olivier-pale placeholder:font-medium outline-none focus:border-terre-cuite transition-colors';
 export const champAvecIcone = `${champ} pl-[46px] lg:pl-12`;
-export const iconeChamp = 'absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] lg:w-[19px] lg:h-[19px] text-[#6F5A4B] pointer-events-none';
-export const boutonPrincipal = 'w-full min-h-[60px] lg:min-h-[62px] px-[22px] lg:px-6 rounded-[18px] bg-[#FF4500] text-white text-[19px] font-extrabold flex items-center justify-between gap-3 shadow-[0_16px_30px_-14px_rgba(255,69,0,0.55)] transition-[background-color,transform] duration-200 hover:bg-[#E63E00] active:scale-[0.98] disabled:bg-[#EDE3D5] disabled:text-[#6F5A4B] disabled:shadow-none disabled:cursor-not-allowed';
+export const iconeChamp = 'absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] lg:w-[19px] lg:h-[19px] text-olivier-gris pointer-events-none';
+export const boutonPrincipal = 'w-full min-h-[60px] lg:min-h-[62px] px-[22px] lg:px-6 rounded-[18px] bg-terre-cuite text-white text-[19px] font-extrabold flex items-center justify-between gap-3 shadow-[0_16px_30px_-14px_rgba(194,96,45,0.55)] transition-[background-color,transform] duration-200 hover:bg-[#B0552A] active:scale-[0.98] disabled:bg-[#EDE3D5] disabled:text-olivier-gris disabled:shadow-none disabled:cursor-not-allowed';
 export const messageErreur = 'flex items-center gap-2.5 px-3.5 py-3 rounded-[14px] bg-red-50 text-[13.5px] font-bold text-red-700';
 
 function Soleil({ className }: { className: string }) {
   return (
     <svg viewBox="0 0 600 600" aria-hidden className={className}>
-      <circle cx="300" cy="300" r="100" fill="#FF4500" fillOpacity="0.9" />
-      <circle cx="300" cy="300" r="226" fill="none" stroke="#FF4500" strokeOpacity="0.7" strokeWidth="110" strokeDasharray="12 47.2" />
+      <circle cx="300" cy="300" r="100" fill="#C2602D" fillOpacity="0.9" />
+      <circle cx="300" cy="300" r="226" fill="none" stroke="#C2602D" strokeOpacity="0.7" strokeWidth="110" strokeDasharray="12 47.2" />
     </svg>
   );
 }
@@ -43,10 +43,10 @@ export default function GabaritConnexion({
   );
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] bg-[#F5EAE0] text-[#3D2B1F] lg:flex">
+    <div className="min-h-[calc(100vh-3.5rem)] bg-lin text-olivier lg:flex">
 
       {/* Panneau (ordinateur) */}
-      <aside className="hidden lg:flex relative overflow-hidden flex-1 bg-[#3D2B1F] text-[#F5EAE0] px-14 xl:px-16 py-14 flex-col justify-between gap-12">
+      <aside className="hidden lg:flex relative overflow-hidden flex-1 bg-olivier text-lin px-14 xl:px-16 py-14 flex-col justify-between gap-12">
         <Soleil className="ss-rayons absolute -right-[240px] -top-[360px] w-[640px] h-[640px] pointer-events-none" />
         {lienRetour}
         <div className="relative">
@@ -54,7 +54,7 @@ export default function GabaritConnexion({
           <ul className="flex flex-col gap-[22px] max-w-[460px]">
             {args.map((a, i) => (
               <li key={i} className="flex items-center gap-4">
-                <span className="shrink-0 w-12 h-12 rounded-[15px] bg-[#F5EAE0]/10 text-[#FF7A47] flex items-center justify-center" aria-hidden>{a.icone}</span>
+                <span className="shrink-0 w-12 h-12 rounded-[15px] bg-lin/10 text-halo flex items-center justify-center" aria-hidden>{a.icone}</span>
                 <span>
                   {a.titre && <strong className="block text-[17px] font-extrabold">{a.titre}</strong>}
                   <span className={`block text-[15px] leading-normal ${a.titre ? 'mt-0.5 text-[#E1D2C2]' : 'font-semibold'}`}>{a.texte}</span>
@@ -68,19 +68,19 @@ export default function GabaritConnexion({
 
       <div className="lg:flex-1 lg:flex lg:items-center lg:justify-center">
         {/* Bandeau (mobile) */}
-        <header className="lg:hidden relative overflow-hidden bg-[#3D2B1F] text-[#F5EAE0] px-5 pt-3 pb-[30px] flex flex-col">
+        <header className="lg:hidden relative overflow-hidden bg-olivier text-lin px-5 pt-3 pb-[30px] flex flex-col">
           <Soleil className="absolute -right-[120px] -top-[150px] w-[300px] h-[300px] pointer-events-none" />
           {lienRetour}
-          {surtitre && <p className="relative mt-3.5 mb-2 text-[11px] font-extrabold uppercase tracking-[0.14em] text-[#FF9466]">{surtitre}</p>}
+          {surtitre && <p className="relative mt-3.5 mb-2 text-[11px] font-extrabold uppercase tracking-[0.14em] text-safran">{surtitre}</p>}
           <h1 className={`relative titre text-[44px] leading-none ${surtitre ? '' : 'mt-3.5'}`}>{titre}</h1>
           {sousTitre && <p className="relative mt-2 text-base text-[#E1D2C2]">{sousTitre}</p>}
         </header>
 
-        <div className="relative -mt-4 lg:mt-0 rounded-t-[22px] lg:rounded-none bg-[#F5EAE0] px-5 pt-[26px] pb-10 lg:px-6 lg:py-14 w-full lg:max-w-[488px]">
+        <div className="relative -mt-4 lg:mt-0 rounded-t-[22px] lg:rounded-none bg-lin px-5 pt-[26px] pb-10 lg:px-6 lg:py-14 w-full lg:max-w-[488px]">
           <div className="hidden lg:block mb-8">
-            {surtitre && <p className="mb-2.5 text-xs font-extrabold uppercase tracking-[0.14em] text-[#C73600]">{surtitre}</p>}
+            {surtitre && <p className="mb-2.5 text-xs font-extrabold uppercase tracking-[0.14em] text-brique">{surtitre}</p>}
             <h1 className="titre text-[54px] leading-none">{titre}</h1>
-            {sousTitre && <p className="mt-2 text-[17px] text-[#5C4030]">{sousTitre}</p>}
+            {sousTitre && <p className="mt-2 text-[17px] text-olivier-doux">{sousTitre}</p>}
           </div>
 
           {children}
@@ -89,10 +89,10 @@ export default function GabaritConnexion({
           <ul className="lg:hidden mt-[26px] flex flex-col gap-3.5 rounded-[20px] bg-white border border-[#E8DCCB] px-4 py-[18px]">
             {args.map((a, i) => (
               <li key={i} className="flex items-center gap-3">
-                <span className="shrink-0 w-10 h-10 rounded-xl bg-[#FFF1EA] text-[#FF4500] flex items-center justify-center" aria-hidden>{a.icone}</span>
+                <span className="shrink-0 w-10 h-10 rounded-xl bg-terre-pale text-terre-cuite flex items-center justify-center" aria-hidden>{a.icone}</span>
                 <span>
                   {a.titre && <strong className="block text-[14.5px] font-extrabold">{a.titre}</strong>}
-                  <span className={`block text-[13px] leading-snug ${a.titre ? 'text-[#6F5A4B]' : 'font-semibold text-[#5C4030]'}`}>{a.texte}</span>
+                  <span className={`block text-[13px] leading-snug ${a.titre ? 'text-olivier-gris' : 'font-semibold text-olivier-doux'}`}>{a.texte}</span>
                 </span>
               </li>
             ))}

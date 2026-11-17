@@ -194,7 +194,7 @@ export default function CadrageImage({ src, onAnnuler, onValider }: Props) {
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in">
       <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl animate-in zoom-in-95 duration-200">
         <div className="flex items-center justify-between mb-2">
-          <h3 className="font-black text-xl italic uppercase tracking-tighter">Cadrer <span className="text-[#FF4500]">l&apos;image</span></h3>
+          <h3 className="font-black text-xl italic uppercase tracking-tighter">Cadrer <span className="text-terre-cuite">l&apos;image</span></h3>
           <button onClick={onAnnuler} disabled={envoi} className="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-100 text-slate-400 hover:bg-slate-200 disabled:opacity-40"><X className="w-4 h-4" /></button>
         </div>
         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-4">
@@ -216,8 +216,8 @@ export default function CadrageImage({ src, onAnnuler, onValider }: Props) {
             <div className="absolute inset-0 flex items-center justify-center"><Loader2 className="w-6 h-6 text-slate-300 animate-spin" /></div>
           )}
           {/* Partie visible dans la vignette carrée du panier */}
-          <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 aspect-square border-2 border-dashed border-[#FF4500]/50 pointer-events-none">
-            <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 whitespace-nowrap bg-white/80 text-[8px] font-black uppercase tracking-widest text-[#FF4500] px-2 py-0.5 rounded-full">Vignette panier</span>
+          <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 aspect-square border-2 border-dashed border-terre-cuite/50 pointer-events-none">
+            <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 whitespace-nowrap bg-white/80 text-[8px] font-black uppercase tracking-widest text-terre-cuite px-2 py-0.5 rounded-full">Vignette panier</span>
           </div>
         </div>
 
@@ -231,11 +231,11 @@ export default function CadrageImage({ src, onAnnuler, onValider }: Props) {
             style={{ '--avancement': `${avancement}%` } as React.CSSProperties}
             className="flex-1 min-w-0 h-12 bg-transparent appearance-none cursor-pointer disabled:opacity-40
               [&::-webkit-slider-runnable-track]:h-3 [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:bg-[linear-gradient(to_right,#FF4500_var(--avancement),#e2e8f0_var(--avancement))]
-              [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:box-border [&::-webkit-slider-thumb]:-mt-3.5 [&::-webkit-slider-thumb]:w-10 [&::-webkit-slider-thumb]:h-10 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#FF4500] [&::-webkit-slider-thumb]:border-4 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:shadow-lg
+              [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:box-border [&::-webkit-slider-thumb]:-mt-3.5 [&::-webkit-slider-thumb]:w-10 [&::-webkit-slider-thumb]:h-10 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-terre-cuite [&::-webkit-slider-thumb]:border-4 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:shadow-lg
               [&::-moz-range-track]:h-3 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:bg-[linear-gradient(to_right,#FF4500_var(--avancement),#e2e8f0_var(--avancement))]
-              [&::-moz-range-thumb]:box-border [&::-moz-range-thumb]:w-10 [&::-moz-range-thumb]:h-10 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-[#FF4500] [&::-moz-range-thumb]:border-4 [&::-moz-range-thumb]:border-white [&::-moz-range-thumb]:shadow-lg"
+              [&::-moz-range-thumb]:box-border [&::-moz-range-thumb]:w-10 [&::-moz-range-thumb]:h-10 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-terre-cuite [&::-moz-range-thumb]:border-4 [&::-moz-range-thumb]:border-white [&::-moz-range-thumb]:shadow-lg"
           />
-          <button onClick={() => zoomer(vue.zoom * 1.2)} disabled={!img} className="w-12 h-12 shrink-0 flex items-center justify-center bg-slate-900 text-white rounded-2xl hover:bg-[#FF4500] disabled:opacity-40"><Plus className="w-5 h-5" /></button>
+          <button onClick={() => zoomer(vue.zoom * 1.2)} disabled={!img} className="w-12 h-12 shrink-0 flex items-center justify-center bg-slate-900 text-white rounded-2xl hover:bg-terre-cuite disabled:opacity-40"><Plus className="w-5 h-5" /></button>
         </div>
         <div className="grid grid-cols-2 gap-2 mt-3">
           <button onClick={() => img && setVue(borner(img, zoomEntiere(img), 0, 0))} disabled={!img} className="py-2.5 rounded-xl bg-slate-100 text-slate-500 text-[9px] font-black uppercase tracking-widest hover:bg-slate-200 disabled:opacity-40">Image entière</button>
@@ -244,7 +244,7 @@ export default function CadrageImage({ src, onAnnuler, onValider }: Props) {
 
         <div className="flex gap-2 mt-6">
           <button onClick={onAnnuler} disabled={envoi} className="px-6 py-3.5 bg-slate-100 text-slate-400 rounded-xl font-black text-[11px] uppercase tracking-widest hover:bg-slate-200 disabled:opacity-40">Annuler</button>
-          <button onClick={valider} disabled={!img || envoi} className="flex-1 py-3.5 bg-slate-900 text-white rounded-xl font-black text-[11px] uppercase tracking-widest hover:bg-[#FF4500] transition-all disabled:opacity-40 flex items-center justify-center gap-2">
+          <button onClick={valider} disabled={!img || envoi} className="flex-1 py-3.5 bg-slate-900 text-white rounded-xl font-black text-[11px] uppercase tracking-widest hover:bg-terre-cuite transition-all disabled:opacity-40 flex items-center justify-center gap-2">
             {envoi && <Loader2 className="w-4 h-4 animate-spin" />}
             Valider le cadrage
           </button>

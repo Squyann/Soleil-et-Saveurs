@@ -267,7 +267,7 @@ export default function GestionVariantes({
     .sort((a, b) => Number(b.actif !== false) - Number(a.actif !== false) || a.name.localeCompare(b.name, 'fr'));
 
   const uniteTexte = `€/${uniteLibelle(produit.unite)}`;
-  const champ = 'w-full bg-slate-50 border border-transparent focus:border-[#FF4500]/40 focus:bg-white rounded-lg p-2.5 text-xs outline-none transition-colors';
+  const champ = 'w-full bg-slate-50 border border-transparent focus:border-terre-cuite/40 focus:bg-white rounded-lg p-2.5 text-xs outline-none transition-colors';
 
   return (
     <div className="fixed inset-0 z-[150] flex items-stretch sm:items-center justify-center sm:p-4 bg-black/50 backdrop-blur-sm animate-in fade-in">
@@ -281,7 +281,7 @@ export default function GestionVariantes({
             <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Variantes du produit</p>
             <p className="font-black uppercase italic text-slate-800 truncate">{produit.name}</p>
           </div>
-          {enCours && <Loader2 className="w-4 h-4 text-[#FF4500] animate-spin" />}
+          {enCours && <Loader2 className="w-4 h-4 text-terre-cuite animate-spin" />}
           <button onClick={onFermer} aria-label="Fermer" className="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-100 text-slate-400 hover:bg-slate-200 shrink-0"><X className="w-4 h-4" /></button>
         </div>
 
@@ -305,9 +305,9 @@ export default function GestionVariantes({
                   type="button"
                   onClick={() => valeur !== cumulables && changerMode(valeur)}
                   aria-pressed={valeur === cumulables}
-                  className={`text-left rounded-xl border-2 p-3 transition-all ${valeur === cumulables ? 'border-[#FF4500] bg-orange-50/60' : 'border-slate-100 hover:border-slate-200'}`}
+                  className={`text-left rounded-xl border-2 p-3 transition-all ${valeur === cumulables ? 'border-terre-cuite bg-terre-pale/60' : 'border-slate-100 hover:border-slate-200'}`}
                 >
-                  <span className="flex items-center gap-2 text-[11px] font-black uppercase tracking-tight text-slate-800"><Icone className={`w-4 h-4 ${valeur === cumulables ? 'text-[#FF4500]' : 'text-slate-300'}`} />{titre}</span>
+                  <span className="flex items-center gap-2 text-[11px] font-black uppercase tracking-tight text-slate-800"><Icone className={`w-4 h-4 ${valeur === cumulables ? 'text-terre-cuite' : 'text-slate-300'}`} />{titre}</span>
                   <span className="block text-[10px] text-slate-400 font-bold mt-1">{exemple}</span>
                 </button>
               ))}
@@ -392,14 +392,14 @@ export default function GestionVariantes({
                   {/* Actions */}
                   <div className="flex flex-wrap items-center gap-1.5 mt-2.5 pt-2.5 border-t border-slate-50">
                     {versionPrincipale?.id === v.id && (
-                      <span className="text-[8px] font-black uppercase tracking-widest text-[#FF4500] bg-orange-50 px-2 py-1 rounded-full">Produit principal</span>
+                      <span className="text-[8px] font-black uppercase tracking-widest text-terre-cuite bg-terre-pale px-2 py-1 rounded-full">Produit principal</span>
                     )}
                     {v.source_product_id && (
                       <button type="button" onClick={() => degrouper(v)} className="text-[8px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 px-2 py-1 rounded-full hover:bg-blue-100" title="Retirer la variante et remettre le produit d'origine en ligne">
                         Regroupé · Dégrouper
                       </button>
                     )}
-                    <button type="button" onClick={() => setFicheOuverte(v.id)} className={`inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest px-2.5 py-1.5 rounded-full ${fichesVariantes[v.id] ? 'bg-slate-900 text-white' : 'bg-white border border-dashed border-slate-300 text-slate-500'} hover:bg-[#FF4500] hover:text-white hover:border-[#FF4500]`} title="Fiche propre à cette variante sur la page du produit">
+                    <button type="button" onClick={() => setFicheOuverte(v.id)} className={`inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest px-2.5 py-1.5 rounded-full ${fichesVariantes[v.id] ? 'bg-slate-900 text-white' : 'bg-white border border-dashed border-slate-300 text-slate-500'} hover:bg-terre-cuite hover:text-white hover:border-terre-cuite`} title="Fiche propre à cette variante sur la page du produit">
                       <FileText className="w-3 h-3" />{fichesVariantes[v.id] ? `Fiche · ${rubriquesPropres(fichesVariantes[v.id])} propre${rubriquesPropres(fichesVariantes[v.id]) > 1 ? 's' : ''}` : 'Créer sa fiche'}
                     </button>
                     <button type="button" role="switch" aria-checked={!inactive} onClick={() => basculerActif(v)} className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-slate-500 mr-auto">
@@ -412,7 +412,7 @@ export default function GestionVariantes({
                     <button type="button" onClick={() => deplacer(index, 1)} disabled={index === liste.length - 1 || !!enCours} aria-label="Descendre" className="w-8 h-8 rounded-lg bg-slate-50 text-slate-400 flex items-center justify-center disabled:opacity-30"><ArrowDown className="w-3.5 h-3.5" /></button>
                     <button type="button" onClick={() => supprimer(v)} aria-label="Supprimer" className="w-8 h-8 rounded-lg bg-red-50 text-red-400 flex items-center justify-center hover:bg-red-500 hover:text-white"><Trash2 className="w-3.5 h-3.5" /></button>
                     {modifiee(v) && (
-                      <button type="button" onClick={() => enregistrer(v)} disabled={!!enCours} className="h-8 px-3 rounded-lg bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 hover:bg-[#FF4500]">
+                      <button type="button" onClick={() => enregistrer(v)} disabled={!!enCours} className="h-8 px-3 rounded-lg bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 hover:bg-terre-cuite">
                         {enCours === v.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />} Enregistrer
                       </button>
                     )}
@@ -441,7 +441,7 @@ export default function GestionVariantes({
               <input className={`${champ} font-bold`} inputMode="decimal" value={nouveauPrix} placeholder={`${Number(produit.price).toFixed(2)} ${uniteTexte}`} onChange={e => setNouveauPrix(e.target.value)} onKeyDown={e => e.key === 'Enter' && ajouter()} />
             </div>
             <p className="text-[9px] font-bold text-slate-400">Prix vide = prix du produit. Photo et description se règlent ensuite sur la variante.</p>
-            <button type="button" onClick={ajouter} disabled={!nouveauNom.trim() || !!enCours} className="w-full bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest py-3 rounded-xl hover:bg-[#FF4500] disabled:opacity-40 flex items-center justify-center gap-2">
+            <button type="button" onClick={ajouter} disabled={!nouveauNom.trim() || !!enCours} className="w-full bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest py-3 rounded-xl hover:bg-terre-cuite disabled:opacity-40 flex items-center justify-center gap-2">
               <Plus className="w-4 h-4" /> Ajouter la variante
             </button>
           </section>
@@ -457,7 +457,7 @@ export default function GestionVariantes({
                   <option key={p.id} value={p.id}>{p.name.trim()} — {Number(p.price).toFixed(2)}€{p.actif === false ? ' (désactivé)' : ''}</option>
                 ))}
               </select>
-              <button type="button" onClick={importer} disabled={!aImporter || !!enCours} className="px-4 rounded-lg bg-[#FF4500] text-white text-[10px] font-black uppercase tracking-widest disabled:opacity-40">Regrouper</button>
+              <button type="button" onClick={importer} disabled={!aImporter || !!enCours} className="px-4 rounded-lg bg-terre-cuite text-white text-[10px] font-black uppercase tracking-widest disabled:opacity-40">Regrouper</button>
             </div>
           </section>
         </div>

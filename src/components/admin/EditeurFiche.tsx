@@ -258,7 +258,7 @@ export default function EditeurFiche({ produit, fiche, slugsPris, onFermer, onEn
     }
   }
 
-  const champ = 'w-full bg-slate-50 border border-transparent focus:border-[#FF4500]/40 focus:bg-white rounded-xl p-3 text-sm outline-none transition-colors';
+  const champ = 'w-full bg-slate-50 border border-transparent focus:border-terre-cuite/40 focus:bg-white rounded-xl p-3 text-sm outline-none transition-colors';
   const libelle = 'text-[9px] font-black uppercase text-slate-400 tracking-widest mb-1.5 block';
 
   return (
@@ -314,7 +314,7 @@ export default function EditeurFiche({ produit, fiche, slugsPris, onFermer, onEn
             <p className="text-[10px] text-slate-400 font-bold mb-3">La photo du catalogue est toujours affichée en premier (elle se change avec « Modifier » sur la carte du produit). Ajoutez jusqu’à {PHOTOS_MAX} photos supplémentaires.</p>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
               {produit.image_url && (
-                <div className="relative aspect-[3/2] rounded-xl overflow-hidden ring-2 ring-[#FF4500]/40">
+                <div className="relative aspect-[3/2] rounded-xl overflow-hidden ring-2 ring-terre-cuite/40">
                   <img src={produit.image_url} alt="" className="w-full h-full object-cover" />
                   <span className="absolute bottom-1.5 left-1.5 bg-white/90 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full">Catalogue</span>
                 </div>
@@ -332,7 +332,7 @@ export default function EditeurFiche({ produit, fiche, slugsPris, onFermer, onEn
                 </div>
               ))}
               {form.photos.length < PHOTOS_MAX && (
-                <label className="relative aspect-[3/2] rounded-xl border-2 border-dashed border-slate-200 bg-white flex flex-col items-center justify-center gap-1 text-slate-300 hover:border-[#FF4500]/40 hover:text-[#FF4500] cursor-pointer transition-colors">
+                <label className="relative aspect-[3/2] rounded-xl border-2 border-dashed border-slate-200 bg-white flex flex-col items-center justify-center gap-1 text-slate-300 hover:border-terre-cuite/40 hover:text-terre-cuite cursor-pointer transition-colors">
                   <ImagePlus className="w-6 h-6" />
                   <span className="text-[9px] font-black uppercase tracking-widest">Ajouter</span>
                   <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => choisirPhoto(e, 'galerie')} />
@@ -378,7 +378,7 @@ export default function EditeurFiche({ produit, fiche, slugsPris, onFermer, onEn
               {form.recettes.map((r, i) => (
                 <div key={i} className="rounded-2xl border border-slate-100 bg-slate-50/60 p-3 sm:p-4 space-y-2.5">
                   <div className="flex items-center gap-2">
-                    <ChefHat className="w-4 h-4 text-[#FF4500] shrink-0" />
+                    <ChefHat className="w-4 h-4 text-terre-cuite shrink-0" />
                     <input className={`${champ} font-bold bg-white`} placeholder="Titre de la recette (obligatoire)" value={r.titre} onChange={e => majRecette(i, { titre: e.target.value })} />
                     <button type="button" onClick={() => maj('recettes', deplacer(form.recettes, i, -1))} disabled={i === 0} aria-label="Monter" className="w-8 h-8 shrink-0 rounded-lg bg-white flex items-center justify-center text-slate-400 disabled:opacity-30"><ArrowUp className="w-3.5 h-3.5" /></button>
                     <button type="button" onClick={() => maj('recettes', deplacer(form.recettes, i, 1))} disabled={i === form.recettes.length - 1} aria-label="Descendre" className="w-8 h-8 shrink-0 rounded-lg bg-white flex items-center justify-center text-slate-400 disabled:opacity-30"><ArrowDown className="w-3.5 h-3.5" /></button>
@@ -397,7 +397,7 @@ export default function EditeurFiche({ produit, fiche, slugsPris, onFermer, onEn
                         <button type="button" onClick={() => majRecette(i, { photo: '' })} className="text-[9px] font-black uppercase tracking-widest text-red-400 hover:text-red-600">Retirer la photo</button>
                       </>
                     ) : (
-                      <label className="relative inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white border border-dashed border-slate-200 text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-[#FF4500] cursor-pointer">
+                      <label className="relative inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white border border-dashed border-slate-200 text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-terre-cuite cursor-pointer">
                         <ImagePlus className="w-3.5 h-3.5" /> Photo de la recette (facultatif)
                         <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => choisirPhoto(e, i)} />
                       </label>
@@ -405,7 +405,7 @@ export default function EditeurFiche({ produit, fiche, slugsPris, onFermer, onEn
                   </div>
                 </div>
               ))}
-              <button type="button" onClick={() => maj('recettes', [...form.recettes, recetteVide()])} className="w-full py-3 rounded-xl border-2 border-dashed border-slate-200 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:border-[#FF4500]/40 hover:text-[#FF4500] flex items-center justify-center gap-2">
+              <button type="button" onClick={() => maj('recettes', [...form.recettes, recetteVide()])} className="w-full py-3 rounded-xl border-2 border-dashed border-slate-200 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:border-terre-cuite/40 hover:text-terre-cuite flex items-center justify-center gap-2">
                 <Plus className="w-4 h-4" /> Ajouter une recette
               </button>
             </div>
@@ -435,7 +435,7 @@ export default function EditeurFiche({ produit, fiche, slugsPris, onFermer, onEn
             <button
               onClick={() => enregistrer(!publiee)}
               disabled={enCours}
-              className={`flex-1 min-w-[140px] py-3 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-40 ${publiee ? 'bg-slate-100 text-slate-500 hover:bg-slate-200' : 'bg-[#FF4500] text-white hover:bg-[#e63e00] shadow-lg'}`}
+              className={`flex-1 min-w-[140px] py-3 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-40 ${publiee ? 'bg-slate-100 text-slate-500 hover:bg-slate-200' : 'bg-terre-cuite text-white hover:bg-[#B0552A] shadow-lg'}`}
             >
               {publiee ? <><EyeOff className="w-4 h-4" /> Dépublier</> : <><Globe className="w-4 h-4" /> {modifie ? 'Enregistrer et publier' : 'Publier'}</>}
             </button>

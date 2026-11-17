@@ -29,13 +29,21 @@ export interface DestinataireMail { email: string; prenom?: string | null; jeton
 
 // Couleurs autorisées dans le texte (palette du site)
 export const COULEURS_TEXTE: { nom: string; valeur: string }[] = [
-  { nom: 'Brun', valeur: '#3D2B1F' },
-  { nom: 'Brun doux', valeur: '#5C4030' },
-  { nom: 'Orange', valeur: '#C73600' },
+  { nom: 'Vert olivier', valeur: '#2F4A2B' },
+  { nom: 'Vert doux', valeur: '#44583F' },
+  { nom: 'Brique', valeur: '#A94E25' },
   { nom: 'Vert', valeur: '#166534' },
 ];
 
-const POLICE = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
+// Couleurs de l'ancienne palette (brouillons enregistrés avant la nouvelle
+// identité) : converties vers leur équivalent actuel.
+const ANCIENNES_COULEURS: Record<string, string> = {
+  '#3d2b1f': '#2f4a2b',
+  '#5c4030': '#44583f',
+  '#c73600': '#a94e25',
+};
+
+const POLICE = "'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
 
 function lienSur(url: string): string | null {
   const u = String(url || '').trim();
@@ -82,7 +90,8 @@ export function nettoyerTexte(html: string): string {
     } else if (nom === 'span') {
       const c = (/color\s*:\s*(#[0-9a-f]{6})/i.exec(attrs) || /color\s*=\s*"?(#[0-9a-f]{6})/i.exec(attrs) || [])[1]?.toLowerCase();
       const rgb = /color\s*:\s*rgb\((\d+),\s*(\d+),\s*(\d+)\)/i.exec(attrs);
-      const hex = c || (rgb ? `#${[rgb[1], rgb[2], rgb[3]].map((x) => Number(x).toString(16).padStart(2, '0')).join('')}` : null);
+      const brut = c || (rgb ? `#${[rgb[1], rgb[2], rgb[3]].map((x) => Number(x).toString(16).padStart(2, '0')).join('')}` : null);
+      const hex = brut ? ANCIENNES_COULEURS[brut] ?? brut : null;
       if (!hex || !couleurs.has(hex)) continue;
       sortie.push(`<span style="color:${hex}">`);
     } else {
