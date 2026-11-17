@@ -1,7 +1,8 @@
 # Exploration du logo — Soleil et Saveurs
 
-- `v3/` : **exploration élargie**, 15 nouvelles pistes (D → R), une par type de logo. Présentation PDF de 33 diapositives.
-- `v2/` : **trois pistes perfectionnées** (A, B, C). Présentation PDF de 40 diapositives.
-- `v1/` : premières planches d'exploration, pour mémoire.
+- `v4-piste-B/` : **piste B retenue, version enrichie**. Six versions du symbole, typographies, palette, illustration de marque. C'est la version à consulter.
+- `v3/` : exploration élargie, 15 pistes (D → R), une par type de logo.
+- `v2/` : trois pistes perfectionnées (A, B, C).
+- `v1/` : premières planches, pour mémoire.
 
-Statut : en attente du choix de la piste. Aucun logo n'est finalisé.
+Statut : piste B retenue ; choix de la version en attente avant la finalisation.
