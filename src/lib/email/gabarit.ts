@@ -5,17 +5,17 @@
 // textes venant de la base ou d'un client passent par echapper().
 
 export const COULEURS = {
-  fond: '#F5EAE0',
+  fond: '#F3E8D6',
   carte: '#FFFFFF',
   creme: '#F8F1E8',
-  brun: '#3D2B1F',
-  brunMoyen: '#5C4030',
-  gris: '#6F5A4B',
+  brun: '#2F4A2B',
+  brunMoyen: '#44583F',
+  gris: '#56654F',
   bord: '#E3D6C4',
   bordClair: '#F0E7DA',
-  orange: '#FF4500',
-  orangeTexte: '#C73600',
-  orangePale: '#FFF1EA',
+  orange: '#C2602D',
+  orangeTexte: '#A94E25',
+  orangePale: '#F8EADF',
   vert: '#166534',
   vertPale: '#ECF7EF',
 };

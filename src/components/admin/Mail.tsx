@@ -40,15 +40,15 @@ interface EtatEnvoi { cle_api: boolean; expediteur: string | null; domaine: stri
 interface Produit { id: string; name: string; price: number; promotion: number | null; unite: string | null; image_url: string | null; actif: boolean | null }
 
 const STATUTS: Record<Campagne['statut'], { libelle: string; classe: string }> = {
-  brouillon: { libelle: 'Brouillon', classe: 'bg-[#F1ECE6] text-[#6F5A4B]' },
+  brouillon: { libelle: 'Brouillon', classe: 'bg-[#F1ECE6] text-[#56654F]' },
   programmee: { libelle: 'Programmée', classe: 'bg-[#EEF2FB] text-[#2F4A8A]' },
-  en_cours: { libelle: 'En cours', classe: 'bg-[#FFF1EA] text-[#C73600]' },
+  en_cours: { libelle: 'En cours', classe: 'bg-[#F8EADF] text-[#A94E25]' },
   envoyee: { libelle: 'Envoyée', classe: 'bg-[#ECF7EF] text-[#166534]' },
-  annulee: { libelle: 'Annulée', classe: 'bg-[#F1ECE6] text-[#6F5A4B]' },
+  annulee: { libelle: 'Annulée', classe: 'bg-[#F1ECE6] text-[#56654F]' },
 };
 
-const champ = 'w-full min-h-[46px] px-3 rounded-xl border-[1.5px] border-[#DDD0BF] bg-white text-[15px] font-semibold text-[#3D2B1F] outline-none focus:border-[#FF4500] transition-colors';
-const etiquette = 'block mt-3 mb-1.5 text-[13px] font-bold text-[#5C4030]';
+const champ = 'w-full min-h-[46px] px-3 rounded-xl border-[1.5px] border-[#DDD0BF] bg-white text-[15px] font-semibold text-[#2F4A2B] outline-none focus:border-[#C2602D] transition-colors';
+const etiquette = 'block mt-3 mb-1.5 text-[13px] font-bold text-[#44583F]';
 const SITE = typeof window !== 'undefined' ? window.location.origin : 'https://soleiletsaveurs.fr';
 const dateHeure = (iso: string | null) => (iso ? new Date(iso).toLocaleString('fr-FR', { timeZone: 'Europe/Paris', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }).replace(':', ' h ') : '—');
 
@@ -124,13 +124,13 @@ function Tableau({ etat, stats, onVerifier, onOuvrir }: { etat: EtatEnvoi | null
   ];
 
   return (
-    <div className="space-y-6 text-[#3D2B1F]">
+    <div className="space-y-6 text-[#2F4A2B]">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h2 className="titre text-4xl leading-none">Mail</h2>
-          <p className="mt-2 text-[15px] text-[#5C4030]">Préparez et envoyez vos campagnes. Seuls les clients qui l&apos;ont accepté reçoivent les offres.</p>
+          <p className="mt-2 text-[15px] text-[#44583F]">Préparez et envoyez vos campagnes. Seuls les clients qui l&apos;ont accepté reçoivent les offres.</p>
         </div>
-        <button type="button" onClick={nouvelle} disabled={creation} className="inline-flex items-center gap-2 min-h-[50px] px-5 rounded-2xl bg-[#FF4500] text-white font-extrabold disabled:opacity-50">
+        <button type="button" onClick={nouvelle} disabled={creation} className="inline-flex items-center gap-2 min-h-[50px] px-5 rounded-2xl bg-[#C2602D] text-white font-extrabold disabled:opacity-50">
           {creation ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}Nouvelle campagne
         </button>
       </div>
@@ -140,7 +140,7 @@ function Tableau({ etat, stats, onVerifier, onOuvrir }: { etat: EtatEnvoi | null
           <div key={c.l} className={`p-5 rounded-[18px] border ${c.vert ? 'bg-[#ECF7EF] border-[#CBE6D3]' : 'bg-white border-[#E3D6C4]'}`}>
             <p className={`titre text-[38px] leading-none ${c.vert ? 'text-[#166534]' : ''}`}>{c.v ?? '—'}</p>
             <p className="mt-2 text-sm font-bold">{c.l}</p>
-            <p className="mt-1 text-[13px] leading-snug text-[#6F5A4B]">{c.d}</p>
+            <p className="mt-1 text-[13px] leading-snug text-[#56654F]">{c.d}</p>
           </div>
         ))}
       </div>
@@ -148,17 +148,17 @@ function Tableau({ etat, stats, onVerifier, onOuvrir }: { etat: EtatEnvoi | null
       <section className="bg-white border border-[#E3D6C4] rounded-[20px] overflow-hidden">
         <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-[#F0E7DA]">
           <h3 className="titre text-[22px]">Campagnes</h3>
-          <span className="text-[13px] text-[#6F5A4B]">Délivrés et échecs remontés par le prestataire d&apos;envoi</span>
+          <span className="text-[13px] text-[#56654F]">Délivrés et échecs remontés par le prestataire d&apos;envoi</span>
         </div>
         {campagnes === null ? (
-          <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-[#8C7867]" /></div>
+          <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-[#7A8570]" /></div>
         ) : campagnes.length === 0 ? (
-          <p className="px-5 py-10 text-center font-bold text-[#6F5A4B]">Aucune campagne pour l&apos;instant. Créez la première avec « Nouvelle campagne ».</p>
+          <p className="px-5 py-10 text-center font-bold text-[#56654F]">Aucune campagne pour l&apos;instant. Créez la première avec « Nouvelle campagne ».</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm min-w-[860px]">
               <thead>
-                <tr className="bg-[#FBF6F0] text-[12px] font-extrabold uppercase tracking-wide text-[#6F5A4B]">
+                <tr className="bg-[#FBF6F0] text-[12px] font-extrabold uppercase tracking-wide text-[#56654F]">
                   <th className="text-left px-4 py-3">Campagne</th><th className="text-right px-3">Date d&apos;envoi</th><th className="text-right px-3">Destinataires</th><th className="text-right px-3">Envoyés</th><th className="text-right px-3">Délivrés</th><th className="text-right px-3">Échecs</th><th className="text-right px-3">Désinscriptions</th><th className="text-right px-4">Statut</th>
                 </tr>
               </thead>
@@ -170,18 +170,18 @@ function Tableau({ etat, stats, onVerifier, onOuvrir }: { etat: EtatEnvoi | null
                     <tr key={c.id} onClick={() => onOuvrir(c.id)} className="border-t border-[#F0E7DA] cursor-pointer hover:bg-[#FFFBF7] tabular-nums">
                       <td className="px-4 py-3.5">
                         <span className="block text-[15px] font-bold">{c.objet || 'Sans objet'}</span>
-                        <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-extrabold ${c.type === 'offre' ? 'bg-[#FFF1EA] text-[#C73600]' : 'bg-[#EEF2FB] text-[#2F4A8A]'}`}>{c.type === 'offre' ? 'Offre' : 'Information'}</span>
+                        <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-extrabold ${c.type === 'offre' ? 'bg-[#F8EADF] text-[#A94E25]' : 'bg-[#EEF2FB] text-[#2F4A8A]'}`}>{c.type === 'offre' ? 'Offre' : 'Information'}</span>
                       </td>
                       <td className="text-right px-3 whitespace-nowrap">{c.statut === 'brouillon' ? '—' : dateHeure(c.lancee_le || c.programmee_pour)}</td>
                       <td className="text-right px-3">{dejaParti ? b?.destinataires ?? '—' : c.nb_destinataires ?? '—'}</td>
                       <td className="text-right px-3">{dejaParti ? b?.envoyes ?? 0 : '—'}</td>
                       <td className="text-right px-3">{dejaParti ? b?.delivres ?? 0 : '—'}</td>
-                      <td className={`text-right px-3 ${b?.echecs ? 'text-[#B83200] font-bold' : ''}`}>{dejaParti ? b?.echecs ?? 0 : '—'}</td>
+                      <td className={`text-right px-3 ${b?.echecs ? 'text-[#A94E25] font-bold' : ''}`}>{dejaParti ? b?.echecs ?? 0 : '—'}</td>
                       <td className="text-right px-3">{dejaParti ? b?.desinscriptions ?? 0 : '—'}</td>
                       <td className="text-right px-4">
                         <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-extrabold uppercase tracking-wide ${(STATUTS[c.statut] ?? STATUTS.brouillon).classe}`}>{(STATUTS[c.statut] ?? STATUTS.brouillon).libelle}</span>
                         {c.statut === 'en_cours' && b && b.destinataires > 0 && (
-                          <span className="block ml-auto mt-1.5 w-[110px] h-2 rounded-full bg-[#F0E7DA] overflow-hidden"><span className="block h-full bg-[#FF4500]" style={{ width: `${Math.round(((b.destinataires - b.restants) / b.destinataires) * 100)}%` }} /></span>
+                          <span className="block ml-auto mt-1.5 w-[110px] h-2 rounded-full bg-[#F0E7DA] overflow-hidden"><span className="block h-full bg-[#C2602D]" style={{ width: `${Math.round(((b.destinataires - b.restants) / b.destinataires) * 100)}%` }} /></span>
                         )}
                       </td>
                     </tr>
@@ -201,10 +201,10 @@ function Tableau({ etat, stats, onVerifier, onOuvrir }: { etat: EtatEnvoi | null
             ["Adresse d'envoi", etat?.domaine ? `…@${etat.domaine}` : 'Non configurée'],
             ['Réponses envoyées à', 'soleiletsaveurs.livraison@gmail.com'],
             ["Débit d'envoi", '100 e-mails par lot, 2 lots par seconde au plus'],
-          ].map(([l, v]) => <p key={l} className="flex justify-between gap-3 py-2.5 border-t border-[#F0E7DA] text-sm"><span className="text-[#6F5A4B]">{l}</span><strong className="text-right">{v}</strong></p>)}
+          ].map(([l, v]) => <p key={l} className="flex justify-between gap-3 py-2.5 border-t border-[#F0E7DA] text-sm"><span className="text-[#56654F]">{l}</span><strong className="text-right">{v}</strong></p>)}
         </section>
         <section className="p-5 rounded-[20px] bg-white border border-[#E3D6C4]">
-          <div className="flex items-center justify-between gap-3 mb-2"><h3 className="titre text-xl">Prêt pour l&apos;envoi</h3><button type="button" onClick={onVerifier} className="text-[13px] font-extrabold text-[#C73600] hover:underline">Vérifier à nouveau</button></div>
+          <div className="flex items-center justify-between gap-3 mb-2"><h3 className="titre text-xl">Prêt pour l&apos;envoi</h3><button type="button" onClick={onVerifier} className="text-[13px] font-extrabold text-[#A94E25] hover:underline">Vérifier à nouveau</button></div>
           {[
             ['Clé du prestataire (Resend)', etat?.cle_api],
             ['DKIM (signature)', etat?.dkim],
@@ -212,8 +212,8 @@ function Tableau({ etat, stats, onVerifier, onOuvrir }: { etat: EtatEnvoi | null
             ['DMARC (politique)', etat?.dmarc],
             ['Envoi programmé automatique', etat?.envoi_auto],
             ['Suivi délivrés / rebonds', etat?.webhook],
-          ].map(([l, ok]) => <p key={String(l)} className="flex justify-between gap-3 py-2.5 border-t border-[#F0E7DA] text-sm"><span className="text-[#6F5A4B]">{l}</span><strong className={ok ? 'text-[#166534]' : 'text-[#B83200]'}>{etat ? (ok ? 'OK' : 'À configurer') : '…'}</strong></p>)}
-          {etat && !etat.pret && <p className="mt-3 px-3.5 py-3 rounded-xl bg-[#FFF1EA] text-[13px] leading-relaxed text-[#B83200]"><strong>Envoi des campagnes bloqué :</strong> {etat.raison} Vous pouvez préparer vos campagnes dès maintenant.</p>}
+          ].map(([l, ok]) => <p key={String(l)} className="flex justify-between gap-3 py-2.5 border-t border-[#F0E7DA] text-sm"><span className="text-[#56654F]">{l}</span><strong className={ok ? 'text-[#166534]' : 'text-[#A94E25]'}>{etat ? (ok ? 'OK' : 'À configurer') : '…'}</strong></p>)}
+          {etat && !etat.pret && <p className="mt-3 px-3.5 py-3 rounded-xl bg-[#F8EADF] text-[13px] leading-relaxed text-[#A94E25]"><strong>Envoi des campagnes bloqué :</strong> {etat.raison} Vous pouvez préparer vos campagnes dès maintenant.</p>}
         </section>
       </div>
     </div>
@@ -264,7 +264,7 @@ function Campagne({ id, etat, stats, produits, codes, onRetour }: { id: string; 
   const produitsMail = useMemo(() => produits.filter((p) => p.actif !== false).map(produitMail), [produits]);
   const html = useMemo(() => (c ? rendreCampagne(c, { email: 'client@exemple.fr', prenom: 'Camille', jeton: '00000000-0000-4000-8000-000000000000' }, produitsMail, SITE).html : ''), [c, produitsMail]);
 
-  if (!c) return <div className="flex justify-center py-16"><Loader2 className="w-7 h-7 animate-spin text-[#8C7867]" /></div>;
+  if (!c) return <div className="flex justify-center py-16"><Loader2 className="w-7 h-7 animate-spin text-[#7A8570]" /></div>;
 
   const majBloc = (bid: string, champs: Partial<Bloc>) => modifier({ blocs: c.blocs.map((b) => (b.id === bid ? ({ ...b, ...champs } as Bloc) : b)) });
   const ajouter = (type: Bloc['type']) => {
@@ -340,9 +340,9 @@ function Campagne({ id, etat, stats, produits, codes, onRetour }: { id: string; 
   const nbDest = c.type === 'offre' ? stats?.destinataires_offre : stats?.destinataires_info;
 
   return (
-    <div className="-mx-4 md:-mx-8 text-[#3D2B1F]">
+    <div className="-mx-4 md:-mx-8 text-[#2F4A2B]">
       {/* BARRE DU HAUT */}
-      <div className="flex flex-wrap items-center gap-3 px-4 md:px-6 py-3 bg-[#3D2B1F] text-[#F5EAE0] rounded-t-[20px]">
+      <div className="flex flex-wrap items-center gap-3 px-4 md:px-6 py-3 bg-[#2F4A2B] text-[#F3E8D6] rounded-t-[20px]">
         <button type="button" onClick={onRetour} className="inline-flex items-center gap-1.5 text-sm font-bold text-[#E3D6C4] hover:text-white"><ArrowLeft className="w-4 h-4" />Campagnes</button>
         <span className="font-serif text-lg text-white truncate max-w-[40ch]">{c.objet || 'Nouvelle campagne'}</span>
         <span className={`px-2.5 py-0.5 rounded-full text-xs font-extrabold uppercase tracking-wide ${(STATUTS[c.statut] ?? STATUTS.brouillon).classe}`}>{(STATUTS[c.statut] ?? STATUTS.brouillon).libelle}</span>
@@ -354,23 +354,23 @@ function Campagne({ id, etat, stats, produits, codes, onRetour }: { id: string; 
           </button>
         )}
         {modifiable && (
-          <button type="button" onClick={() => setConfirmation(true)} disabled={!pretAEnvoyer} className="inline-flex items-center gap-2 min-h-[42px] px-4 rounded-xl bg-[#FF4500] text-white text-sm font-extrabold disabled:opacity-40">
+          <button type="button" onClick={() => setConfirmation(true)} disabled={!pretAEnvoyer} className="inline-flex items-center gap-2 min-h-[42px] px-4 rounded-xl bg-[#C2602D] text-white text-sm font-extrabold disabled:opacity-40">
             Vérifier et envoyer<Send className="w-4 h-4" />
           </button>
         )}
-        {(c.statut === 'programmee' || c.statut === 'en_cours') && <button type="button" onClick={annuler} className="min-h-[42px] px-4 rounded-xl bg-[#F5EAE0] text-[#3D2B1F] text-sm font-extrabold">{c.statut === 'en_cours' ? "Arrêter l'envoi" : 'Annuler la programmation'}</button>}
+        {(c.statut === 'programmee' || c.statut === 'en_cours') && <button type="button" onClick={annuler} className="min-h-[42px] px-4 rounded-xl bg-[#F3E8D6] text-[#2F4A2B] text-sm font-extrabold">{c.statut === 'en_cours' ? "Arrêter l'envoi" : 'Annuler la programmation'}</button>}
         {!modifiable && <button type="button" onClick={dupliquer} className="inline-flex items-center gap-2 min-h-[42px] px-4 rounded-xl border-[1.5px] border-[#E3D6C4] text-sm font-extrabold"><Copy className="w-4 h-4" />Dupliquer</button>}
       </div>
       {test.etat !== 'idle' && test.etat !== 'encours' && (
-        <p role="status" className={`px-6 py-2.5 text-sm font-bold ${test.etat === 'ok' ? 'bg-[#ECF7EF] text-[#166534]' : 'bg-[#FFF1EA] text-[#B83200]'}`}>{test.etat === 'ok' ? `E-mail de test ${test.message?.toLowerCase()}.` : test.message}</p>
+        <p role="status" className={`px-6 py-2.5 text-sm font-bold ${test.etat === 'ok' ? 'bg-[#ECF7EF] text-[#166534]' : 'bg-[#F8EADF] text-[#A94E25]'}`}>{test.etat === 'ok' ? `E-mail de test ${test.message?.toLowerCase()}.` : test.message}</p>
       )}
 
-      <div className="grid lg:grid-cols-[420px_minmax(0,1fr)] bg-[#F5EAE0] rounded-b-[20px] border border-t-0 border-[#E0D3C0] overflow-hidden">
+      <div className="grid lg:grid-cols-[420px_minmax(0,1fr)] bg-[#F3E8D6] rounded-b-[20px] border border-t-0 border-[#E0D3C0] overflow-hidden">
         {/* COLONNE DE GAUCHE */}
         <div className="p-5 border-b lg:border-b-0 lg:border-r border-[#E0D3C0] bg-[#FBF6F0] space-y-6">
           {!modifiable && (
             <section className="p-4 rounded-2xl bg-white border border-[#E3D6C4]">
-              <h3 className="text-[13px] font-extrabold uppercase tracking-wide text-[#5C4030] mb-2">Suivi</h3>
+              <h3 className="text-[13px] font-extrabold uppercase tracking-wide text-[#44583F] mb-2">Suivi</h3>
               {[
                 ['Statut', (STATUTS[c.statut] ?? STATUTS.brouillon).libelle],
                 ['Programmée pour', dateHeure(c.programmee_pour)],
@@ -382,13 +382,13 @@ function Campagne({ id, etat, stats, produits, codes, onRetour }: { id: string; 
                 ['Échecs', bilan?.echecs ?? 0],
                 ['Désinscriptions', bilan?.desinscriptions ?? 0],
                 ['Restant à envoyer', bilan?.restants ?? 0],
-              ].map(([l, v]) => <p key={String(l)} className="flex justify-between gap-3 py-2 border-t border-[#F0E7DA] text-sm first-of-type:border-t-0"><span className="text-[#6F5A4B]">{l}</span><strong>{v}</strong></p>)}
+              ].map(([l, v]) => <p key={String(l)} className="flex justify-between gap-3 py-2 border-t border-[#F0E7DA] text-sm first-of-type:border-t-0"><span className="text-[#56654F]">{l}</span><strong>{v}</strong></p>)}
               {c.statut === 'en_cours' && <EnvoiEnCours campagneId={c.id} onFini={charger} />}
             </section>
           )}
 
           <section>
-            <h3 className="text-[13px] font-extrabold uppercase tracking-wide text-[#5C4030]">Réglages</h3>
+            <h3 className="text-[13px] font-extrabold uppercase tracking-wide text-[#44583F]">Réglages</h3>
             <label className={etiquette} htmlFor="m-objet">Objet de l&apos;e-mail</label>
             <input id="m-objet" className={champ} value={c.objet} maxLength={150} disabled={!modifiable} onChange={(e) => modifier({ objet: e.target.value })} placeholder="Ex. : Noël approche : −10 % sur vos fruits et légumes" />
             <label className={etiquette} htmlFor="m-apercu">Texte d&apos;aperçu (affiché après l&apos;objet)</label>
@@ -397,41 +397,41 @@ function Campagne({ id, etat, stats, produits, codes, onRetour }: { id: string; 
               <div><label className={etiquette} htmlFor="m-nom">Nom de l&apos;expéditeur</label><input id="m-nom" className={champ} value={c.expediteur_nom} maxLength={60} disabled={!modifiable} onChange={(e) => modifier({ expediteur_nom: e.target.value })} /></div>
               <div>
                 <label className={etiquette} htmlFor="m-adresse">Adresse d&apos;envoi</label>
-                <div className="flex items-center rounded-xl border-[1.5px] border-[#DDD0BF] bg-white focus-within:border-[#FF4500] overflow-hidden">
+                <div className="flex items-center rounded-xl border-[1.5px] border-[#DDD0BF] bg-white focus-within:border-[#C2602D] overflow-hidden">
                   <input id="m-adresse" className="w-full min-w-0 min-h-[43px] pl-3 text-[15px] font-semibold outline-none bg-transparent" value={c.expediteur_local} maxLength={40} disabled={!modifiable} onChange={(e) => modifier({ expediteur_local: e.target.value.toLowerCase().replace(/[^a-z0-9._-]/g, '') })} />
-                  <span className="pr-3 text-[13px] text-[#8C7867] whitespace-nowrap">@{etat?.domaine || 'domaine'}</span>
+                  <span className="pr-3 text-[13px] text-[#7A8570] whitespace-nowrap">@{etat?.domaine || 'domaine'}</span>
                 </div>
               </div>
             </div>
           </section>
 
           <section>
-            <h3 className="text-[13px] font-extrabold uppercase tracking-wide text-[#5C4030] mb-2.5">Type de message</h3>
+            <h3 className="text-[13px] font-extrabold uppercase tracking-wide text-[#44583F] mb-2.5">Type de message</h3>
             <div className="grid grid-cols-2 gap-2">
               {([
                 ['offre', 'Offre commerciale', `Promotions, nouveautés. Envoyée aux ${stats?.destinataires_offre ?? '…'} clients qui l'ont accepté.`],
                 ['info', 'Information de service', `Livraisons, changement important. Sans aucune promotion. ${stats?.destinataires_info ?? '…'} clients.`],
               ] as const).map(([t, l, d]) => (
                 <button key={t} type="button" disabled={!modifiable} onClick={() => modifier({ type: t })} aria-pressed={c.type === t}
-                  className={`text-left p-3 rounded-xl border-[1.5px] bg-white ${c.type === t ? 'border-[#3D2B1F] ring-1 ring-[#3D2B1F] ring-inset' : 'border-[#DDD0BF]'} disabled:cursor-default`}>
-                  <strong className="block text-sm">{l}</strong><span className="block mt-1 text-xs leading-snug text-[#6F5A4B]">{d}</span>
+                  className={`text-left p-3 rounded-xl border-[1.5px] bg-white ${c.type === t ? 'border-[#2F4A2B] ring-1 ring-[#2F4A2B] ring-inset' : 'border-[#DDD0BF]'} disabled:cursor-default`}>
+                  <strong className="block text-sm">{l}</strong><span className="block mt-1 text-xs leading-snug text-[#56654F]">{d}</span>
                 </button>
               ))}
             </div>
-            {c.type === 'info' && <p className="mt-2 text-xs leading-snug text-[#B83200]">Une information de service ne doit contenir ni promotion, ni code promo, ni mise en avant de produits : sinon c&apos;est une offre commerciale, réservée aux clients qui l&apos;ont acceptée.</p>}
+            {c.type === 'info' && <p className="mt-2 text-xs leading-snug text-[#A94E25]">Une information de service ne doit contenir ni promotion, ni code promo, ni mise en avant de produits : sinon c&apos;est une offre commerciale, réservée aux clients qui l&apos;ont acceptée.</p>}
           </section>
 
           {modifiable && (
             <section>
-              <h3 className="text-[13px] font-extrabold uppercase tracking-wide text-[#5C4030] mb-2.5">Ajouter un bloc</h3>
+              <h3 className="text-[13px] font-extrabold uppercase tracking-wide text-[#44583F] mb-2.5">Ajouter un bloc</h3>
               <div className="grid grid-cols-4 gap-2">
                 {([
                   ['titre', 'Titre', Type], ['texte', 'Texte', Minus], ['image', 'Image', IconeImage], ['bouton', 'Bouton', MousePointerClick],
                   ['code', 'Code promo', Tag], ['produits', 'Produits', LayoutGrid], ['separateur', 'Séparateur', Minus], ['espace', 'Espace', Space],
                 ] as const).map(([t, l, I]) => (
                   <button key={t} type="button" onClick={() => ajouter(t)} disabled={c.type === 'info' && (t === 'code' || t === 'produits')}
-                    className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-xl border-[1.5px] border-dashed border-[#C9BBAA] bg-white text-xs font-bold text-[#5C4030] hover:border-[#FF4500] disabled:opacity-35">
-                    <I className="w-5 h-5 text-[#C73600]" aria-hidden />{l}
+                    className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-xl border-[1.5px] border-dashed border-[#C9BBAA] bg-white text-xs font-bold text-[#44583F] hover:border-[#C2602D] disabled:opacity-35">
+                    <I className="w-5 h-5 text-[#A94E25]" aria-hidden />{l}
                   </button>
                 ))}
               </div>
@@ -439,16 +439,16 @@ function Campagne({ id, etat, stats, produits, codes, onRetour }: { id: string; 
           )}
 
           <section>
-            <h3 className="text-[13px] font-extrabold uppercase tracking-wide text-[#5C4030] mb-2.5">Contenu</h3>
+            <h3 className="text-[13px] font-extrabold uppercase tracking-wide text-[#44583F] mb-2.5">Contenu</h3>
             <ol className="space-y-1.5">
               {c.blocs.map((b, i) => (
                 <li key={b.id}>
-                  <div className={`flex items-center gap-2 pl-3 pr-1.5 py-1.5 rounded-xl bg-white border ${selection === b.id ? 'border-[#FF4500] ring-1 ring-[#FF4500] ring-inset' : 'border-[#E3D6C4]'}`}>
+                  <div className={`flex items-center gap-2 pl-3 pr-1.5 py-1.5 rounded-xl bg-white border ${selection === b.id ? 'border-[#C2602D] ring-1 ring-[#C2602D] ring-inset' : 'border-[#E3D6C4]'}`}>
                     <button type="button" onClick={() => setSelection(selection === b.id ? null : b.id)} className="flex-1 min-w-0 text-left py-1.5 text-sm font-semibold truncate">{resumeBloc(b, produits)}</button>
                     {modifiable && <>
-                      <button type="button" aria-label="Monter" disabled={i === 0} onClick={() => deplacer(b.id, -1)} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#F5EAE0] disabled:opacity-25"><ArrowUp className="w-4 h-4" /></button>
-                      <button type="button" aria-label="Descendre" disabled={i === c.blocs.length - 1} onClick={() => deplacer(b.id, 1)} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#F5EAE0] disabled:opacity-25"><ArrowDown className="w-4 h-4" /></button>
-                      <button type="button" aria-label="Supprimer le bloc" onClick={() => supprimerBloc(b.id)} className="w-8 h-8 flex items-center justify-center rounded-lg text-[#8C7867] hover:text-[#B83200] hover:bg-[#FFF1EA]"><Trash2 className="w-4 h-4" /></button>
+                      <button type="button" aria-label="Monter" disabled={i === 0} onClick={() => deplacer(b.id, -1)} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#F3E8D6] disabled:opacity-25"><ArrowUp className="w-4 h-4" /></button>
+                      <button type="button" aria-label="Descendre" disabled={i === c.blocs.length - 1} onClick={() => deplacer(b.id, 1)} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#F3E8D6] disabled:opacity-25"><ArrowDown className="w-4 h-4" /></button>
+                      <button type="button" aria-label="Supprimer le bloc" onClick={() => supprimerBloc(b.id)} className="w-8 h-8 flex items-center justify-center rounded-lg text-[#7A8570] hover:text-[#A94E25] hover:bg-[#F8EADF]"><Trash2 className="w-4 h-4" /></button>
                     </>}
                   </div>
                   {selection === b.id && modifiable && (
@@ -458,10 +458,10 @@ function Campagne({ id, etat, stats, produits, codes, onRetour }: { id: string; 
                   )}
                 </li>
               ))}
-              <li className="px-3 py-2.5 rounded-xl border border-dashed border-[#C9BBAA] text-[13px] text-[#8C7867]">Pied de page légal {c.type === 'offre' ? 'et lien de désinscription ' : ''}(ajouté automatiquement)</li>
+              <li className="px-3 py-2.5 rounded-xl border border-dashed border-[#C9BBAA] text-[13px] text-[#7A8570]">Pied de page légal {c.type === 'offre' ? 'et lien de désinscription ' : ''}(ajouté automatiquement)</li>
             </ol>
           </section>
-          {modifiable && <button type="button" onClick={supprimer} className="text-sm font-bold text-[#B83200] hover:underline">Supprimer ce brouillon</button>}
+          {modifiable && <button type="button" onClick={supprimer} className="text-sm font-bold text-[#A94E25] hover:underline">Supprimer ce brouillon</button>}
         </div>
 
         {/* APERÇU */}
@@ -469,18 +469,18 @@ function Campagne({ id, etat, stats, produits, codes, onRetour }: { id: string; 
           <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3 border-b border-[#E0D3C0]">
             <div className="inline-flex p-1 rounded-xl bg-[#E8DCCB]" role="group" aria-label="Taille de l'aperçu">
               {([['ordinateur', 'Ordinateur', Monitor], ['mobile', 'Mobile', Smartphone]] as const).map(([v, l, I]) => (
-                <button key={v} type="button" aria-pressed={ecran === v} onClick={() => setEcran(v)} className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-bold ${ecran === v ? 'bg-white text-[#3D2B1F] shadow-sm' : 'text-[#5C4030]'}`}><I className="w-4 h-4" />{l}</button>
+                <button key={v} type="button" aria-pressed={ecran === v} onClick={() => setEcran(v)} className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-bold ${ecran === v ? 'bg-white text-[#2F4A2B] shadow-sm' : 'text-[#44583F]'}`}><I className="w-4 h-4" />{l}</button>
               ))}
             </div>
             <ul className="flex flex-wrap gap-x-4 gap-y-1 text-[13px] font-bold">
-              {verifs.map((v) => <li key={v.texte} className={v.ok ? 'text-[#166534]' : 'text-[#B83200]'}>{v.ok ? '✓' : '✗'} {v.texte}</li>)}
+              {verifs.map((v) => <li key={v.texte} className={v.ok ? 'text-[#166534]' : 'text-[#A94E25]'}>{v.ok ? '✓' : '✗'} {v.texte}</li>)}
             </ul>
           </div>
           <div className="flex-1 flex justify-center p-4 md:p-6 bg-[#E8DCCB] overflow-auto">
-            <div className="bg-white rounded-2xl shadow-[0_10px_30px_rgba(61,43,31,0.12)] overflow-hidden" style={{ width: ecran === 'mobile' ? 390 : 680, maxWidth: '100%' }}>
-              <div className="px-4 py-2.5 border-b border-[#F0E7DA] text-[13px] leading-snug text-[#6F5A4B]">
-                <strong className="text-[#3D2B1F]">{c.expediteur_nom || 'Soleil et Saveurs'}</strong> &lt;{c.expediteur_local}@{etat?.domaine || 'domaine'}&gt;<br />
-                <strong className="text-[#3D2B1F]">{c.objet || 'Sans objet'}</strong>{c.apercu ? ` — ${c.apercu}` : ''}
+            <div className="bg-white rounded-2xl shadow-[0_10px_30px_rgba(47,74,43,0.12)] overflow-hidden" style={{ width: ecran === 'mobile' ? 390 : 680, maxWidth: '100%' }}>
+              <div className="px-4 py-2.5 border-b border-[#F0E7DA] text-[13px] leading-snug text-[#56654F]">
+                <strong className="text-[#2F4A2B]">{c.expediteur_nom || 'Soleil et Saveurs'}</strong> &lt;{c.expediteur_local}@{etat?.domaine || 'domaine'}&gt;<br />
+                <strong className="text-[#2F4A2B]">{c.objet || 'Sans objet'}</strong>{c.apercu ? ` — ${c.apercu}` : ''}
               </div>
               {/* allow-same-origin sans allow-scripts : aucun script ne s'exécute, la hauteur peut être lue */}
               <iframe title="Aperçu de l'e-mail" srcDoc={html} sandbox="allow-same-origin" className="block w-full border-0" style={{ height: hauteurApercu }}
@@ -517,7 +517,7 @@ function EditeurBloc({ bloc, produits, codes, onChange }: { bloc: Bloc; produits
   switch (bloc.type) {
     case 'titre':
       return (<>
-        <label className="block mb-1.5 text-[13px] font-bold text-[#5C4030]" htmlFor={`t-${bloc.id}`}>Titre</label>
+        <label className="block mb-1.5 text-[13px] font-bold text-[#44583F]" htmlFor={`t-${bloc.id}`}>Titre</label>
         <input id={`t-${bloc.id}`} className={champ} value={bloc.texte} maxLength={120} onChange={(e) => onChange({ texte: e.target.value })} />
         <Alignement valeur={bloc.alignement} onChange={(alignement) => onChange({ alignement })} />
       </>);
@@ -527,13 +527,13 @@ function EditeurBloc({ bloc, produits, codes, onChange }: { bloc: Bloc; produits
       return <EditeurImage bloc={bloc} produits={produits} onChange={onChange} />;
     case 'bouton':
       return (<>
-        <label className="block mb-1.5 text-[13px] font-bold text-[#5C4030]">Texte du bouton</label>
+        <label className="block mb-1.5 text-[13px] font-bold text-[#44583F]">Texte du bouton</label>
         <input className={champ} value={bloc.texte} maxLength={50} onChange={(e) => onChange({ texte: e.target.value })} />
         <label className={etiquette}>Lien (page du site comme /commander, ou adresse https://…)</label>
         <input className={champ} value={bloc.lien} maxLength={300} onChange={(e) => onChange({ lien: e.target.value.trim() })} />
-        {!/^(https:\/\/|\/|mailto:|tel:)/.test(bloc.lien) && <p className="mt-1.5 text-xs font-bold text-[#B83200]">Lien invalide : commencez par / ou https://</p>}
+        {!/^(https:\/\/|\/|mailto:|tel:)/.test(bloc.lien) && <p className="mt-1.5 text-xs font-bold text-[#A94E25]">Lien invalide : commencez par / ou https://</p>}
         <div className="flex gap-2 mt-3">
-          {(['orange', 'brun'] as const).map((k) => <button key={k} type="button" aria-pressed={(bloc.couleur || 'orange') === k} onClick={() => onChange({ couleur: k })} className={`flex-1 min-h-[40px] rounded-xl text-sm font-extrabold text-white ${k === 'orange' ? 'bg-[#FF4500]' : 'bg-[#3D2B1F]'} ${(bloc.couleur || 'orange') === k ? 'ring-2 ring-offset-2 ring-[#3D2B1F]' : 'opacity-60'}`}>{k === 'orange' ? 'Orange' : 'Brun'}</button>)}
+          {(['orange', 'brun'] as const).map((k) => <button key={k} type="button" aria-pressed={(bloc.couleur || 'orange') === k} onClick={() => onChange({ couleur: k })} className={`flex-1 min-h-[40px] rounded-xl text-sm font-extrabold text-white ${k === 'orange' ? 'bg-[#C2602D]' : 'bg-[#2F4A2B]'} ${(bloc.couleur || 'orange') === k ? 'ring-2 ring-offset-2 ring-[#2F4A2B]' : 'opacity-60'}`}>{k === 'orange' ? 'Orange' : 'Brun'}</button>)}
         </div>
       </>);
     case 'code': {
@@ -545,10 +545,10 @@ function EditeurBloc({ bloc, produits, codes, onChange }: { bloc: Bloc; produits
       };
       const utilisables = codes.filter((x) => ['actif', 'programme'].includes(statutCode(x)));
       return (<>
-        <label className="block mb-1.5 text-[13px] font-bold text-[#5C4030]">Code promo à mettre en avant</label>
+        <label className="block mb-1.5 text-[13px] font-bold text-[#44583F]">Code promo à mettre en avant</label>
         <div className="flex flex-wrap gap-1.5">
-          {utilisables.length === 0 && <p className="text-sm text-[#6F5A4B]">Aucun code actif ou programmé. Créez-en un dans l&apos;onglet Codes promo.</p>}
-          {utilisables.map((x) => <button key={x.id} type="button" aria-pressed={bloc.code === x.code} onClick={() => choisir(x)} className={`px-3 py-2 rounded-xl border-[1.5px] text-sm font-extrabold tracking-wide ${bloc.code === x.code ? 'bg-[#3D2B1F] border-[#3D2B1F] text-[#F5EAE0]' : 'border-[#DDD0BF] bg-white'}`}>{x.code} <span className="font-bold opacity-75">−{x.reduction_pct} %</span></button>)}
+          {utilisables.length === 0 && <p className="text-sm text-[#56654F]">Aucun code actif ou programmé. Créez-en un dans l&apos;onglet Codes promo.</p>}
+          {utilisables.map((x) => <button key={x.id} type="button" aria-pressed={bloc.code === x.code} onClick={() => choisir(x)} className={`px-3 py-2 rounded-xl border-[1.5px] text-sm font-extrabold tracking-wide ${bloc.code === x.code ? 'bg-[#2F4A2B] border-[#2F4A2B] text-[#F3E8D6]' : 'border-[#DDD0BF] bg-white'}`}>{x.code} <span className="font-bold opacity-75">−{x.reduction_pct} %</span></button>)}
         </div>
         <label className={etiquette}>Conditions affichées sous le code</label>
         <input className={champ} value={bloc.legende || ''} maxLength={140} onChange={(e) => onChange({ legende: e.target.value })} />
@@ -558,14 +558,14 @@ function EditeurBloc({ bloc, produits, codes, onChange }: { bloc: Bloc; produits
       const actifs = produits.filter((p) => p.actif !== false);
       const basculer = (pid: string) => onChange({ ids: bloc.ids.includes(pid) ? bloc.ids.filter((x) => x !== pid) : [...bloc.ids, pid].slice(0, 6) });
       return (<>
-        <p className="mb-2 text-[13px] font-bold text-[#5C4030]">Produits affichés ({bloc.ids.length}/6) · nom, photo et prix du jour</p>
+        <p className="mb-2 text-[13px] font-bold text-[#44583F]">Produits affichés ({bloc.ids.length}/6) · nom, photo et prix du jour</p>
         <div className="max-h-[260px] overflow-y-auto grid grid-cols-2 gap-1.5 pr-1">
           {actifs.map((p) => {
             const on = bloc.ids.includes(String(p.id));
             return (
               <button key={p.id} type="button" aria-pressed={on} onClick={() => basculer(String(p.id))} disabled={!on && bloc.ids.length >= 6}
                 className={`flex items-center gap-2 p-1.5 rounded-xl border-[1.5px] text-left text-[13px] font-semibold ${on ? 'border-[#166534] bg-[#ECF7EF]' : 'border-[#E3D6C4] bg-white'} disabled:opacity-40`}>
-                {p.image_url ? <img src={p.image_url} alt="" className="w-9 h-9 rounded-lg object-cover shrink-0" /> : <span className="w-9 h-9 rounded-lg bg-[#F5EAE0] shrink-0" />}
+                {p.image_url ? <img src={p.image_url} alt="" className="w-9 h-9 rounded-lg object-cover shrink-0" /> : <span className="w-9 h-9 rounded-lg bg-[#F3E8D6] shrink-0" />}
                 <span className="truncate">{p.name}</span>
                 {on && <Check className="w-4 h-4 ml-auto shrink-0 text-[#166534]" />}
               </button>
@@ -576,18 +576,18 @@ function EditeurBloc({ bloc, produits, codes, onChange }: { bloc: Bloc; produits
     }
     case 'espace':
       return (<>
-        <label className="block mb-1.5 text-[13px] font-bold text-[#5C4030]">Hauteur : {bloc.hauteur ?? 24} px</label>
-        <input type="range" min={8} max={80} step={4} value={bloc.hauteur ?? 24} onChange={(e) => onChange({ hauteur: Number(e.target.value) })} className="w-full accent-[#FF4500]" />
+        <label className="block mb-1.5 text-[13px] font-bold text-[#44583F]">Hauteur : {bloc.hauteur ?? 24} px</label>
+        <input type="range" min={8} max={80} step={4} value={bloc.hauteur ?? 24} onChange={(e) => onChange({ hauteur: Number(e.target.value) })} className="w-full accent-[#C2602D]" />
       </>);
     default:
-      return <p className="text-sm text-[#6F5A4B]">Ce bloc n&apos;a pas de réglage.</p>;
+      return <p className="text-sm text-[#56654F]">Ce bloc n&apos;a pas de réglage.</p>;
   }
 }
 
 function Alignement({ valeur, onChange }: { valeur?: 'gauche' | 'centre'; onChange: (v: 'gauche' | 'centre') => void }) {
   return (
     <div className="flex gap-1.5 mt-2.5" role="group" aria-label="Alignement">
-      {(['gauche', 'centre'] as const).map((a) => <button key={a} type="button" aria-pressed={(valeur || 'gauche') === a} onClick={() => onChange(a)} className={`px-3 py-1.5 rounded-lg border-[1.5px] text-[13px] font-bold ${(valeur || 'gauche') === a ? 'border-[#3D2B1F] bg-[#3D2B1F] text-[#F5EAE0]' : 'border-[#DDD0BF]'}`}>{a === 'gauche' ? 'À gauche' : 'Centré'}</button>)}
+      {(['gauche', 'centre'] as const).map((a) => <button key={a} type="button" aria-pressed={(valeur || 'gauche') === a} onClick={() => onChange(a)} className={`px-3 py-1.5 rounded-lg border-[1.5px] text-[13px] font-bold ${(valeur || 'gauche') === a ? 'border-[#2F4A2B] bg-[#2F4A2B] text-[#F3E8D6]' : 'border-[#DDD0BF]'}`}>{a === 'gauche' ? 'À gauche' : 'Centré'}</button>)}
     </div>
   );
 }
@@ -610,22 +610,22 @@ function EditeurTexte({ bloc, onChange }: { bloc: Extract<Bloc, { type: 'texte' 
     if (!/^(https:\/\/|\/|mailto:|tel:)/.test(url.trim())) { window.alert('Le lien doit commencer par / ou https://'); return; }
     commande('createLink', url.trim());
   };
-  const outil = 'w-9 h-9 flex items-center justify-center rounded-lg text-[#F5EAE0] hover:bg-[#5C4030]';
+  const outil = 'w-9 h-9 flex items-center justify-center rounded-lg text-[#F3E8D6] hover:bg-[#44583F]';
   return (
     <>
-      <div className="flex flex-wrap items-center gap-0.5 p-1 mb-2 rounded-xl bg-[#3D2B1F]" role="toolbar" aria-label="Mise en forme">
+      <div className="flex flex-wrap items-center gap-0.5 p-1 mb-2 rounded-xl bg-[#2F4A2B]" role="toolbar" aria-label="Mise en forme">
         <button type="button" className={outil} aria-label="Gras" onMouseDown={(e) => { e.preventDefault(); commande('bold'); }}><Bold className="w-4 h-4" /></button>
         <button type="button" className={outil} aria-label="Italique" onMouseDown={(e) => { e.preventDefault(); commande('italic'); }}><Italic className="w-4 h-4" /></button>
         <button type="button" className={outil} aria-label="Souligné" onMouseDown={(e) => { e.preventDefault(); commande('underline'); }}><Underline className="w-4 h-4" /></button>
-        <span className="w-px h-5 mx-1 bg-[#5C4030]" />
-        {COULEURS_TEXTE.map((c) => <button key={c.valeur} type="button" aria-label={`Couleur ${c.nom}`} title={c.nom} onMouseDown={(e) => { e.preventDefault(); commande('foreColor', c.valeur); }} className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-[#5C4030]"><span className="w-4 h-4 rounded-full border-2 border-white" style={{ background: c.valeur }} /></button>)}
-        <span className="w-px h-5 mx-1 bg-[#5C4030]" />
+        <span className="w-px h-5 mx-1 bg-[#44583F]" />
+        {COULEURS_TEXTE.map((c) => <button key={c.valeur} type="button" aria-label={`Couleur ${c.nom}`} title={c.nom} onMouseDown={(e) => { e.preventDefault(); commande('foreColor', c.valeur); }} className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-[#44583F]"><span className="w-4 h-4 rounded-full border-2 border-white" style={{ background: c.valeur }} /></button>)}
+        <span className="w-px h-5 mx-1 bg-[#44583F]" />
         <button type="button" className={outil} aria-label="Lien" onMouseDown={(e) => { e.preventDefault(); lien(); }}><IconeLien className="w-4 h-4" /></button>
-        <button type="button" className="h-9 px-2 rounded-lg text-xs font-extrabold text-[#F5EAE0] hover:bg-[#5C4030]" onMouseDown={(e) => { e.preventDefault(); commande('insertText', '{prenom}'); }} title="Remplacé par le prénom du client">+ Prénom</button>
+        <button type="button" className="h-9 px-2 rounded-lg text-xs font-extrabold text-[#F3E8D6] hover:bg-[#44583F]" onMouseDown={(e) => { e.preventDefault(); commande('insertText', '{prenom}'); }} title="Remplacé par le prénom du client">+ Prénom</button>
       </div>
       <div ref={zone} contentEditable suppressContentEditableWarning onInput={publier} onBlur={publier} aria-label="Texte du bloc" role="textbox" aria-multiline="true"
-        className="min-h-[120px] p-3 rounded-xl border-[1.5px] border-[#DDD0BF] bg-white text-[15px] leading-relaxed outline-none focus:border-[#FF4500] [&_a]:text-[#C73600] [&_a]:underline" />
-      <p className="mt-1.5 text-xs text-[#6F5A4B]">« {'{prenom}'} » est remplacé par le prénom de chaque client (ou retiré s&apos;il est inconnu).</p>
+        className="min-h-[120px] p-3 rounded-xl border-[1.5px] border-[#DDD0BF] bg-white text-[15px] leading-relaxed outline-none focus:border-[#C2602D] [&_a]:text-[#A94E25] [&_a]:underline" />
+      <p className="mt-1.5 text-xs text-[#56654F]">« {'{prenom}'} » est remplacé par le prénom de chaque client (ou retiré s&apos;il est inconnu).</p>
       <Alignement valeur={bloc.alignement} onChange={(alignement) => onChange({ alignement })} />
     </>
   );
@@ -663,13 +663,13 @@ function EditeurImage({ bloc, produits, onChange }: { bloc: Extract<Bloc, { type
 
   return (<>
     <input ref={fichier} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) importer(f); }} />
-    <button type="button" onClick={() => fichier.current?.click()} disabled={envoi} className="w-full inline-flex items-center justify-center gap-2 min-h-[44px] rounded-xl border-[1.5px] border-[#3D2B1F] text-sm font-extrabold disabled:opacity-50">
+    <button type="button" onClick={() => fichier.current?.click()} disabled={envoi} className="w-full inline-flex items-center justify-center gap-2 min-h-[44px] rounded-xl border-[1.5px] border-[#2F4A2B] text-sm font-extrabold disabled:opacity-50">
       {envoi ? <Loader2 className="w-4 h-4 animate-spin" /> : <IconeImage className="w-4 h-4" />}Importer une photo
     </button>
     {photos.length > 0 && <>
-      <p className="mt-3 mb-1.5 text-[13px] font-bold text-[#5C4030]">Ou une photo de vos produits</p>
+      <p className="mt-3 mb-1.5 text-[13px] font-bold text-[#44583F]">Ou une photo de vos produits</p>
       <div className="grid grid-cols-5 gap-1.5 max-h-[150px] overflow-y-auto pr-1">
-        {photos.map((u) => <button key={u} type="button" aria-pressed={bloc.url === u} onClick={() => onChange({ url: u })} className={`aspect-square rounded-lg overflow-hidden ${bloc.url === u ? 'ring-2 ring-[#FF4500] ring-offset-1' : ''}`}><img src={u} alt="" className="w-full h-full object-cover" /></button>)}
+        {photos.map((u) => <button key={u} type="button" aria-pressed={bloc.url === u} onClick={() => onChange({ url: u })} className={`aspect-square rounded-lg overflow-hidden ${bloc.url === u ? 'ring-2 ring-[#C2602D] ring-offset-1' : ''}`}><img src={u} alt="" className="w-full h-full object-cover" /></button>)}
       </div>
     </>}
     <label className={etiquette}>Description de l&apos;image (lue si l&apos;image ne s&apos;affiche pas)</label>
@@ -714,14 +714,14 @@ function Confirmation({ campagne, etat, nbDestinataires, html, verifs, onFermer,
 
   const typeLibelle = campagne.type === 'offre' ? "Offre commerciale : clients ayant accepté les offres (désinscrits et adresses en erreur exclus)" : "Information de service : tous les clients à l'adresse confirmée (adresses en erreur exclues)";
   return (
-    <div className="fixed inset-0 z-[300] flex items-start md:items-center justify-center p-3 md:p-6 bg-[rgba(61,43,31,0.55)] overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="titre-confirmation">
-      <div className="w-full max-w-[780px] bg-white rounded-[24px] overflow-hidden shadow-2xl text-[#3D2B1F]">
+    <div className="fixed inset-0 z-[300] flex items-start md:items-center justify-center p-3 md:p-6 bg-[rgba(47,74,43,0.55)] overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="titre-confirmation">
+      <div className="w-full max-w-[780px] bg-white rounded-[24px] overflow-hidden shadow-2xl text-[#2F4A2B]">
         <div className="flex items-start justify-between gap-4 px-6 pt-6 pb-4 border-b border-[#F0E7DA]">
           <div>
-            <p className="text-[13px] font-extrabold uppercase tracking-[0.1em] text-[#C73600]">Dernière vérification</p>
+            <p className="text-[13px] font-extrabold uppercase tracking-[0.1em] text-[#A94E25]">Dernière vérification</p>
             <h2 id="titre-confirmation" className="titre text-[28px] leading-tight mt-1">Envoyer « {campagne.objet} » à {nbDestinataires ?? '…'} clients ?</h2>
           </div>
-          <button type="button" onClick={onFermer} aria-label="Fermer" className="w-10 h-10 shrink-0 flex items-center justify-center rounded-full hover:bg-[#F5EAE0]"><X className="w-5 h-5" /></button>
+          <button type="button" onClick={onFermer} aria-label="Fermer" className="w-10 h-10 shrink-0 flex items-center justify-center rounded-full hover:bg-[#F3E8D6]"><X className="w-5 h-5" /></button>
         </div>
         <div className="grid md:grid-cols-[minmax(0,1fr)_210px] gap-5 px-6 py-5">
           <div className="text-[15px]">
@@ -731,10 +731,10 @@ function Confirmation({ campagne, etat, nbDestinataires, html, verifs, onFermer,
               ['Destinataires', `${nbDestinataires ?? '…'} clients`],
               ['Type', typeLibelle],
               ['Envoi', quand === 'maintenant' ? 'Dès la confirmation' : isoProgramme ? dateParis(isoProgramme, { jour: true }) + ' (heure de Paris)' : 'Date à choisir'],
-            ].map(([l, v]) => <p key={l} className="flex justify-between gap-4 py-2.5 border-b border-[#F0E7DA]"><span className="shrink-0 text-[#6F5A4B]">{l}</span><strong className="text-right">{v}</strong></p>)}
+            ].map(([l, v]) => <p key={l} className="flex justify-between gap-4 py-2.5 border-b border-[#F0E7DA]"><span className="shrink-0 text-[#56654F]">{l}</span><strong className="text-right">{v}</strong></p>)}
             <div className="flex gap-2 mt-3.5">
-              <button type="button" aria-pressed={quand === 'maintenant'} onClick={() => setQuand('maintenant')} className={`flex-1 text-left p-3 rounded-xl border-[1.5px] ${quand === 'maintenant' ? 'border-[#3D2B1F] ring-1 ring-inset ring-[#3D2B1F]' : 'border-[#DDD0BF]'}`}><strong className="block text-sm">Maintenant</strong><span className="text-[13px] text-[#6F5A4B]">dès la confirmation</span></button>
-              <button type="button" aria-pressed={quand === 'programmer'} disabled={!programmable} onClick={() => setQuand('programmer')} title={programmable ? undefined : "L'envoi programmé sera disponible après l'activation de l'envoi automatique"} className={`flex-1 text-left p-3 rounded-xl border-[1.5px] disabled:opacity-40 ${quand === 'programmer' ? 'border-[#3D2B1F] ring-1 ring-inset ring-[#3D2B1F]' : 'border-[#DDD0BF]'}`}><strong className="block text-sm">Programmer</strong><span className="text-[13px] text-[#6F5A4B]">{programmable ? 'à une date choisie' : 'bientôt disponible'}</span></button>
+              <button type="button" aria-pressed={quand === 'maintenant'} onClick={() => setQuand('maintenant')} className={`flex-1 text-left p-3 rounded-xl border-[1.5px] ${quand === 'maintenant' ? 'border-[#2F4A2B] ring-1 ring-inset ring-[#2F4A2B]' : 'border-[#DDD0BF]'}`}><strong className="block text-sm">Maintenant</strong><span className="text-[13px] text-[#56654F]">dès la confirmation</span></button>
+              <button type="button" aria-pressed={quand === 'programmer'} disabled={!programmable} onClick={() => setQuand('programmer')} title={programmable ? undefined : "L'envoi programmé sera disponible après l'activation de l'envoi automatique"} className={`flex-1 text-left p-3 rounded-xl border-[1.5px] disabled:opacity-40 ${quand === 'programmer' ? 'border-[#2F4A2B] ring-1 ring-inset ring-[#2F4A2B]' : 'border-[#DDD0BF]'}`}><strong className="block text-sm">Programmer</strong><span className="text-[13px] text-[#56654F]">{programmable ? 'à une date choisie' : 'bientôt disponible'}</span></button>
             </div>
             {quand === 'programmer' && <input type="datetime-local" value={date} onChange={(e) => setDate(e.target.value)} className={`${champ} mt-2.5`} aria-label="Date et heure d'envoi (heure de Paris)" />}
           </div>
@@ -743,22 +743,22 @@ function Confirmation({ campagne, etat, nbDestinataires, html, verifs, onFermer,
           </div>
         </div>
         <ul className="mx-6 px-4 py-3 rounded-2xl bg-[#ECF7EF] text-sm font-semibold leading-7 text-[#166534]">
-          <li className={campagne.test_envoye_le ? '' : 'text-[#B83200]'}>{campagne.test_envoye_le ? `✓ E-mail de test envoyé le ${dateHeure(campagne.test_envoye_le)}` : '! Aucun e-mail de test envoyé (conseillé avant l’envoi)'}</li>
-          {verifs.map((v) => <li key={v.texte} className={v.ok ? '' : 'text-[#B83200]'}>{v.ok ? '✓' : '✗'} {v.texte}</li>)}
+          <li className={campagne.test_envoye_le ? '' : 'text-[#A94E25]'}>{campagne.test_envoye_le ? `✓ E-mail de test envoyé le ${dateHeure(campagne.test_envoye_le)}` : '! Aucun e-mail de test envoyé (conseillé avant l’envoi)'}</li>
+          {verifs.map((v) => <li key={v.texte} className={v.ok ? '' : 'text-[#A94E25]'}>{v.ok ? '✓' : '✗'} {v.texte}</li>)}
         </ul>
-        {bloque && <p className="mx-6 mt-3 flex gap-2.5 px-4 py-3 rounded-2xl bg-[#FFF1EA] text-sm leading-relaxed text-[#B83200]"><AlertTriangle className="w-5 h-5 shrink-0" /><span><strong>Envoi impossible pour l&apos;instant :</strong> {etat?.raison || 'état du prestataire inconnu.'}</span></p>}
+        {bloque && <p className="mx-6 mt-3 flex gap-2.5 px-4 py-3 rounded-2xl bg-[#F8EADF] text-sm leading-relaxed text-[#A94E25]"><AlertTriangle className="w-5 h-5 shrink-0" /><span><strong>Envoi impossible pour l&apos;instant :</strong> {etat?.raison || 'état du prestataire inconnu.'}</span></p>}
         <div className="px-6 pt-5 pb-6">
-          <label htmlFor="saisie-envoyer" className="block text-sm font-bold text-[#5C4030]">Pour confirmer, tapez <strong className="text-[#3D2B1F]">ENVOYER</strong></label>
+          <label htmlFor="saisie-envoyer" className="block text-sm font-bold text-[#44583F]">Pour confirmer, tapez <strong className="text-[#2F4A2B]">ENVOYER</strong></label>
           <input id="saisie-envoyer" value={saisie} onChange={(e) => setSaisie(e.target.value.toUpperCase())} autoComplete="off" disabled={bloque} className={`${champ} mt-2 text-lg tracking-[0.1em] font-extrabold`} />
-          {erreur && <p role="alert" className="mt-2 text-sm font-bold text-[#B83200]">{erreur}</p>}
+          {erreur && <p role="alert" className="mt-2 text-sm font-bold text-[#A94E25]">{erreur}</p>}
           <div className="flex flex-col-reverse sm:flex-row gap-2.5 mt-4">
-            <button type="button" onClick={onFermer} className="min-h-[54px] px-5 rounded-2xl border-[1.5px] border-[#3D2B1F] font-extrabold">Revenir modifier</button>
-            <button type="button" onClick={lancer} disabled={bloque || encours || saisie.trim() !== 'ENVOYER' || !dateOk} className="flex-1 inline-flex items-center justify-center gap-2 min-h-[54px] px-5 rounded-2xl bg-[#FF4500] text-white font-extrabold disabled:opacity-40">
+            <button type="button" onClick={onFermer} className="min-h-[54px] px-5 rounded-2xl border-[1.5px] border-[#2F4A2B] font-extrabold">Revenir modifier</button>
+            <button type="button" onClick={lancer} disabled={bloque || encours || saisie.trim() !== 'ENVOYER' || !dateOk} className="flex-1 inline-flex items-center justify-center gap-2 min-h-[54px] px-5 rounded-2xl bg-[#C2602D] text-white font-extrabold disabled:opacity-40">
               {encours ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
               {quand === 'maintenant' ? `Envoyer à ${nbDestinataires ?? '…'} clients` : `Programmer l'envoi à ${nbDestinataires ?? '…'} clients`}
             </button>
           </div>
-          <p className="mt-3 text-[13px] text-[#6F5A4B]">Une campagne programmée peut être annulée jusqu&apos;à l&apos;heure d&apos;envoi. Une fois partie, elle ne peut plus être rappelée.</p>
+          <p className="mt-3 text-[13px] text-[#56654F]">Une campagne programmée peut être annulée jusqu&apos;à l&apos;heure d&apos;envoi. Une fois partie, elle ne peut plus être rappelée.</p>
         </div>
       </div>
     </div>
@@ -785,5 +785,5 @@ function EnvoiEnCours({ campagneId, onFini }: { campagneId: string; onFini: () =
     })();
     return () => { actif.current = false; };
   }, [campagneId, onFini]);
-  return <p className="mt-3 flex items-center gap-2 px-3 py-2.5 rounded-xl bg-[#FFF1EA] text-sm font-bold text-[#C73600]"><Loader2 className="w-4 h-4 animate-spin shrink-0" />{message}</p>;
+  return <p className="mt-3 flex items-center gap-2 px-3 py-2.5 rounded-xl bg-[#F8EADF] text-sm font-bold text-[#A94E25]"><Loader2 className="w-4 h-4 animate-spin shrink-0" />{message}</p>;
 }

@@ -160,21 +160,21 @@ export default function CommanderPage() {
 
   const champRecherche = (
     <div className="relative">
-      <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-[#6F5A4B] pointer-events-none" aria-hidden />
+      <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-[#56654F] pointer-events-none" aria-hidden />
       <input
         type="search"
         aria-label="Rechercher un produit, une provenance"
         value={search}
         onChange={(e) => choisirRecherche(e.target.value)}
         placeholder="Rechercher un produit, une provenance…"
-        className="w-full h-[50px] lg:h-[52px] bg-white border border-[#E0D3C0] rounded-[15px] lg:rounded-2xl pl-12 pr-12 text-base font-semibold text-[#3D2B1F] placeholder:text-[#8C7867] placeholder:font-medium focus:outline-none focus:border-[#FF4500] transition-colors [&::-webkit-search-cancel-button]:hidden"
+        className="w-full h-[50px] lg:h-[52px] bg-white border border-[#E0D3C0] rounded-[15px] lg:rounded-2xl pl-12 pr-12 text-base font-semibold text-[#2F4A2B] placeholder:text-[#7A8570] placeholder:font-medium focus:outline-none focus:border-[#C2602D] transition-colors [&::-webkit-search-cancel-button]:hidden"
       />
       {search && (
         <button
           type="button"
           onClick={() => choisirRecherche('')}
           aria-label="Effacer la recherche"
-          className="absolute right-1.5 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center text-[#6F5A4B] hover:bg-[#F5EAE0] hover:text-[#3D2B1F] transition-colors"
+          className="absolute right-1.5 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center text-[#56654F] hover:bg-[#F3E8D6] hover:text-[#2F4A2B] transition-colors"
         >
           <X className="w-[18px] h-[18px]" aria-hidden />
         </button>
@@ -206,33 +206,33 @@ export default function CommanderPage() {
 
   return (
     <>
-    <main className="min-h-screen bg-[#EDE3D5] text-[#3D2B1F] pb-44 md:pb-36">
+    <main className="min-h-screen bg-[#EDE3D5] text-[#2F4A2B] pb-44 md:pb-36">
 
       {showToast && (
-        <div className="fixed top-28 left-1/2 -translate-x-1/2 z-[100] bg-[#3D2B1F] text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-300">
-          <CheckCircle2 className="w-5 h-5 text-[#FF7A47]" aria-hidden />
+        <div className="fixed top-28 left-1/2 -translate-x-1/2 z-[100] bg-[#2F4A2B] text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-300">
+          <CheckCircle2 className="w-5 h-5 text-[#D7803F]" aria-hidden />
           <span role="status" className="font-bold text-sm">{texteToast}</span>
         </div>
       )}
 
       {/* EN-TÊTE DE PAGE */}
-      <header className="bg-[#F5EAE0] border-b border-[#E3D6C4]">
+      <header className="bg-[#F3E8D6] border-b border-[#E3D6C4]">
         <div className="max-w-7xl mx-auto px-5 md:px-10 pt-5 pb-5 md:pt-8 md:pb-7">
-          <nav aria-label="Fil d'Ariane" className="hidden md:flex items-center gap-2 mb-3.5 text-[13px] font-semibold text-[#6F5A4B]">
-            <Link href="/" className="hover:text-[#C73600] transition-colors">Accueil</Link>
+          <nav aria-label="Fil d'Ariane" className="hidden md:flex items-center gap-2 mb-3.5 text-[13px] font-semibold text-[#56654F]">
+            <Link href="/" className="hover:text-[#A94E25] transition-colors">Accueil</Link>
             <span aria-hidden>›</span>
-            <span aria-current="page" className="font-bold text-[#3D2B1F]">Boutique</span>
+            <span aria-current="page" className="font-bold text-[#2F4A2B]">Boutique</span>
           </nav>
           <div className="flex items-end justify-between gap-3">
             <h1 className="titre text-[44px] md:text-[64px] leading-none">
-              La <em className="text-[#FF4500]">récolte</em>
+              La <em className="text-[#C2602D]">récolte</em>
             </h1>
             <p className="mb-1.5 inline-flex items-center gap-2 md:gap-2.5 px-3 py-1.5 md:px-4 md:py-2.5 rounded-full bg-white border border-[#E8DCCB] text-xs md:text-[13px] font-bold text-[#166534] whitespace-nowrap">
               <span className="ss-pouls w-2 h-2 rounded-full bg-[#16A34A]" />
               Stock mis à jour
             </p>
           </div>
-          <p className="mt-2 md:mt-2.5 text-[15px] md:text-[17px] leading-normal text-[#5C4030]">Cultivé avec passion, livré avec soin.</p>
+          <p className="mt-2 md:mt-2.5 text-[15px] md:text-[17px] leading-normal text-[#44583F]">Cultivé avec passion, livré avec soin.</p>
         </div>
       </header>
 
@@ -254,16 +254,16 @@ export default function CommanderPage() {
                   onClick={() => choisirFiltre(cat)}
                   className={`shrink-0 flex items-center gap-1.5 md:gap-2 h-11 md:h-12 px-2.5 md:px-[18px] rounded-[13px] md:rounded-[14px] border-[1.5px] text-[13.5px] md:text-[15px] font-bold whitespace-nowrap transition-colors ${
                     actif
-                      ? cat === 'promos' ? 'bg-[#D43A00] border-[#D43A00] text-white' : 'bg-[#3D2B1F] border-[#3D2B1F] text-[#F5EAE0]'
+                      ? cat === 'promos' ? 'bg-[#A94E25] border-[#A94E25] text-white' : 'bg-[#2F4A2B] border-[#2F4A2B] text-[#F3E8D6]'
                       : cat === 'promos'
-                        ? 'bg-white border-[#FFB89A] text-[#C73600] hover:border-[#C73600]'
-                        : 'bg-white border-[#DDD0BF] text-[#3D2B1F] hover:border-[#3D2B1F]'
+                        ? 'bg-white border-[#E2AE8E] text-[#A94E25] hover:border-[#A94E25]'
+                        : 'bg-white border-[#DDD0BF] text-[#2F4A2B] hover:border-[#2F4A2B]'
                   }`}
                 >
                   {cat === 'promos' && <Flame className="w-[15px] h-[15px] md:w-[17px] md:h-[17px]" aria-hidden />}
                   {cat === 'all' ? <><span className="sm:hidden">Tout</span><span className="hidden sm:inline">Tout voir</span></> : cat === 'promos' ? 'Promos' : cat}
                   {!loading && (
-                    <span className={`text-xs md:text-[13px] font-semibold ${actif ? 'opacity-80' : cat === 'promos' ? '' : 'text-[#6F5A4B]'}`}>{compter(cat)}</span>
+                    <span className={`text-xs md:text-[13px] font-semibold ${actif ? 'opacity-80' : cat === 'promos' ? '' : 'text-[#56654F]'}`}>{compter(cat)}</span>
                   )}
                 </button>
               );
@@ -275,27 +275,27 @@ export default function CommanderPage() {
       <div className="max-w-7xl mx-auto px-2 md:px-10 pt-4 md:pt-6">
 
         {!loading && filteredProducts.length > 0 && (
-          <p className="mx-2 md:mx-0 mb-3 md:mb-[18px] text-[13px] md:text-sm font-semibold text-[#6F5A4B]">
-            <strong className="font-extrabold text-[#3D2B1F]">{filteredProducts.length} produit{filteredProducts.length > 1 ? 's' : ''}</strong>
+          <p className="mx-2 md:mx-0 mb-3 md:mb-[18px] text-[13px] md:text-sm font-semibold text-[#56654F]">
+            <strong className="font-extrabold text-[#2F4A2B]">{filteredProducts.length} produit{filteredProducts.length > 1 ? 's' : ''}</strong>
             {filteredProducts.some(enPromoProduit) && filteredProducts.some(p => !enPromoProduit(p)) ? ' · les promotions en premier' : ''}
           </p>
         )}
 
         {loading ? (
           <div className="flex justify-center py-20" role="status" aria-label="Chargement des produits">
-            <div className="w-10 h-10 border-4 border-[#DDD0BF] border-t-[#FF4500] rounded-full animate-spin" />
+            <div className="w-10 h-10 border-4 border-[#DDD0BF] border-t-[#C2602D] rounded-full animate-spin" />
           </div>
         ) : filteredProducts.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="w-16 h-16 bg-[#F5EAE0] rounded-full flex items-center justify-center mb-4 text-[#C9BBAA]">
+            <div className="w-16 h-16 bg-[#F3E8D6] rounded-full flex items-center justify-center mb-4 text-[#C9BBAA]">
               <Search className="w-7 h-7" aria-hidden />
             </div>
-            <p className="titre text-2xl text-[#3D2B1F]">Aucun produit trouvé</p>
+            <p className="titre text-2xl text-[#2F4A2B]">Aucun produit trouvé</p>
             {search && (
               <button
                 type="button"
                 onClick={() => choisirRecherche('')}
-                className="mt-4 min-h-11 px-5 rounded-full border-[1.5px] border-[#3D2B1F] text-sm font-bold text-[#3D2B1F] hover:bg-[#3D2B1F] hover:text-[#F5EAE0] transition-colors"
+                className="mt-4 min-h-11 px-5 rounded-full border-[1.5px] border-[#2F4A2B] text-sm font-bold text-[#2F4A2B] hover:bg-[#2F4A2B] hover:text-[#F3E8D6] transition-colors"
               >
                 Effacer la recherche
               </button>
@@ -354,7 +354,7 @@ export default function CommanderPage() {
               return (
                 <article
                   key={product.id}
-                  className={`group relative flex flex-col rounded-[18px] sm:rounded-3xl border border-[#E8DCCB] p-1.5 sm:p-2.5 overflow-hidden transition-[transform,box-shadow] duration-300 ease-out sm:hover:-translate-y-1 sm:hover:shadow-[0_26px_44px_-28px_rgba(61,43,31,0.5)] ${epuise ? 'bg-[#F9F3EA]' : 'bg-white'}`}
+                  className={`group relative flex flex-col rounded-[18px] sm:rounded-3xl border border-[#E8DCCB] p-1.5 sm:p-2.5 overflow-hidden transition-[transform,box-shadow] duration-300 ease-out sm:hover:-translate-y-1 sm:hover:shadow-[0_26px_44px_-28px_rgba(47,74,43,0.5)] ${epuise ? 'bg-[#F9F3EA]' : 'bg-white'}`}
                 >
                   {/* PHOTO — au format 3:2 de l'outil de cadrage de l'admin : le client voit le cadrage exact */}
                   <div className="relative">
@@ -364,10 +364,10 @@ export default function CommanderPage() {
                           <ImageFondu src={imageCarte} alt={nomCarte} />
                         </div>
                       ) : (
-                        <span className="absolute inset-0 flex items-center justify-center bg-[#F5EAE0] text-[#C9BBAA]"><ShoppingBasket className="w-10 h-10" aria-hidden /></span>
+                        <span className="absolute inset-0 flex items-center justify-center bg-[#F3E8D6] text-[#C9BBAA]"><ShoppingBasket className="w-10 h-10" aria-hidden /></span>
                       )}
                       {slug && (
-                        <span className="absolute bottom-1.5 right-1.5 sm:bottom-2 sm:right-2 bg-white/90 backdrop-blur-sm text-[#3D2B1F] text-[11px] sm:text-xs font-bold px-2 py-1 rounded-full shadow-sm flex items-center gap-1 group-hover:bg-[#3D2B1F] group-hover:text-[#F5EAE0] transition-colors">
+                        <span className="absolute bottom-1.5 right-1.5 sm:bottom-2 sm:right-2 bg-white/90 backdrop-blur-sm text-[#2F4A2B] text-[11px] sm:text-xs font-bold px-2 py-1 rounded-full shadow-sm flex items-center gap-1 group-hover:bg-[#2F4A2B] group-hover:text-[#F3E8D6] transition-colors">
                           <BookOpen className="w-3 h-3" aria-hidden /> Voir la fiche
                         </span>
                       )}
@@ -376,12 +376,12 @@ export default function CommanderPage() {
                     {/* PROMOTIONS ET DISPONIBILITÉ */}
                     <div className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 flex flex-col items-start gap-1 pointer-events-none">
                       {epuise ? (
-                        <span className="px-2 py-1 sm:px-2.5 rounded-full bg-[#5C4030] text-white text-[11px] sm:text-[13px] font-extrabold">Épuisé</span>
+                        <span className="px-2 py-1 sm:px-2.5 rounded-full bg-[#44583F] text-white text-[11px] sm:text-[13px] font-extrabold">Épuisé</span>
                       ) : etiquettes.map(e => (
                         <span
                           key={e.cle}
                           className={`px-2 py-1 sm:px-2.5 rounded-full text-white text-[11px] sm:text-[13px] font-extrabold ${
-                            e.cle === 'offertes' ? 'bg-[#166534]' : e.cle === 'lot' ? 'bg-[#3D2B1F]' : 'bg-[#D43A00]'}`}
+                            e.cle === 'offertes' ? 'bg-[#166534]' : e.cle === 'lot' ? 'bg-[#2F4A2B]' : 'bg-[#A94E25]'}`}
                         >
                           <span className="sm:hidden">{e.court}</span>
                           <span className="hidden sm:inline">{e.texte}</span>
@@ -402,7 +402,7 @@ export default function CommanderPage() {
                         type="button"
                         onClick={() => setInfoProduct({ ...product, name: nomCarte, image_url: imageCarte, description: descriptionCarte })}
                         aria-label={`Description : ${nomCarte}`}
-                        className="absolute bottom-1.5 right-1.5 sm:bottom-2 sm:right-2 w-9 h-9 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm text-[#5C4030] hover:bg-white hover:text-[#3D2B1F] transition-colors"
+                        className="absolute bottom-1.5 right-1.5 sm:bottom-2 sm:right-2 w-9 h-9 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm text-[#44583F] hover:bg-white hover:text-[#2F4A2B] transition-colors"
                       >
                         <Info className="w-4 h-4" aria-hidden />
                       </button>
@@ -412,9 +412,9 @@ export default function CommanderPage() {
                   <div className="flex-1 flex flex-col gap-2 sm:gap-3 px-1 sm:px-1.5 pt-2.5 sm:pt-3.5 pb-0.5 sm:pb-1">
                     <div>
                       <LienFiche slug={slug} className="block min-w-0">
-                        <h3 className={`text-sm sm:text-[17px] font-extrabold leading-tight text-[#3D2B1F] line-clamp-2 ${epuise ? 'text-[#5C4030]' : ''} ${slug ? 'hover:underline' : ''}`}>{nomCarte}</h3>
+                        <h3 className={`text-sm sm:text-[17px] font-extrabold leading-tight text-[#2F4A2B] line-clamp-2 ${epuise ? 'text-[#44583F]' : ''} ${slug ? 'hover:underline' : ''}`}>{nomCarte}</h3>
                       </LienFiche>
-                      <p className="mt-0.5 text-xs sm:text-[13px] font-semibold text-[#6F5A4B]">
+                      <p className="mt-0.5 text-xs sm:text-[13px] font-semibold text-[#56654F]">
                         {product.provenance ? `${product.provenance} · ` : ''}{libelleUnite(pv.unite)}
                       </p>
                     </div>
@@ -423,7 +423,7 @@ export default function CommanderPage() {
                     {productVariants.length > 0 && (
                       <div>
                         <div className="flex items-center justify-between gap-1 mb-0.5">
-                          <p className="text-[11px] sm:text-xs font-semibold text-[#6F5A4B] truncate">
+                          <p className="text-[11px] sm:text-xs font-semibold text-[#56654F] truncate">
                             {productVariants.length} {variantesCumulables(product) ? 'variétés' : 'versions'}<span className="hidden sm:inline">{variantesCumulables(product) ? ' · cumulables' : ' au choix'}</span>
                           </p>
                           {productVariants.length > 2 && (
@@ -431,7 +431,7 @@ export default function CommanderPage() {
                               type="button"
                               onClick={() => setPanneauVariantes(String(product.id))}
                               aria-haspopup="dialog"
-                              className="shrink-0 inline-flex items-center gap-0.5 text-[11px] sm:text-xs font-bold text-[#C73600] hover:text-[#3D2B1F] transition-colors"
+                              className="shrink-0 inline-flex items-center gap-0.5 text-[11px] sm:text-xs font-bold text-[#A94E25] hover:text-[#2F4A2B] transition-colors"
                             >
                               Tout voir <ChevronDown className="w-3 h-3" aria-hidden />
                             </button>
@@ -452,7 +452,7 @@ export default function CommanderPage() {
                       <p
                         aria-live="polite"
                         className={`self-start px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-[10px] sm:rounded-xl text-[11px] sm:text-[13px] font-bold leading-snug ${
-                          message.ton === 'vert' ? 'bg-[#ECF7EF] text-[#166534]' : message.ton === 'orange' ? 'bg-[#FFF1EA] text-[#B83200]' : 'bg-[#F5EAE0] text-[#5C4030]'}`}
+                          message.ton === 'vert' ? 'bg-[#ECF7EF] text-[#166534]' : message.ton === 'orange' ? 'bg-[#F8EADF] text-[#A94E25]' : 'bg-[#F3E8D6] text-[#44583F]'}`}
                       >
                         {message.texte}
                       </p>
@@ -461,15 +461,15 @@ export default function CommanderPage() {
                     {/* PRIX : nouveau prix bien visible, ancien prix barré */}
                     <div className="mt-auto flex items-end justify-between gap-2">
                       <p className="flex flex-col">
-                        {prixReduit && <s className="text-xs sm:text-[13px] font-semibold text-[#6F5A4B]">{formatPrix(prixBase)}</s>}
-                        <span className={`text-[19px] sm:text-2xl font-black tracking-tight leading-tight ${epuise ? 'text-[#6F5A4B]' : prixReduit ? 'text-[#FF4500]' : 'text-[#3D2B1F]'}`}>
-                          {formatPrix(prixUnitaire)}<span className="text-xs sm:text-[13px] font-bold tracking-normal text-[#6F5A4B]"> /{uniteAffichee(pv)}</span>
+                        {prixReduit && <s className="text-xs sm:text-[13px] font-semibold text-[#56654F]">{formatPrix(prixBase)}</s>}
+                        <span className={`text-[19px] sm:text-2xl font-black tracking-tight leading-tight ${epuise ? 'text-[#56654F]' : prixReduit ? 'text-[#C2602D]' : 'text-[#2F4A2B]'}`}>
+                          {formatPrix(prixUnitaire)}<span className="text-xs sm:text-[13px] font-bold tracking-normal text-[#56654F]"> /{uniteAffichee(pv)}</span>
                         </span>
                       </p>
                       {resultat && (
-                        <p className="mb-0.5 text-xs sm:text-[13px] font-semibold text-[#6F5A4B] text-right leading-tight">
+                        <p className="mb-0.5 text-xs sm:text-[13px] font-semibold text-[#56654F] text-right leading-tight">
                           Total<br />
-                          <strong className="text-sm sm:text-[15px] font-extrabold text-[#3D2B1F]">{formatPrix(resultat.total)}</strong>
+                          <strong className="text-sm sm:text-[15px] font-extrabold text-[#2F4A2B]">{formatPrix(resultat.total)}</strong>
                           {resultat.offerts > 0 && <span className="block text-[11px] font-bold text-[#166534]">dont {resultat.offerts} offert{resultat.offerts > 1 ? 's' : ''}</span>}
                         </p>
                       )}
@@ -477,35 +477,35 @@ export default function CommanderPage() {
 
                     {/* ACTION : « Ajouter », puis sélecteur de quantité relié au panier */}
                     {epuise ? (
-                      <button type="button" disabled className="w-full h-11 sm:h-[50px] rounded-[13px] sm:rounded-[15px] border-[1.5px] border-dashed border-[#C9BBAA] text-[#5C4030] text-[13px] sm:text-[15px] font-bold cursor-not-allowed">
+                      <button type="button" disabled className="w-full h-11 sm:h-[50px] rounded-[13px] sm:rounded-[15px] border-[1.5px] border-dashed border-[#C9BBAA] text-[#44583F] text-[13px] sm:text-[15px] font-bold cursor-not-allowed">
                         Bientôt de retour
                       </button>
                     ) : qteLigne === 0 ? (
                       <button
                         type="button"
                         onClick={() => ajouterAuPanier(product)}
-                        className="w-full h-11 sm:h-[50px] rounded-[13px] sm:rounded-[15px] bg-[#3D2B1F] text-[#F5EAE0] text-sm sm:text-[15px] font-extrabold flex items-center justify-center gap-2 transition-[background-color,transform] duration-200 hover:bg-[#FF4500] active:scale-[0.97]"
+                        className="w-full h-11 sm:h-[50px] rounded-[13px] sm:rounded-[15px] bg-[#2F4A2B] text-[#F3E8D6] text-sm sm:text-[15px] font-extrabold flex items-center justify-center gap-2 transition-[background-color,transform] duration-200 hover:bg-[#C2602D] active:scale-[0.97]"
                       >
                         <Plus className="w-[18px] h-[18px]" strokeWidth={2.6} aria-hidden />
                         Ajouter{pv.unite === 'g' || pv.unite === 'kg' ? ` ${libelleQuantite(pv, pas)}` : ''}
                       </button>
                     ) : (
-                      <div className="ss-pop flex items-center h-11 sm:h-[50px] p-[3px] rounded-[13px] sm:rounded-[15px] bg-[#FFF1EA] border-[1.5px] border-[#FFC9B0]">
+                      <div className="ss-pop flex items-center h-11 sm:h-[50px] p-[3px] rounded-[13px] sm:rounded-[15px] bg-[#F8EADF] border-[1.5px] border-[#E9C0A4]">
                         <button
                           type="button"
                           onClick={() => retirerDuPanier(product)}
                           aria-label={qteLigne <= getMin(pv) ? `Retirer ${nomCarte} du panier` : `Diminuer la quantité de ${nomCarte}`}
-                          className="shrink-0 w-10 sm:w-11 h-full rounded-[10px] sm:rounded-xl bg-white text-[#3D2B1F] flex items-center justify-center transition-[background-color,transform] duration-150 hover:bg-[#FFE1D3] active:scale-90"
+                          className="shrink-0 w-10 sm:w-11 h-full rounded-[10px] sm:rounded-xl bg-white text-[#2F4A2B] flex items-center justify-center transition-[background-color,transform] duration-150 hover:bg-[#F2D7C6] active:scale-90"
                         >
                           <Minus className="w-[18px] h-[18px]" strokeWidth={2.6} aria-hidden />
                         </button>
-                        <span aria-live="polite" className="flex-1 text-center text-[13px] sm:text-[15px] font-extrabold text-[#3D2B1F] whitespace-nowrap">{libelleQuantite(pv, qteLigne)}</span>
+                        <span aria-live="polite" className="flex-1 text-center text-[13px] sm:text-[15px] font-extrabold text-[#2F4A2B] whitespace-nowrap">{libelleQuantite(pv, qteLigne)}</span>
                         <button
                           type="button"
                           onClick={() => ajouterAuPanier(product)}
                           disabled={!plusPossible}
                           aria-label={`Augmenter la quantité de ${nomCarte}`}
-                          className="shrink-0 w-10 sm:w-11 h-full rounded-[10px] sm:rounded-xl bg-[#FF4500] text-white flex items-center justify-center transition-[background-color,transform] duration-150 hover:bg-[#D43A00] active:scale-90 disabled:bg-[#C9BBAA] disabled:cursor-not-allowed"
+                          className="shrink-0 w-10 sm:w-11 h-full rounded-[10px] sm:rounded-xl bg-[#C2602D] text-white flex items-center justify-center transition-[background-color,transform] duration-150 hover:bg-[#A94E25] active:scale-90 disabled:bg-[#C9BBAA] disabled:cursor-not-allowed"
                         >
                           <Plus className="w-[18px] h-[18px]" strokeWidth={2.6} aria-hidden />
                         </button>
@@ -514,15 +514,15 @@ export default function CommanderPage() {
 
                     {/* DÉJÀ DANS LE PANIER (variantes cumulées) */}
                     {productVariants.length > 0 && lignesPanier.length > 0 && (
-                      <p className="text-[11px] sm:text-xs font-semibold text-[#6F5A4B] leading-snug">
-                        <span className="font-extrabold text-[#3D2B1F]">Panier : </span>
+                      <p className="text-[11px] sm:text-xs font-semibold text-[#56654F] leading-snug">
+                        <span className="font-extrabold text-[#2F4A2B]">Panier : </span>
                         {lignesPanier.map((i: any) => `${formatQuantite(i, Number(i.quantite))} ${i.variant_nom ? libelleCourt(product, { nom: i.variant_nom }) : product.name}`).join(' · ')}
                       </p>
                     )}
 
                     {!epuise && effectiveStock < (pv.unite === 'g' ? 500 : 5) && (
-                      <p className="flex items-center justify-center gap-2 text-[11px] sm:text-xs font-bold text-[#C73600]">
-                        <span className="ss-pouls w-1.5 h-1.5 bg-[#FF4500] rounded-full" />
+                      <p className="flex items-center justify-center gap-2 text-[11px] sm:text-xs font-bold text-[#A94E25]">
+                        <span className="ss-pouls w-1.5 h-1.5 bg-[#C2602D] rounded-full" />
                         Derniers exemplaires !
                       </p>
                     )}
@@ -552,7 +552,7 @@ export default function CommanderPage() {
     {/* FENÊTRE : DESCRIPTION DU PRODUIT */}
     {infoProduct && (
       <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-3 sm:p-4" onClick={() => setInfoProduct(null)}>
-        <div className="absolute inset-0 bg-[#3D2B1F]/55 backdrop-blur-sm" />
+        <div className="absolute inset-0 bg-[#2F4A2B]/55 backdrop-blur-sm" />
         <div
           role="dialog"
           aria-modal="true"
@@ -567,15 +567,15 @@ export default function CommanderPage() {
           )}
           <div className="p-6">
             <div className="flex items-start justify-between gap-3 mb-2">
-              <h3 id="titre-description" className="titre text-[26px] leading-tight text-[#3D2B1F]">{infoProduct.name}</h3>
-              <button type="button" onClick={() => setInfoProduct(null)} aria-label="Fermer" className="shrink-0 -mt-1 -mr-1 w-11 h-11 rounded-full bg-[#F5EAE0] text-[#3D2B1F] flex items-center justify-center hover:bg-[#EAD9C8] transition-colors">
+              <h3 id="titre-description" className="titre text-[26px] leading-tight text-[#2F4A2B]">{infoProduct.name}</h3>
+              <button type="button" onClick={() => setInfoProduct(null)} aria-label="Fermer" className="shrink-0 -mt-1 -mr-1 w-11 h-11 rounded-full bg-[#F3E8D6] text-[#2F4A2B] flex items-center justify-center hover:bg-[#EAD9C8] transition-colors">
                 <X className="w-5 h-5" aria-hidden />
               </button>
             </div>
             {infoProduct.provenance && (
-              <span className="inline-block mb-3 px-2.5 py-1 rounded-full bg-[#FFF1EA] text-xs font-bold text-[#C73600]">{infoProduct.provenance}</span>
+              <span className="inline-block mb-3 px-2.5 py-1 rounded-full bg-[#F8EADF] text-xs font-bold text-[#A94E25]">{infoProduct.provenance}</span>
             )}
-            <p className="text-[15px] text-[#5C4030] leading-relaxed whitespace-pre-line">{infoProduct.description}</p>
+            <p className="text-[15px] text-[#44583F] leading-relaxed whitespace-pre-line">{infoProduct.description}</p>
           </div>
         </div>
       </div>

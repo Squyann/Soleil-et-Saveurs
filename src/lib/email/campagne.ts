@@ -29,9 +29,9 @@ export interface DestinataireMail { email: string; prenom?: string | null; jeton
 
 // Couleurs autorisées dans le texte (palette du site)
 export const COULEURS_TEXTE: { nom: string; valeur: string }[] = [
-  { nom: 'Brun', valeur: '#3D2B1F' },
-  { nom: 'Brun doux', valeur: '#5C4030' },
-  { nom: 'Orange', valeur: '#C73600' },
+  { nom: 'Brun', valeur: '#2F4A2B' },
+  { nom: 'Brun doux', valeur: '#44583F' },
+  { nom: 'Orange', valeur: '#A94E25' },
   { nom: 'Vert', valeur: '#166534' },
 ];
 
