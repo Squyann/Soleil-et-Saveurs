@@ -7,6 +7,7 @@
 // Tous les calculs se font en centimes entiers.
 import { formatPrix, libelleQuantite } from '@/lib/format';
 import { premieresOffertes, qtePayantePremieresOffertes } from '@/lib/promos';
+import { LOGO_IMPRESSION } from '@/lib/logoImpression';
 
 // Fruits et légumes frais, et frais de livraison accessoires à la vente
 export const TAUX_TVA = 5.5;
@@ -232,22 +233,13 @@ function fraisCommande(commande: CommandeDocument): number {
   return produits > 0 && produits < 4000 ? 2.5 : 0;
 }
 
-const LOGO = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 60" width="224" height="42" role="img" aria-label="Soleil et Saveurs">
-<circle cx="28" cy="30" r="9" fill="#C2602D"/>
-<g stroke="#C2602D" stroke-width="2.5" stroke-linecap="round">
-<line x1="28" y1="7" x2="28" y2="15"/><line x1="28" y1="45" x2="28" y2="53"/>
-<line x1="5" y1="30" x2="13" y2="30"/><line x1="43" y1="30" x2="51" y2="30"/>
-<line x1="44.3" y1="13.7" x2="38.5" y2="19.5"/><line x1="11.7" y1="46.3" x2="17.5" y2="40.5"/>
-<line x1="11.7" y1="13.7" x2="17.5" y2="19.5"/><line x1="44.3" y1="46.3" x2="38.5" y2="40.5"/>
-</g>
-<text x="62" y="39" font-family="Georgia, 'Times New Roman', serif" font-size="26" fill="#3A5236" letter-spacing="0.3">Soleil et Saveurs</text>
-</svg>`;
+const LOGO = LOGO_IMPRESSION;
 
 const STYLES = `
 @page { size: A4; margin: 12mm 13mm; }
 * { box-sizing: border-box; }
 html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-body { margin: 0; background: #fff; color: #2F4A2B; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; line-height: 1.4; }
+body { margin: 0; background: #fff; color: #2F4A2B; font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; line-height: 1.4; }
 .page { display: flex; flex-direction: column; min-height: 270mm; }
 @media screen { body { background: #EDE3D5; } .page { width: 210mm; max-width: 100%; margin: 16px auto; padding: 12mm 13mm; background: #fff; } }
 .titre { font-family: Georgia, 'Times New Roman', serif; font-weight: 400; letter-spacing: -0.01em; }

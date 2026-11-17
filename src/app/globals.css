@@ -3,6 +3,21 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Palette de la marque (charte graphique Soleil et Saveurs, novembre 2026).
+   Utilisée dans les classes : bg-olivier, text-brique, border-lin, etc. */
+@theme {
+  --color-olivier: #2F4A2B;
+  --color-terre-cuite: #C2602D;
+  --color-brique: #A94E25;
+  --color-safran: #ECAD44;
+  --color-lin: #F3E8D6;
+  --color-halo: #D7803F;
+  --color-olivier-doux: #44583F;
+  --color-olivier-gris: #56654F;
+  --color-olivier-pale: #7A8570;
+  --color-terre-pale: #F8EADF;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

@@ -145,8 +145,8 @@ export default function AchatProduit({
   return (
     <>
       {toast && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[100] bg-[#2F4A2B] text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-300">
-          <CheckCircle2 className="w-5 h-5 text-[#D7803F]" aria-hidden />
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[100] bg-olivier text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-300">
+          <CheckCircle2 className="w-5 h-5 text-halo" aria-hidden />
           <span role="status" className="font-bold text-sm">{toast}</span>
         </div>
       )}
@@ -155,33 +155,33 @@ export default function AchatProduit({
         {/* Prix unitaire de la variante affichée */}
         <div>
           <div className="flex flex-wrap items-end gap-x-3.5 gap-y-1">
-            <p className={`text-4xl lg:text-[44px] font-black tracking-tight leading-none tabular-nums transition-colors duration-200 ${pv.promotion > 0 ? 'text-[#C2602D]' : 'text-[#2F4A2B]'}`}>
-              {formatPrix(prixUnitaire)}<span className="text-[15px] lg:text-[17px] font-bold tracking-normal text-[#56654F]"> /{unite}</span>
+            <p className={`text-4xl lg:text-[44px] font-black tracking-tight leading-none tabular-nums transition-colors duration-200 ${pv.promotion > 0 ? 'text-terre-cuite' : 'text-olivier'}`}>
+              {formatPrix(prixUnitaire)}<span className="text-[15px] lg:text-[17px] font-bold tracking-normal text-olivier-gris"> /{unite}</span>
             </p>
             {pv.promotion > 0 && (
-              <s className="mb-0.5 text-base lg:text-lg font-semibold text-[#56654F]">{formatPrix(prixBase)}</s>
+              <s className="mb-0.5 text-base lg:text-lg font-semibold text-olivier-gris">{formatPrix(prixBase)}</s>
             )}
           </div>
-          <p className="mt-1.5 text-[13px] font-semibold text-[#56654F]">Vendu {libelleUnite(pv.unite)}</p>
+          <p className="mt-1.5 text-[13px] font-semibold text-olivier-gris">Vendu {libelleUnite(pv.unite)}</p>
         </div>
 
         {/* Promotions (celles du produit, valables sur toutes ses variantes) */}
         {enPromo && (
           <div className="flex flex-wrap items-center gap-1.5">
             {etiquettes.length === 0 && (
-              <span className="px-3 py-1.5 rounded-full bg-[#A94E25] text-white text-[13px] font-extrabold">En promo</span>
+              <span className="px-3 py-1.5 rounded-full bg-brique text-white text-[13px] font-extrabold">En promo</span>
             )}
             {etiquettes.map(e => (
               <span
                 key={e.cle}
                 className={`px-3 py-1.5 rounded-full text-white text-[13px] font-extrabold ${
-                  e.cle === 'offertes' ? 'bg-[#166534]' : e.cle === 'lot' ? 'bg-[#2F4A2B]' : 'bg-[#A94E25]'}`}
+                  e.cle === 'offertes' ? 'bg-[#166534]' : e.cle === 'lot' ? 'bg-olivier' : 'bg-brique'}`}
               >
                 {e.cle === 'degressif' ? `${e.texte} /${uniteAffichee(produit)}` : e.texte}
               </span>
             ))}
             {cumul && (
-              <span className="text-[13px] font-bold text-[#A94E25]">Promo valable en mélangeant les variétés</span>
+              <span className="text-[13px] font-bold text-brique">Promo valable en mélangeant les variétés</span>
             )}
           </div>
         )}
@@ -189,7 +189,7 @@ export default function AchatProduit({
         {/* VARIANTE UNIQUE : choix de la version */}
         {variantes.length > 0 && !cumul && (
           <div>
-            <p className="mb-2.5 text-sm font-bold text-[#44583F]">{variantes.length} versions au choix</p>
+            <p className="mb-2.5 text-sm font-bold text-olivier-doux">{variantes.length} versions au choix</p>
             <ChoixVariantes produit={produit} variantes={variantes} selection={selection} onChoisir={onSelection} quantites={qteParVariante} />
             {lignesPanier.some((i: any) => i.variant_id && i.variant_id !== selection) && (
               <p className="mt-2.5 text-[13px] font-semibold text-[#92400E]">Une seule version par commande : l’ajouter remplacera celle de votre panier.</p>
@@ -198,13 +198,13 @@ export default function AchatProduit({
         )}
 
         {variante?.description && (
-          <p key={variante.id} className="text-[15px] text-[#44583F] leading-relaxed bg-[#F3E8D6] rounded-2xl px-4 py-3 whitespace-pre-line animate-in fade-in duration-200">{variante.description}</p>
+          <p key={variante.id} className="text-[15px] text-olivier-doux leading-relaxed bg-lin rounded-2xl px-4 py-3 whitespace-pre-line animate-in fade-in duration-200">{variante.description}</p>
         )}
 
         {/* VARIANTES CUMULABLES : une quantité par variante */}
         {cumul ? (
           <div>
-            <p className="mb-2.5 text-sm font-bold text-[#44583F]">Composez votre sélection</p>
+            <p className="mb-2.5 text-sm font-bold text-olivier-doux">Composez votre sélection</p>
             <ul className="flex flex-col gap-2">
               {variantes.map(v => {
                 const q = quantites[v.id] ?? 0;
@@ -215,62 +215,62 @@ export default function AchatProduit({
                 const image = imageVariante(produit, v);
                 const dejaDansPanier = qteParVariante[v.id] ?? 0;
                 return (
-                  <li key={v.id} className={`flex items-center gap-2.5 rounded-2xl border-[1.5px] p-2 transition-colors ${actif ? 'border-[#2F4A2B] bg-[#FBF7F2]' : 'border-[#E8DCCB] bg-white'}`}>
+                  <li key={v.id} className={`flex items-center gap-2.5 rounded-2xl border-[1.5px] p-2 transition-colors ${actif ? 'border-olivier bg-[#FBF7F2]' : 'border-[#E8DCCB] bg-white'}`}>
                     <button type="button" onClick={() => onSelection(v.id)} className="flex items-center gap-3 min-w-0 flex-1 min-h-11 text-left" aria-label={`Voir ${v.nom}`}>
-                      <span className="w-[54px] h-9 rounded-[10px] overflow-hidden bg-[#F3E8D6] shrink-0">
+                      <span className="w-[54px] h-9 rounded-[10px] overflow-hidden bg-lin shrink-0">
                         {image && <img src={image} alt="" className="w-full h-full object-cover" />}
                       </span>
                       <span className="min-w-0">
-                        <span className="block text-sm font-extrabold text-[#2F4A2B] truncate">{libelleCourt(produit, v)}</span>
-                        <span className="block text-xs font-semibold text-[#56654F]">
-                          <span className={prixLigneFinal < prixLigne ? 'font-bold text-[#A94E25]' : ''}>{formatPrix(prixLigneFinal)}/{uniteAffichee(eff)}</span>
+                        <span className="block text-sm font-extrabold text-olivier truncate">{libelleCourt(produit, v)}</span>
+                        <span className="block text-xs font-semibold text-olivier-gris">
+                          <span className={prixLigneFinal < prixLigne ? 'font-bold text-brique' : ''}>{formatPrix(prixLigneFinal)}/{uniteAffichee(eff)}</span>
                           {prixLigneFinal < prixLigne && <span className="line-through ml-1">{formatPrix(prixLigne)}</span>}
                           {dejaDansPanier > 0 && <span className="font-bold text-[#166534]"> · {formatQuantite(eff, dejaDansPanier)} au panier</span>}
                         </span>
                       </span>
                     </button>
-                    <div className="flex items-center h-11 p-[3px] rounded-[13px] bg-[#F3E8D6] shrink-0">
-                      <button type="button" onClick={() => changerQuantiteVariante(v, -1)} disabled={q <= 0} aria-label={`Retirer ${v.nom}`} className="w-10 h-full rounded-[10px] bg-white flex items-center justify-center text-[#2F4A2B] disabled:text-[#C9BBAA] active:scale-90 transition-transform"><Minus className="w-4 h-4" strokeWidth={2.6} aria-hidden /></button>
+                    <div className="flex items-center h-11 p-[3px] rounded-[13px] bg-lin shrink-0">
+                      <button type="button" onClick={() => changerQuantiteVariante(v, -1)} disabled={q <= 0} aria-label={`Retirer ${v.nom}`} className="w-10 h-full rounded-[10px] bg-white flex items-center justify-center text-olivier disabled:text-[#C9BBAA] active:scale-90 transition-transform"><Minus className="w-4 h-4" strokeWidth={2.6} aria-hidden /></button>
                       <span className="w-12 text-center text-sm font-extrabold tabular-nums">{q > 0 ? formatQuantite(eff, q) : '0'}</span>
-                      <button type="button" onClick={() => changerQuantiteVariante(v, 1)} disabled={maxVariante(v) - q <= 0} aria-label={`Ajouter ${v.nom}`} className="w-10 h-full rounded-[10px] bg-[#2F4A2B] flex items-center justify-center text-[#F3E8D6] disabled:bg-[#C9BBAA] active:scale-90 transition-transform"><Plus className="w-4 h-4" strokeWidth={2.6} aria-hidden /></button>
+                      <button type="button" onClick={() => changerQuantiteVariante(v, 1)} disabled={maxVariante(v) - q <= 0} aria-label={`Ajouter ${v.nom}`} className="w-10 h-full rounded-[10px] bg-olivier flex items-center justify-center text-lin disabled:bg-[#C9BBAA] active:scale-90 transition-transform"><Plus className="w-4 h-4" strokeWidth={2.6} aria-hidden /></button>
                     </div>
                   </li>
                 );
               })}
             </ul>
 
-            <div className="mt-3 rounded-[20px] bg-[#F3E8D6] px-4 py-3.5">
+            <div className="mt-3 rounded-[20px] bg-lin px-4 py-3.5">
               <div className="flex justify-between items-center gap-3">
-                <span className="text-sm font-bold text-[#44583F]">
+                <span className="text-sm font-bold text-olivier-doux">
                   {lignesSelection.length > 0 ? `Sélection : ${lignesSelection.length} variété${lignesSelection.length > 1 ? 's' : ''}` : 'Aucune variété choisie'}
                 </span>
                 <div className="flex items-baseline gap-2">
                   {economieSelection > 0.005 && (
-                    <s className="text-[13px] font-semibold text-[#56654F]">{formatPrix(calculSelection.total + economieSelection)}</s>
+                    <s className="text-[13px] font-semibold text-olivier-gris">{formatPrix(calculSelection.total + economieSelection)}</s>
                   )}
-                  <span className={`text-[26px] font-black tracking-tight tabular-nums ${economieSelection > 0.005 ? 'text-[#C2602D]' : 'text-[#2F4A2B]'}`}>{formatPrix(calculSelection.total)}</span>
+                  <span className={`text-[26px] font-black tracking-tight tabular-nums ${economieSelection > 0.005 ? 'text-terre-cuite' : 'text-olivier'}`}>{formatPrix(calculSelection.total)}</span>
                 </div>
               </div>
               {suggestion && (
-                <p className="mt-1.5 text-[13px] font-bold text-[#A94E25]">{suggestion.texte}{qtePanierUniteProduit > 0 ? ' (avec votre panier)' : ''}</p>
+                <p className="mt-1.5 text-[13px] font-bold text-brique">{suggestion.texte}{qtePanierUniteProduit > 0 ? ' (avec votre panier)' : ''}</p>
               )}
               {lignesPanier.length > 0 && (
-                <p className="mt-1 text-[13px] font-semibold text-[#56654F]">Déjà au panier : {lignesPanier.map((i: any) => `${formatQuantite(i, Number(i.quantite))} ${i.variant_nom ? libelleCourt(produit, { nom: i.variant_nom }) : produit.name}`).join(' · ')}</p>
+                <p className="mt-1 text-[13px] font-semibold text-olivier-gris">Déjà au panier : {lignesPanier.map((i: any) => `${formatQuantite(i, Number(i.quantite))} ${i.variant_nom ? libelleCourt(produit, { nom: i.variant_nom }) : produit.name}`).join(' · ')}</p>
               )}
             </div>
           </div>
         ) : (
           /* Quantité et total (une variante) */
-          <div className="flex items-center justify-between gap-4 rounded-[20px] bg-[#F3E8D6] px-4 py-3.5 lg:px-[18px] lg:py-4">
+          <div className="flex items-center justify-between gap-4 rounded-[20px] bg-lin px-4 py-3.5 lg:px-[18px] lg:py-4">
             <div>
-              <p className="mb-2 text-sm font-bold text-[#44583F]">Quantité</p>
+              <p className="mb-2 text-sm font-bold text-olivier-doux">Quantité</p>
               <div className="flex items-center w-[176px] lg:w-[190px] h-[52px] p-[3px] rounded-2xl bg-white border-[1.5px] border-[#E0D3C0]">
                 <button
                   type="button"
                   onClick={() => changerQuantite(quantite - getStep(pv))}
                   disabled={quantite <= getMin(pv)}
                   aria-label="Diminuer la quantité"
-                  className="shrink-0 w-[46px] h-full rounded-xl bg-[#F3E8D6] text-[#2F4A2B] flex items-center justify-center active:scale-90 transition-transform disabled:text-[#C9BBAA] disabled:cursor-not-allowed"
+                  className="shrink-0 w-[46px] h-full rounded-xl bg-lin text-olivier flex items-center justify-center active:scale-90 transition-transform disabled:text-[#C9BBAA] disabled:cursor-not-allowed"
                 ><Minus className="w-[18px] h-[18px]" strokeWidth={2.6} aria-hidden /></button>
                 <span aria-live="polite" className="flex-1 text-center text-base font-extrabold tabular-nums whitespace-nowrap">{libelleQuantite(pv, quantite)}</span>
                 <button
@@ -278,14 +278,14 @@ export default function AchatProduit({
                   onClick={() => changerQuantite(quantite + getStep(pv))}
                   disabled={quantite >= stockRestant}
                   aria-label="Augmenter la quantité"
-                  className="shrink-0 w-[46px] h-full rounded-xl bg-[#2F4A2B] text-[#F3E8D6] flex items-center justify-center active:scale-90 transition-transform disabled:bg-[#C9BBAA] disabled:cursor-not-allowed"
+                  className="shrink-0 w-[46px] h-full rounded-xl bg-olivier text-lin flex items-center justify-center active:scale-90 transition-transform disabled:bg-[#C9BBAA] disabled:cursor-not-allowed"
                 ><Plus className="w-[18px] h-[18px]" strokeWidth={2.6} aria-hidden /></button>
               </div>
             </div>
-            <p className="text-right text-sm font-semibold text-[#56654F] leading-tight">
+            <p className="text-right text-sm font-semibold text-olivier-gris leading-tight">
               Total{' '}
               {affiche.totalEconomy > 0.005 && <s className="ml-1 text-[13px]">{formatPrix(totalSimpleSansPromo)}</s>}
-              <strong className={`block mt-0.5 text-[26px] font-black tracking-tight tabular-nums ${affiche.totalEconomy > 0.005 ? 'text-[#C2602D]' : 'text-[#2F4A2B]'}`}>{formatPrix(affiche.totalPrice)}</strong>
+              <strong className={`block mt-0.5 text-[26px] font-black tracking-tight tabular-nums ${affiche.totalEconomy > 0.005 ? 'text-terre-cuite' : 'text-olivier'}`}>{formatPrix(affiche.totalPrice)}</strong>
               {affiche.totalEconomy > 0.005 && (
                 <span className="block mt-0.5 text-[13px] font-extrabold text-[#166534]">Économie : {formatPrix(affiche.totalEconomy)}</span>
               )}
@@ -303,8 +303,8 @@ export default function AchatProduit({
             onClick={ajouter}
             className={`${bouton} ${
               peutAjouter
-                ? 'bg-[#C2602D] text-white shadow-[0_18px_34px_-14px_rgba(194,96,45,0.55)] hover:bg-[#B0552A] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]'
-                : 'bg-[#EDE3D5] text-[#56654F] cursor-not-allowed'
+                ? 'bg-terre-cuite text-white shadow-[0_18px_34px_-14px_rgba(194,96,45,0.55)] hover:bg-[#B0552A] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]'
+                : 'bg-[#EDE3D5] text-olivier-gris cursor-not-allowed'
             }`}
           >
             {epuise ? (
@@ -318,8 +318,8 @@ export default function AchatProduit({
         </div>
 
         {!epuise && !cumul && stockDisponible(pv) < (pv.unite === 'g' ? 500 : 5) && (
-          <p className="flex items-center justify-center gap-2 text-[13px] font-bold text-[#A94E25]">
-            <span className="ss-pouls w-1.5 h-1.5 bg-[#C2602D] rounded-full" />
+          <p className="flex items-center justify-center gap-2 text-[13px] font-bold text-brique">
+            <span className="ss-pouls w-1.5 h-1.5 bg-terre-cuite rounded-full" />
             Derniers exemplaires !
           </p>
         )}
@@ -330,14 +330,14 @@ export default function AchatProduit({
         <div className={`lg:hidden fixed bottom-0 inset-x-0 z-[90] bg-white/95 backdrop-blur-md border-t border-[#E8DCCB] px-3 pt-2.5 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex items-center gap-2.5 shadow-[0_-16px_30px_-22px_rgba(47,74,43,0.45)] transition-transform duration-300 ${boutonVisible ? 'translate-y-full' : 'translate-y-0'}`}>
           {cumul ? (
             <p className="shrink-0 pl-1 leading-tight">
-              <span className={`block text-lg font-black tabular-nums ${economieSelection > 0.005 ? 'text-[#C2602D]' : 'text-[#2F4A2B]'}`}>{formatPrix(totalBarre)}</span>
-              <span className="block text-xs font-semibold text-[#56654F]">{lignesSelection.length} variété{lignesSelection.length > 1 ? 's' : ''}</span>
+              <span className={`block text-lg font-black tabular-nums ${economieSelection > 0.005 ? 'text-terre-cuite' : 'text-olivier'}`}>{formatPrix(totalBarre)}</span>
+              <span className="block text-xs font-semibold text-olivier-gris">{lignesSelection.length} variété{lignesSelection.length > 1 ? 's' : ''}</span>
             </p>
           ) : (
-            <div className="shrink-0 flex items-center h-[52px] p-[3px] rounded-2xl bg-[#F3E8D6]">
-              <button type="button" onClick={() => changerQuantite(quantite - getStep(pv))} disabled={quantite <= getMin(pv)} tabIndex={boutonVisible ? -1 : 0} aria-label="Diminuer la quantité" className="w-11 h-full rounded-[13px] bg-white text-[#2F4A2B] flex items-center justify-center active:scale-90 transition-transform disabled:text-[#C9BBAA]"><Minus className="w-[17px] h-[17px]" strokeWidth={2.6} aria-hidden /></button>
+            <div className="shrink-0 flex items-center h-[52px] p-[3px] rounded-2xl bg-lin">
+              <button type="button" onClick={() => changerQuantite(quantite - getStep(pv))} disabled={quantite <= getMin(pv)} tabIndex={boutonVisible ? -1 : 0} aria-label="Diminuer la quantité" className="w-11 h-full rounded-[13px] bg-white text-olivier flex items-center justify-center active:scale-90 transition-transform disabled:text-[#C9BBAA]"><Minus className="w-[17px] h-[17px]" strokeWidth={2.6} aria-hidden /></button>
               <span className="min-w-[46px] px-1 text-center text-sm font-extrabold tabular-nums whitespace-nowrap">{pv.unite === 'g' || pv.unite === 'kg' ? libelleQuantite(pv, quantite) : quantite}</span>
-              <button type="button" onClick={() => changerQuantite(quantite + getStep(pv))} disabled={quantite >= stockRestant} tabIndex={boutonVisible ? -1 : 0} aria-label="Augmenter la quantité" className="w-11 h-full rounded-[13px] bg-[#2F4A2B] text-[#F3E8D6] flex items-center justify-center active:scale-90 transition-transform disabled:bg-[#C9BBAA]"><Plus className="w-[17px] h-[17px]" strokeWidth={2.6} aria-hidden /></button>
+              <button type="button" onClick={() => changerQuantite(quantite + getStep(pv))} disabled={quantite >= stockRestant} tabIndex={boutonVisible ? -1 : 0} aria-label="Augmenter la quantité" className="w-11 h-full rounded-[13px] bg-olivier text-lin flex items-center justify-center active:scale-90 transition-transform disabled:bg-[#C9BBAA]"><Plus className="w-[17px] h-[17px]" strokeWidth={2.6} aria-hidden /></button>
             </div>
           )}
           <button
@@ -345,7 +345,7 @@ export default function AchatProduit({
             onClick={ajouter}
             disabled={!peutAjouter}
             tabIndex={boutonVisible ? -1 : 0}
-            className="flex-1 min-w-0 h-[52px] px-4 rounded-2xl bg-[#C2602D] text-white text-[19px] font-extrabold flex items-center justify-between gap-2 active:scale-[0.98] transition-transform disabled:bg-[#EDE3D5] disabled:text-[#56654F]"
+            className="flex-1 min-w-0 h-[52px] px-4 rounded-2xl bg-terre-cuite text-white text-[19px] font-extrabold flex items-center justify-between gap-2 active:scale-[0.98] transition-transform disabled:bg-[#EDE3D5] disabled:text-olivier-gris"
           >
             {cumul ? <span className="mx-auto text-base">Ajouter la sélection</span> : <><span>Ajouter</span><span className="tabular-nums">{formatPrix(totalBarre)}</span></>}
           </button>

@@ -94,8 +94,8 @@ export default function ChoixVariantes({
         className={`relative shrink-0 snap-start flex items-center gap-1.5 border transition-[background-color,border-color,color,box-shadow] duration-200 ${
           compact ? 'h-9 sm:h-10 px-2.5 sm:px-3.5 rounded-[11px] sm:rounded-[13px] border-[1.5px] text-xs sm:text-[13px] font-bold' : 'h-12 px-4 rounded-[15px] border-[1.5px] text-[15px] font-bold'
         } ${actif
-          ? 'bg-[#2F4A2B] border-[#2F4A2B] text-[#F3E8D6]'
-          : 'bg-white border-[#DDD0BF] text-[#2F4A2B] hover:border-[#2F4A2B]'}`}
+          ? 'bg-olivier border-olivier text-lin'
+          : 'bg-white border-[#DDD0BF] text-olivier hover:border-olivier'}`}
       >
         {!compact && v.image_url && (
           <img src={v.image_url} alt="" className="w-9 h-6 rounded-md object-cover -ml-1.5" />
@@ -103,10 +103,10 @@ export default function ChoixVariantes({
         {actif && <Check className={compact ? 'w-3 h-3 sm:w-3.5 sm:h-3.5' : 'w-4 h-4'} strokeWidth={3} aria-hidden />}
         <span className="whitespace-nowrap">{libelleCourt(produit, v)}</span>
         {prixDifferents && !compact && (
-          <span className={`text-[13px] font-semibold ${actif ? 'text-[#E3D3C1]' : 'text-[#56654F]'}`}>{formatPrix(infos[i].final)}/{infos[i].unite}</span>
+          <span className={`text-[13px] font-semibold ${actif ? 'text-[#E3D3C1]' : 'text-olivier-gris'}`}>{formatPrix(infos[i].final)}/{infos[i].unite}</span>
         )}
         {dansPanier > 0 && (
-          <span className={`absolute -top-1.5 -right-1.5 px-1 rounded-full bg-[#A94E25] text-white font-black flex items-center justify-center ${compact ? 'min-w-[18px] h-[18px] text-[10px]' : 'min-w-5 h-5 text-[11px]'}`}>
+          <span className={`absolute -top-1.5 -right-1.5 px-1 rounded-full bg-brique text-white font-black flex items-center justify-center ${compact ? 'min-w-[18px] h-[18px] text-[10px]' : 'min-w-5 h-5 text-[11px]'}`}>
             {uniteLigne === 'g' || uniteLigne === 'kg' ? '✓' : dansPanier}
           </span>
         )}
@@ -122,7 +122,7 @@ export default function ChoixVariantes({
     );
   }
 
-  const fleche = 'absolute top-1/2 -translate-y-1/2 mt-0.5 w-7 h-7 rounded-full bg-white border border-[#D5C9B8] shadow-md text-[#2F4A2B] flex items-center justify-center transition-opacity duration-200';
+  const fleche = 'absolute top-1/2 -translate-y-1/2 mt-0.5 w-7 h-7 rounded-full bg-white border border-[#D5C9B8] shadow-md text-olivier flex items-center justify-center transition-opacity duration-200';
   return (
     <div className="relative" onPointerEnter={precharger} onTouchStart={precharger}>
       <div
@@ -179,8 +179,8 @@ export function PanneauVariantes({
       className="absolute inset-0 z-30 flex flex-col bg-white/95 backdrop-blur-md animate-in fade-in slide-in-from-bottom-2 duration-200 ease-out"
     >
       <div className="flex items-center justify-between gap-2 px-2.5 pt-2.5 pb-1.5 sm:px-4 sm:pt-4">
-        <p className="text-xs sm:text-sm font-extrabold text-[#2F4A2B]">Choisir une variante</p>
-        <button type="button" onClick={onFermer} aria-label="Fermer" className="w-9 h-9 rounded-full bg-[#EDE3D5] text-[#2F4A2B] flex items-center justify-center hover:bg-[#DDD0BF] transition-colors">
+        <p className="text-xs sm:text-sm font-extrabold text-olivier">Choisir une variante</p>
+        <button type="button" onClick={onFermer} aria-label="Fermer" className="w-9 h-9 rounded-full bg-[#EDE3D5] text-olivier flex items-center justify-center hover:bg-[#DDD0BF] transition-colors">
           <X className="w-4 h-4" aria-hidden />
         </button>
       </div>
@@ -197,21 +197,21 @@ export function PanneauVariantes({
               role="radio"
               aria-checked={actif}
               onClick={() => onChoisir(v.id)}
-              className={`w-full flex items-center gap-2 sm:gap-3 rounded-xl border p-1.5 sm:p-2 text-left transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C2602D]/40 ${
-                actif ? 'border-[#2F4A2B] bg-[#FBF7F2]' : 'border-transparent hover:bg-[#FBF7F2]'}`}
+              className={`w-full flex items-center gap-2 sm:gap-3 rounded-xl border p-1.5 sm:p-2 text-left transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-terre-cuite/40 ${
+                actif ? 'border-olivier bg-[#FBF7F2]' : 'border-transparent hover:bg-[#FBF7F2]'}`}
             >
               <span className="relative w-10 h-7 sm:w-14 sm:h-9 shrink-0 rounded-lg overflow-hidden bg-[#EDE3D5] flex items-center justify-center">
                 {image && <img src={image} alt="" className="w-full h-full object-cover" />}
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block text-xs sm:text-sm font-bold text-[#2F4A2B] truncate">{libelleCourt(produit, v)}</span>
-                <span className="block text-[11px] sm:text-xs font-semibold text-[#56654F]">
-                  <span className={final < base ? 'font-bold text-[#A94E25]' : ''}>{formatPrix(final)}/{unite}</span>
+                <span className="block text-xs sm:text-sm font-bold text-olivier truncate">{libelleCourt(produit, v)}</span>
+                <span className="block text-[11px] sm:text-xs font-semibold text-olivier-gris">
+                  <span className={final < base ? 'font-bold text-brique' : ''}>{formatPrix(final)}/{unite}</span>
                   {final < base && <span className="line-through ml-1">{formatPrix(base)}</span>}
                   {dansPanier > 0 && <span className="font-bold text-[#166534]"> · au panier</span>}
                 </span>
               </span>
-              {actif && <Check className="w-3.5 h-3.5 text-[#2F4A2B] shrink-0" />}
+              {actif && <Check className="w-3.5 h-3.5 text-olivier shrink-0" />}
             </button>
           );
         })}

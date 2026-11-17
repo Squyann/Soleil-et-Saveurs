@@ -65,7 +65,7 @@ export default function ResetPasswordPage() {
           onChange={(e) => changer(e.target.value)}
           className={`${champAvecIcone} pr-14`}
         />
-        <button type="button" onClick={basculer} aria-label={visible ? 'Masquer le mot de passe' : 'Afficher le mot de passe'} className="absolute right-1.5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-xl flex items-center justify-center text-[#56654F] hover:text-[#2F4A2B] transition-colors">
+        <button type="button" onClick={basculer} aria-label={visible ? 'Masquer le mot de passe' : 'Afficher le mot de passe'} className="absolute right-1.5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-xl flex items-center justify-center text-olivier-gris hover:text-olivier transition-colors">
           {visible ? <EyeOff className="w-[19px] h-[19px]" aria-hidden /> : <Eye className="w-[19px] h-[19px]" aria-hidden />}
         </button>
       </div>
@@ -77,7 +77,7 @@ export default function ResetPasswordPage() {
       surtitre="Sécurité"
       titre="Nouveau mot de passe"
       sousTitre={success || !ready ? undefined : 'Choisissez un mot de passe sécurisé.'}
-      accroche={<>Nouveau<br /><em className="text-[#D7803F]">mot de passe.</em></>}
+      accroche={<>Nouveau<br /><em className="text-halo">mot de passe.</em></>}
       arguments={[
         { icone: <ShieldCheck className="w-[22px] h-[22px]" />, titre: 'Compte sécurisé', texte: "Choisissez un mot de passe fort d'au moins 8 caractères." },
       ]}
@@ -87,7 +87,7 @@ export default function ResetPasswordPage() {
           <span className="ss-pop w-20 h-20 rounded-full bg-[#166534] text-white flex items-center justify-center"><Check className="w-10 h-10" strokeWidth={3} aria-hidden /></span>
           <div>
             <h2 className="titre text-3xl leading-tight">Mot de passe mis à jour !</h2>
-            <p className="mt-2 text-[15px] text-[#44583F]">Redirection vers la connexion dans quelques secondes…</p>
+            <p className="mt-2 text-[15px] text-olivier-doux">Redirection vers la connexion dans quelques secondes…</p>
           </div>
           <Link href="/login" className={boutonPrincipal}>
             Se connecter maintenant <ArrowRight className="w-[22px] h-[22px]" strokeWidth={2.4} aria-hidden />
@@ -95,11 +95,11 @@ export default function ResetPasswordPage() {
         </div>
       ) : !ready ? (
         <div className="flex flex-col items-center text-center gap-4 py-8">
-          <Loader2 className="w-10 h-10 animate-spin text-[#C2602D]" aria-hidden />
+          <Loader2 className="w-10 h-10 animate-spin text-terre-cuite" aria-hidden />
           <p role="status" className="text-base font-bold">Vérification du lien en cours…</p>
-          <p className="text-sm leading-relaxed text-[#44583F]">
+          <p className="text-sm leading-relaxed text-olivier-doux">
             Si rien ne se passe, le lien a peut-être expiré.<br />
-            <Link href="/login" className="font-extrabold text-[#A94E25] underline underline-offset-4">Retourner à la connexion</Link>
+            <Link href="/login" className="font-extrabold text-brique underline underline-offset-4">Retourner à la connexion</Link>
           </p>
         </div>
       ) : (

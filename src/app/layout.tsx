@@ -10,6 +10,7 @@ const fraunces = Fraunces({ subsets: ['latin'], style: ['normal', 'italic'], axe
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
+  themeColor: '#2F4A2B',
 };
 
 export const metadata: Metadata = {
@@ -17,7 +18,14 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://soleiletsaveurs.fr'),
   title: 'Soleil et Saveurs',
   description: 'Fruits et légumes frais, livrés chez vous dans les Yvelines (78).',
-  icons: { icon: '/logo.svg' },
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+    ],
+    apple: '/apple-touch-icon.png',
+  },
+  manifest: '/site.webmanifest',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

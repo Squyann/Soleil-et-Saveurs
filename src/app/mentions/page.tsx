@@ -15,25 +15,25 @@ export default function MentionsLegales() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#EDE3D5] text-[#2F4A2B]">
+    <div className="min-h-screen bg-[#EDE3D5] text-olivier">
 
       {/* Hero */}
-      <section className="bg-[#F3E8D6] border-b border-[#E3D6C4] pt-5 pb-7 md:pt-8 md:pb-10 px-5 relative overflow-hidden">
+      <section className="bg-lin border-b border-[#E3D6C4] pt-5 pb-7 md:pt-8 md:pb-10 px-5 relative overflow-hidden">
         <div className="hidden" />
         <div className="max-w-5xl mx-auto relative z-10">
-          <Link href="/" className="inline-flex items-center gap-2 min-h-11 text-[#44583F] hover:text-[#A94E25] font-bold text-sm transition-colors mb-3 group">
+          <Link href="/" className="inline-flex items-center gap-2 min-h-11 text-olivier-doux hover:text-brique font-bold text-sm transition-colors mb-3 group">
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Retour boutique
           </Link>
           <div className="flex items-center gap-4 mb-4">
-            <div className="w-11 h-11 bg-[#F8EADF] rounded-[14px] flex items-center justify-center">
-              <FileText className="w-6 h-6 text-[#A94E25]" />
+            <div className="w-11 h-11 bg-terre-pale rounded-[14px] flex items-center justify-center">
+              <FileText className="w-6 h-6 text-brique" />
             </div>
-            <span className="text-[#A94E25] font-extrabold text-xs uppercase tracking-[0.14em]">Informations légales</span>
+            <span className="text-brique font-extrabold text-xs uppercase tracking-[0.14em]">Informations légales</span>
           </div>
-          <h1 className="titre text-[44px] md:text-[64px] text-[#2F4A2B] leading-none">
-            Mentions<br /><span className="italic font-medium text-[#C2602D]">Légales</span>
+          <h1 className="titre text-[44px] md:text-[64px] text-olivier leading-none">
+            Mentions<br /><span className="italic font-medium text-terre-cuite">Légales</span>
           </h1>
-          <p className="text-[#56654F] text-sm font-semibold mt-3">Dernière mise à jour : 25 octobre 2026</p>
+          <p className="text-olivier-gris text-sm font-semibold mt-3">Dernière mise à jour : 25 octobre 2026</p>
         </div>
       </section>
 
@@ -42,12 +42,12 @@ export default function MentionsLegales() {
         {/* Sommaire sticky */}
         <aside className="md:w-56 flex-shrink-0 hidden md:block">
           <nav className="sticky top-20 space-y-0.5 bg-white rounded-3xl p-5 border border-[#E8DCCB]">
-            <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-[#A94E25] mb-3">Sommaire</p>
+            <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-brique mb-3">Sommaire</p>
             {sections.map((s) => (
               <a
                 key={s.id}
                 href={`#${s.id}`}
-                className="block text-[13px] font-semibold text-[#44583F] hover:text-[#A94E25] transition-colors py-1.5 border-l-2 border-transparent hover:border-[#C2602D] pl-3"
+                className="block text-[13px] font-semibold text-olivier-doux hover:text-brique transition-colors py-1.5 border-l-2 border-transparent hover:border-terre-cuite pl-3"
               >
                 {s.title}
               </a>
@@ -59,68 +59,68 @@ export default function MentionsLegales() {
         <article className="flex-1 min-w-0 space-y-10 md:space-y-12 text-[15px]">
 
           <section id="editeur" className="scroll-mt-20">
-            <h2 className="titre text-2xl md:text-[28px] leading-tight text-[#2F4A2B] mb-4 pb-3 border-b border-[#E3D6C4]">
+            <h2 className="titre text-2xl md:text-[28px] leading-tight text-olivier mb-4 pb-3 border-b border-[#E3D6C4]">
               1. Éditeur du site
             </h2>
-            <div className="space-y-2 text-[#44583F] font-medium text-sm leading-relaxed">
-              <p>Le site <strong className="text-[#2F4A2B]">Soleil et Saveurs</strong> est édité par la société :</p>
-              <div className="bg-[#F3E8D6] rounded-2xl p-5 mt-4 space-y-2 border border-[#E8DCCB]">
-                <p><span className="text-[#56654F] text-xs uppercase font-extrabold tracking-wider mr-2">Société</span> SOLEIL ET SAVEURS — SAS au capital de 1 000 €</p>
-                <p><span className="text-[#56654F] text-xs uppercase font-extrabold tracking-wider mr-2">Représentant légal</span> Khaled Boulila, président</p>
-                <p><span className="text-[#56654F] text-xs uppercase font-extrabold tracking-wider mr-2">Siège social</span> 6-8 AVENUE HENRIETTE, 93170 BAGNOLET</p>
-                <p><span className="text-[#56654F] text-xs uppercase font-extrabold tracking-wider mr-2">Immatriculation</span> RCS Bobigny 821 324 324</p>
-                <p><span className="text-[#56654F] text-xs uppercase font-extrabold tracking-wider mr-2">SIRET</span> 821 324 324 00028</p>
-                <p><span className="text-[#56654F] text-xs uppercase font-extrabold tracking-wider mr-2">E-mail</span> soleiletsaveurs.livraison@gmail.com</p>
-                <p><span className="text-[#56654F] text-xs uppercase font-extrabold tracking-wider mr-2">Téléphone</span> 07 59 72 00 83</p>
-                <p><span className="text-[#56654F] text-xs uppercase font-extrabold tracking-wider mr-2">TVA intracommunautaire</span> FR33821324324</p>
+            <div className="space-y-2 text-olivier-doux font-medium text-sm leading-relaxed">
+              <p>Le site <strong className="text-olivier">Soleil et Saveurs</strong> est édité par la société :</p>
+              <div className="bg-lin rounded-2xl p-5 mt-4 space-y-2 border border-[#E8DCCB]">
+                <p><span className="text-olivier-gris text-xs uppercase font-extrabold tracking-wider mr-2">Société</span> SOLEIL ET SAVEURS — SAS au capital de 1 000 €</p>
+                <p><span className="text-olivier-gris text-xs uppercase font-extrabold tracking-wider mr-2">Représentant légal</span> Khaled Boulila, président</p>
+                <p><span className="text-olivier-gris text-xs uppercase font-extrabold tracking-wider mr-2">Siège social</span> 6-8 AVENUE HENRIETTE, 93170 BAGNOLET</p>
+                <p><span className="text-olivier-gris text-xs uppercase font-extrabold tracking-wider mr-2">Immatriculation</span> RCS Bobigny 821 324 324</p>
+                <p><span className="text-olivier-gris text-xs uppercase font-extrabold tracking-wider mr-2">SIRET</span> 821 324 324 00028</p>
+                <p><span className="text-olivier-gris text-xs uppercase font-extrabold tracking-wider mr-2">E-mail</span> soleiletsaveurs.livraison@gmail.com</p>
+                <p><span className="text-olivier-gris text-xs uppercase font-extrabold tracking-wider mr-2">Téléphone</span> 07 59 72 00 83</p>
+                <p><span className="text-olivier-gris text-xs uppercase font-extrabold tracking-wider mr-2">TVA intracommunautaire</span> FR33821324324</p>
               </div>
             </div>
           </section>
 
           <section id="directeur" className="scroll-mt-20">
-            <h2 className="titre text-2xl md:text-[28px] leading-tight text-[#2F4A2B] mb-4 pb-3 border-b border-[#E3D6C4]">
+            <h2 className="titre text-2xl md:text-[28px] leading-tight text-olivier mb-4 pb-3 border-b border-[#E3D6C4]">
               2. Directeur de publication
             </h2>
-            <p className="text-[#44583F] font-medium text-sm leading-relaxed">
-              Le directeur de la publication du site est <strong className="text-[#2F4A2B]">Khaled Boulila</strong>, en sa qualité de président de la société SOLEIL ET SAVEURS.
+            <p className="text-olivier-doux font-medium text-sm leading-relaxed">
+              Le directeur de la publication du site est <strong className="text-olivier">Khaled Boulila</strong>, en sa qualité de président de la société SOLEIL ET SAVEURS.
             </p>
           </section>
 
           <section id="hebergement" className="scroll-mt-20">
-            <h2 className="titre text-2xl md:text-[28px] leading-tight text-[#2F4A2B] mb-4 pb-3 border-b border-[#E3D6C4]">
+            <h2 className="titre text-2xl md:text-[28px] leading-tight text-olivier mb-4 pb-3 border-b border-[#E3D6C4]">
               3. Hébergement
             </h2>
-            <div className="space-y-4 text-[#44583F] font-medium text-sm leading-relaxed">
-              <div className="bg-[#F3E8D6] rounded-2xl p-5 border border-[#E8DCCB] space-y-1">
-                <p className="font-extrabold text-[#2F4A2B] text-xs uppercase tracking-widest mb-2">Hébergeur du site</p>
+            <div className="space-y-4 text-olivier-doux font-medium text-sm leading-relaxed">
+              <div className="bg-lin rounded-2xl p-5 border border-[#E8DCCB] space-y-1">
+                <p className="font-extrabold text-olivier text-xs uppercase tracking-widest mb-2">Hébergeur du site</p>
                 <p><strong>Hostinger International Ltd</strong></p>
                 <p>61 Lordou Vironos Street, 6023 Larnaca, Chypre</p>
-                <p>Site : <a href="https://www.hostinger.fr" className="text-[#A94E25] hover:underline">hostinger.fr</a></p>
+                <p>Site : <a href="https://www.hostinger.fr" className="text-brique hover:underline">hostinger.fr</a></p>
               </div>
-              <div className="bg-[#F3E8D6] rounded-2xl p-5 border border-[#E8DCCB] space-y-1">
-                <p className="font-extrabold text-[#2F4A2B] text-xs uppercase tracking-widest mb-2">Stockage des données</p>
+              <div className="bg-lin rounded-2xl p-5 border border-[#E8DCCB] space-y-1">
+                <p className="font-extrabold text-olivier text-xs uppercase tracking-widest mb-2">Stockage des données</p>
                 <p><strong>Supabase Inc.</strong></p>
                 <p>970 Toa Payoh North, #07-04, Singapour 318992</p>
-                <p>Site : <a href="https://supabase.com" className="text-[#A94E25] hover:underline">supabase.com</a></p>
+                <p>Site : <a href="https://supabase.com" className="text-brique hover:underline">supabase.com</a></p>
               </div>
             </div>
           </section>
 
           <section id="propriete" className="scroll-mt-20">
-            <h2 className="titre text-2xl md:text-[28px] leading-tight text-[#2F4A2B] mb-4 pb-3 border-b border-[#E3D6C4]">
+            <h2 className="titre text-2xl md:text-[28px] leading-tight text-olivier mb-4 pb-3 border-b border-[#E3D6C4]">
               4. Propriété intellectuelle
             </h2>
-            <p className="text-[#44583F] font-medium text-sm leading-relaxed">
+            <p className="text-olivier-doux font-medium text-sm leading-relaxed">
               L'ensemble des éléments constituant le site Soleil et Saveurs (logo, textes, photographies, structure, design) sont protégés par la législation française et internationale sur le droit d'auteur et la propriété intellectuelle.
               Toute reproduction, représentation, modification ou exploitation, totale ou partielle, est strictement interdite sans l'autorisation écrite préalable de Soleil et Saveurs.
             </p>
           </section>
 
           <section id="responsabilite" className="scroll-mt-20">
-            <h2 className="titre text-2xl md:text-[28px] leading-tight text-[#2F4A2B] mb-4 pb-3 border-b border-[#E3D6C4]">
+            <h2 className="titre text-2xl md:text-[28px] leading-tight text-olivier mb-4 pb-3 border-b border-[#E3D6C4]">
               5. Responsabilité
             </h2>
-            <p className="text-[#44583F] font-medium text-sm leading-relaxed">
+            <p className="text-olivier-doux font-medium text-sm leading-relaxed">
               Soleil et Saveurs s'efforce d'assurer l'exactitude et la mise à jour des informations publiées sur ce site, et se réserve le droit de corriger le contenu à tout moment sans préavis.
               Soleil et Saveurs ne saurait être tenu responsable de l'utilisation faite de ces informations, ni des dommages directs ou indirects qui pourraient en découler.
               Les liens hypertextes vers d'autres sites sont fournis à titre indicatif ; Soleil et Saveurs n'exerce aucun contrôle sur ces sites tiers.
@@ -128,33 +128,33 @@ export default function MentionsLegales() {
           </section>
 
           <section id="donnees" className="scroll-mt-20">
-            <h2 className="titre text-2xl md:text-[28px] leading-tight text-[#2F4A2B] mb-4 pb-3 border-b border-[#E3D6C4]">
+            <h2 className="titre text-2xl md:text-[28px] leading-tight text-olivier mb-4 pb-3 border-b border-[#E3D6C4]">
               6. Données personnelles
             </h2>
-            <p className="text-[#44583F] font-medium text-sm leading-relaxed mb-4">
+            <p className="text-olivier-doux font-medium text-sm leading-relaxed mb-4">
               Les données personnelles collectées lors de votre utilisation du site (nom, adresse e-mail, téléphone, adresse de livraison) sont traitées conformément au règlement général sur la protection des données (RGPD).
-              Pour en savoir plus, consultez notre <Link href="/rgpd" className="text-[#A94E25] hover:underline font-bold">Politique de confidentialité</Link>.
+              Pour en savoir plus, consultez notre <Link href="/rgpd" className="text-brique hover:underline font-bold">Politique de confidentialité</Link>.
             </p>
-            <p className="text-[#44583F] font-medium text-sm leading-relaxed">
-              Vous disposez d'un droit d'accès, de rectification, de suppression et de portabilité de vos données. Pour exercer ces droits, contactez-nous à : <strong className="text-[#2F4A2B]">soleiletsaveurs.livraison@gmail.com</strong>
+            <p className="text-olivier-doux font-medium text-sm leading-relaxed">
+              Vous disposez d'un droit d'accès, de rectification, de suppression et de portabilité de vos données. Pour exercer ces droits, contactez-nous à : <strong className="text-olivier">soleiletsaveurs.livraison@gmail.com</strong>
             </p>
           </section>
 
           <section id="cookies" className="scroll-mt-20">
-            <h2 className="titre text-2xl md:text-[28px] leading-tight text-[#2F4A2B] mb-4 pb-3 border-b border-[#E3D6C4]">
+            <h2 className="titre text-2xl md:text-[28px] leading-tight text-olivier mb-4 pb-3 border-b border-[#E3D6C4]">
               7. Cookies
             </h2>
-            <p className="text-[#44583F] font-medium text-sm leading-relaxed">
+            <p className="text-olivier-doux font-medium text-sm leading-relaxed">
               Ce site utilise uniquement des cookies techniques strictement nécessaires au fonctionnement du service : gestion de la session utilisateur (authentification) et conservation temporaire du panier d'achat dans le localStorage de votre navigateur.
               Aucun cookie publicitaire, analytique ou de traçage tiers n'est déposé sur votre terminal.
             </p>
           </section>
 
           <section id="droit" className="scroll-mt-20">
-            <h2 className="titre text-2xl md:text-[28px] leading-tight text-[#2F4A2B] mb-4 pb-3 border-b border-[#E3D6C4]">
+            <h2 className="titre text-2xl md:text-[28px] leading-tight text-olivier mb-4 pb-3 border-b border-[#E3D6C4]">
               8. Droit applicable & médiation
             </h2>
-            <p className="text-[#44583F] font-medium text-sm leading-relaxed mb-4">
+            <p className="text-olivier-doux font-medium text-sm leading-relaxed mb-4">
               Les présentes mentions légales sont régies par le droit français. En cas de litige, une solution amiable sera recherchée avant toute action judiciaire.
               Conformément aux articles L. 616-1 et R. 616-1 du Code de la consommation, tout consommateur peut recourir gratuitement à un médiateur de la consommation.
             </p>
@@ -162,22 +162,22 @@ export default function MentionsLegales() {
 
           {/* Liens vers les autres pages légales */}
           <div className="grid sm:grid-cols-2 gap-4 pt-8 border-t border-[#E8DCCB]">
-            <Link href="/cgv" className="group flex items-center gap-4 bg-white border border-[#E8DCCB] p-5 rounded-2xl hover:border-[#C2602D] hover:shadow-md transition-all">
-              <div className="w-10 h-10 bg-[#F3E8D6] rounded-xl flex items-center justify-center group-hover:bg-[#F8EADF] transition-colors">
-                <FileText className="w-5 h-5 text-[#56654F] group-hover:text-[#A94E25]" />
+            <Link href="/cgv" className="group flex items-center gap-4 bg-white border border-[#E8DCCB] p-5 rounded-2xl hover:border-terre-cuite hover:shadow-md transition-all">
+              <div className="w-10 h-10 bg-lin rounded-xl flex items-center justify-center group-hover:bg-terre-pale transition-colors">
+                <FileText className="w-5 h-5 text-olivier-gris group-hover:text-brique" />
               </div>
               <div>
-                <p className="font-extrabold text-xs uppercase text-[#2F4A2B]">CGV</p>
-                <p className="text-xs text-[#56654F] font-semibold">Conditions Générales de Vente</p>
+                <p className="font-extrabold text-xs uppercase text-olivier">CGV</p>
+                <p className="text-xs text-olivier-gris font-semibold">Conditions Générales de Vente</p>
               </div>
             </Link>
-            <Link href="/rgpd" className="group flex items-center gap-4 bg-white border border-[#E8DCCB] p-5 rounded-2xl hover:border-[#C2602D] hover:shadow-md transition-all">
-              <div className="w-10 h-10 bg-[#F3E8D6] rounded-xl flex items-center justify-center group-hover:bg-[#F8EADF] transition-colors">
-                <FileText className="w-5 h-5 text-[#56654F] group-hover:text-[#A94E25]" />
+            <Link href="/rgpd" className="group flex items-center gap-4 bg-white border border-[#E8DCCB] p-5 rounded-2xl hover:border-terre-cuite hover:shadow-md transition-all">
+              <div className="w-10 h-10 bg-lin rounded-xl flex items-center justify-center group-hover:bg-terre-pale transition-colors">
+                <FileText className="w-5 h-5 text-olivier-gris group-hover:text-brique" />
               </div>
               <div>
-                <p className="font-extrabold text-xs uppercase text-[#2F4A2B]">RGPD</p>
-                <p className="text-xs text-[#56654F] font-semibold">Politique de confidentialité</p>
+                <p className="font-extrabold text-xs uppercase text-olivier">RGPD</p>
+                <p className="text-xs text-olivier-gris font-semibold">Politique de confidentialité</p>
               </div>
             </Link>
           </div>
@@ -186,7 +186,7 @@ export default function MentionsLegales() {
       </div>
 
       <footer className="py-10 border-t border-[#E3D6C4] text-center">
-        <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#56654F]">
+        <p className="text-xs font-bold uppercase tracking-[0.14em] text-olivier-gris">
           © 2026 Soleil et Saveurs — Bagnolet (93)
         </p>
       </footer>

@@ -509,7 +509,7 @@ export default function AdminPage() {
     <header className="bg-white border-b border-slate-100 sticky top-0 z-50 px-6 py-4">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
         <Link href="/" className="text-xl font-black uppercase tracking-tighter italic">
-          SOLEIL<span className="text-[#C2602D]">SAVEURS</span>
+          SOLEIL<span className="text-terre-cuite">SAVEURS</span>
         </Link>
 
         <nav className="flex flex-wrap gap-1 bg-slate-100 p-1 rounded-2xl">
@@ -521,7 +521,7 @@ export default function AdminPage() {
           <button onClick={() => setOnglet('messages')} className={`relative px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${onglet === 'messages' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}>
             Messages
             {nbNonLus > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#C2602D] text-white text-[8px] font-black rounded-full flex items-center justify-center">{nbNonLus}</span>
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-terre-cuite text-white text-[8px] font-black rounded-full flex items-center justify-center">{nbNonLus}</span>
             )}
           </button>
           <button onClick={() => setOnglet('stats')} className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${onglet === 'stats' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}>
@@ -541,7 +541,7 @@ export default function AdminPage() {
         <div className="flex items-center gap-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input type="text" placeholder="Rechercher..." value={recherche} onChange={(e) => setRecherche(e.target.value)} className="pl-10 pr-4 py-2 bg-slate-100 border-none rounded-xl text-xs font-bold w-48 focus:ring-2 focus:ring-[#C2602D]" />
+            <input type="text" placeholder="Rechercher..." value={recherche} onChange={(e) => setRecherche(e.target.value)} className="pl-10 pr-4 py-2 bg-slate-100 border-none rounded-xl text-xs font-bold w-48 focus:ring-2 focus:ring-terre-cuite" />
           </div>
           <button onClick={fetchData} className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all"><RefreshCcw className="w-4 h-4" /></button>
           <button onClick={async () => { await supabase.auth.signOut(); window.location.href = '/admin/login'; }} className="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-red-500 border border-red-200 rounded-xl hover:bg-red-50 transition-all">Déco</button>
@@ -560,8 +560,8 @@ export default function AdminPage() {
               <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1">Total Commandes</p>
               <p className="text-4xl font-black italic text-slate-900">{stats.total}</p>
             </div>
-            <div className="bg-white p-6 rounded-3xl shadow-sm border-l-4 border-l-[#C2602D]">
-              <p className="text-[10px] font-black uppercase text-[#C2602D] tracking-widest mb-1">À préparer</p>
+            <div className="bg-white p-6 rounded-3xl shadow-sm border-l-4 border-l-terre-cuite">
+              <p className="text-[10px] font-black uppercase text-terre-cuite tracking-widest mb-1">À préparer</p>
               <p className="text-4xl font-black italic text-slate-900">{stats.aPreparer}</p>
             </div>
             <div className="bg-slate-900 p-6 rounded-3xl shadow-xl text-white">
@@ -583,7 +583,7 @@ export default function AdminPage() {
           </div>
 
           {calculerBesoinStock().length > 0 && (
-            <div className="bg-[#C2602D]/5 rounded-[40px] p-10 border border-[#C2602D]/10 shadow-sm">
+            <div className="bg-terre-cuite/5 rounded-[40px] p-10 border border-terre-cuite/10 shadow-sm">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="font-black text-xl text-slate-900 italic tracking-tighter uppercase">Besoin de préparation</h2>
                 <button onClick={() => window.print()} className="bg-slate-900 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
@@ -603,7 +603,7 @@ export default function AdminPage() {
 
           <div className="space-y-6">
             {commandesFiltrees.map(cmd => (
-              <div key={cmd.id} className="bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm flex flex-col md:flex-row justify-between gap-6 group hover:border-[#C2602D]/20 transition-all">
+              <div key={cmd.id} className="bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm flex flex-col md:flex-row justify-between gap-6 group hover:border-terre-cuite/20 transition-all">
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-4">
@@ -612,7 +612,7 @@ export default function AdminPage() {
                       </div>
                       <div>
                         <h3 className="font-black text-xl uppercase italic tracking-tighter">{cmd.nom_client}</h3>
-                        <p className="text-[11px] font-black text-[#C2602D] uppercase tracking-wider mb-1 flex items-center gap-1">
+                        <p className="text-[11px] font-black text-terre-cuite uppercase tracking-wider mb-1 flex items-center gap-1">
                           <Phone className="w-3 h-3" /> {cmd.telephone_client || 'Pas de numéro'}
                         </p>
                         <p className="text-xs font-bold text-slate-400 uppercase flex items-center gap-1">
@@ -637,7 +637,7 @@ export default function AdminPage() {
                           </button>
                         </>
                       )}
-                      <button onClick={() => imprimerBon(cmd)} className="w-10 h-10 bg-slate-50 text-slate-400 rounded-xl flex items-center justify-center hover:bg-[#C2602D] hover:text-white transition-all shadow-sm">
+                      <button onClick={() => imprimerBon(cmd)} className="w-10 h-10 bg-slate-50 text-slate-400 rounded-xl flex items-center justify-center hover:bg-terre-cuite hover:text-white transition-all shadow-sm">
                         <Printer className="w-4 h-4" />
                       </button>
                     </div>
@@ -654,8 +654,8 @@ export default function AdminPage() {
                     </div>
 
                     {cmd.commentaire_client && (
-                      <div className="mt-4 p-3 bg-white border-l-4 border-[#C2602D] rounded-r-xl shadow-sm">
-                        <p className="text-[9px] font-black text-[#C2602D] uppercase tracking-widest mb-1">Note du client :</p>
+                      <div className="mt-4 p-3 bg-white border-l-4 border-terre-cuite rounded-r-xl shadow-sm">
+                        <p className="text-[9px] font-black text-terre-cuite uppercase tracking-widest mb-1">Note du client :</p>
                         <p className="text-xs text-slate-700 italic font-medium">"{cmd.commentaire_client}"</p>
                       </div>
                     )}
@@ -665,12 +665,12 @@ export default function AdminPage() {
                 <div className="text-right flex flex-col justify-between min-w-[150px]">
                   <div>
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Payé</p>
-                    <p className="text-3xl font-black text-[#C2602D] italic tracking-tighter">{cmd.total?.toFixed(2)}€</p>
+                    <p className="text-3xl font-black text-terre-cuite italic tracking-tighter">{cmd.total?.toFixed(2)}€</p>
                   </div>
                   {cmd.statut !== 'livrée' ? (
                     <button 
                       onClick={() => updateStatut(cmd.id, 'livrée')} 
-                      className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-[#C2602D] shadow-xl transition-all flex items-center justify-center gap-2"
+                      className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-terre-cuite shadow-xl transition-all flex items-center justify-center gap-2"
                     >
                       <CheckCircle2 className="w-4 h-4" /> Valider Livraison
                     </button>
@@ -691,15 +691,15 @@ export default function AdminPage() {
       {onglet === 'produits' && (
         <div className="animate-in fade-in space-y-12">
           <section className="bg-white p-12 rounded-[40px] border border-slate-100 shadow-sm max-w-4xl mx-auto">
-            <h2 className="font-black text-3xl mb-10 italic uppercase tracking-tighter">Nouveau <span className="text-[#C2602D]">Produit</span></h2>
+            <h2 className="font-black text-3xl mb-10 italic uppercase tracking-tighter">Nouveau <span className="text-terre-cuite">Produit</span></h2>
             <form onSubmit={ajouterProduit} className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="md:col-span-3 border-4 border-dashed border-slate-100 rounded-[32px] p-10 bg-slate-50 flex flex-col items-center justify-center relative cursor-pointer hover:border-[#C2602D]/20 transition-all group">
-                {nouveauProd.image_url ? <img src={nouveauProd.image_url} className="h-32 w-48 object-cover rounded-3xl shadow-lg border-4 border-white" /> : <Plus className="w-12 h-12 text-slate-200 group-hover:text-[#C2602D]" />}
+              <div className="md:col-span-3 border-4 border-dashed border-slate-100 rounded-[32px] p-10 bg-slate-50 flex flex-col items-center justify-center relative cursor-pointer hover:border-terre-cuite/20 transition-all group">
+                {nouveauProd.image_url ? <img src={nouveauProd.image_url} className="h-32 w-48 object-cover rounded-3xl shadow-lg border-4 border-white" /> : <Plus className="w-12 h-12 text-slate-200 group-hover:text-terre-cuite" />}
                 <input type="file" accept="image/*" onChange={(e) => choisirImage(e)} className="absolute inset-0 opacity-0 cursor-pointer" />
                 {nouveauProd.image_url && (
                   <button type="button" onClick={() => setCadrage({ src: nouveauProd.image_url, produitId: null })} className="relative z-10 mt-4 px-4 py-2 bg-white text-slate-500 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-sm hover:bg-slate-900 hover:text-white transition-all">Recadrer</button>
                 )}
-                {uploading && <div className="absolute inset-0 bg-white/90 flex items-center justify-center font-black text-[#C2602D] rounded-[32px] animate-pulse">UPLOAD...</div>}
+                {uploading && <div className="absolute inset-0 bg-white/90 flex items-center justify-center font-black text-terre-cuite rounded-[32px] animate-pulse">UPLOAD...</div>}
               </div>
               
               <div className="md:col-span-2">
@@ -727,13 +727,13 @@ export default function AdminPage() {
 
               <div className="relative">
                   <input type="number" step={nouveauProd.unite === 'kg' ? '0.1' : '1'} placeholder="Stock initial" className="w-full p-5 bg-slate-100 rounded-2xl font-black border-none text-sm" value={nouveauProd.stock || ''} onChange={e => setNouveauProd({...nouveauProd, stock: parseFloat(e.target.value)})} required />
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-[#C2602D] uppercase">{nouveauProd.unite}</span>
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-terre-cuite uppercase">{nouveauProd.unite}</span>
               </div>
 
               {nouveauProd.unite === 'g' && (
                 <div className="relative">
                   <input type="number" step="50" min="50" placeholder="Pas de quantité (ex: 250)" className="w-full p-5 bg-slate-100 rounded-2xl font-black border-none text-sm" value={nouveauProd.pas_g || ''} onChange={e => setNouveauProd({...nouveauProd, pas_g: parseInt(e.target.value) || 100})} />
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-[#C2602D] uppercase">g/step</span>
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-terre-cuite uppercase">g/step</span>
                 </div>
               )}
 
@@ -748,7 +748,7 @@ export default function AdminPage() {
                     <label className="text-[9px] font-black uppercase text-slate-400 ml-2 mb-1 block">Remise %</label>
                     <input
                       type="number" min="0" max="100" placeholder="Ex: 20"
-                      className="w-full p-4 bg-white rounded-xl font-black border border-slate-200 text-sm text-center focus:border-[#C2602D] outline-none"
+                      className="w-full p-4 bg-white rounded-xl font-black border border-slate-200 text-sm text-center focus:border-terre-cuite outline-none"
                       value={nouveauProd.promotion || ''}
                       onChange={e => setNouveauProd({ ...nouveauProd, promotion: parseFloat(e.target.value) || 0, seuil_achat: 0, quantite_offerte: 0, seuil_promo_qte: 0, prix_promo: 0 })}
                     />
@@ -758,7 +758,7 @@ export default function AdminPage() {
                     <input
                       type="number" step="0.5" min="0"
                       placeholder={nouveauProd.unite === 'kg' ? 'Ex: 2 kg' : 'Ex: 3'}
-                      className="w-full p-4 bg-white rounded-xl font-black border border-slate-200 text-sm text-center focus:border-[#C2602D] outline-none"
+                      className="w-full p-4 bg-white rounded-xl font-black border border-slate-200 text-sm text-center focus:border-terre-cuite outline-none"
                       value={nouveauProd.seuil_achat || ''}
                       onChange={e => setNouveauProd({ ...nouveauProd, seuil_achat: parseFloat(e.target.value) || 0, promotion: 0, seuil_promo_qte: 0, prix_promo: 0 })}
                     />
@@ -768,7 +768,7 @@ export default function AdminPage() {
                     <input
                       type="number" step="0.5" min="0"
                       placeholder={nouveauProd.unite === 'kg' ? 'Ex: 0.5 kg' : 'Ex: 1'}
-                      className="w-full p-4 bg-white rounded-xl font-black border border-slate-200 text-sm text-center focus:border-[#C2602D] outline-none"
+                      className="w-full p-4 bg-white rounded-xl font-black border border-slate-200 text-sm text-center focus:border-terre-cuite outline-none"
                       value={nouveauProd.quantite_offerte || ''}
                       onChange={e => setNouveauProd({ ...nouveauProd, quantite_offerte: parseFloat(e.target.value) || 0 })}
                     />
@@ -806,7 +806,7 @@ export default function AdminPage() {
                 <p className="text-[9px] text-slate-400 font-bold">Un seul type de promo à la fois : remise %, lot X+Y ou prix dégressif.</p>
               </div>
 
-              <button type="submit" disabled={uploading} className="md:col-span-3 bg-slate-900 text-white py-6 rounded-3xl font-black uppercase tracking-[0.3em] shadow-xl hover:bg-[#C2602D] hover:scale-[1.01] transition-all disabled:opacity-50">
+              <button type="submit" disabled={uploading} className="md:col-span-3 bg-slate-900 text-white py-6 rounded-3xl font-black uppercase tracking-[0.3em] shadow-xl hover:bg-terre-cuite hover:scale-[1.01] transition-all disabled:opacity-50">
                 Ajouter au catalogue
               </button>
             </form>
@@ -824,7 +824,7 @@ export default function AdminPage() {
                   onChange={(e) => setRecherche(e.target.value)}
                   placeholder="Rechercher un produit…"
                   aria-label="Rechercher un produit"
-                  className="w-full pl-10 pr-9 py-3 bg-slate-100 border-none rounded-xl text-sm font-bold focus:ring-2 focus:ring-[#C2602D] focus:bg-white outline-none transition-colors"
+                  className="w-full pl-10 pr-9 py-3 bg-slate-100 border-none rounded-xl text-sm font-bold focus:ring-2 focus:ring-terre-cuite focus:bg-white outline-none transition-colors"
                 />
                 {recherche && (
                   <button type="button" onClick={() => setRecherche('')} aria-label="Effacer la recherche" className="absolute right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center hover:bg-slate-300">
@@ -842,7 +842,7 @@ export default function AdminPage() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {produitsFiltres.map(p => editingProdId === p.id ? (
-                <div key={p.id} className="p-6 bg-white rounded-[2.5rem] border border-[#C2602D] ring-4 ring-[#C2602D]/5 sm:col-span-2 self-start">
+                <div key={p.id} className="p-6 bg-white rounded-[2.5rem] border border-terre-cuite ring-4 ring-terre-cuite/5 sm:col-span-2 self-start">
                   <div className="space-y-4 animate-in fade-in duration-300">
                     <div className="flex gap-4 items-center">
                        <div className="flex flex-col items-center gap-1.5">
@@ -852,12 +852,12 @@ export default function AdminPage() {
                             <div className="absolute bottom-0 right-0 bg-black text-white p-1 rounded-full"><Edit3 className="w-3 h-3"/></div>
                          </div>
                          {editFormData.image_url && (
-                           <button type="button" onClick={() => setCadrage({ src: editFormData.image_url, produitId: p.id })} className="text-[8px] font-black uppercase tracking-widest text-slate-400 hover:text-[#C2602D]">Recadrer</button>
+                           <button type="button" onClick={() => setCadrage({ src: editFormData.image_url, produitId: p.id })} className="text-[8px] font-black uppercase tracking-widest text-slate-400 hover:text-terre-cuite">Recadrer</button>
                          )}
                        </div>
                        <div className="flex-1">
                           <input type="text" className="w-full bg-slate-50 border-none rounded-lg p-2 font-black text-sm mb-2" value={editFormData.name} onChange={e => setEditFormData({...editFormData, name: e.target.value})} />
-                          <input type="number" className="w-full bg-slate-50 border-none rounded-lg p-2 font-black text-sm text-[#C2602D]" value={editFormData.price} onChange={e => setEditFormData({...editFormData, price: parseFloat(e.target.value)})} />
+                          <input type="number" className="w-full bg-slate-50 border-none rounded-lg p-2 font-black text-sm text-terre-cuite" value={editFormData.price} onChange={e => setEditFormData({...editFormData, price: parseFloat(e.target.value)})} />
                        </div>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
@@ -873,7 +873,7 @@ export default function AdminPage() {
                     {editFormData.unite === 'g' && (
                       <div className="relative">
                         <input type="number" step="50" min="50" placeholder="Pas (g), ex: 250" className="w-full bg-slate-50 border-none rounded-lg p-2 text-xs font-black" value={editFormData.pas_g || ''} onChange={e => setEditFormData({...editFormData, pas_g: parseInt(e.target.value) || 100})} />
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-black text-[#C2602D]">g/step</span>
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-black text-terre-cuite">g/step</span>
                       </div>
                     )}
                     <input type="text" placeholder="Provenance (ex: France)" className="w-full bg-slate-50 border-none rounded-lg p-2 text-xs font-black" value={editFormData.provenance || ''} onChange={e => setEditFormData({...editFormData, provenance: e.target.value})} />
@@ -887,7 +887,7 @@ export default function AdminPage() {
               ) : (
                 <div key={p.id} className={`p-6 bg-[#EDE3D5] rounded-[2.5rem] border border-slate-100 flex flex-col items-center relative transition-all hover:shadow-md group ${p.actif === false ? 'opacity-60 grayscale' : ''}`}>
                   {(p.promotion > 0 || p.seuil_achat > 0 || premieresOffertes(p) > 0) && (
-                    <div className="absolute top-4 right-4 bg-[#C2602D] text-white text-[9px] font-black px-2.5 py-1 rounded-full uppercase z-10 shadow-sm animate-pulse">
+                    <div className="absolute top-4 right-4 bg-terre-cuite text-white text-[9px] font-black px-2.5 py-1 rounded-full uppercase z-10 shadow-sm animate-pulse">
                       {p.promotion > 0 ? `-${p.promotion}%` : p.seuil_achat > 0 ? `${p.seuil_achat}+${p.quantite_offerte}` : libellePremieresOffertes(p)}
                     </div>
                   )}
@@ -915,10 +915,10 @@ export default function AdminPage() {
                   {p.promotion > 0 ? (
                     <p className="font-bold uppercase tracking-tighter flex items-baseline gap-1.5">
                       <span className="text-[11px] line-through text-slate-400">{p.price?.toFixed(2)}€</span>
-                      <span className="text-sm font-black text-[#C2602D]">{(p.price * (1 - p.promotion / 100)).toFixed(2)}€ / {p.unite === 'g' ? 'kg' : p.unite}</span>
+                      <span className="text-sm font-black text-terre-cuite">{(p.price * (1 - p.promotion / 100)).toFixed(2)}€ / {p.unite === 'g' ? 'kg' : p.unite}</span>
                     </p>
                   ) : (
-                    <p className="text-xs font-bold text-[#C2602D] uppercase tracking-tighter">{p.price?.toFixed(2)}€ / {p.unite === 'g' ? 'kg' : p.unite}</p>
+                    <p className="text-xs font-bold text-terre-cuite uppercase tracking-tighter">{p.price?.toFixed(2)}€ / {p.unite === 'g' ? 'kg' : p.unite}</p>
                   )}
                   {premieresOffertes(p) > 0 && (
                     <p className="text-[10px] font-black text-green-600 uppercase tracking-tighter">{libellePremieresOffertes(p)}</p>
@@ -940,7 +940,7 @@ export default function AdminPage() {
                       }} className={`w-14 text-center font-black text-lg bg-transparent border-none focus:ring-0 p-0 ${p.stock <= 5 ? 'text-red-500' : 'text-slate-900'}`} />
                       <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest">{p.unite || 'unité'}</span>
                     </div>
-                    <button onClick={() => ajusterStock(p.id, p.stock, 1)} className="w-10 h-10 flex items-center justify-center bg-slate-900 text-white rounded-xl font-black shadow-lg hover:bg-[#C2602D] transition-all">+</button>
+                    <button onClick={() => ajusterStock(p.id, p.stock, 1)} className="w-10 h-10 flex items-center justify-center bg-slate-900 text-white rounded-xl font-black shadow-lg hover:bg-terre-cuite transition-all">+</button>
                   </div>
 
                   <button onClick={() => basculerActif(p.id, p.actif !== false)} className={`w-full mt-2 text-[9px] font-black uppercase tracking-widest py-3 rounded-xl transition-all ${p.actif === false ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 hover:bg-emerald-500/20' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}>
@@ -948,7 +948,7 @@ export default function AdminPage() {
                   </button>
 
                   <div className="w-full mt-2">
-                    <button onClick={() => { setPromoProdId(promoProdId === p.id ? null : p.id); setPourcentage(0); setSeuilAchat(0); setQteOfferte(0); setSeuilPromoQte(0); setPrixPromo(0); setPremieresOffertesSaisie(0); }} className={`w-full text-[9px] font-black uppercase tracking-widest py-3 rounded-xl transition-all ${(p.promotion > 0 || p.seuil_achat > 0 || p.seuil_promo_qte > 0 || p.premieres_offertes > 0) ? 'bg-[#C2602D]/10 text-[#C2602D] border border-[#C2602D]/20' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}>
+                    <button onClick={() => { setPromoProdId(promoProdId === p.id ? null : p.id); setPourcentage(0); setSeuilAchat(0); setQteOfferte(0); setSeuilPromoQte(0); setPrixPromo(0); setPremieresOffertesSaisie(0); }} className={`w-full text-[9px] font-black uppercase tracking-widest py-3 rounded-xl transition-all ${(p.promotion > 0 || p.seuil_achat > 0 || p.seuil_promo_qte > 0 || p.premieres_offertes > 0) ? 'bg-terre-cuite/10 text-terre-cuite border border-terre-cuite/20' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}>
                       {(p.promotion > 0 || p.seuil_achat > 0 || p.seuil_promo_qte > 0 || p.premieres_offertes > 0) ? '🔥 Modifier Promo' : 'Ajouter Promo'}
                     </button>
                     {promoProdId === p.id && (
@@ -971,7 +971,7 @@ export default function AdminPage() {
                               </div>
                             </div>
                             {seuilAchat > 0 && qteOfferte > 0 && (
-                              <p className="text-[8px] font-black text-[#C2602D] mt-1 text-center">{seuilAchat} kg achetés = {qteOfferte} kg offerts</p>
+                              <p className="text-[8px] font-black text-terre-cuite mt-1 text-center">{seuilAchat} kg achetés = {qteOfferte} kg offerts</p>
                             )}
                           </div>
                         ) : (
@@ -1033,7 +1033,7 @@ export default function AdminPage() {
                           </div>
                         )}
                         <div className="flex gap-2 mt-1">
-                          <button onClick={() => appliquerPromo(p.id)} className="flex-1 bg-slate-900 text-white text-[9px] font-black py-3 rounded-lg shadow-md hover:bg-[#C2602D]">VALIDER</button>
+                          <button onClick={() => appliquerPromo(p.id)} className="flex-1 bg-slate-900 text-white text-[9px] font-black py-3 rounded-lg shadow-md hover:bg-terre-cuite">VALIDER</button>
                           {(p.promotion > 0 || p.seuil_achat > 0 || p.seuil_promo_qte > 0 || p.premieres_offertes > 0) && (
                             <button onClick={() => { setPourcentage(0); setSeuilAchat(0); setQteOfferte(0); setSeuilPromoQte(0); setPrixPromo(0); setPremieresOffertesSaisie(0); appliquerPromo(p.id, true); }} className="px-3 bg-red-100 text-red-500 rounded-lg"><Trash2 className="w-4 h-4" /></button>
                           )}
@@ -1083,12 +1083,12 @@ export default function AdminPage() {
                               </span>
                               {fiche.publiee ? 'Activée' : 'Désactivée'}
                             </button>
-                            <a href={`/produits/${fiche.slug}`} target="_blank" rel="noopener" title={fiche.publiee ? 'Voir la page' : 'Aperçu (visible par les admins uniquement)'} className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-[#C2602D]">
+                            <a href={`/produits/${fiche.slug}`} target="_blank" rel="noopener" title={fiche.publiee ? 'Voir la page' : 'Aperçu (visible par les admins uniquement)'} className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-terre-cuite">
                               {fiche.publiee ? 'Voir' : 'Aperçu'} <ExternalLink className="w-3 h-3" />
                             </a>
                           </div>
                         )}
-                        <button onClick={() => setFicheProdId(p.id)} className={`w-full text-[9px] font-black uppercase tracking-widest py-2.5 rounded-xl flex items-center justify-center gap-1.5 transition-all ${fiche ? 'bg-slate-100 text-slate-500 hover:bg-slate-900 hover:text-white' : 'bg-[#C2602D]/10 text-[#C2602D] hover:bg-[#C2602D] hover:text-white'}`}>
+                        <button onClick={() => setFicheProdId(p.id)} className={`w-full text-[9px] font-black uppercase tracking-widest py-2.5 rounded-xl flex items-center justify-center gap-1.5 transition-all ${fiche ? 'bg-slate-100 text-slate-500 hover:bg-slate-900 hover:text-white' : 'bg-terre-cuite/10 text-terre-cuite hover:bg-terre-cuite hover:text-white'}`}>
                           <FileText className="w-3.5 h-3.5" /> {fiche ? `Modifier la fiche · ${remplies}/${total}` : 'Créer la fiche'}
                         </button>
                       </div>
@@ -1116,8 +1116,8 @@ export default function AdminPage() {
               <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1">Total Messages</p>
               <p className="text-4xl font-black italic text-slate-900">{messages.length}</p>
             </div>
-            <div className="bg-white p-6 rounded-3xl shadow-sm border-l-4 border-l-[#C2602D]">
-              <p className="text-[10px] font-black uppercase text-[#C2602D] tracking-widest mb-1">Non lus</p>
+            <div className="bg-white p-6 rounded-3xl shadow-sm border-l-4 border-l-terre-cuite">
+              <p className="text-[10px] font-black uppercase text-terre-cuite tracking-widest mb-1">Non lus</p>
               <p className="text-4xl font-black italic text-slate-900">{nbNonLus}</p>
             </div>
             <div className="bg-slate-900 p-6 rounded-3xl shadow-xl text-white">
@@ -1138,24 +1138,24 @@ export default function AdminPage() {
                 <div
                   key={msg.id}
                   className={`bg-white rounded-[2rem] border shadow-sm transition-all ${
-                    !msg.lu ? 'border-[#C2602D]/30 shadow-[#C2602D]/5' : 'border-slate-100'
+                    !msg.lu ? 'border-terre-cuite/30 shadow-terre-cuite/5' : 'border-slate-100'
                   }`}
                 >
                   {/* En-tête du message */}
                   <div className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
                       {/* Avatar initiale */}
-                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-black text-lg shrink-0 ${!msg.lu ? 'bg-[#C2602D] text-white' : 'bg-slate-100 text-slate-500'}`}>
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-black text-lg shrink-0 ${!msg.lu ? 'bg-terre-cuite text-white' : 'bg-slate-100 text-slate-500'}`}>
                         {(msg.nom || '?')[0].toUpperCase()}
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
                           <h3 className="font-black text-sm uppercase italic tracking-tighter">{msg.nom || 'Inconnu'}</h3>
                           {!msg.lu && (
-                            <span className="text-[8px] font-black bg-[#C2602D] text-white px-2 py-0.5 rounded-full uppercase tracking-widest">Nouveau</span>
+                            <span className="text-[8px] font-black bg-terre-cuite text-white px-2 py-0.5 rounded-full uppercase tracking-widest">Nouveau</span>
                           )}
                         </div>
-                        <a href={`mailto:${msg.email}`} className="text-[11px] font-bold text-[#C2602D] hover:underline flex items-center gap-1">
+                        <a href={`mailto:${msg.email}`} className="text-[11px] font-bold text-terre-cuite hover:underline flex items-center gap-1">
                           <Mail className="w-3 h-3" /> {msg.email}
                         </a>
                         <p className="text-[10px] text-slate-400 font-bold uppercase mt-0.5">
@@ -1175,7 +1175,7 @@ export default function AdminPage() {
                       </button>
                       <button
                         onClick={() => { setReponseOuvert(reponseOuvert === msg.id ? null : msg.id); setReponseTexte(''); }}
-                        className="flex items-center gap-1.5 bg-slate-900 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase hover:bg-[#C2602D] transition-all"
+                        className="flex items-center gap-1.5 bg-slate-900 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase hover:bg-terre-cuite transition-all"
                       >
                         <Send className="w-3.5 h-3.5" /> Répondre
                       </button>
@@ -1207,13 +1207,13 @@ export default function AdminPage() {
                           onChange={e => setReponseTexte(e.target.value)}
                           placeholder={`Bonjour ${msg.nom},\n\nÉcrivez votre réponse ici…`}
                           rows={5}
-                          className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm font-medium text-slate-700 focus:border-[#C2602D] focus:ring-0 outline-none resize-none transition-all"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm font-medium text-slate-700 focus:border-terre-cuite focus:ring-0 outline-none resize-none transition-all"
                         />
                         <div className="flex gap-3 mt-3">
                           <button
                             onClick={() => envoyerReponse(msg)}
                             disabled={!reponseTexte.trim() || envoiEnCours}
-                            className="flex items-center gap-2 bg-[#C2602D] text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-900 transition-all shadow-lg shadow-orange-900/10 disabled:opacity-40 disabled:cursor-not-allowed"
+                            className="flex items-center gap-2 bg-terre-cuite text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-900 transition-all shadow-lg shadow-orange-900/10 disabled:opacity-40 disabled:cursor-not-allowed"
                           >
                             <Send className="w-3.5 h-3.5" />
                             Envoyer via Mail
@@ -1301,7 +1301,7 @@ export default function AdminPage() {
                 { label: 'CA Total', value: `${stats.caTotal.toFixed(0)}€`, sub: 'commandes livrées', icon: TrendingUp, color: 'text-green-600', bg: 'bg-green-50' },
                 { label: 'CA ce mois', value: `${caThisMonth.toFixed(0)}€`, sub: new Date().toLocaleDateString('fr-FR', { month: 'long' }), icon: BarChart2, color: 'text-blue-600', bg: 'bg-blue-50' },
                 { label: 'Commandes / mois', value: String(cmdThisMonth), sub: 'ce mois', icon: Package, color: 'text-purple-600', bg: 'bg-purple-50' },
-                { label: 'En attente', value: String(cmdEnAttente), sub: 'à préparer / livrer', icon: Clock, color: 'text-orange-600', bg: 'bg-orange-50' },
+                { label: 'En attente', value: String(cmdEnAttente), sub: 'à préparer / livrer', icon: Clock, color: 'text-brique', bg: 'bg-terre-pale' },
               ].map(({ label, value, sub, icon: Icon, color, bg }) => (
                 <div key={label} className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm">
                   <div className={`w-10 h-10 ${bg} rounded-2xl flex items-center justify-center mb-3`}>
@@ -1320,7 +1320,7 @@ export default function AdminPage() {
                 {weeklyData.map((w, i) => (
                   <div key={i} className="flex-1 flex flex-col items-center justify-end" style={{ height: '100%' }}>
                     {w.rev > 0 && (
-                      <p className="text-[8px] font-black text-[#C2602D] mb-1 whitespace-nowrap">{w.rev.toFixed(0)}€</p>
+                      <p className="text-[8px] font-black text-terre-cuite mb-1 whitespace-nowrap">{w.rev.toFixed(0)}€</p>
                     )}
                     <div
                       className="w-full rounded-t-xl transition-all duration-700"
@@ -1346,7 +1346,7 @@ export default function AdminPage() {
                       <span className="text-[10px] font-black text-slate-300 w-4">{i + 1}</span>
                       <span className="font-black text-sm uppercase text-slate-800 w-36 truncate">{name}</span>
                       <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
-                        <div className="h-full bg-[#C2602D] rounded-full" style={{ width: `${(qty / maxQte) * 100}%` }} />
+                        <div className="h-full bg-terre-cuite rounded-full" style={{ width: `${(qty / maxQte) * 100}%` }} />
                       </div>
                       <span className="text-[10px] font-black text-slate-500 w-20 text-right">{formatQteUnite(qty, unite)}</span>
                     </div>
@@ -1418,8 +1418,8 @@ export default function AdminPage() {
             {/* Config récurrence */}
             <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm space-y-6">
               <div>
-                <p className="text-[10px] font-black uppercase text-[#C2602D] tracking-widest mb-1">Configuration</p>
-                <h2 className="text-3xl font-black uppercase italic tracking-tighter">Calendrier <span className="text-[#C2602D]">Livraisons</span></h2>
+                <p className="text-[10px] font-black uppercase text-terre-cuite tracking-widest mb-1">Configuration</p>
+                <h2 className="text-3xl font-black uppercase italic tracking-tighter">Calendrier <span className="text-terre-cuite">Livraisons</span></h2>
               </div>
 
               <div className="space-y-3">
@@ -1436,7 +1436,7 @@ export default function AdminPage() {
                       }))}
                       className={`px-4 py-2 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${
                         configCal.jours_semaine.includes(v)
-                          ? 'bg-[#2F4A2B] text-white shadow-md'
+                          ? 'bg-olivier text-white shadow-md'
                           : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
                       }`}
                     >
@@ -1455,7 +1455,7 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              <button onClick={sauvegarderConfigCal} disabled={savingCal} className="flex items-center gap-2 px-6 py-3 bg-[#2F4A2B] text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:opacity-90 disabled:opacity-40 transition-all">
+              <button onClick={sauvegarderConfigCal} disabled={savingCal} className="flex items-center gap-2 px-6 py-3 bg-olivier text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:opacity-90 disabled:opacity-40 transition-all">
                 {savingCal ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                 Sauvegarder la configuration
               </button>
@@ -1504,12 +1504,12 @@ export default function AdminPage() {
                       key={dateStr}
                       onClick={() => { toggleExceptionDate(dateStr); setSelectedDateAdmin(isSelected ? null : dateStr); }}
                       className={`aspect-square rounded-xl flex flex-col items-center justify-center transition-all border ${
-                        isSelected ? 'ring-2 ring-[#C2602D]' : ''
+                        isSelected ? 'ring-2 ring-terre-cuite' : ''
                       } ${
                         exc
                           ? exc.ferme ? 'bg-red-50 border-red-200 text-red-500' : 'bg-blue-50 border-blue-200 text-blue-600'
                           : isAvail
-                          ? isFull ? 'bg-orange-50 border-orange-200 text-orange-500' : 'bg-green-50 border-green-200 text-green-700'
+                          ? isFull ? 'bg-terre-pale border-[#E9C0A4] text-brique' : 'bg-green-50 border-green-200 text-green-700'
                           : 'bg-slate-50 border-slate-100 text-slate-300'
                       }`}
                     >
@@ -1528,7 +1528,7 @@ export default function AdminPage() {
                   { color: 'bg-green-100 text-green-700', label: 'Disponible (récurrent)' },
                   { color: 'bg-blue-100 text-blue-600', label: 'Ouvert (exception)' },
                   { color: 'bg-red-100 text-red-500', label: 'Bloqué (exception)' },
-                  { color: 'bg-orange-100 text-orange-500', label: 'Complet' },
+                  { color: 'bg-[#F2D7C6] text-brique', label: 'Complet' },
                   { color: 'bg-slate-100 text-slate-400', label: 'Indisponible' },
                 ].map(({ color, label }) => (
                   <div key={label} className="flex items-center gap-1.5">
@@ -1544,7 +1544,7 @@ export default function AdminPage() {
               <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm">
                 <h3 className="font-black text-sm uppercase tracking-widest text-slate-900 mb-4">
                   Commandes du {new Date(selectedDateAdmin + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
-                  <span className="ml-2 text-[10px] bg-[#C2602D] text-white px-2 py-0.5 rounded-full">{cmdParDate[selectedDateAdmin].length}</span>
+                  <span className="ml-2 text-[10px] bg-terre-cuite text-white px-2 py-0.5 rounded-full">{cmdParDate[selectedDateAdmin].length}</span>
                 </h3>
                 <div className="space-y-3">
                   {cmdParDate[selectedDateAdmin].map(cmd => (
@@ -1554,7 +1554,7 @@ export default function AdminPage() {
                         <p className="text-[10px] text-slate-400 font-bold uppercase">{cmd.adresse_livraison}</p>
                       </div>
                       <div className="text-right">
-                        <p className="font-black text-sm text-[#C2602D]">{parseFloat(cmd.total).toFixed(2)}€</p>
+                        <p className="font-black text-sm text-terre-cuite">{parseFloat(cmd.total).toFixed(2)}€</p>
                         <p className="text-[9px] text-slate-400 font-bold uppercase">{cmd.statut}</p>
                       </div>
                     </div>

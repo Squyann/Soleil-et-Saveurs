@@ -67,24 +67,24 @@ async function supprimerPhotos(urls: string[]) {
 function Choix({ propre, onChange }: { propre: boolean; onChange: (propre: boolean) => void }) {
   return (
     <div className="inline-flex p-[3px] rounded-xl bg-[#EDE3D5] shrink-0" role="group">
-      <button type="button" aria-pressed={!propre} onClick={() => onChange(false)} className={`px-2.5 sm:px-3 py-1.5 rounded-[9px] text-xs sm:text-[13px] font-bold ${!propre ? 'bg-white text-[#2F4A2B] shadow-sm' : 'text-[#44583F]'}`}>Reprendre le produit</button>
-      <button type="button" aria-pressed={propre} onClick={() => onChange(true)} className={`px-2.5 sm:px-3 py-1.5 rounded-[9px] text-xs sm:text-[13px] font-bold ${propre ? 'bg-white text-[#2F4A2B] shadow-sm' : 'text-[#44583F]'}`}>Propre</button>
+      <button type="button" aria-pressed={!propre} onClick={() => onChange(false)} className={`px-2.5 sm:px-3 py-1.5 rounded-[9px] text-xs sm:text-[13px] font-bold ${!propre ? 'bg-white text-olivier shadow-sm' : 'text-olivier-doux'}`}>Reprendre le produit</button>
+      <button type="button" aria-pressed={propre} onClick={() => onChange(true)} className={`px-2.5 sm:px-3 py-1.5 rounded-[9px] text-xs sm:text-[13px] font-bold ${propre ? 'bg-white text-olivier shadow-sm' : 'text-olivier-doux'}`}>Propre</button>
     </div>
   );
 }
 
 function Bloc({ titre, propre, onChange, aide, children, herite }: { titre: string; propre: boolean; onChange: (p: boolean) => void; aide?: string; children?: React.ReactNode; herite: React.ReactNode }) {
   return (
-    <section className={`p-4 rounded-[18px] border ${propre ? 'border-[#2F4A2B] bg-[#FBF6F0]' : 'border-[#E3D6C4] bg-white'}`}>
+    <section className={`p-4 rounded-[18px] border ${propre ? 'border-olivier bg-[#FBF6F0]' : 'border-[#E3D6C4] bg-white'}`}>
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <p className="font-extrabold text-[15px]">{titre}</p>
         <Choix propre={propre} onChange={onChange} />
       </div>
       {propre ? (
-        <div className="mt-2.5">{aide && <p className="mb-1.5 text-xs text-[#56654F]">{aide}</p>}{children}</div>
+        <div className="mt-2.5">{aide && <p className="mb-1.5 text-xs text-olivier-gris">{aide}</p>}{children}</div>
       ) : (
-        <div className="mt-2.5 px-3.5 py-3 rounded-xl bg-[#F8F1E8] text-sm leading-relaxed text-[#7A8570]">
-          <p className="mb-1 text-[11px] font-extrabold uppercase tracking-wide text-[#56654F]">Affiché : repris du produit</p>
+        <div className="mt-2.5 px-3.5 py-3 rounded-xl bg-[#F8F1E8] text-sm leading-relaxed text-olivier-pale">
+          <p className="mb-1 text-[11px] font-extrabold uppercase tracking-wide text-olivier-gris">Affiché : repris du produit</p>
           {herite}
         </div>
       )}
@@ -216,28 +216,28 @@ export default function EditeurFicheVariante({
     }
   }
 
-  const champ = 'w-full rounded-xl border-[1.5px] border-[#DDD0BF] bg-white p-3 text-[15px] leading-relaxed text-[#2F4A2B] outline-none focus:border-[#C2602D] transition-colors';
+  const champ = 'w-full rounded-xl border-[1.5px] border-[#DDD0BF] bg-white p-3 text-[15px] leading-relaxed text-olivier outline-none focus:border-terre-cuite transition-colors';
   const vide = <span className="italic">Rubrique vide sur le produit : rien ne s’affiche.</span>;
   const lienApercu = ficheProduit ? `/produits/${ficheProduit.slug}?variete=${encodeURIComponent(slugVariante(produit, variante))}` : null;
 
   return (
     <div className="fixed inset-0 z-[160] flex items-stretch sm:items-center justify-center sm:p-4 bg-black/50 backdrop-blur-sm">
-      <div className="relative bg-[#F3E8D6] text-[#2F4A2B] w-full sm:max-w-3xl h-full sm:h-[92vh] sm:rounded-[28px] shadow-2xl flex flex-col overflow-hidden">
+      <div className="relative bg-lin text-olivier w-full sm:max-w-3xl h-full sm:h-[92vh] sm:rounded-[28px] shadow-2xl flex flex-col overflow-hidden">
         <div className="flex items-center gap-3 px-4 py-3 sm:px-6 sm:py-4 bg-white border-b border-[#F0E7DA]">
-          <div className="w-14 h-14 rounded-xl overflow-hidden bg-[#F3E8D6] shrink-0">
+          <div className="w-14 h-14 rounded-xl overflow-hidden bg-lin shrink-0">
             {(variante.image_url || produit.image_url) && <img src={variante.image_url || produit.image_url} alt="" className="w-full h-full object-cover" />}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-extrabold uppercase tracking-[0.08em] text-[#A94E25]">Fiche de la variante</p>
+            <p className="text-xs font-extrabold uppercase tracking-[0.08em] text-brique">Fiche de la variante</p>
             <p className="titre text-[22px] sm:text-[26px] leading-tight truncate">{titre}</p>
           </div>
-          <p className="hidden sm:block text-right text-[13px] text-[#56654F]"><strong className="block text-xl text-[#2F4A2B]">{propres} / {TOTAL_RUBRIQUES_VARIANTE}</strong>rubriques propres</p>
-          <button onClick={fermer} aria-label="Fermer" className="w-10 h-10 flex items-center justify-center rounded-xl bg-[#F3E8D6] text-[#44583F] hover:bg-[#EDE3D5] shrink-0"><X className="w-5 h-5" /></button>
+          <p className="hidden sm:block text-right text-[13px] text-olivier-gris"><strong className="block text-xl text-olivier">{propres} / {TOTAL_RUBRIQUES_VARIANTE}</strong>rubriques propres</p>
+          <button onClick={fermer} aria-label="Fermer" className="w-10 h-10 flex items-center justify-center rounded-xl bg-lin text-olivier-doux hover:bg-[#EDE3D5] shrink-0"><X className="w-5 h-5" /></button>
         </div>
 
         <div className="flex-1 overflow-y-auto px-3 py-4 sm:px-6 sm:py-5 space-y-3">
           {!ficheProduit && (
-            <p className="flex gap-2.5 px-4 py-3 rounded-2xl bg-[#F8EADF] text-sm leading-relaxed text-[#A94E25]">
+            <p className="flex gap-2.5 px-4 py-3 rounded-2xl bg-terre-pale text-sm leading-relaxed text-brique">
               <AlertTriangle className="w-5 h-5 shrink-0" />
               <span>« {produit.name.trim()} » n’a pas encore de page détaillée : créez-la et publiez-la d’abord (bouton « Créer la fiche » sur la carte du produit). Sans elle, la fiche de la variante ne sera pas visible.</span>
             </p>
@@ -271,12 +271,12 @@ export default function EditeurFicheVariante({
                       <button type="button" onClick={() => setForm(f => ({ ...f, photos: deplacer(liste, i, -1) }))} disabled={i === 0} aria-label="Déplacer à gauche" className="w-7 h-7 rounded-lg bg-white/90 flex items-center justify-center disabled:opacity-30"><ArrowLeft className="w-3.5 h-3.5" /></button>
                       <button type="button" onClick={() => setForm(f => ({ ...f, photos: deplacer(liste, i, 1) }))} disabled={i === liste.length - 1} aria-label="Déplacer à droite" className="w-7 h-7 rounded-lg bg-white/90 flex items-center justify-center disabled:opacity-30"><ArrowRight className="w-3.5 h-3.5" /></button>
                     </div>
-                    <button type="button" onClick={() => setForm(f => ({ ...f, photos: liste.filter((_, j) => j !== i) }))} aria-label="Retirer la photo" className="w-7 h-7 rounded-lg bg-[#A94E25] text-white flex items-center justify-center"><Trash2 className="w-3.5 h-3.5" /></button>
+                    <button type="button" onClick={() => setForm(f => ({ ...f, photos: liste.filter((_, j) => j !== i) }))} aria-label="Retirer la photo" className="w-7 h-7 rounded-lg bg-brique text-white flex items-center justify-center"><Trash2 className="w-3.5 h-3.5" /></button>
                   </div>
                 </div>
               ))}
               {(form.photos?.length ?? 0) < PHOTOS_MAX && (
-                <label className="relative aspect-[3/2] rounded-xl border-2 border-dashed border-[#C9BBAA] bg-white flex flex-col items-center justify-center gap-1 text-[#7A8570] hover:border-[#C2602D] hover:text-[#C2602D] cursor-pointer">
+                <label className="relative aspect-[3/2] rounded-xl border-2 border-dashed border-[#C9BBAA] bg-white flex flex-col items-center justify-center gap-1 text-olivier-pale hover:border-terre-cuite hover:text-terre-cuite cursor-pointer">
                   <ImagePlus className="w-6 h-6" /><span className="text-xs font-bold">Ajouter</span>
                   <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => choisirPhoto(e, 'galerie')} />
                 </label>
@@ -293,7 +293,7 @@ export default function EditeurFicheVariante({
                 return (
                   <button key={nom} type="button" aria-pressed={actif}
                     onClick={() => setForm(f => ({ ...f, saison_mois: actif ? (f.saison_mois ?? []).filter(x => x !== m) : [...(f.saison_mois ?? []), m].sort((a, b) => a - b) }))}
-                    className={`py-2.5 rounded-xl text-xs font-extrabold ${actif ? 'bg-[#166534] text-white' : 'bg-white border border-[#E3D6C4] text-[#56654F]'}`}>
+                    className={`py-2.5 rounded-xl text-xs font-extrabold ${actif ? 'bg-[#166534] text-white' : 'bg-white border border-[#E3D6C4] text-olivier-gris'}`}>
                     {MOIS_COURTS[i]}
                   </button>
                 );
@@ -309,11 +309,11 @@ export default function EditeurFicheVariante({
               {(form.recettes ?? []).map((r, i, liste) => (
                 <div key={i} className="rounded-2xl border border-[#E3D6C4] bg-white p-3 space-y-2">
                   <div className="flex items-center gap-2">
-                    <ChefHat className="w-4 h-4 text-[#C2602D] shrink-0" />
+                    <ChefHat className="w-4 h-4 text-terre-cuite shrink-0" />
                     <input className={`${champ} font-bold`} placeholder="Titre de la recette (obligatoire)" value={r.titre} onChange={e => majRecette(i, { titre: e.target.value })} />
-                    <button type="button" onClick={() => setForm(f => ({ ...f, recettes: deplacer(liste, i, -1) }))} disabled={i === 0} aria-label="Monter" className="w-8 h-8 shrink-0 rounded-lg bg-[#F3E8D6] flex items-center justify-center disabled:opacity-30"><ArrowUp className="w-3.5 h-3.5" /></button>
-                    <button type="button" onClick={() => setForm(f => ({ ...f, recettes: deplacer(liste, i, 1) }))} disabled={i === liste.length - 1} aria-label="Descendre" className="w-8 h-8 shrink-0 rounded-lg bg-[#F3E8D6] flex items-center justify-center disabled:opacity-30"><ArrowDown className="w-3.5 h-3.5" /></button>
-                    <button type="button" onClick={() => { if (confirm('Supprimer cette recette ?')) setForm(f => ({ ...f, recettes: liste.filter((_, j) => j !== i) })); }} aria-label="Supprimer la recette" className="w-8 h-8 shrink-0 rounded-lg bg-[#F8EADF] text-[#A94E25] flex items-center justify-center"><Trash2 className="w-3.5 h-3.5" /></button>
+                    <button type="button" onClick={() => setForm(f => ({ ...f, recettes: deplacer(liste, i, -1) }))} disabled={i === 0} aria-label="Monter" className="w-8 h-8 shrink-0 rounded-lg bg-lin flex items-center justify-center disabled:opacity-30"><ArrowUp className="w-3.5 h-3.5" /></button>
+                    <button type="button" onClick={() => setForm(f => ({ ...f, recettes: deplacer(liste, i, 1) }))} disabled={i === liste.length - 1} aria-label="Descendre" className="w-8 h-8 shrink-0 rounded-lg bg-lin flex items-center justify-center disabled:opacity-30"><ArrowDown className="w-3.5 h-3.5" /></button>
+                    <button type="button" onClick={() => { if (confirm('Supprimer cette recette ?')) setForm(f => ({ ...f, recettes: liste.filter((_, j) => j !== i) })); }} aria-label="Supprimer la recette" className="w-8 h-8 shrink-0 rounded-lg bg-terre-pale text-brique flex items-center justify-center"><Trash2 className="w-3.5 h-3.5" /></button>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <input className={champ} placeholder="Temps (ex. : 20 min)" value={r.temps} onChange={e => majRecette(i, { temps: e.target.value })} />
@@ -323,9 +323,9 @@ export default function EditeurFicheVariante({
                   <textarea className={`${champ} min-h-[110px]`} placeholder={'Étapes, une par ligne'} value={r.etapes} onChange={e => majRecette(i, { etapes: e.target.value })} />
                   <div className="flex items-center gap-3">
                     {r.photo ? (
-                      <><img src={r.photo} alt="" className="w-24 aspect-[3/2] object-cover rounded-lg" /><button type="button" onClick={() => majRecette(i, { photo: '' })} className="text-xs font-bold text-[#A94E25]">Retirer la photo</button></>
+                      <><img src={r.photo} alt="" className="w-24 aspect-[3/2] object-cover rounded-lg" /><button type="button" onClick={() => majRecette(i, { photo: '' })} className="text-xs font-bold text-brique">Retirer la photo</button></>
                     ) : (
-                      <label className="relative inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-[#C9BBAA] text-xs font-bold text-[#56654F] cursor-pointer">
+                      <label className="relative inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-[#C9BBAA] text-xs font-bold text-olivier-gris cursor-pointer">
                         <ImagePlus className="w-3.5 h-3.5" /> Photo de la recette (facultatif)
                         <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => choisirPhoto(e, i)} />
                       </label>
@@ -333,7 +333,7 @@ export default function EditeurFicheVariante({
                   </div>
                 </div>
               ))}
-              <button type="button" onClick={() => setForm(f => ({ ...f, recettes: [...(f.recettes ?? []), recetteVide()] }))} className="w-full py-3 rounded-xl border-2 border-dashed border-[#C9BBAA] text-sm font-bold text-[#56654F] hover:border-[#C2602D] hover:text-[#C2602D] flex items-center justify-center gap-2">
+              <button type="button" onClick={() => setForm(f => ({ ...f, recettes: [...(f.recettes ?? []), recetteVide()] }))} className="w-full py-3 rounded-xl border-2 border-dashed border-[#C9BBAA] text-sm font-bold text-olivier-gris hover:border-terre-cuite hover:text-terre-cuite flex items-center justify-center gap-2">
                 <Plus className="w-4 h-4" /> Ajouter une recette
               </button>
             </div>
@@ -342,16 +342,16 @@ export default function EditeurFicheVariante({
 
         <div className="bg-white border-t border-[#F0E7DA] px-3 py-3 sm:px-6 sm:py-4 space-y-2">
           {message && (
-            <p role="status" className={`flex items-center gap-2 text-sm font-bold ${message.type === 'ok' ? 'text-[#166534]' : 'text-[#A94E25]'}`}>
+            <p role="status" className={`flex items-center gap-2 text-sm font-bold ${message.type === 'ok' ? 'text-[#166534]' : 'text-brique'}`}>
               {message.type === 'ok' && <CheckCircle2 className="w-4 h-4 shrink-0" />}{message.texte}
             </p>
           )}
           <div className="flex flex-wrap items-center gap-2">
-            <p className="flex-1 min-w-[200px] text-xs text-[#56654F]">Les rubriques « Reprendre le produit » suivent automatiquement les changements de la fiche de « {produit.name.trim()} ».</p>
+            <p className="flex-1 min-w-[200px] text-xs text-olivier-gris">Les rubriques « Reprendre le produit » suivent automatiquement les changements de la fiche de « {produit.name.trim()} ».</p>
             {lienApercu && !modifie && enregistree && (
-              <a href={lienApercu} target="_blank" rel="noopener" className="inline-flex items-center gap-2 min-h-12 px-4 rounded-2xl border-[1.5px] border-[#2F4A2B] text-sm font-extrabold">Aperçu <ExternalLink className="w-4 h-4" /></a>
+              <a href={lienApercu} target="_blank" rel="noopener" className="inline-flex items-center gap-2 min-h-12 px-4 rounded-2xl border-[1.5px] border-olivier text-sm font-extrabold">Aperçu <ExternalLink className="w-4 h-4" /></a>
             )}
-            <button onClick={enregistrer} disabled={enCours || !modifie} className="inline-flex items-center gap-2 min-h-12 px-5 rounded-2xl bg-[#C2602D] text-white text-sm font-extrabold disabled:opacity-40">
+            <button onClick={enregistrer} disabled={enCours || !modifie} className="inline-flex items-center gap-2 min-h-12 px-5 rounded-2xl bg-terre-cuite text-white text-sm font-extrabold disabled:opacity-40">
               {enCours ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Enregistrer
             </button>
           </div>
