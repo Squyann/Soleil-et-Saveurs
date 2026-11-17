@@ -2,6 +2,7 @@
 
 **Logo validé (novembre 2026) :** l'emblème « Arche titrée ».
 - Le nom *SOLEIL ET SAVEURS* suit la courbe de l'arche.
+- Un bandeau vert porte la mention « PRIMEUR DEPUIS 1999 ».
 - L'arche cadre un paysage en papier découpé : soleil levant dans son halo, collines, étal de poireaux, chou, tomate et poire.
 - Typographie T3 : Fraunces pour le nom, DM Sans pour le descripteur « PRIMEUR · FRUITS & LÉGUMES ».
 

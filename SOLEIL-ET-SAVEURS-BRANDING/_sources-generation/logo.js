@@ -68,9 +68,9 @@ function sceneSimpleMonoMasque(ink) {
 }
 
 // Emblème « Arche titrée » sans bandeau. theme : couleur | sombre | noir | blanc ; mode : relief | plat
-const EMB = { cx: 70, cy: 70, Ro: 56, sc: 1.18, bottomMargin: 8.6 };
-function emblem(T, arcText, { theme = 'couleur', mode = 'relief' } = {}) {
-  const { cx, cy, Ro, sc } = EMB; const bot = cy + (116 - 52) * sc + EMB.bottomMargin;
+const EMB = { cx: 70, cy: 70, Ro: 56, sc: 1.18, bottomMargin: 8.6, bandH: 21 };
+function emblem(T, arcText, { theme = 'couleur', mode = 'relief', band = null } = {}) {
+  const { cx, cy, Ro, sc } = EMB; const bot = cy + (116 - 52) * sc + (band ? EMB.bandH : EMB.bottomMargin);
   const mono = theme === 'noir' || theme === 'blanc'; const ink = theme === 'noir' ? '#000000' : theme === 'blanc' ? '#FFFFFF' : null;
   const line = theme === 'sombre' ? K.lin : mono ? ink : K.olive;
   const fill = theme === 'couleur' ? K.lin : 'none';
@@ -82,7 +82,7 @@ function emblem(T, arcText, { theme = 'couleur', mode = 'relief' } = {}) {
     ${arcText(T.arc, cx, cy, 46.6, 0, line, 1)}
     <circle cx="${cx - 50.2}" cy="${cy + 3}" r="1.7" fill="${dots}"/><circle cx="${cx + 50.2}" cy="${cy + 3}" r="1.7" fill="${dots}"/>
     <!-- paysage -->
-    <g transform="translate(${f(cx - 50 * sc)} ${f(cy - 52 * sc)}) scale(${sc})">${inner}<path d="${ARCH}" fill="none" stroke="${line}" stroke-width="${f(1.4 / sc)}"/></g>`;
+    <g transform="translate(${f(cx - 50 * sc)} ${f(cy - 52 * sc)}) scale(${sc})">${inner}<path d="${ARCH}" fill="none" stroke="${line}" stroke-width="${f(1.4 / sc)}"/></g>${band ? `\n    <!-- bandeau -->\n    ${band}` : ''}`;
 }
 // Symbole seul (arche sans texte) avec son filet
 function symbol({ theme = 'couleur', mode = 'relief', simple = false } = {}) {

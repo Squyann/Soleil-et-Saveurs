@@ -10,7 +10,9 @@ const SPEC = {
   h: [{ ...fra(620), text: 'Soleil ' }, { ...fra(480, true), text: 'et' }, { ...fra(620), text: ' Saveurs' }],
   v1: [{ ...fra(620), text: 'Soleil ' }, { ...fra(480, true), text: 'et' }], v2: [{ ...fra(620), text: 'Saveurs' }],
   d0: [dm(29, 0)], dv0: [dm(25, 0)],
+  band: [{ font: E.FONT('DMSans-normal'), axes: { wght: 600, opsz: 14 }, size: 5.6, text: 'PRIMEUR DEPUIS 1999', tracking: 0.22, dx: 0, glyphs: false }],
 };
+const { execFileSync } = require('child_process');
 
 (async () => {
   let T = E.shapeAll(SPEC);
@@ -43,6 +45,19 @@ const SPEC = {
     s += E.line(T.dv, 0, y + 0.2 * C + T.dv.capH, THEMES[th].desc, 'middle');
     return s;
   };
+  // Bandeau vert « PRIMEUR DEPUIS 1999 »
+  const EMB = L.EMB, bandTop = EMB.cy + 64 * EMB.sc, bx = EMB.cx - EMB.Ro, bw = 2 * EMB.Ro;
+  const Lb = T.band, bwT = Lb.bbox[2] - Lb.bbox[0], base = bandTop + EMB.bandH / 2 + Lb.capH / 2;
+  const tdx = EMB.cx - Lb.bbox[0] - bwT / 2, dotY = base - Lb.capH / 2, dotX = bwT / 2 + 5.2;
+  const knock = JSON.parse(execFileSync('python3', [path.join(__dirname, 'band_knock.py')], { cwd: __dirname, input: JSON.stringify({ rect: [bx, bandTop, bw, EMB.bandH], d: Lb.d, dx: tdx, dy: base, dots: [[EMB.cx - dotX, dotY, 1.05], [EMB.cx + dotX, dotY, 1.05]] }) }).toString());
+  const band = th => {
+    if (th === 'noir' || th === 'blanc') return `<path d="${knock.d}" fill="${th === 'noir' ? '#000000' : '#FFFFFF'}" fill-rule="${knock.rule}"/>`;
+    const [bg, tx, dt] = th === 'sombre' ? [K.lin, K.olive, K.terra] : [K.olive, K.lin, K.saffron];
+    return `<rect x="${f(bx)}" y="${f(bandTop)}" width="${f(bw)}" height="${EMB.bandH}" fill="${bg}"/>
+    <!-- texte du bandeau -->
+    ${E.line(Lb, EMB.cx, f(base), tx, 'middle')}
+    <circle cx="${f(EMB.cx - dotX)}" cy="${f(dotY)}" r="1.05" fill="${dt}"/><circle cx="${f(EMB.cx + dotX)}" cy="${f(dotY)}" r="1.05" fill="${dt}"/>`;
+  };
   const items = []; const add = (dir, name, inner, title) => items.push({ key: name, file: `${dir}/${name}.svg`, inner, title: `Soleil et Saveurs — ${title}. Logo validé, novembre 2026.` });
   for (const th of ['couleur', 'sombre']) for (const mode of ['relief', 'plat']) {
     const suf = `${th === 'couleur' ? 'fond-clair' : 'fond-sombre'}${mode === 'plat' ? '_a-plat' : ''}`;
@@ -50,7 +65,7 @@ const SPEC = {
     add(SRC, `soleil-et-saveurs_logo-horizontal_${suf}`, horizontal(th, mode), `logo principal horizontal, ${lab}`);
     add(SRC, `soleil-et-saveurs_logo-horizontal-sans-descripteur_${suf}`, horizontal(th, mode, false), `logo horizontal sans descripteur, ${lab}`);
     add(SRC, `soleil-et-saveurs_logo-vertical_${suf}`, vertical(th, mode), `logo vertical empilé, ${lab}`);
-    add(SRC, `soleil-et-saveurs_embleme_${suf}`, L.emblem(T, E.arcText, { theme: th, mode }), `emblème « Arche titrée », ${lab}`);
+    add(SRC, `soleil-et-saveurs_embleme_${suf}`, L.emblem(T, E.arcText, { theme: th, mode, band: band(th) }), `emblème « Arche titrée », ${lab}`);
     if (th === 'couleur') add(SRC, `soleil-et-saveurs_symbole${mode === 'plat' ? '_a-plat' : ''}`, L.symbol({ mode }), `symbole seul${mode === 'plat' ? ', à plat' : ', relief'}`);
   }
   add(SRC, 'soleil-et-saveurs_symbole-simplifie', L.symbol({ simple: true }), 'symbole simplifié pour les petites tailles (moins de 40 px)');
@@ -58,7 +73,7 @@ const SPEC = {
     add(MONO, `soleil-et-saveurs_logo-horizontal_${th}`, horizontal(th, 'plat'), `logo horizontal monochrome ${th}`);
     add(MONO, `soleil-et-saveurs_logo-horizontal-sans-descripteur_${th}`, horizontal(th, 'plat', false), `logo horizontal sans descripteur, monochrome ${th}`);
     add(MONO, `soleil-et-saveurs_logo-vertical_${th}`, vertical(th, 'plat'), `logo vertical monochrome ${th}`);
-    add(MONO, `soleil-et-saveurs_embleme_${th}`, L.emblem(T, E.arcText, { theme: th }), `emblème monochrome ${th}`);
+    add(MONO, `soleil-et-saveurs_embleme_${th}`, L.emblem(T, E.arcText, { theme: th, band: band(th) }), `emblème monochrome ${th}`);
     add(MONO, `soleil-et-saveurs_symbole_${th}`, L.symbol({ theme: th }), `symbole monochrome ${th}`);
     add(MONO, `soleil-et-saveurs_symbole-simplifie_${th}`, L.symbol({ theme: th, simple: true }), `symbole simplifié monochrome ${th}`);
   }
@@ -88,9 +103,10 @@ ${symbolPart}<text x="${f(x - T.h.bbox[0])}" y="0" font-size="100" fill="${THEME
   { const kk = 'soleil-et-saveurs_embleme_fond-clair'; const svg = fs.readFileSync(`${SRC}/${kk}.svg`, 'utf8'); const v = vb(kk);
     const body = svg.slice(svg.indexOf('>', svg.indexOf('<svg')) + 1, svg.lastIndexOf('</svg>'));
     const start = body.indexOf('<!-- nom en arc -->'), end = body.indexOf('<circle', start);
+    const trB = (0.22 * 5.6).toFixed(2);
     const { cx, cy } = L.EMB, R = 46.6;
     const edited = body.slice(0, start) + `<!-- nom en arc (texte éditable) -->\n<defs><path id="arc-nom" d="M${cx - R} ${cy} A${R} ${R} 0 0 1 ${cx + R} ${cy}"/></defs>
-<text font-size="10.4" fill="${K.olive}" letter-spacing="2.08" style="font-family:Fraunces;font-weight:640;font-variation-settings:'SOFT' 100,'opsz' 72,'WONK' 0"><textPath href="#arc-nom" startOffset="50%" text-anchor="middle">SOLEIL ET SAVEURS</textPath></text>\n` + body.slice(end);
-    fs.writeFileSync(`${SRC}/soleil-et-saveurs_embleme_fond-clair_texte-editable.svg`, `<?xml version="1.0" encoding="UTF-8"?>\n<!-- Soleil et Saveurs — emblème, version à TEXTE ÉDITABLE (Fraunces requise). Référence : fichier vectorisé. -->\n<svg xmlns="http://www.w3.org/2000/svg" viewBox="${v.join(' ')}" width="${v[2]}" height="${v[3]}">${edited}</svg>\n`); }
+<text font-size="10.4" fill="${K.olive}" letter-spacing="2.08" style="font-family:Fraunces;font-weight:640;font-variation-settings:'SOFT' 100,'opsz' 72,'WONK' 0"><textPath href="#arc-nom" startOffset="50%" text-anchor="middle">SOLEIL ET SAVEURS</textPath></text>\n` + body.slice(end).replace(/<!-- texte du bandeau -->\s*<path[^>]*\/>/, `<!-- texte du bandeau (éditable) -->\n<text x="${f(EMB.cx)}" y="${f(base)}" text-anchor="middle" font-size="5.6" letter-spacing="${trB}" fill="${K.lin}" style="font-family:'DM Sans';font-weight:600">PRIMEUR DEPUIS 1999</text>`);
+    fs.writeFileSync(`${SRC}/soleil-et-saveurs_embleme_fond-clair_texte-editable.svg`, `<?xml version="1.0" encoding="UTF-8"?>\n<!-- Soleil et Saveurs — emblème, version à TEXTE ÉDITABLE (Fraunces et DM Sans requises). Référence : fichier vectorisé. -->\n<svg xmlns="http://www.w3.org/2000/svg" viewBox="${v.join(' ')}" width="${v[2]}" height="${v[3]}">${edited}</svg>\n`); }
   console.log(items.length + 3, 'fichiers SVG');
 })();

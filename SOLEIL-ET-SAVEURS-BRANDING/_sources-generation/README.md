@@ -10,6 +10,7 @@ Ils réutilisent :
 |---|---|
 | `logo.js` | Dessin du logo validé : paysage relief, à plat, monochrome, simplifié ; emblème |
 | `mono_paths.py` | Réserves monochromes en vrai vectoriel (opérations booléennes Skia) → `mono-paths.json` |
+| `band_knock.py` | Bandeau monochrome : texte en vraie réserve (opérations booléennes Skia) |
 | `build.js` | SVG maîtres (texte vectorisé avec HarfBuzz et fontTools) et versions à texte éditable |
 | `export.js` | PNG 1x, 2x, 4x ; PDF vectoriels ; favicons |
 | `couleurs.py` | CMJN indicatifs (LittleCMS, profil Ghostscript) et contrastes WCAG |

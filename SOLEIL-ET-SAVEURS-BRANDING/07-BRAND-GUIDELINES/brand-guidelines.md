@@ -12,7 +12,7 @@ Dans ce document :
 
 | | |
 |---|---|
-| **Positionnement** | Le savoir-faire d'un primeur, livré à domicile. Vente et livraison de fruits et légumes frais aux particuliers des Yvelines (78) : sélection pièce par pièce, produits choisis à maturité, livraison dès le lendemain. |
+| **Positionnement** | Le savoir-faire d'un primeur, livré à domicile. Métier de primeur exercé depuis 1999. Vente et livraison de fruits et légumes frais aux particuliers des Yvelines (78) : sélection pièce par pièce, produits choisis à maturité, livraison dès le lendemain. |
 | **Idée de marque** | « Le soleil se goûte. » Le soleil mûrit le fruit, le primeur choisit le meilleur, Soleil et Saveurs le livre. *(Idée directrice interne, pas un slogan.)* |
 | **Personnalité** | Chaleureuse, généreuse, experte, fiable, simple. |
 | **Public** | Particuliers et familles des Yvelines qui veulent des produits de qualité sans se déplacer au marché. |
@@ -25,6 +25,7 @@ Dans ce document :
 - Le soleil se lève dans son halo, derrière trois plans de collines.
 - L'horizon est un étal : poireaux, chou, tomate, poire.
 - Le nom *SOLEIL ET SAVEURS* suit la courbe de l'arche.
+- Un bandeau vert porte la mention *PRIMEUR DEPUIS 1999*.
 
 **Le logo principal horizontal** associe l'arche sans texte, le nom en Fraunces et le descripteur « PRIMEUR · FRUITS & LÉGUMES » en DM Sans. Le descripteur est justifié sur la largeur du nom.
 
@@ -58,7 +59,7 @@ Aucun élément ne doit entrer dans cette zone.
 |---|---|
 | Logo horizontal avec descripteur | 65 mm · 260 px de large |
 | Logo horizontal sans descripteur | 30 mm · 120 px de large |
-| Emblème (lisibilité du nom en arc) | 30 mm · 120 px de haut |
+| Emblème (lisibilité du nom et du bandeau) | 40 mm · 160 px de haut |
 | Symbole détaillé | 12 mm · 40 px de haut |
 | Symbole simplifié | 5 mm · 16 px |
 
@@ -77,7 +78,7 @@ Il est interdit de :
 - ajouter des ombres ou des effets ;
 - réduire son opacité ;
 - poser le logo horizontal sur un fond chargé ;
-- recadrer l'emblème ou couper le nom en arc ;
+- recadrer l'emblème, retirer le nom en arc ou le bandeau ;
 - recomposer le nom dans une autre police ;
 - utiliser la version relief à l'impression.
 

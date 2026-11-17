@@ -107,6 +107,7 @@ def simple():
         hp = parse(h); k.W(hp); k.B(stroke(hp, 3))
     k.clip(ARCH); return k.p
 
-m, s = mono(), simple()
-rule = lambda p: 'evenodd' if p.getFillType() in (skia.PathFillType.kEvenOdd, skia.PathFillType.kInverseEvenOdd) else 'nonzero'
-print(json.dumps({'mono': to_d(m), 'monoRule': rule(m), 'simple': to_d(s), 'simpleRule': rule(s)}))
+if __name__ == '__main__':
+  m, s = mono(), simple()
+  rule = lambda p: 'evenodd' if p.getFillType() in (skia.PathFillType.kEvenOdd, skia.PathFillType.kInverseEvenOdd) else 'nonzero'
+  print(json.dumps({'mono': to_d(m), 'monoRule': rule(m), 'simple': to_d(s), 'simpleRule': rule(s)}))
