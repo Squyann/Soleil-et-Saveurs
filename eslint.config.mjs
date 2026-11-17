@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Dossier de création du logo (scripts Node autonomes, hors application)
+    "SOLEIL-ET-SAVEURS-BRANDING/**",
   ]),
 ]);
 
