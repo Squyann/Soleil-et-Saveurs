@@ -22,11 +22,31 @@ export const metadata: Metadata = {
     icon: [
       { url: '/favicon.ico', sizes: 'any' },
       { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/icon-192.png', type: 'image/png', sizes: '192x192' },
     ],
     apple: '/apple-touch-icon.png',
   },
   manifest: '/site.webmanifest',
 };
+
+// Données structurées pour les moteurs de recherche : nom du site affiché par
+// Google au-dessus des résultats, et logo officiel de l'entreprise.
+const DONNEES_STRUCTUREES = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'Soleil et Saveurs',
+    alternateName: 'soleiletsaveurs.fr',
+    url: 'https://soleiletsaveurs.fr/',
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'Soleil et Saveurs',
+    url: 'https://soleiletsaveurs.fr/',
+    logo: 'https://soleiletsaveurs.fr/marque/embleme_fond-clair.png',
+  },
+];
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -35,6 +55,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
       </head>
       <body className={`${dmSans.className} ${dmSans.variable} ${fraunces.variable} bg-[#EDE3D5] antialiased overflow-x-hidden`}>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(DONNEES_STRUCTUREES).replace(/</g, '\\u003c') }}
+        />
         <ClientShell>{children}</ClientShell>
       </body>
     </html>
