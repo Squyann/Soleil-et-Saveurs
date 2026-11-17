@@ -1,5 +1,7 @@
 # SOLEIL ET SAVEURS — Identité visuelle
 
+> **Le logo final : `LOGO-FINAL_soleil-et-saveurs` (.png, .svg, .pdf), ici à la racine.** C'est l'emblème « Arche titrée ». Tous les autres fichiers sont ce même logo dans d'autres formats ou couleurs. Ouvrez d'abord `A-LIRE-EN-PREMIER.png`.
+
 **Logo validé (novembre 2026) :** l'emblème « Arche titrée ».
 - Le nom *SOLEIL ET SAVEURS* suit la courbe de l'arche.
 - Un bandeau vert porte la mention « PRIMEUR DEPUIS 1999 ».
@@ -30,8 +32,8 @@
 
 ## Logos principaux
 
-- `soleil-et-saveurs_logo-horizontal_fond-clair` : logo principal.
-- `soleil-et-saveurs_embleme_fond-clair` : logo secondaire vertical, l'emblème.
+- `soleil-et-saveurs_embleme_fond-clair` : **le logo** (l'emblème), identique à `LOGO-FINAL_soleil-et-saveurs`.
+- `soleil-et-saveurs_logo-horizontal_fond-clair` : version en longueur, pour le haut du site et les documents.
 - `soleil-et-saveurs_symbole` : symbole seul.
 - `soleil-et-saveurs_symbole-simplifie` : symbole pour les petites tailles.
 

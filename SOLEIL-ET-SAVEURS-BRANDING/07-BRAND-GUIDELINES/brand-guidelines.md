@@ -27,14 +27,14 @@ Dans ce document :
 - Le nom *SOLEIL ET SAVEURS* suit la courbe de l'arche.
 - Un bandeau vert porte la mention *PRIMEUR DEPUIS 1999*.
 
-**Le logo principal horizontal** associe l'arche sans texte, le nom en Fraunces et le descripteur « PRIMEUR · FRUITS & LÉGUMES » en DM Sans. Le descripteur est justifié sur la largeur du nom.
+**La version en longueur** (horizontale) associe l'arche sans texte, le nom en Fraunces et le descripteur « PRIMEUR · FRUITS & LÉGUMES » en DM Sans. Le descripteur est justifié sur la largeur du nom.
 
 ### Versions (fichiers dans `01-LOGO-SOURCE`)
 
 | Version | Usage |
 |---|---|
-| `logo-horizontal` | **Logo principal.** En-tête du site, documents, factures, signatures. |
-| `embleme` | **Logo secondaire vertical.** Emballages, cagettes, autocollants, véhicule, avatar, enseigne. |
+| `embleme` | **Le logo** (référence). Emballages, cagettes, autocollants, véhicule, avatar, enseigne, affiches. |
+| `logo-horizontal` | **Version en longueur.** En-tête du site, documents, factures, signatures : quand l'emblème est trop haut. |
 | `logo-vertical` | Formats hauts et étroits : affiches, kakémonos. |
 | `logo-horizontal-sans-descripteur` | Petits formats (moins de 260 px de large) : en-tête mobile. |
 | `symbole` | Icône d'application, réseaux sociaux, motifs, quand le nom est déjà présent. |
