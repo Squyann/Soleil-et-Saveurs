@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Soleil et Saveurs — exploration, piste A « L'Étoile du fruit » (noir). Esquisse non finalisée. -->
+<svg width="512" height="512" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="50" cy="54" r="42.2" fill="none" stroke="#000" stroke-width="3.6"/>
+  <path d="M50 10.6 C52.4 4.8 58.8 1.4 66 2.4 C63.4 8.8 57 12.2 50 10.6Z" fill="#000"/>
+  <g fill="#000"><path d="M0 -34 C2.7 -26.4 5.4 -19.13 5.4 -14 A5.4 5.4 0 0 1 -5.4 -14 C-5.4 -19.13 -2.7 -26.4 0 -34Z" transform="translate(50 54) rotate(0)"/><path d="M0 -34 C2.7 -26.4 5.4 -19.13 5.4 -14 A5.4 5.4 0 0 1 -5.4 -14 C-5.4 -19.13 -2.7 -26.4 0 -34Z" transform="translate(50 54) rotate(72)"/><path d="M0 -34 C2.7 -26.4 5.4 -19.13 5.4 -14 A5.4 5.4 0 0 1 -5.4 -14 C-5.4 -19.13 -2.7 -26.4 0 -34Z" transform="translate(50 54) rotate(144)"/><path d="M0 -34 C2.7 -26.4 5.4 -19.13 5.4 -14 A5.4 5.4 0 0 1 -5.4 -14 C-5.4 -19.13 -2.7 -26.4 0 -34Z" transform="translate(50 54) rotate(216)"/><path d="M0 -34 C2.7 -26.4 5.4 -19.13 5.4 -14 A5.4 5.4 0 0 1 -5.4 -14 C-5.4 -19.13 -2.7 -26.4 0 -34Z" transform="translate(50 54) rotate(288)"/></g></svg>
