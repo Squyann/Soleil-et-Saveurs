@@ -13,7 +13,7 @@ C'est le même logo que le logo validé : l'emblème avec le nom en arc, le band
 | `RESEAUX-SOCIAUX/` | Photos de profil rondes |
 | `comparatif_papier-decoupe_vs_B1.png` | Comparaison avec le logo validé |
 
-**Statut : variante proposée.** Le logo officiel reste celui des dossiers 01 à 09 (papier découpé). Si la B1 devient le logo officiel, il faudra encore régénérer :
+**Statut : variante non retenue (novembre 2026).** Le logo officiel reste le papier découpé, dans les dossiers 01 à 09. Si la B1 devient le logo officiel, il faudra encore régénérer :
 - les versions monochromes, avec un dessin au trait propre à la B1 ;
 - les EPS ;
 - la charte ;

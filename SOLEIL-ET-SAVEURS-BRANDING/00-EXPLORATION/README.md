@@ -1,5 +1,6 @@
 # Exploration du logo — Soleil et Saveurs (historique)
 
+- `v5-variante-B1-lever-du-jour/` : l'emblème final avec le paysage B1 au lieu du papier découpé. Variante **non retenue** : le logo officiel reste le papier découpé.
 - `v4-piste-B/` : piste B retenue, six versions enrichies. La **B5 « Arche titrée »** a été choisie, puis modifiée : paysage en papier découpé (B6), bandeau « PRIMEUR DEPUIS 1999 », typographie T3. Le résultat est dans les dossiers 01 à 08.
 - `v3/` : exploration élargie, 15 pistes (D → R).
 - `v2/` : trois pistes perfectionnées (A, B, C).
