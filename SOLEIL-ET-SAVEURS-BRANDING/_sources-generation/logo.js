@@ -12,8 +12,11 @@ const HILLS = [
 ];
 const clipArch = inner => { const id = uid('ca'); return `<defs><clipPath id="${id}"><path d="${ARCH}"/></clipPath></defs><g clip-path="url(#${id})">${inner}</g>`; };
 
+// Variante de paysage : null = papier découpé (logo validé) ; 'B1' = Potager au lever du jour
+let VARIANT = null; const setVariant = v => { VARIANT = v; };
 // Paysage : 'relief' (ombres portées, écran) | 'plat' (sans ombre, impression)
 function scene(mode = 'relief') {
+  if (VARIANT === 'B1') return require('../b2/variants.js').B1();
   const sh = uid('sh'); const F = mode === 'relief' ? ` filter="url(#${sh})"` : '';
   const defs = mode === 'relief' ? `<defs><filter id="${sh}" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB"><feDropShadow dx="0" dy="-0.9" stdDeviation="1.1" flood-color="#3a1d0c" flood-opacity=".38"/></filter></defs>` : '';
   return defs + clipArch(`<!-- ciel -->
@@ -90,4 +93,4 @@ function symbol({ theme = 'couleur', mode = 'relief', simple = false } = {}) {
   const inner = simple ? (mono ? sceneSimpleMono(ink) : sceneSimple()) : (mono ? sceneMono(ink) : scene(mode));
   return inner;
 }
-module.exports = { K, ARCH, EMB, scene, sceneMono, sceneSimple, emblem, symbol };
+module.exports = { K, ARCH, EMB, scene, sceneMono, sceneSimple, emblem, symbol, setVariant };

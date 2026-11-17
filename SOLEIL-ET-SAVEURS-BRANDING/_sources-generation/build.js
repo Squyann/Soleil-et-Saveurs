@@ -2,6 +2,8 @@
 const fs = require('fs'); const path = require('path'); const { chromium } = require('playwright');
 const E = require('../concepts/engine.js'); const L = require('./logo.js');
 const [, , S, SRC, MONO] = process.argv; E.setRoot(S);
+if (process.env.VARIANT) L.setVariant(process.env.VARIANT);
+const INDEX = process.env.INDEX || 'final-index.json';
 const K = L.K; const f = n => +(+n).toFixed(2);
 const fra = (w, it = false) => ({ font: E.FONT(it ? 'Fraunces-italic' : 'Fraunces-normal'), axes: { wght: w, SOFT: 100, opsz: 72, WONK: 0 }, size: 100, tracking: 0, dx: 0, glyphs: false });
 const dm = (size, tr) => ({ font: E.FONT('DMSans-normal'), axes: { wght: 600, opsz: 14 }, size, text: 'PRIMEUR · FRUITS & LÉGUMES', tracking: tr, dx: 0, glyphs: false });
@@ -79,7 +81,7 @@ const { execFileSync } = require('child_process');
   }
   const browser = await chromium.launch(); const page = await browser.newPage();
   const idx = await E.tightAll(items, page); await browser.close();
-  fs.writeFileSync(`${S}/work/final-index.json`, JSON.stringify(idx, null, 1));
+  fs.writeFileSync(`${S}/work/${INDEX}`, JSON.stringify(idx, null, 1));
 
   // Versions à texte éditable (polices Fraunces et DM Sans requises)
   const vb = k => idx[k];
