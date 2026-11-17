@@ -1,0 +1,42 @@
+{
+ "arc": {
+  "size": 72.97,
+  "tracking": -0.0052
+ },
+ "band": {
+  "size": 42.27,
+  "tracking": 0.1296
+ },
+ "S1": {
+  "size": 275.82,
+  "tracking": 0
+ },
+ "S2": {
+  "size": 264.95,
+  "tracking": 0
+ },
+ "et": {
+  "size": 203.17,
+  "tracking": -0.0819
+ },
+ "s2": {
+  "size": 39.58,
+  "tracking": 0.2743
+ },
+ "script": {
+  "size": 71.83,
+  "tracking": 0
+ },
+ "oleil": {
+  "size": 251.87,
+  "tracking": -0.0256
+ },
+ "aveurs": {
+  "size": 251.87,
+  "tracking": -0.0296
+ },
+ "s1": {
+  "size": 39.58,
+  "tracking": 0.2531
+ }
+}
