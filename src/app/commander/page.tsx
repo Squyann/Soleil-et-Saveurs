@@ -415,7 +415,7 @@ export default function CommanderPage() {
                         <h3 className={`text-sm sm:text-[17px] font-extrabold leading-tight text-olivier line-clamp-2 ${epuise ? 'text-olivier-doux' : ''} ${slug ? 'hover:underline' : ''}`}>{nomCarte}</h3>
                       </LienFiche>
                       <p className="mt-0.5 text-xs sm:text-[13px] font-semibold text-olivier-gris">
-                        {product.provenance ? `${product.provenance} · ` : ''}{libelleUnite(pv.unite)}
+                        {product.provenance ? `${product.provenance} · ` : ''}{libelleUnite(pv.unite, pv)}
                       </p>
                     </div>
 

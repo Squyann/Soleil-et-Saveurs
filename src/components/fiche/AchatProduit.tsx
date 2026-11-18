@@ -162,7 +162,7 @@ export default function AchatProduit({
               <s className="mb-0.5 text-base lg:text-lg font-semibold text-olivier-gris">{formatPrix(prixBase)}</s>
             )}
           </div>
-          <p className="mt-1.5 text-[13px] font-semibold text-olivier-gris">Vendu {libelleUnite(pv.unite)}</p>
+          <p className="mt-1.5 text-[13px] font-semibold text-olivier-gris">Vendu {libelleUnite(pv.unite, pv)}</p>
         </div>
 
         {/* Promotions (celles du produit, valables sur toutes ses variantes) */}

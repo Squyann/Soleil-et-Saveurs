@@ -36,6 +36,13 @@ const nextConfig: NextConfig = {
     // threads tournent dans le processus du build : plus aucun `node` lancé.
     turbopackPluginRuntimeStrategy: 'workerThreads',
   },
+  // Anciennes adresses de fiches produits renommées : redirection permanente
+  // pour que les liens déjà partagés et Google trouvent la nouvelle page.
+  async redirects() {
+    return [
+      { source: '/produits/mini-concombre-4', destination: '/produits/mini-concombre-x3', permanent: true },
+    ];
+  },
   async headers() {
     return [
       {
