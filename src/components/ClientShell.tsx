@@ -6,6 +6,9 @@ import { ShoppingCart, User, HelpCircle, Store, House } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import dynamic from 'next/dynamic';
 
+// Fiche Google Business (Google Maps) de Soleil et Saveurs
+const FICHE_GOOGLE = 'https://www.google.com/maps?cid=958019188493410492';
+
 const PanierDrawer = dynamic(() => import('@/components/ui/PanierDrawer'), { ssr: false });
 
 const LIENS = [
@@ -163,6 +166,7 @@ export default function ClientShell({ children }: { children: React.ReactNode })
               <li className="py-1 text-sm font-medium text-olivier-doux">WhatsApp : 7h – 22h</li>
               <li className="py-1 text-sm font-medium text-olivier-doux">Standard : 9h – 19h</li>
               <li><Link href="/aide" className="inline-flex items-center min-h-10 hover:text-brique transition-colors">Support</Link></li>
+              <li><a href={FICHE_GOOGLE} target="_blank" rel="noopener noreferrer" className="inline-flex items-center min-h-10 hover:text-brique transition-colors">Retrouvez-nous sur Google</a></li>
             </ul>
           </div>
           <div className="col-span-2 lg:col-span-1">

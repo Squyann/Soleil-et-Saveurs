@@ -45,6 +45,8 @@ const DONNEES_STRUCTUREES = [
     name: 'Soleil et Saveurs',
     url: 'https://soleiletsaveurs.fr/',
     logo: 'https://soleiletsaveurs.fr/marque/embleme_fond-clair.png',
+    // Fiche Google Business : indique à Google que le site et la fiche sont la même entreprise
+    sameAs: ['https://www.google.com/maps?cid=958019188493410492'],
   },
 ];
 
