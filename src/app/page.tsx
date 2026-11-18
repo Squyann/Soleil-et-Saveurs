@@ -81,9 +81,9 @@ function CartePromo({ produit, variantes, slug }: { produit: any; variantes: Var
           <div className="min-w-0">
             <h3 className="text-base sm:text-lg font-extrabold leading-tight truncate">{nom}</h3>
             <p className="mt-0.5 text-[13px] font-semibold text-olivier-gris">
-              <span className="sm:hidden">{produit.provenance ? `${produit.provenance} · ` : ''}{libelleUnite(pv.unite)}</span>
+              <span className="sm:hidden">{produit.provenance ? `${produit.provenance} · ` : ''}{libelleUnite(pv.unite, pv)}</span>
               <span className="hidden sm:inline">
-                Vendu {libelleUnite(pv.unite)}
+                Vendu {libelleUnite(pv.unite, pv)}
                 {variantes.length > 1 ? ` · ${variantes.length} ${variantesCumulables(produit) ? 'variétés' : 'versions'}` : ''}
               </span>
             </p>

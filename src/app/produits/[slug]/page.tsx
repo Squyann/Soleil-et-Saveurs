@@ -195,7 +195,7 @@ export default async function PageProduit({ params, searchParams }: { params: Pr
                     </div>
                     <div className="px-1 lg:px-1.5 pt-2.5 lg:pt-3.5 pb-1.5">
                       <p className="text-sm lg:text-[17px] font-extrabold leading-tight line-clamp-2 group-hover:underline">{s.name}</p>
-                      <p className="mt-0.5 text-xs lg:text-[13px] font-semibold text-olivier-gris">{s.provenance ? `${s.provenance} · ` : ''}{libelleUnite(s.unite)}</p>
+                      <p className="mt-0.5 text-xs lg:text-[13px] font-semibold text-olivier-gris">{s.provenance ? `${s.provenance} · ` : ''}{libelleUnite(s.unite, s)}</p>
                       <p className={`mt-2 lg:mt-2.5 text-lg lg:text-[22px] font-black tracking-tight ${s.promotion > 0 ? 'text-terre-cuite' : ''}`}>
                         {formatPrix(prix)}<span className="text-xs lg:text-[13px] font-bold tracking-normal text-olivier-gris"> /{s.unite === 'g' ? 'kg' : s.unite || 'pièce'}</span>
                       </p>

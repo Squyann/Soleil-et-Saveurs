@@ -12,7 +12,12 @@ export const UNITES: { valeur: string; libelle: string }[] = [
   { valeur: 'pièce', libelle: 'unité (pièce)' },
   { valeur: 'botte', libelle: 'botte' },
   { valeur: 'barquette', libelle: 'barquette' },
+  { valeur: 'sachet', libelle: 'sachet' },
+  { valeur: 'filet', libelle: 'filet' },
 ];
+
+// Unités du contenu d'un conditionnement (ex. sachet de 1 kg, barquette de 500 g)
+export const UNITES_CONTENANCE = ['g', 'kg', 'pièces'] as const;
 
 export type Variante = {
   id: string;
@@ -97,7 +102,7 @@ export function produitPourVariante<T extends Record<string, any>>(produit: T, v
     pas_g: v.pas_g ?? produit.pas_g,
     promotion: v.promotion != null ? Number(v.promotion) : produit.promotion,
     stock: v.stock != null ? Number(v.stock) : stockPartage,
-    ...(memeUnite ? {} : { seuil_achat: 0, quantite_offerte: 0, seuil_promo_qte: 0, prix_promo: 0, premieres_offertes: 0 }),
+    ...(memeUnite ? {} : { seuil_achat: 0, quantite_offerte: 0, seuil_promo_qte: 0, prix_promo: 0, premieres_offertes: 0, contenance: null, contenance_unite: null }),
   };
 }
 

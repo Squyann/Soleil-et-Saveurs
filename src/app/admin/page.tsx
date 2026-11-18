@@ -6,7 +6,8 @@ import { supabase } from '@/lib/supabase';
 import CadrageImage from '@/components/CadrageImage';
 import nextDynamic from 'next/dynamic';
 import { completudeFiche, type Fiche } from '@/lib/fiches';
-import { UNITES } from '@/lib/variantes';
+import { UNITES, UNITES_CONTENANCE } from '@/lib/variantes';
+import { libelleUnite } from '@/lib/format';
 import { premieresOffertes, libellePremieresOffertes } from '@/lib/promos';
 import { htmlDocument, imprimerDocument, type FactureEmise } from '@/lib/facture';
 import Link from 'next/link';
@@ -85,6 +86,7 @@ export default function AdminPage() {
     unite: 'kg', provenance: '', description: '', promotion: 0,
     seuil_achat: 0, quantite_offerte: 0, pas_g: 100,
     seuil_promo_qte: 0, prix_promo: 0,
+    contenance: null as number | null, contenance_unite: 'kg',
   });
 
   useEffect(() => {
@@ -250,7 +252,7 @@ export default function AdminPage() {
       // l'édition ne doit pas écraser ce qui a été modifié entre-temps.
       const { name, price, category, unite, pas_g, provenance, description, image_url } = editFormData;
       const { error } = await supabase.from('products')
-        .update({ name, price, category, unite, pas_g, provenance, description, image_url })
+        .update({ name, price, category, unite, pas_g, provenance, description, image_url, ...contenanceSaisie(editFormData) })
         .eq('id', id);
       if (error) throw error;
       setEditingProdId(null);
@@ -377,7 +379,7 @@ export default function AdminPage() {
   async function ajouterProduit(e: React.FormEvent) {
     e.preventDefault();
     setErreurNomProduit('');
-    const { error } = await supabase.from('products').insert([nouveauProd]);
+    const { error } = await supabase.from('products').insert([{ ...nouveauProd, ...contenanceSaisie(nouveauProd) }]);
     if (error) {
       if (error.code === '23505') {
         setErreurNomProduit(`Un produit nommé "${nouveauProd.name}" existe déjà. Choisissez un autre nom.`);
@@ -737,6 +739,10 @@ export default function AdminPage() {
                 </div>
               )}
 
+              {!['kg', 'g'].includes(nouveauProd.unite) && (
+                <ChampContenance unite={nouveauProd.unite} valeur={nouveauProd} onChange={c => setNouveauProd({ ...nouveauProd, ...c })} grand />
+              )}
+
               <input type="text" placeholder="Provenance (ex: France)" className="p-5 bg-slate-100 rounded-2xl font-black border-none text-sm" value={nouveauProd.provenance} onChange={e => setNouveauProd({...nouveauProd, provenance: e.target.value})} />
               <input type="text" placeholder="Description courte" className="md:col-span-2 p-5 bg-slate-100 rounded-2xl font-black border-none text-sm" value={nouveauProd.description} onChange={e => setNouveauProd({...nouveauProd, description: e.target.value})} />
 
@@ -875,6 +881,9 @@ export default function AdminPage() {
                         <input type="number" step="50" min="50" placeholder="Pas (g), ex: 250" className="w-full bg-slate-50 border-none rounded-lg p-2 text-xs font-black" value={editFormData.pas_g || ''} onChange={e => setEditFormData({...editFormData, pas_g: parseInt(e.target.value) || 100})} />
                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-black text-terre-cuite">g/step</span>
                       </div>
+                    )}
+                    {!['kg', 'g'].includes(editFormData.unite) && (
+                      <ChampContenance unite={editFormData.unite} valeur={editFormData} onChange={c => setEditFormData({ ...editFormData, ...c })} />
                     )}
                     <input type="text" placeholder="Provenance (ex: France)" className="w-full bg-slate-50 border-none rounded-lg p-2 text-xs font-black" value={editFormData.provenance || ''} onChange={e => setEditFormData({...editFormData, provenance: e.target.value})} />
                     <input type="text" placeholder="Description" className="w-full bg-slate-50 border-none rounded-lg p-2 text-xs" value={editFormData.description} onChange={e => setEditFormData({...editFormData, description: e.target.value})} />
@@ -1644,4 +1653,47 @@ export default function AdminPage() {
     )}
   </div>
 );
+}
+
+// Contenu du conditionnement (ex. sachet de 1 kg) : vide = non précisé.
+// Sans objet pour les produits vendus au kg ou au poids.
+function contenanceSaisie(p: { unite?: string; contenance?: number | string | null; contenance_unite?: string | null }) {
+  const q = Number(p.contenance);
+  if (['kg', 'g'].includes(p.unite || '') || !(q > 0)) return { contenance: null, contenance_unite: null };
+  return { contenance: q, contenance_unite: p.contenance_unite || 'kg' };
+}
+
+function ChampContenance({ unite, valeur, onChange, grand }: {
+  unite: string;
+  valeur: { contenance?: number | string | null; contenance_unite?: string | null };
+  onChange: (c: { contenance: number | null; contenance_unite: string }) => void;
+  grand?: boolean;
+}) {
+  const champ = grand ? 'p-5 rounded-2xl text-sm' : 'p-2 rounded-lg text-xs';
+  const quantite = valeur.contenance ?? '';
+  const uniteContenu = valeur.contenance_unite || 'kg';
+  const apercu = libelleUnite(unite, { contenance: valeur.contenance, contenance_unite: uniteContenu });
+  return (
+    <div className={grand ? 'md:col-span-2' : ''}>
+      <label className={`font-black uppercase text-slate-400 ${grand ? 'text-[9px] ml-2 mb-1' : 'text-[8px] mb-1'} block`}>Contenu du {unite} (facultatif)</label>
+      <div className="flex gap-2">
+        <input
+          type="number" min="0" step="any" inputMode="decimal" placeholder="ex : 1"
+          aria-label={`Quantité contenue dans un ${unite}`}
+          className={`flex-1 min-w-0 bg-slate-100 border-none font-black ${champ}`}
+          value={quantite}
+          onChange={e => onChange({ contenance: e.target.value === '' ? null : parseFloat(e.target.value), contenance_unite: uniteContenu })}
+        />
+        <select
+          aria-label="Unité du contenu"
+          className={`bg-slate-100 border-none font-black ${champ}`}
+          value={uniteContenu}
+          onChange={e => onChange({ contenance: valeur.contenance == null || valeur.contenance === '' ? null : Number(valeur.contenance), contenance_unite: e.target.value })}
+        >
+          {UNITES_CONTENANCE.map(u => <option key={u} value={u}>{u}</option>)}
+        </select>
+      </div>
+      <p className={`mt-1 font-bold text-slate-400 ${grand ? 'text-[10px] ml-2' : 'text-[9px]'}`}>Affiché au client : « Vendu {apercu} »</p>
+    </div>
+  );
 }
