@@ -177,6 +177,18 @@ export function emailNouvelleCommande(cmd: CommandeEmail, emailClient: string): 
   };
 }
 
+// Lien « Laisser un avis » de la fiche Google Business de Soleil et Saveurs
+export const AVIS_GOOGLE = 'https://g.page/r/CbxgKEpgkUsNEBE/review';
+
+function blocAvisGoogle(): string {
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:28px;"><tr><td style="padding:22px 20px 20px;border-radius:16px;background:${C.orangePale};font-family:Arial,sans-serif;">
+      <p style="margin:0;font-size:20px;letter-spacing:3px;color:${C.orange};" aria-hidden="true">★★★★★</p>
+      <p style="margin:8px 0 0;font-family:Georgia,serif;font-size:22px;line-height:1.25;color:${C.brun};">Vos fruits et légumes vous ont plu&nbsp;?</p>
+      <p style="margin:8px 0 0;font-size:15px;line-height:1.55;color:${C.brunMoyen};">Laissez-nous un avis sur Google, cela prend 30&nbsp;secondes. C'est ce qui aide le plus un primeur indépendant à se faire connaître. Merci&nbsp;!</p>
+    </td></tr></table>
+    ${bouton('Laisser un avis sur Google', AVIS_GOOGLE, 'orange', '12px 0 0')}`;
+}
+
 // 3. Au client, à la livraison (avec sa facture si elle est émise)
 export function emailCommandeLivree(cmd: CommandeEmail, facture: FactureEmail | null): Email {
   const p = prenom(cmd.nom_client);
@@ -198,6 +210,7 @@ export function emailCommandeLivree(cmd: CommandeEmail, facture: FactureEmail | 
     blocFacture,
     bouton(facture ? 'Télécharger ma facture' : 'Voir ma commande', `${urlSite()}/compte?onglet=commandes`, 'brun'),
     bouton('Commander à nouveau', `${urlSite()}/commander`, 'contour', '10px 0 0'),
+    blocAvisGoogle(),
     encadre(`<strong style="color:${C.brun};">Un produit abîmé ou une erreur ?</strong> Envoyez-nous une photo par WhatsApp ou en répondant à cet e-mail dans les 24&nbsp;h suivant la livraison : nous vous créditons la valeur du produit.`),
   ].join('');
   return {
