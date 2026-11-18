@@ -2,17 +2,18 @@ import { createHash } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServerClient, requireAdmin } from '@/lib/api-auth';
 import { rendreCampagne, type Bloc, type CampagneMail } from '@/lib/email/campagne';
-import { REPONDRE_A } from '@/lib/email/envoi';
+import { envoyerLot, fournisseur, NOM_FOURNISSEUR, REPONDRE_A, type Envoi } from '@/lib/email/envoi';
 import { urlSite } from '@/lib/email/gabarit';
 import { clientAnonyme, etatEnvoi, expediteurCampagne, produitsDesBlocs } from '@/lib/email/serveur';
 
-// Envoi des campagnes, par lots de 100 (API « batch » de Resend : un e-mail
-// individuel par destinataire, aucune adresse visible des autres). Appelé par
+// Envoi des campagnes, par lots de 100 (un e-mail individuel par
+// destinataire, aucune adresse visible des autres ; Brevo ou Resend, voir
+// lib/email/envoi.ts). Appelé par
 // l'administrateur connecté (bouton d'envoi, l'écran relance tant qu'il reste
 // des e-mails) ou par une tâche planifiée munie de la clé MAIL_CRON_SECRET.
 // Chaque appel traite au plus 5 lots pour rester court.
 
-const PAUSE_MS = 400;          // ~2 lots par seconde, sous la limite de Resend
+const PAUSE_MS = 400;          // courte pause entre deux lots, sous les limites de débit
 const LOTS_PAR_APPEL = 5;
 
 interface Destinataire { envoi_id: number; email: string; prenom: string | null; jeton: string | null }
@@ -64,39 +65,30 @@ export async function POST(req: NextRequest) {
     const c = lot.campagne;
     const from = expediteurCampagne(c.expediteur_nom, c.expediteur_local);
     const produits = await produitsDesBlocs(supabase, c.blocs || []);
-    const emails = lot.destinataires.map((d) => {
+    const emails: Envoi[] = lot.destinataires.map((d) => {
       const { html, headers } = rendreCampagne({ ...c, blocs: c.blocs || [] }, d, produits, site);
       return {
-        from, to: [d.email], subject: c.objet, html, reply_to: REPONDRE_A,
+        from: from || undefined, to: d.email, subject: c.objet, html, replyTo: REPONDRE_A,
         headers, tags: [{ name: 'campagne', value: c.id.replace(/[^a-zA-Z0-9_-]/g, '') }],
       };
     });
 
-    // Même lot renvoyé après une coupure : Resend ignore le doublon
+    // Même lot renvoyé après une coupure : Resend ignore le doublon (clé d'idempotence)
     const idempotence = createHash('sha256').update(`${c.id}:${lot.destinataires.map((d) => d.envoi_id).join(',')}`).digest('hex');
-    const res = await fetch('https://api.resend.com/emails/batch', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json', 'Idempotency-Key': idempotence },
-      body: JSON.stringify(emails),
+    const envois = await envoyerLot(emails, idempotence, 'mail/traiter');
+    const nom = NOM_FOURNISSEUR[fournisseur() ?? 'brevo'];
+    // Échec passager (quota du jour atteint, limite de débit, panne) : l'e-mail repart dans la file
+    const resultats = lot.destinataires.map((d, i) => {
+      const r = envois[i];
+      if (r?.ok && r.id) return { envoi_id: d.envoi_id, ok: true, resend_id: r.id, erreur: null };
+      if (r?.ok) return { envoi_id: d.envoi_id, ok: false, erreur: 'Réponse incomplète du prestataire' };
+      return { envoi_id: d.envoi_id, ok: false, reprendre: Boolean(r?.reprendre), erreur: r?.statut ? `${nom} ${r.statut}` : `${nom} injoignable` };
     });
-
-    let resultats;
-    if (res.ok) {
-      const corps = await res.json().catch(() => ({}));
-      const ids: { id: string }[] = corps?.data || [];
-      resultats = lot.destinataires.map((d, i) => ({ envoi_id: d.envoi_id, ok: Boolean(ids[i]?.id), resend_id: ids[i]?.id ?? null, erreur: ids[i]?.id ? null : 'Réponse incomplète du prestataire' }));
-    } else {
-      const detail = await res.text();
-      console.error(`[mail/traiter] Resend ${res.status}:`, detail);
-      // Trop de requêtes ou quota atteint : le lot repart dans la file
-      const reprendre = res.status === 429 || res.status >= 500;
-      resultats = lot.destinataires.map((d) => ({ envoi_id: d.envoi_id, ok: false, reprendre, erreur: `Resend ${res.status}` }));
-    }
     const { error: errRes } = await supabase.rpc('mail_resultats', { p_cle: cle, p_resultats: resultats });
     if (errRes) console.error('[mail/traiter] mail_resultats :', errRes.message);
     envoyes += resultats.filter((r) => r.ok).length;
     echecs += resultats.filter((r) => !r.ok && !('reprendre' in r && r.reprendre)).length;
-    if (!res.ok && (res.status === 429 || res.status >= 500)) {
+    if (resultats.some((r) => 'reprendre' in r && r.reprendre)) {
       return NextResponse.json({ ok: true, pause: true, envoyes, echecs, campagne_id: c.id }, { status: 200 });
     }
     await pause(PAUSE_MS);

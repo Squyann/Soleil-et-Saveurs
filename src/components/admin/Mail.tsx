@@ -36,7 +36,7 @@ interface Campagne {
 
 interface Bilan { campagne_id: string; destinataires: number; envoyes: number; delivres: number; echecs: number; desinscriptions: number; restants: number }
 interface Stats { inscrits: number; destinataires_offre: number; destinataires_info: number; desinscrits: number; bloquees: number }
-interface EtatEnvoi { cle_api: boolean; expediteur: string | null; domaine: string | null; spf: boolean; dkim: boolean; dmarc: boolean; envoi_auto: boolean; webhook: boolean; pret: boolean; raison: string | null }
+interface EtatEnvoi { fournisseur?: string | null; cle_api: boolean; expediteur: string | null; domaine: string | null; spf: boolean; dkim: boolean; dmarc: boolean; envoi_auto: boolean; webhook: boolean; pret: boolean; raison: string | null }
 interface Produit { id: string; name: string; price: number; promotion: number | null; unite: string | null; image_url: string | null; actif: boolean | null }
 
 const STATUTS: Record<Campagne['statut'], { libelle: string; classe: string }> = {
@@ -200,13 +200,13 @@ function Tableau({ etat, stats, onVerifier, onOuvrir }: { etat: EtatEnvoi | null
             ['Nom affiché', 'Soleil et Saveurs (modifiable par campagne)'],
             ["Adresse d'envoi", etat?.domaine ? `…@${etat.domaine}` : 'Non configurée'],
             ['Réponses envoyées à', 'soleiletsaveurs.livraison@gmail.com'],
-            ["Débit d'envoi", '100 e-mails par lot, 2 lots par seconde au plus'],
+            ["Débit d'envoi", etat?.fournisseur === 'Resend' ? '100 e-mails par lot, 2 lots par seconde au plus' : '100 e-mails par lot, 5 à la fois (Brevo gratuit : 300 par jour)'],
           ].map(([l, v]) => <p key={l} className="flex justify-between gap-3 py-2.5 border-t border-[#F0E7DA] text-sm"><span className="text-olivier-gris">{l}</span><strong className="text-right">{v}</strong></p>)}
         </section>
         <section className="p-5 rounded-[20px] bg-white border border-[#E3D6C4]">
           <div className="flex items-center justify-between gap-3 mb-2"><h3 className="titre text-xl">Prêt pour l&apos;envoi</h3><button type="button" onClick={onVerifier} className="text-[13px] font-extrabold text-brique hover:underline">Vérifier à nouveau</button></div>
           {[
-            ['Clé du prestataire (Resend)', etat?.cle_api],
+            [`Clé du prestataire (${etat?.fournisseur || 'Brevo'})`, etat?.cle_api],
             ['DKIM (signature)', etat?.dkim],
             ['SPF (serveur autorisé)', etat?.spf],
             ['DMARC (politique)', etat?.dmarc],

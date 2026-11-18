@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth, consommerQuota, getSupabaseServerClient } from '@/lib/api-auth';
 import { emailCommandeRecue, emailNouvelleCommande, type CommandeEmail } from '@/lib/email/commande';
-import { envoyerEmail } from '@/lib/email/envoi';
+import { envoyerEmail, fournisseur } from '@/lib/email/envoi';
 
 export async function POST(req: NextRequest) {
   const { user, error: authError } = await requireAuth();
   if (authError) return authError;
 
-  // Limite anti-abus : chaque appel déclenche 2 envois Resend. Sans plafond, une
+  // Limite anti-abus : chaque appel déclenche 2 envois d'e-mails. Sans plafond, une
   // boucle épuise le quota d'envoi et abîme la réputation du domaine.
   if (!(await consommerQuota('notify-order', 10, 60))) {
     return NextResponse.json({ error: 'Trop de requêtes' }, { status: 429 });
@@ -34,8 +34,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Commande introuvable' }, { status: 404 });
     }
 
-    if (!process.env.RESEND_API_KEY) {
-      console.warn('[notify-order] RESEND_API_KEY non configuré — emails non envoyés');
+    if (!fournisseur()) {
+      console.warn('[notify-order] aucune clé d’envoi (BREVO_API_KEY) configurée — emails non envoyés');
       return NextResponse.json({ ok: true, skipped: true });
     }
 
@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
       clientResult = await envoyerEmail({ to: emailClient, subject: client.objet, html: client.html }, 'notify-order');
     }
 
-    // On ne renvoie jamais le corps d'erreur de Resend au client : il divulgue
+    // On ne renvoie jamais le corps d'erreur du prestataire au client : il divulgue
     // l'email admin, le domaine expéditeur et l'état du quota. Détails en logs.
     return NextResponse.json({
       ok: true,

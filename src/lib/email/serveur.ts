@@ -1,10 +1,12 @@
-// Outils serveur des campagnes : état de l'expéditeur (clé Resend, domaine
-// SPF / DKIM / DMARC), expéditeur d'une campagne, produits à afficher.
+// Outils serveur des campagnes : état de l'expéditeur (clé Brevo ou Resend,
+// domaine SPF / DKIM / DMARC), expéditeur d'une campagne, produits à afficher.
 import { promises as dns } from 'node:dns';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { produitMail, type Bloc, type ProduitMail } from './campagne';
+import { adresseExpedition, fournisseur, NOM_FOURNISSEUR } from './envoi';
 
 export interface EtatEnvoi {
+  fournisseur: string | null;
   cle_api: boolean;
   expediteur: string | null;
   domaine: string | null;
@@ -18,7 +20,7 @@ export interface EtatEnvoi {
 }
 
 function domaineExpediteur(): string | null {
-  const from = process.env.RESEND_FROM_EMAIL || '';
+  const from = adresseExpedition();
   const m = /@([a-z0-9.-]+\.[a-z]{2,})>?\s*$/i.exec(from);
   return m ? m[1].toLowerCase() : null;
 }
@@ -36,26 +38,33 @@ let cache: { quand: number; etat: EtatEnvoi } | null = null;
 export async function etatEnvoi(forcer = false): Promise<EtatEnvoi> {
   if (!forcer && cache && Date.now() - cache.quand < 10 * 60 * 1000) return cache.etat;
   const domaine = domaineExpediteur();
-  const cleApi = Boolean(process.env.RESEND_API_KEY);
+  const f = fournisseur();
+  const cleApi = f !== null;
+  const nom = f ? NOM_FOURNISSEUR[f] : 'Brevo';
   let spf = false, dkim = false, dmarc = false;
   if (domaine && !domaine.endsWith('resend.dev')) {
-    const [envoi, racine, signature, politique] = await Promise.all([
-      txt(`send.${domaine}`), txt(domaine), txt(`resend._domainkey.${domaine}`), txt(`_dmarc.${domaine}`),
+    // Brevo signe avec brevo1 / brevo2._domainkey (CNAME suivis par la requête TXT), Resend avec resend._domainkey
+    const selecteurs = f === 'resend' ? ['resend'] : ['brevo1', 'brevo2', 'mail'];
+    const [envoi, racine, politique, ...signatures] = await Promise.all([
+      txt(`send.${domaine}`), txt(domaine), txt(`_dmarc.${domaine}`),
+      ...selecteurs.map((sel) => txt(`${sel}._domainkey.${domaine}`)),
     ]);
-    spf = [...envoi, ...racine].some((t) => /^v=spf1\b/i.test(t) && /amazonses\.com|resend/i.test(t));
-    dkim = signature.some((t) => /p=[A-Za-z0-9+/]{40,}/.test(t));
+    // Brevo n'exige plus d'inclure son SPF : il suffit que le domaine en publie un
+    spf = [...envoi, ...racine].some((t) => /^v=spf1\b/i.test(t) && (f !== 'resend' || /amazonses\.com|resend/i.test(t)));
+    dkim = signatures.flat().some((t) => /p=[A-Za-z0-9+/]{40,}/.test(t));
     dmarc = politique.some((t) => /^v=DMARC1\b/i.test(t));
   }
-  const raison = !cleApi ? "La clé du prestataire d'envoi (Resend) n'est pas configurée."
+  const raison = !cleApi ? "La clé du prestataire d'envoi (Brevo) n'est pas configurée."
     : !domaine || domaine.endsWith('resend.dev') ? "L'adresse d'expédition n'est pas sur le domaine soleiletsaveurs.fr."
-    : !spf || !dkim || !dmarc ? `Authentification du domaine incomplète (${[!spf && 'SPF', !dkim && 'DKIM', !dmarc && 'DMARC'].filter(Boolean).join(', ')}).`
+    : !spf || !dkim || !dmarc ? `Authentification du domaine incomplète chez ${nom} (${[!spf && 'SPF', !dkim && 'DKIM', !dmarc && 'DMARC'].filter(Boolean).join(', ')}).`
     : null;
   const etat: EtatEnvoi = {
+    fournisseur: f ? NOM_FOURNISSEUR[f] : null,
     cle_api: cleApi,
-    expediteur: domaine ? process.env.RESEND_FROM_EMAIL || null : null,
+    expediteur: domaine ? adresseExpedition() || null : null,
     domaine, spf, dkim, dmarc,
     envoi_auto: Boolean(process.env.MAIL_CRON_SECRET),
-    webhook: Boolean(process.env.RESEND_WEBHOOK_SECRET && process.env.MAIL_CRON_SECRET),
+    webhook: Boolean((f === 'resend' ? process.env.RESEND_WEBHOOK_SECRET : process.env.BREVO_WEBHOOK_SECRET) && process.env.MAIL_CRON_SECRET),
     pret: raison === null,
     raison,
   };
