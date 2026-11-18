@@ -61,9 +61,16 @@ export default function Mail() {
   const [codes, setCodes] = useState<CodePromo[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
 
+  const [verification, setVerification] = useState<'en_cours' | 'ok' | 'erreur' | null>(null);
+  const [verifieA, setVerifieA] = useState<string | null>(null);
   const chargerEtat = useCallback(async (verifier = false) => {
-    const r = await fetch(`/api/mail/domaine${verifier ? '?verifier=1' : ''}`).catch(() => null);
+    if (verifier) setVerification('en_cours');
+    const r = await fetch(`/api/mail/domaine${verifier ? '?verifier=1' : ''}`, { cache: 'no-store' }).catch(() => null);
     if (r?.ok) setEtat(await r.json());
+    if (verifier) {
+      setVerification(r?.ok ? 'ok' : 'erreur');
+      setVerifieA(new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+    }
   }, []);
   const chargerStats = useCallback(async () => {
     const { data } = await supabase.rpc('mail_statistiques');
@@ -82,12 +89,12 @@ export default function Mail() {
   if (vue.ecran === 'campagne') {
     return <Campagne id={vue.id} etat={etat} stats={stats} produits={produits} codes={codes} onRetour={() => { setVue({ ecran: 'liste' }); chargerStats(); }} />;
   }
-  return <Tableau etat={etat} stats={stats} onVerifier={() => chargerEtat(true)} onOuvrir={(id) => setVue({ ecran: 'campagne', id })} />;
+  return <Tableau etat={etat} stats={stats} verification={verification} verifieA={verifieA} onVerifier={() => chargerEtat(true)} onOuvrir={(id) => setVue({ ecran: 'campagne', id })} />;
 }
 
 // --- Tableau de bord --------------------------------------------------------
 
-function Tableau({ etat, stats, onVerifier, onOuvrir }: { etat: EtatEnvoi | null; stats: Stats | null; onVerifier: () => void; onOuvrir: (id: string) => void }) {
+function Tableau({ etat, stats, verification, verifieA, onVerifier, onOuvrir }: { etat: EtatEnvoi | null; stats: Stats | null; verification: 'en_cours' | 'ok' | 'erreur' | null; verifieA: string | null; onVerifier: () => void; onOuvrir: (id: string) => void }) {
   const [campagnes, setCampagnes] = useState<Campagne[] | null>(null);
   const [bilans, setBilans] = useState<Record<string, Bilan>>({});
   const [creation, setCreation] = useState(false);
@@ -204,7 +211,9 @@ function Tableau({ etat, stats, onVerifier, onOuvrir }: { etat: EtatEnvoi | null
           ].map(([l, v]) => <p key={l} className="flex justify-between gap-3 py-2.5 border-t border-[#F0E7DA] text-sm"><span className="text-olivier-gris">{l}</span><strong className="text-right">{v}</strong></p>)}
         </section>
         <section className="p-5 rounded-[20px] bg-white border border-[#E3D6C4]">
-          <div className="flex items-center justify-between gap-3 mb-2"><h3 className="titre text-xl">Prêt pour l&apos;envoi</h3><button type="button" onClick={onVerifier} className="text-[13px] font-extrabold text-brique hover:underline">Vérifier à nouveau</button></div>
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-2"><h3 className="titre text-xl">Prêt pour l&apos;envoi</h3><button type="button" onClick={onVerifier} disabled={verification === 'en_cours'} className="inline-flex items-center min-h-[44px] px-4 rounded-xl border-2 border-brique text-[13px] font-extrabold text-brique hover:bg-terre-pale disabled:opacity-60">{verification === 'en_cours' ? 'Vérification…' : 'Vérifier à nouveau'}</button></div>
+          {verification === 'ok' && verifieA && <p className="mb-1 text-[12px] font-semibold text-olivier-gris" role="status">Vérifié à {verifieA}.</p>}
+          {verification === 'erreur' && <p className="mb-1 text-[12px] font-semibold text-brique" role="status">La vérification a échoué. Réessayez dans un instant.</p>}
           {[
             [`Clé du prestataire (${etat?.fournisseur || 'Brevo'})`, etat?.cle_api],
             ['DKIM (signature)', etat?.dkim],
