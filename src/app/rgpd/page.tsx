@@ -225,9 +225,9 @@ export default function RGPDPage() {
                 </div>
               </div>
               <div className="bg-white border border-[#E8DCCB] rounded-2xl p-5 flex items-start gap-4">
-                <div className="w-10 h-10 bg-lin rounded-xl flex items-center justify-center flex-shrink-0 font-extrabold text-xs text-olivier">RS</div>
+                <div className="w-10 h-10 bg-lin rounded-xl flex items-center justify-center flex-shrink-0 font-extrabold text-xs text-olivier">BR</div>
                 <div>
-                  <p className="font-extrabold text-xs uppercase text-olivier mb-1">Resend</p>
+                  <p className="font-extrabold text-xs uppercase text-olivier mb-1">Brevo (Sendinblue SAS, France)</p>
                   <p className="text-olivier-doux font-medium text-[13px]">Envoi des e-mails de commande et de livraison, et de nos offres si vous les avez acceptées (adresse e-mail, nom, adresse et contenu de la commande).</p>
                 </div>
               </div>

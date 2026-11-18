@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin, getSupabaseServerClient } from '@/lib/api-auth';
 import { emailCommandeLivree, type CommandeEmail, type FactureEmail } from '@/lib/email/commande';
-import { envoyerEmail } from '@/lib/email/envoi';
+import { envoyerEmail, fournisseur } from '@/lib/email/envoi';
 
 // E-mail « Commande livrée » : la commande et sa facture (émise par la base au
 // passage en « livrée ») sont relues en base ; le navigateur n'envoie que le
@@ -30,8 +30,8 @@ export async function POST(req: NextRequest) {
     if (!cmd.email_client) {
       return NextResponse.json({ ok: true, skipped: true, reason: 'no email_client' });
     }
-    if (!process.env.RESEND_API_KEY) {
-      console.warn('[notify-delivery] RESEND_API_KEY non configuré');
+    if (!fournisseur()) {
+      console.warn('[notify-delivery] aucune clé d’envoi (BREVO_API_KEY) configurée');
       return NextResponse.json({ ok: true, skipped: true });
     }
 
