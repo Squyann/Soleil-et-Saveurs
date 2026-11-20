@@ -33,7 +33,8 @@ export default function Plus() {
 
   const outils = [
     ...(peut('promos') ? [{ href: '/gestion/codes-promo', libelle: 'Codes promo', detail: 'activer, désactiver, créer' }] : []),
-    ...(peut('promos') ? [{ href: '/admin', libelle: 'Mail, calendrier, statistiques', detail: 'dans l’admin du site' }] : []),
+    // L'admin du site est réservée à l'administrateur
+    ...(role === 'admin' ? [{ href: '/admin', libelle: 'Mail, calendrier, statistiques', detail: 'dans l’admin du site' }] : []),
   ];
 
   return (
