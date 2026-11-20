@@ -8,10 +8,12 @@ export type Preferences = {
   nouvelle_commande: boolean;
   annulation: boolean;
   stock_bas: boolean;
+  non_confirmee: boolean;
+  resume_soir: boolean;
   heures_calmes: boolean;
   verrouillage: boolean;
 };
-export const PREFERENCES_DEFAUT: Preferences = { nouvelle_commande: true, annulation: true, stock_bas: true, heures_calmes: true, verrouillage: false };
+export const PREFERENCES_DEFAUT: Preferences = { nouvelle_commande: true, annulation: true, stock_bas: true, non_confirmee: true, resume_soir: false, heures_calmes: true, verrouillage: false };
 
 export type Appareil = { id: string; endpoint: string; appareil: string | null; cree_le: string; vu_le: string };
 
@@ -94,7 +96,7 @@ export const listerAppareils = () =>
 export const retirerAppareil = (id: string) => reponse(supabase.from('abonnements_push').delete().eq('id', id).select());
 
 export async function lirePreferences(): Promise<Preferences> {
-  const { data } = await supabase.from('preferences_gestion').select('nouvelle_commande, annulation, stock_bas, heures_calmes, verrouillage').maybeSingle();
+  const { data } = await supabase.from('preferences_gestion').select('nouvelle_commande, annulation, stock_bas, non_confirmee, resume_soir, heures_calmes, verrouillage').maybeSingle();
   return { ...PREFERENCES_DEFAUT, ...(data ?? {}) };
 }
 
