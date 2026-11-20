@@ -114,6 +114,8 @@ export function ReglagesNotifications() {
           <p className="pt-2 text-[12px] font-extrabold uppercase tracking-[0.07em] text-olivier-gris">Me prévenir pour</p>
           <Interrupteur on={prefs.nouvelle_commande} libelle="Nouvelle commande" changer={() => basculer('nouvelle_commande')} desactive={!enLigne} />
           <Interrupteur on={prefs.annulation} libelle="Commande annulée" detail="par un autre membre de l’équipe" changer={() => basculer('annulation')} desactive={!enLigne} />
+          <Interrupteur on={prefs.non_confirmee} libelle="Commande à confirmer" detail="encore « Nouvelle » après 2 heures" changer={() => basculer('non_confirmee')} desactive={!enLigne} />
+          <Interrupteur on={prefs.resume_soir} libelle="Résumé du soir" detail="à 19 h : les commandes du lendemain" changer={() => basculer('resume_soir')} desactive={!enLigne} />
           {peut('catalogue') && <Interrupteur on={prefs.stock_bas} libelle="Stock bas" detail="5 ou moins après une commande" changer={() => basculer('stock_bas')} desactive={!enLigne} />}
           <Interrupteur on={prefs.heures_calmes} libelle="Heures calmes de 22 h à 7 h" detail="sauf commande à livrer aujourd’hui ou demain" changer={() => basculer('heures_calmes')} desactive={!enLigne} />
         </Carte>

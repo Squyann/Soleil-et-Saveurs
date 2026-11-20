@@ -11,6 +11,9 @@
 //  POST { action: 'annulation', id } commande annulée par un membre de
 //                                   l'équipe : les autres sont prévenus
 //  POST { action: 'test' }          notification d'essai sur ses appareils
+//  POST { action: 'rappels' }       tâche planifiée (toutes les 15 min,
+//                                   en-tête x-rappels) : commandes à
+//                                   confirmer depuis 2 h, résumé du soir à 19 h
 //
 // Une seule notification par événement (table notifications_envoyees),
 // réglages de chacun respectés, heures calmes de 22 h à 7 h (sauf nouvelle
@@ -47,10 +50,11 @@ async function clesVapid(): Promise<CleVapid> {
   return (vapid = { publique: finale!.publique, privee: finale!.privee });
 }
 
-type Evenement = 'nouvelle_commande' | 'annulation' | 'stock_bas' | 'test';
+type Evenement = 'nouvelle_commande' | 'annulation' | 'stock_bas' | 'non_confirmee' | 'resume_soir' | 'test';
 type Message = { titre: string; texte: string; url: string; cle: string };
 
-const heureParis = () => Number(new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', hour: '2-digit', hourCycle: 'h23' }).format(new Date()));
+// Heure de Paris (0 à 23), lue par élément : le format affiché (« 10 h ») varie
+const heureParis = () => Number(new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris', hour: 'numeric', hourCycle: 'h23' }).formatToParts(new Date()).find((x) => x.type === 'hour')?.value ?? 12);
 const jourParis = (decalage = 0) => new Intl.DateTimeFormat('fr-CA', { timeZone: 'Europe/Paris' }).format(new Date(Date.now() + decalage * 86400000));
 
 // Une seule fois par événement : renvoie false si déjà notifié
@@ -82,6 +86,8 @@ async function destinataires(evenement: Evenement, options: { seulement?: string
     if (evenement === 'nouvelle_commande' && p.nouvelle_commande === false) return false;
     if (evenement === 'annulation' && p.annulation === false) return false;
     if (evenement === 'stock_bas' && (p.stock_bas === false || !['admin', 'gerant'].includes(role))) return false;
+    if (evenement === 'non_confirmee' && p.non_confirmee === false) return false;
+    if (evenement === 'resume_soir' && p.resume_soir !== true) return false;
     if (calme && p.heures_calmes !== false && !options.urgent) return false;
     return true;
   });
@@ -107,6 +113,47 @@ async function diffuser(evenement: Evenement, m: Message, options: { seulement?:
 const prix = (n: unknown) => `${(Number(n) || 0).toFixed(2).replace('.', ',')} €`;
 const jourCourt = (d: string | null) => (d ? new Date(`${d}T12:00:00`).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', timeZone: 'Europe/Paris' }) : '');
 
+// Rappels à heure fixe (appelés toutes les 15 minutes par pg_cron)
+async function rappels() {
+  const r: Record<string, unknown> = {};
+  const heure = heureParis();
+  // Commandes « Nouvelle » depuis plus de 2 h (pas pendant les heures calmes :
+  // elles seront signalées à 7 h)
+  if (heure >= 7 && heure < 22) {
+    const avant = new Date(Date.now() - 2 * 3600 * 1000).toISOString();
+    const depuis = new Date(Date.now() - 3 * 86400 * 1000).toISOString();
+    const { data } = await admin.from('commandes').select('id, nom_client, total, date_livraison, created_at')
+      .eq('statut', 'En attente').lt('created_at', avant).gt('created_at', depuis).order('created_at');
+    let n = 0;
+    for (const c of data ?? []) {
+      if (!(await premiereFois(`a-confirmer-${c.id}`))) continue;
+      const heures = Math.floor((Date.now() - new Date(c.created_at).getTime()) / 3600000);
+      await diffuser('non_confirmee', {
+        titre: `Commande n° ${c.id} à confirmer`,
+        texte: [`Reçue il y a ${heures} h`, c.nom_client, prix(c.total), c.date_livraison ? `livraison ${jourCourt(c.date_livraison)}` : null].filter(Boolean).join(' · '),
+        url: `/gestion/commandes/${c.id}`,
+        cle: `a-confirmer-${c.id}`,
+      });
+      n++;
+    }
+    r.a_confirmer = n;
+  }
+  // Résumé du soir, à 19 h : les commandes du lendemain
+  if (heure === 19 && (await premiereFois(`resume-${jourParis()}`))) {
+    const demain = jourParis(1);
+    const { data } = await admin.from('commandes').select('total, statut').eq('date_livraison', demain);
+    const actives = (data ?? []).filter((c) => !String(c.statut ?? '').toLowerCase().startsWith('annul'));
+    const total = actives.reduce((a, c) => a + (Number(c.total) || 0), 0);
+    r.resume = await diffuser('resume_soir', {
+      titre: `Demain, ${jourCourt(demain)}`,
+      texte: actives.length ? `${actives.length} commande${actives.length > 1 ? 's' : ''} à livrer · ${prix(total)}` : 'Aucune commande à livrer pour l’instant.',
+      url: '/gestion/commandes?filtre=demain',
+      cle: `resume-${demain}`,
+    }, { urgent: true });
+  }
+  return r;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
   try {
@@ -115,6 +162,14 @@ Deno.serve(async (req) => {
       return json({ cle: (await clesVapid()).publique });
     }
     if (req.method !== 'POST') return json({ error: 'Méthode non prise en charge' }, 405);
+
+    // Tâche planifiée : reconnue par sa clé secrète (table push_cles)
+    const cleRappels = req.headers.get('x-rappels');
+    if (cleRappels) {
+      const { data } = await admin.from('push_cles').select('secret_rappels').eq('id', 1).maybeSingle();
+      if (!data?.secret_rappels || cleRappels.length !== data.secret_rappels.length || cleRappels !== data.secret_rappels) return json({ error: 'Non autorisé' }, 401);
+      return json({ ok: true, ...(await rappels()) });
+    }
 
     const jeton = (req.headers.get('authorization') ?? '').replace(/^Bearer\s+/i, '');
     const { data: u } = await admin.auth.getUser(jeton);
