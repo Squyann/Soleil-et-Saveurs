@@ -5,18 +5,18 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { ArrowLeft, Camera, ExternalLink, Minus, Plus } from 'lucide-react';
+import { ArrowLeft, Camera, ExternalLink } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { formatPrix, libelleQuantite } from '@/lib/format';
 import { UNITES } from '@/lib/variantes';
 import {
-  ajusterStock, CATEGORIES, COLONNES_PRODUIT, COLONNES_VARIANTE, enregistrerProduit, enregistrerVariante, estIllimite,
-  stockLisible, type Produit, type Variante,
+  CATEGORIES, COLONNES_PRODUIT, COLONNES_VARIANTE, enregistrerProduit, estIllimite, type Produit, type Variante,
 } from '@/lib/gestion/produits';
 import { useChangements, useGestion } from '@/components/gestion/AppliGestion';
 import { Carte, Chargement } from '@/components/gestion/Elements';
 import Feuille from '@/components/gestion/Feuille';
 import FeuilleStock from '@/components/gestion/FeuilleStock';
+import Variantes from '@/components/gestion/Variantes';
 import CadrageImage from '@/components/CadrageImage';
 
 // Champs modifiables dans l'appli (le reste — fiche détaillée, description,
@@ -179,21 +179,6 @@ export default function FicheProduit() {
     setCadrage(URL.createObjectURL(f));
   }
 
-  async function stockVariante(v: Variante, delta: number) {
-    const r = await executer(`Stock de ${v.nom}`, () => ajusterStock(p!.id, v.id, delta));
-    if (r.ok) setVariantes((l) => l.map((x) => (x.id === v.id ? { ...x, stock: r.donnees.stock, updated_at: r.donnees.updated_at } : x)));
-  }
-
-  async function prixVariante(v: Variante, valeur: string) {
-    const n = nombre(valeur);
-    if (n !== null && (Number.isNaN(n) || n <= 0 || n > 1000)) { notifier({ type: 'erreur', texte: 'Prix invalide.' }); return; }
-    if ((n ?? null) === (v.prix ?? null)) return;
-    const r = await executer(`Prix de ${v.nom}`, () => enregistrerVariante(v.id, v.updated_at, { prix: n == null ? null : Math.round(n * 100) / 100 }));
-    if (!r.ok) return;
-    if (r.donnees.ok) { const ligne = r.donnees.ligne; setVariantes((l) => l.map((x) => (x.id === v.id ? ligne : x))); notifier({ type: 'ok', texte: `${v.nom} : prix enregistré` }); }
-    else { notifier({ type: 'info', texte: `${v.nom} a été modifiée ailleurs entre-temps : rechargée, rien n’a été écrasé.` }); void charger(true); }
-  }
-
   const champ = 'w-full rounded-2xl border border-[#E3D6C4] bg-[#FBF6F0] px-3.5 py-3 text-[16px] outline-none focus:border-olivier disabled:opacity-60';
   const libelle = 'mb-1 block text-[12.5px] font-bold text-olivier-gris';
   const auKg = saisie.unite === 'g' || saisie.unite === 'kg';
@@ -286,50 +271,11 @@ export default function FicheProduit() {
         </div>
       </Carte>
 
-      {variantes.length > 0 && (
-        <Carte className="mb-3">
-          <h2 className="text-[12px] font-extrabold uppercase tracking-[0.07em] text-olivier-gris">Versions et variétés</h2>
-          <ul className="mt-1 divide-y divide-[#F0E7DA]">
-            {variantes.map((v) => (
-              <li key={v.id} className={`py-3 ${v.actif ? '' : 'opacity-60'}`}>
-                <div className="flex items-center gap-2">
-                  <b className="flex-1 text-[14.5px]">{v.nom}{!v.actif && <span className="font-semibold text-olivier-gris"> · masquée</span>}</b>
-                  {modifiable ? (
-                    <input
-                      key={v.updated_at}
-                      aria-label={`Prix de ${v.nom}`}
-                      inputMode="decimal"
-                      defaultValue={texte(v.prix)}
-                      placeholder={texte(p.price)}
-                      onBlur={(e) => prixVariante(v, e.target.value)}
-                      disabled={!enLigne}
-                      className="w-[84px] rounded-xl border border-[#E3D6C4] bg-[#FBF6F0] px-2 py-2 text-right text-[15px] outline-none focus:border-olivier"
-                    />
-                  ) : (
-                    <span className="text-[14px]">{formatPrix(Number(v.prix ?? p.price))}</span>
-                  )}
-                  <span className="w-6 text-[12px] text-olivier-gris">€</span>
-                </div>
-                <div className="mt-2 flex items-center gap-1">
-                  <span className="flex-1 text-[12.5px] text-olivier-gris">{v.stock == null ? 'Stock du produit' : `Stock propre : ${stockLisible(v.stock, v.unite ?? p.unite)}`}</span>
-                  {v.stock != null && !estIllimite(v.stock) && (
-                    <>
-                      <button type="button" aria-label={`Retirer 1 au stock de ${v.nom}`} disabled={!enLigne || v.stock <= 0} onClick={() => stockVariante(v, -1)} className="flex h-10 w-10 items-center justify-center rounded-xl bg-lin disabled:opacity-30"><Minus className="h-4 w-4" /></button>
-                      <button type="button" aria-label={`Ajouter 1 au stock de ${v.nom}`} disabled={!enLigne} onClick={() => stockVariante(v, 1)} className="flex h-10 w-10 items-center justify-center rounded-xl bg-olivier text-lin disabled:opacity-30"><Plus className="h-4 w-4" /></button>
-                    </>
-                  )}
-                  <button type="button" onClick={() => setStock({ variante: v })} className="min-h-[40px] rounded-xl px-2 text-[13px] font-bold text-brique">Régler</button>
-                </div>
-              </li>
-            ))}
-          </ul>
-          <p className="mt-1 text-[12px] text-olivier-gris">Prix vide : prix du produit. Ordre, unités et fiches des variétés : dans l’admin du site.</p>
-        </Carte>
-      )}
+      <Variantes p={p} variantes={variantes} recharger={() => { void charger(true); }} />
 
       {role === 'admin' && (
         <Link href="/admin" className="mb-3 flex min-h-[52px] items-center justify-between rounded-3xl border border-[#E3D6C4] bg-white px-4 text-[14.5px] font-bold">
-          Page détaillée, description, variétés <ExternalLink className="h-4 w-4 text-olivier-pale" aria-hidden="true" />
+          Page détaillée, description, regroupements <ExternalLink className="h-4 w-4 text-olivier-pale" aria-hidden="true" />
         </Link>
       )}
 

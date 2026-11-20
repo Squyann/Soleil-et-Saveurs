@@ -5,7 +5,7 @@ import { definirDisponibilite, definirStock, estIllimite, STOCK_ILLIMITE } from 
 import { useGestion } from './AppliGestion';
 import Feuille from './Feuille';
 
-type Cible = { produit: string; variante: string | null; nom: string; stock: number | null; actif: boolean; unite?: string | null };
+type Cible = { produit: string; variante: string | null; nom: string; stock: number | null; actif: boolean; unite?: string | null; partage?: boolean };
 
 export default function FeuilleStock({ cible, fermer, apres }: { cible: Cible; fermer: () => void; apres: () => void }) {
   const { executer, enLigne } = useGestion();
@@ -52,6 +52,9 @@ export default function FeuilleStock({ cible, fermer, apres }: { cible: Cible; f
         <div className="mt-2 grid grid-cols-2 gap-2">
           <button type="button" disabled={envoi || !enLigne} onClick={() => fixer(STOCK_ILLIMITE, 'stock illimité')} className="min-h-[48px] rounded-2xl border border-[#E3D6C4] text-[14px] font-bold disabled:opacity-40">Illimité</button>
           <button type="button" disabled={envoi || !enLigne} onClick={() => fixer(0, 'en rupture')} className="min-h-[48px] rounded-2xl border border-[#E3D6C4] text-[14px] font-bold disabled:opacity-40">Rupture (0)</button>
+          {cible.partage && (
+            <button type="button" disabled={envoi || !enLigne || cible.stock == null} onClick={() => fixer(null, 'stock partagé avec le produit')} className="col-span-2 min-h-[48px] rounded-2xl border border-[#E3D6C4] text-[14px] font-bold disabled:opacity-40">Stock partagé avec le produit</button>
+          )}
         </div>
         <button type="button" disabled={envoi || !enLigne} onClick={visibilite} className={`mt-3 min-h-[52px] w-full rounded-2xl text-[15px] font-extrabold disabled:opacity-40 ${cible.actif ? 'bg-[#F1E1DB] text-[#8A3A1E]' : 'bg-[#E7EEDC] text-olivier'}`}>
           {cible.actif ? 'Masquer du site' : 'Afficher sur le site'}

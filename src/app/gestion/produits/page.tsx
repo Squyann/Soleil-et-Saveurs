@@ -19,7 +19,7 @@ type Donnees = { produits: Produit[]; versions: Record<string, number> };
 const CLE = 'produits';
 
 export default function PageProduits() {
-  const { executer, enLigne } = useGestion();
+  const { executer, enLigne, peut } = useGestion();
   const [d, setD] = useState<Donnees | null>(() => lireMemoire<Donnees>(CLE)?.valeur ?? null);
   const [le, setLe] = useState<number | null>(() => lireMemoire<Donnees>(CLE)?.le ?? null);
   const [erreur, setErreur] = useState(false);
@@ -87,7 +87,14 @@ export default function PageProduits() {
 
   return (
     <>
-      <EnTete titre="Produits" />
+      <EnTete
+        titre="Produits"
+        droite={peut('catalogue') ? (
+          <Link href="/gestion/produits/nouveau" aria-label="Nouveau produit" className="flex h-10 w-10 items-center justify-center rounded-xl bg-olivier text-lin">
+            <Plus className="h-5 w-5" />
+          </Link>
+        ) : undefined}
+      />
       <label className="relative block">
         <span className="sr-only">Rechercher un produit</span>
         <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-olivier-pale" aria-hidden="true" />
