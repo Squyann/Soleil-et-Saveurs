@@ -13,6 +13,7 @@ import { equipe } from '@/lib/gestion/serveur';
 import { statutNormalise } from '@/lib/gestion/statuts';
 import { emailCommandeAnnulee, emailCommandeLivree, type CommandeEmail, type FactureEmail } from '@/lib/email/commande';
 import { envoyerEmail, fournisseur } from '@/lib/email/envoi';
+import { notifierEquipe } from '@/lib/gestion/notifier';
 
 type ReponseRpc = { ok: boolean; conflit?: boolean; inchange?: boolean; statut: string; updated_at: string; prevenir_client?: boolean };
 
@@ -41,8 +42,14 @@ export async function POST(req: NextRequest) {
 
   // E-mail au client (uniquement pour un vrai changement)
   let email: 'envoye' | 'echec' | 'sans' = 'sans';
+  const statut = statutNormalise(r.statut);
   if (r.prevenir_client && !r.inchange) {
-    email = await prevenirClient(e.supabase, id, statutNormalise(r.statut));
+    const jeton = (req.headers.get('authorization') ?? '').replace(/^Bearer\s+/i, '');
+    [email] = await Promise.all([
+      prevenirClient(e.supabase, id, statut),
+      // Annulation : les autres membres de l'équipe sont prévenus sur leur téléphone
+      statut === 'annulee' ? notifierEquipe(jeton, { action: 'annulation', id }) : Promise.resolve(),
+    ]);
   }
   return NextResponse.json({ ok: true, statut: r.statut, updated_at: r.updated_at, inchange: !!r.inchange, email });
 }
