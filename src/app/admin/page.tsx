@@ -10,6 +10,7 @@ import { UNITES, UNITES_CONTENANCE } from '@/lib/variantes';
 import { libelleUnite } from '@/lib/format';
 import { premieresOffertes, libellePremieresOffertes } from '@/lib/promos';
 import { htmlDocument, imprimerDocument, type FactureEmise } from '@/lib/facture';
+import { statutNormalise } from '@/lib/gestion/statuts';
 import Link from 'next/link';
 import {
   LayoutDashboard, Package, ListTree, Search,
@@ -31,6 +32,11 @@ interface StatsType {
   aPreparer: number;
   caTotal: number;
 }
+
+// Statuts (application de gestion) : « En préparation », « En livraison » et
+// « annulée » s'ajoutent à « En attente » et « livrée ».
+const estLivree = (c: { statut?: string | null }) => statutNormalise(c.statut) === 'livree';
+const aTraiter = (c: { statut?: string | null }) => !['livree', 'annulee'].includes(statutNormalise(c.statut));
 
 export default function AdminPage() {
   const [commandes, setCommandes] = useState<any[]>([]);
@@ -135,10 +141,10 @@ export default function AdminPage() {
       if (cmds) {
         setCommandes(cmds);
         const total = cmds.length;
-        const aPreparer = cmds.filter(c => c.statut !== 'livrée').length;
+        const aPreparer = cmds.filter(c => aTraiter(c)).length;
 
         const ca = cmds
-          .filter(c => c.statut === 'livrée')
+          .filter(c => estLivree(c))
           .reduce((acc, curr) => {
             const montantDirect = parseFloat(curr.total);
             if (!isNaN(montantDirect) && montantDirect > 0) {
@@ -225,9 +231,9 @@ export default function AdminPage() {
       setCommandes(prev => {
         const updated = prev.map(c => c.id === id ? { ...c, statut: nouveauStatut } : c);
         const total = updated.length;
-        const aPreparer = updated.filter(c => c.statut !== 'livrée').length;
+        const aPreparer = updated.filter(c => aTraiter(c)).length;
         const ca = updated
-          .filter(c => c.statut === 'livrée')
+          .filter(c => estLivree(c))
           .reduce((acc, curr) => {
             const montantDirect = parseFloat(curr.total);
             if (!isNaN(montantDirect) && montantDirect > 0) return acc + montantDirect;
@@ -460,7 +466,7 @@ export default function AdminPage() {
 
   const calculerBesoinStock = () => {
     const stockMap: { [key: string]: { quantite: number; unite: string } } = {};
-    commandes.filter(cmd => cmd.statut !== 'livrée').forEach(cmd => {
+    commandes.filter(cmd => aTraiter(cmd)).forEach(cmd => {
       cmd.contenu_panier?.forEach((item: any) => {
         const nom = item.name || item.nom;
         const qte = Number(item.quantity || item.quantite || 0);
@@ -488,8 +494,8 @@ export default function AdminPage() {
     });
   const commandesFiltrees = commandes.filter(cmd => {
     const matchSearch = cmd.nom_client?.toLowerCase().includes(recherche.toLowerCase()) || cmd.id.toString().includes(recherche);
-    if (filtreStatut === 'À préparer') return matchSearch && cmd.statut !== 'livrée';
-    if (filtreStatut === 'livrée') return matchSearch && cmd.statut === 'livrée';
+    if (filtreStatut === 'À préparer') return matchSearch && aTraiter(cmd);
+    if (filtreStatut === 'livrée') return matchSearch && estLivree(cmd);
     return matchSearch;
   }).sort((a, b) => {
     if (!a.date_livraison && !b.date_livraison) return 0;
@@ -669,16 +675,20 @@ export default function AdminPage() {
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Payé</p>
                     <p className="text-3xl font-black text-terre-cuite italic tracking-tighter">{cmd.total?.toFixed(2)}€</p>
                   </div>
-                  {cmd.statut !== 'livrée' ? (
+                  {aTraiter(cmd) ? (
                     <button 
                       onClick={() => updateStatut(cmd.id, 'livrée')} 
                       className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-terre-cuite shadow-xl transition-all flex items-center justify-center gap-2"
                     >
                       <CheckCircle2 className="w-4 h-4" /> Valider Livraison
                     </button>
-                  ) : (
+                  ) : estLivree(cmd) ? (
                     <div className="w-full text-center py-4 bg-green-50 text-green-600 rounded-2xl font-black text-xs border border-green-200">
                       ✓ LIVRÉE
+                    </div>
+                  ) : (
+                    <div className="w-full text-center py-4 bg-[#F1E1DB] text-[#8A3A1E] rounded-2xl font-black text-xs border border-[#E5C9BE]">
+                      ANNULÉE
                     </div>
                   )}
                 </div>
@@ -1251,22 +1261,22 @@ export default function AdminPage() {
       {onglet === 'stats' && (() => {
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        const caThisMonth = commandes.filter(c => c.statut === 'livrée' && new Date(c.created_at) >= startOfMonth).reduce((a, c) => a + parseFloat(c.total || 0), 0);
+        const caThisMonth = commandes.filter(c => estLivree(c) && new Date(c.created_at) >= startOfMonth).reduce((a, c) => a + parseFloat(c.total || 0), 0);
         const cmdThisMonth = commandes.filter(c => new Date(c.created_at) >= startOfMonth).length;
-        const cmdEnAttente = commandes.filter(c => c.statut !== 'livrée').length;
+        const cmdEnAttente = commandes.filter(c => aTraiter(c)).length;
 
         const weeklyData = Array.from({ length: 8 }, (_, i) => {
           const weeksAgo = 7 - i;
           const wStart = new Date(now); wStart.setDate(now.getDate() - weeksAgo * 7 - now.getDay()); wStart.setHours(0,0,0,0);
           const wEnd = new Date(wStart); wEnd.setDate(wStart.getDate() + 7);
-          const rev = commandes.filter(c => c.statut === 'livrée' && new Date(c.created_at) >= wStart && new Date(c.created_at) < wEnd).reduce((a, c) => a + parseFloat(c.total || 0), 0);
+          const rev = commandes.filter(c => estLivree(c) && new Date(c.created_at) >= wStart && new Date(c.created_at) < wEnd).reduce((a, c) => a + parseFloat(c.total || 0), 0);
           const label = weeksAgo === 0 ? 'Cette sem.' : wStart.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
           return { label, rev };
         });
         const maxRev = Math.max(...weeklyData.map(w => w.rev), 1);
 
         const produitStats = commandes
-          .filter(c => c.statut === 'livrée')
+          .filter(c => estLivree(c))
           .flatMap(c => c.contenu_panier || [])
           .reduce((acc: Record<string, { qty: number; unite: string }>, item: any) => {
             const name = item.name || item.nom || 'Inconnu';

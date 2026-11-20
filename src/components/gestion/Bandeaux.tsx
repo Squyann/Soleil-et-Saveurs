@@ -35,7 +35,8 @@ export default function Bandeaux({ enLigne, tempsReel, miseAJour, enCours, appli
         </div>
       ) : null}
 
-      <div className="pointer-events-none fixed inset-x-0 bottom-[calc(84px+env(safe-area-inset-bottom))] z-50 mx-auto flex max-w-xl flex-col gap-2 px-3" aria-live="polite">
+      {/* Messages en haut : ils ne cachent jamais les boutons d'action du bas */}
+      <div className="pointer-events-none fixed inset-x-0 top-[max(10px,env(safe-area-inset-top))] z-[70] mx-auto flex max-w-xl flex-col gap-2 px-3" aria-live="polite">
         {messages.map((m) => (
           <div
             key={m.id}
@@ -61,7 +62,9 @@ export default function Bandeaux({ enLigne, tempsReel, miseAJour, enCours, appli
             )}
           </div>
         ))}
+      </div>
 
+      <div className="pointer-events-none fixed inset-x-0 bottom-[calc(84px+env(safe-area-inset-bottom))] z-50 mx-auto flex max-w-xl flex-col gap-2 px-3">
         {miseAJour && (
           <div className="pointer-events-auto flex items-center gap-3 rounded-2xl border border-[#E3D6C4] bg-white p-3 shadow-lg">
             <img src="/icon-192.png" alt="" className="h-10 w-10 rounded-xl" />
