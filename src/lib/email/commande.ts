@@ -1,5 +1,6 @@
 // E-mails automatiques liés aux commandes : commande reçue (client),
-// nouvelle commande (boutique) et commande livrée avec sa facture (client).
+// nouvelle commande (boutique), commande livrée avec sa facture (client) et
+// commande annulée (client).
 // Tout le contenu est relu dans la base par les routes /api/notify-*.
 import { libelleQuantite } from '@/lib/format';
 import {
@@ -216,5 +217,24 @@ export function emailCommandeLivree(cmd: CommandeEmail, facture: FactureEmail | 
   return {
     objet: facture ? `Livrée ! Votre facture ${facture.numero} est disponible` : `Votre commande n° ${cmd.id} est livrée`,
     html: coquille({ titre: `Commande n° ${cmd.id} livrée`, preheader: facture ? `Facture ${facture.numero} · ${n(facture.total_ttc).toFixed(2).replace('.', ',')} €` : 'Votre commande a été livrée', reference: `Commande n° ${cmd.id}`, contenu, pied: piedTransactionnel() }),
+  };
+}
+
+// 4. Au client, quand l'équipe annule sa commande (application de gestion).
+// Le motif saisi par l'équipe reste interne : il n'apparaît pas dans l'e-mail.
+export function emailCommandeAnnulee(cmd: CommandeEmail): Email {
+  const p = prenom(cmd.nom_client);
+  const date = dateLivraison(cmd.date_livraison);
+  const contenu = [
+    surtitre('Commande annulée'),
+    titre(`${p ? `${echapper(p)}, votre` : 'Votre'} commande est annulée`),
+    paragraphe(`Votre commande n°&nbsp;${cmd.id}${date ? ` prévue le ${date.toLowerCase()}` : ''} a été annulée. Vous n'avez rien à régler.`),
+    paragraphe(`Les points de fidélité gagnés avec cette commande ont été retirés${cmd.code_promo ? `, et votre code ${echapper(cmd.code_promo)} est de nouveau utilisable` : ''}.`),
+    bouton('Passer une nouvelle commande', `${urlSite()}/commander`),
+    encadre(`<strong style="color:${C.brun};">Une question ?</strong> Répondez simplement à cet e-mail ou appelez-nous au 07&nbsp;59&nbsp;72&nbsp;00&nbsp;83.`),
+  ].join('');
+  return {
+    objet: `Votre commande n° ${cmd.id} est annulée`,
+    html: coquille({ titre: `Commande n° ${cmd.id} annulée`, preheader: 'Vous n’avez rien à régler', reference: `Commande n° ${cmd.id}`, contenu, pied: piedTransactionnel() }),
   };
 }

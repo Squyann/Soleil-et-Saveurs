@@ -54,6 +54,9 @@ export default function ClientShell({ children }: { children: React.ReactNode })
     return () => subscription.unsubscribe();
   }, []);
 
+  // Application de gestion : écran plein, sans l'en-tête ni le pied du site
+  if (pathname === '/gestion' || pathname.startsWith('/gestion/')) return <>{children}</>;
+
   const lienCompte = user ? '/compte' : '/login';
   const badge = nombreArticles > 99 ? '99+' : nombreArticles;
   // La barre du bas laisse la place à la barre d'achat des pages produits et

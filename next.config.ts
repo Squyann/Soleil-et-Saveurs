@@ -24,6 +24,12 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Numéro de version de l'application de gestion (date de la publication) :
+  // le service worker /gestion/sw.js change à chaque mise en ligne, ce qui
+  // déclenche le bandeau « Nouvelle version prête » sur les téléphones.
+  env: {
+    NEXT_PUBLIC_VERSION_GESTION: new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', dateStyle: 'short', timeStyle: 'short' }).format(new Date()),
+  },
   // Le site n'utilise pas next/image (balises <img>) : on désactive
   // l'optimiseur d'images, qui reste sinon accessible publiquement
   // (/_next/image) et a déjà fait l'objet de failles (SSRF, SVG).

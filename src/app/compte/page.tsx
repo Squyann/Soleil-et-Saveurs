@@ -1,6 +1,7 @@
 'use client';
 export const dynamic = 'force-dynamic';
 import React, { useState, useEffect } from 'react';
+import { statutNormalise } from '@/lib/gestion/statuts';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -365,7 +366,7 @@ export default function ComptePage() {
               {[
                 { valeur: orders.length, libelle: 'Commandes' },
                 { valeur: `${totalDepense.toFixed(0)} €`, libelle: 'Dépensé' },
-                { valeur: orders.filter(o => o.statut?.toLowerCase().includes('livr')).length, libelle: 'Livrées' },
+                { valeur: orders.filter(o => statutNormalise(o.statut) === 'livree').length, libelle: 'Livrées' },
               ].map(s => (
                 <div key={s.libelle} className="px-1.5 py-3.5 md:px-[30px] md:py-5 flex flex-col-reverse">
                   <dt className="mt-1.5 md:mt-2 text-[11px] md:text-xs font-extrabold uppercase tracking-[0.08em] md:tracking-[0.12em] text-olivier-doux">{s.libelle}</dt>
@@ -613,16 +614,14 @@ export default function ComptePage() {
               </div>
             ) : (
               orders.map((order) => {
-                // Gestion du statut (Français vs Anglais et formatage pour config)
-                const currentStatus = (order.statut || 'en_attente')
-                  .normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
-                const statusKey = currentStatus.includes('attente') ? 'en_attente' :
-                                currentStatus.includes('confirme') ? 'confirmee' :
-                                currentStatus.includes('livre') ? 'livree' :
-                                currentStatus.includes('annule') ? 'annulee' : 'en_attente';
+                // Statut commun au site et à l'application de gestion
+                const statut = statutNormalise(order.statut);
+                const statusKey = statut === 'nouvelle' ? 'en_attente'
+                  : statut === 'livree' ? 'livree'
+                  : statut === 'annulee' ? 'annulee' : 'confirmee';
                 const statusCfg = STATUS_CONFIG[statusKey as keyof typeof STATUS_CONFIG] || STATUS_CONFIG.en_attente;
                 const StatusIcon = statusCfg.icon;
-                const etapeCourante = statusKey === 'en_attente' ? 0 : statusKey === 'confirmee' ? 1 : 2;
+                const etapeCourante = ({ nouvelle: 0, preparation: 1, livraison: 2, livree: 3, annulee: 0 } as const)[statut];
 
                 return (
                   <article key={order.id} className={`${carte} overflow-hidden`}>
@@ -648,12 +647,12 @@ export default function ComptePage() {
                       <div className="px-[18px] pb-[18px] md:px-6">
                         <p className="mb-3 text-xs font-extrabold uppercase tracking-[0.12em] text-brique">Suivi de commande</p>
                         <ol className="flex items-start">
-                          {(['Reçue', 'En prépa', 'Livrée'] as const).map((libelle, idx) => {
+                          {(['Reçue', 'En préparation', 'En livraison', 'Livrée'] as const).map((libelle, idx) => {
                             const faite = idx <= etapeCourante;
                             return (
                               <React.Fragment key={libelle}>
                                 {idx > 0 && <li aria-hidden className={`flex-1 h-[3px] mt-[15px] rounded-full ${faite ? 'bg-[#166534]' : 'bg-[#E3D6C4]'}`} />}
-                                <li aria-current={idx === etapeCourante ? 'step' : undefined} className={`shrink-0 w-16 flex flex-col items-center gap-1.5 text-[12.5px] ${faite ? 'font-extrabold text-[#166534]' : 'font-bold text-olivier-gris'}`}>
+                                <li aria-current={idx === etapeCourante ? 'step' : undefined} className={`shrink-0 w-[72px] text-center leading-tight flex flex-col items-center gap-1.5 text-[12.5px] ${faite ? 'font-extrabold text-[#166534]' : 'font-bold text-olivier-gris'}`}>
                                   <span className={`w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-extrabold ${faite ? 'bg-[#166534] text-white' : 'bg-white border-2 border-[#DDD0BF]'}`}>
                                     {faite ? <Check className="w-4 h-4" strokeWidth={3} aria-hidden /> : idx + 1}
                                   </span>
