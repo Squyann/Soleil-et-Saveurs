@@ -77,7 +77,7 @@ function verifier(s: Saisie): { champs: Partial<Produit> } | { erreur: string } 
 export default function FicheProduit() {
   const params = useParams<{ id: string }>();
   const id = String(params?.id ?? '');
-  const { peut, executer, enLigne, notifier } = useGestion();
+  const { peut, role, executer, enLigne, notifier } = useGestion();
   const modifiable = peut('catalogue');
   const [p, setP] = useState<Produit | null>(null);
   const [variantes, setVariantes] = useState<Variante[]>([]);
@@ -327,7 +327,7 @@ export default function FicheProduit() {
         </Carte>
       )}
 
-      {modifiable && (
+      {role === 'admin' && (
         <Link href="/admin" className="mb-3 flex min-h-[52px] items-center justify-between rounded-3xl border border-[#E3D6C4] bg-white px-4 text-[14.5px] font-bold">
           Page détaillée, description, variétés <ExternalLink className="h-4 w-4 text-olivier-pale" aria-hidden="true" />
         </Link>
