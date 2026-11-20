@@ -31,7 +31,8 @@ export default function Plus() {
   }
 
   const outils = [
-    ...(peut('promos') ? [{ href: '/admin', libelle: 'Codes promo, mail, calendrier', detail: 'dans l’admin du site pour l’instant' }] : []),
+    ...(peut('promos') ? [{ href: '/gestion/codes-promo', libelle: 'Codes promo', detail: 'activer, désactiver, créer' }] : []),
+    ...(peut('promos') ? [{ href: '/admin', libelle: 'Mail, calendrier, statistiques', detail: 'dans l’admin du site' }] : []),
   ];
 
   return (
@@ -41,7 +42,7 @@ export default function Plus() {
       {outils.length > 0 && (
         <Carte className="mb-3 !p-0">
           {outils.map((o) => (
-            <Link key={o.libelle} href={o.href} className="flex min-h-[60px] items-center gap-3 px-4 py-3">
+            <Link key={o.libelle} href={o.href} className="flex min-h-[60px] items-center gap-3 border-b border-[#F0E7DA] px-4 py-3 last:border-0">
               <span className="flex-1"><b className="block text-[15px]">{o.libelle}</b><span className="text-[12.5px] text-olivier-gris">{o.detail}</span></span>
               <ChevronRight className="h-5 w-5 text-olivier-pale" aria-hidden="true" />
             </Link>
