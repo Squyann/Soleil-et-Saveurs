@@ -18,7 +18,7 @@ const CACHE = 'gestion-' + VERSION;
 const HORS_LIGNE = '/gestion/hors-ligne';
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(CACHE).then((c) => c.addAll([HORS_LIGNE, '/icon-192.png'])));
+  event.waitUntil(caches.open(CACHE).then((c) => c.addAll([HORS_LIGNE, '/icon-192.png', '/badge-notification.png'])));
 });
 
 self.addEventListener('activate', (event) => {
@@ -77,7 +77,9 @@ self.addEventListener('push', (event) => {
   event.waitUntil(self.registration.showNotification(titre, {
     body: d.texte || '',
     icon: '/icon-192.png',
-    badge: '/icon-192.png',
+    // Petite icône de la barre d'état (Android n'en garde que la silhouette) :
+    // logo blanc sur fond transparent, sinon un carré blanc s'affiche
+    badge: '/badge-notification.png',
     tag: d.cle || undefined,
     data: { url: typeof d.url === 'string' && d.url.startsWith('/gestion') ? d.url : '/gestion' },
   }));

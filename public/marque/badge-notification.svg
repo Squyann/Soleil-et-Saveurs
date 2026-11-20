@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
+  <!-- Pastille de notification Android : silhouette du symbole Soleil et Saveurs
+       (arche, soleil couchant derrière la colline), une seule couleur sur fond transparent -->
+  <defs>
+    <mask id="creux">
+      <rect width="96" height="96" fill="#fff"/>
+      <circle cx="48" cy="64" r="18" fill="none" stroke="#000" stroke-width="5.5"/>
+      <path d="M10 70 C24 63 36 64 46 67 C58 71 70 63 86 64 V96 H10 Z" fill="#fff"/>
+      <path d="M10 70 C24 63 36 64 46 67 C58 71 70 63 86 64" fill="none" stroke="#000" stroke-width="5.5" stroke-linecap="round"/>
+    </mask>
+  </defs>
+  <path d="M20 88 V42 A28 28 0 0 1 76 42 V88 Z" fill="#fff" mask="url(#creux)"/>
+</svg>
