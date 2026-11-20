@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth, consommerQuota, getSupabaseServerClient } from '@/lib/api-auth';
 import { emailCommandeRecue, emailNouvelleCommande, type CommandeEmail } from '@/lib/email/commande';
 import { envoyerEmail, fournisseur } from '@/lib/email/envoi';
+import { notifierEquipe } from '@/lib/gestion/notifier';
 
 export async function POST(req: NextRequest) {
   const { user, error: authError } = await requireAuth();
@@ -34,7 +35,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Commande introuvable' }, { status: 404 });
     }
 
+    // Téléphones de l'équipe (application de gestion), en parallèle des e-mails
+    const { data: { session } } = await supabase.auth.getSession();
+    const notification = notifierEquipe(session?.access_token ?? '', { action: 'commande', id: commandeId });
+
     if (!fournisseur()) {
+      await notification;
       console.warn('[notify-order] aucune clé d’envoi (BREVO_API_KEY) configurée — emails non envoyés');
       return NextResponse.json({ ok: true, skipped: true });
     }
@@ -51,6 +57,8 @@ export async function POST(req: NextRequest) {
       const client = emailCommandeRecue(commande);
       clientResult = await envoyerEmail({ to: emailClient, subject: client.objet, html: client.html }, 'notify-order');
     }
+
+    await notification;
 
     // On ne renvoie jamais le corps d'erreur du prestataire au client : il divulgue
     // l'email admin, le domaine expéditeur et l'état du quota. Détails en logs.

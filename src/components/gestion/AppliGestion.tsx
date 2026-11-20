@@ -15,6 +15,8 @@ import { peut as peutRole, roleEquipe, type Droit, type Role } from '@/lib/gesti
 import { viderMemoire } from '@/lib/gestion/memoire';
 import NavBas from './NavBas';
 import Bandeaux, { type Message } from './Bandeaux';
+import EcranVerrou from './EcranVerrou';
+import { verrouActif } from '@/lib/gestion/verrou';
 
 export type TableSuivie = 'commandes' | 'commandes_journal' | 'products' | 'product_variants' | 'codes_promo';
 export type EtatTempsReel = 'connexion' | 'direct' | 'coupe';
@@ -36,6 +38,7 @@ type Contexte = {
   ecouter: (tables: TableSuivie[], f: Ecouteur) => () => void;
   installation: { possible: boolean; installee: boolean; lancer: () => Promise<void> };
   miseAJour: { prete: boolean; version: string; appliquer: () => void };
+  verrouiller: () => void;
   deconnecter: (partout?: boolean) => Promise<void>;
 };
 
@@ -73,7 +76,7 @@ function avecDelai<T>(p: Promise<T>): Promise<T> {
 export function messageErreur(e: unknown): string {
   const brut = e && typeof e === 'object' && 'message' in e ? String((e as { message: unknown }).message) : '';
   if (/Failed to fetch|NetworkError|Load failed/i.test(brut)) return 'Connexion perdue';
-  if (/permission denied|Accès refusé|42501|row-level security/i.test(brut)) return 'Action non autorisée pour votre rôle';
+  if (/permission denied for|Accès refusé|42501|row-level security/i.test(brut)) return 'Action non autorisée pour votre rôle';
   if (brut && /[éèàùç]|^[A-ZÉ][a-zé]/.test(brut) && brut.length < 160) return brut;
   return 'Erreur du serveur';
 }
@@ -93,6 +96,7 @@ export default function AppliGestion({ children }: { children: React.ReactNode }
   const [attente, setAttente] = useState<ServiceWorker | null>(null);
   const [invite, setInvite] = useState<(Event & { prompt: () => Promise<void> }) | null>(null);
   const [installee, setInstallee] = useState(false);
+  const [verrouille, setVerrouille] = useState(false);
   const ecouteurs = useRef(new Set<{ tables: TableSuivie[]; f: Ecouteur }>());
   const enCoursRef = useRef(0);
 
@@ -113,6 +117,8 @@ export default function AppliGestion({ children }: { children: React.ReactNode }
     supabase.auth.getSession().then(({ data }) => {
       if (!actif) return;
       setSession(data.session);
+      // Verrouillage activé sur ce téléphone : demandé à chaque ouverture
+      setVerrouille(verrouActif());
       setPret(true);
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((evenement, s) => {
@@ -126,6 +132,17 @@ export default function AppliGestion({ children }: { children: React.ReactNode }
     if (!pret || !avecCadre) return;
     if (!session || !role) router.replace('/gestion/connexion');
   }, [pret, avecCadre, session, role, router]);
+
+  // Retour dans l'appli après plus de 2 minutes : on reverrouille
+  useEffect(() => {
+    let cache = 0;
+    const vis = () => {
+      if (document.visibilityState === 'hidden') cache = Date.now();
+      else if (cache && Date.now() - cache > 2 * 60 * 1000 && verrouActif()) setVerrouille(true);
+    };
+    document.addEventListener('visibilitychange', vis);
+    return () => document.removeEventListener('visibilitychange', vis);
+  }, []);
 
   // --- Réseau --------------------------------------------------------------
   useEffect(() => {
@@ -287,6 +304,7 @@ export default function AppliGestion({ children }: { children: React.ReactNode }
     installation: { possible: !!invite, installee, lancer: async () => { if (invite) { await invite.prompt(); setInvite(null); } } },
     miseAJour: { prete: !!attente, version: VERSION, appliquer: appliquerMiseAJour },
     deconnecter,
+    verrouiller: () => setVerrouille(true),
   }), [session, role, prenom, enLigne, tempsReel, nouvelles, enCours, executer, notifier, ecouter, invite, installee, attente, appliquerMiseAJour, deconnecter]);
 
   if (!avecCadre) return <Ctx.Provider value={valeur}>{children}</Ctx.Provider>;
@@ -311,6 +329,7 @@ export default function AppliGestion({ children }: { children: React.ReactNode }
           </div>
         )}
         {pret && session && role && <NavBas />}
+        {pret && session && role && verrouille && <EcranVerrou ouvrir={() => setVerrouille(false)} deconnecter={() => { setVerrouille(false); void deconnecter(false); }} />}
       </div>
     </Ctx.Provider>
   );

@@ -6,6 +6,7 @@ import { ChevronRight, Download, LogOut, RefreshCw, ShieldCheck, Smartphone } fr
 import { LIBELLE_ROLE } from '@/lib/gestion/roles';
 import { useGestion } from '@/components/gestion/AppliGestion';
 import { Carte, EnTete } from '@/components/gestion/Elements';
+import { ReglagesNotifications, ReglageVerrou } from '@/components/gestion/Reglages';
 
 export default function Plus() {
   const { session, role, peut, installation, miseAJour, deconnecter, enCours, notifier } = useGestion();
@@ -49,6 +50,9 @@ export default function Plus() {
           ))}
         </Carte>
       )}
+
+      <ReglagesNotifications />
+      <ReglageVerrou />
 
       <h2 className="mb-2 mt-5 text-[13px] font-extrabold uppercase tracking-[0.08em] text-olivier-gris">Ce téléphone</h2>
       <Carte className="space-y-4">
