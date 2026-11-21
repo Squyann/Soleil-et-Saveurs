@@ -133,15 +133,17 @@ export default function PageProduits() {
               const occupe = enCours === p.id;
               const n = d.versions[p.id];
               return (
-                <li key={p.id} className={`flex items-center gap-3 rounded-2xl border border-[#E3D6C4] bg-white py-2 pl-2 pr-2 ${p.actif ? '' : 'opacity-70'}`}>
+                <li key={p.id} className={`flex items-center gap-3 rounded-2xl border py-2 pl-2 pr-2 ${p.actif ? 'border-[#E3D6C4] bg-white' : 'border-dashed border-[#C9BBAA] bg-[#E6DED2]'}`}>
                   <Link href={`/gestion/produits/${p.id}`} className="flex min-w-0 flex-1 items-center gap-3">
-                    {p.image_url ? <img src={p.image_url} alt="" loading="lazy" className="h-11 w-[60px] flex-none rounded-xl object-cover" /> : <span className="h-11 w-[60px] flex-none rounded-xl bg-lin" />}
+                    {/* Produit masqué : photo en noir et blanc et pâlie */}
+                    {p.image_url ? <img src={p.image_url} alt="" loading="lazy" className={`h-11 w-[60px] flex-none rounded-xl object-cover ${p.actif ? '' : 'opacity-40 grayscale'}`} /> : <span className="h-11 w-[60px] flex-none rounded-xl bg-lin" />}
                     <span className="min-w-0 flex-1">
-                      <b className="block text-[15px] leading-snug [overflow-wrap:anywhere]">{p.name}</b>
+                      <b className={`block text-[15px] leading-snug [overflow-wrap:anywhere] ${p.actif ? '' : 'text-[#8C877E]'}`}>{p.name}</b>
                       <span className="block truncate text-[12.5px] text-olivier-gris">
+                        {!p.actif && <span className="mr-1 rounded-full bg-[#7D776E] px-1.5 text-[11px] font-extrabold uppercase tracking-wide text-white">Masqué</span>}
                         {bas && p.actif && <span className="mr-1 rounded-full bg-terre-pale px-1.5 text-[11px] font-extrabold text-brique">stock bas</span>}
-                        {promo && <span className="mr-1 rounded-full bg-terre-cuite px-1.5 text-[11px] font-extrabold text-white">{promo.court}</span>}
-                        {[prixAffiche(p), !p.actif ? 'masqué du site' : null, bas ? null : p.provenance, n ? `${n} version${n > 1 ? 's' : ''}` : null].filter(Boolean).join(' · ')}
+                        {promo && <span className={`mr-1 rounded-full px-1.5 text-[11px] font-extrabold text-white ${p.actif ? 'bg-terre-cuite' : 'bg-[#B5ADA2]'}`}>{promo.court}</span>}
+                        {[prixAffiche(p), bas ? null : p.provenance, n ? `${n} version${n > 1 ? 's' : ''}` : null].filter(Boolean).join(' · ')}
                       </span>
                     </span>
                   </Link>
