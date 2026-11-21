@@ -38,11 +38,12 @@ export type Variante = {
   promotion: number | null;
   stock: number | null;
   actif: boolean;
+  image_url: string | null;
   updated_at: string;
 };
 
 export const COLONNES_PRODUIT = 'id, name, description, price, image_url, category, stock, unite, provenance, promotion, seuil_achat, quantite_offerte, seuil_promo_qte, prix_promo, premieres_offertes, actif, contenance, contenance_unite, updated_at';
-export const COLONNES_VARIANTE = 'id, product_id, nom, ordre, prix, unite, promotion, stock, actif, updated_at';
+export const COLONNES_VARIANTE = 'id, product_id, nom, ordre, prix, unite, promotion, stock, actif, image_url, updated_at';
 
 export const CATEGORIES = ['Fruits', 'Légumes', 'Panier'];
 
