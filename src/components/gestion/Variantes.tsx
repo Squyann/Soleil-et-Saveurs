@@ -59,11 +59,11 @@ export default function Variantes({ p, variantes, recharger }: { p: Produit; var
       ) : (
         <ul className="mt-1 divide-y divide-[#F0E7DA]">
           {liste.map((v, i) => (
-            <li key={v.id} className={`py-3 ${v.actif ? '' : 'opacity-60'}`}>
+            <li key={v.id} className={`py-3 ${v.actif ? '' : '-mx-2 rounded-xl bg-[#E6DED2] px-2'}`}>
               <div className="flex items-center gap-2">
-                <img src={v.image_url || p.image_url || '/icon-192.png'} alt="" className={`h-10 w-[60px] flex-none rounded-lg object-cover ${v.image_url ? '' : 'opacity-50'}`} />
+                <img src={v.image_url || p.image_url || '/icon-192.png'} alt="" className={`h-10 w-[60px] flex-none rounded-lg object-cover ${!v.actif ? 'opacity-40 grayscale' : v.image_url ? '' : 'opacity-50'}`} />
                 <span className="min-w-0 flex-1">
-                  <b className="block text-[14.5px]">{v.nom}{!v.actif && <span className="font-semibold text-olivier-gris"> · masquée</span>}</b>
+                  <b className={`block text-[14.5px] ${v.actif ? '' : 'text-[#8C877E]'}`}>{!v.actif && <span className="mr-1.5 rounded-full bg-[#7D776E] px-1.5 align-middle text-[11px] font-extrabold uppercase tracking-wide text-white">Masquée</span>}{v.nom}</b>
                   <span className="text-[12.5px] text-olivier-gris">
                     {[formatPrix(Number(v.prix ?? p.price)) + (v.prix == null ? ' (prix du produit)' : ''), v.unite && v.unite !== p.unite ? `vendue ${v.unite === 'g' ? 'au poids' : `à la ${v.unite}`}` : null, v.promotion ? `−${v.promotion} %` : null].filter(Boolean).join(' · ')}
                   </span>

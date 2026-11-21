@@ -187,7 +187,7 @@ export default function FicheProduit() {
     <>
       <Retour />
       <div className="relative mb-4 overflow-hidden rounded-3xl bg-white">
-        {p.image_url ? <img src={p.image_url} alt="" className="aspect-[3/2] w-full object-cover" /> : <div className="aspect-[3/2] w-full bg-lin" />}
+        {p.image_url ? <img src={p.image_url} alt="" className={`aspect-[3/2] w-full object-cover ${p.actif ? '' : 'opacity-50 grayscale'}`} /> : <div className="aspect-[3/2] w-full bg-lin" />}
         {modifiable && (
           <label className={`absolute bottom-3 right-3 flex min-h-[44px] cursor-pointer items-center gap-2 rounded-2xl bg-white/95 px-3.5 text-[13.5px] font-bold shadow ${!enLigne ? 'pointer-events-none opacity-50' : ''}`}>
             <Camera className="h-4 w-4" aria-hidden="true" /> Changer la photo
@@ -195,7 +195,12 @@ export default function FicheProduit() {
           </label>
         )}
       </div>
-      <h1 className="titre text-[28px] leading-tight">{p.name}</h1>
+      {!p.actif && (
+        <p className="mb-3 rounded-2xl border border-dashed border-[#A79F94] bg-[#E6DED2] px-4 py-2.5 text-[13.5px] font-bold text-[#5E5951]">
+          Masqué du site : les clients ne voient pas ce produit. « Stock et visibilité » pour le remettre en ligne.
+        </p>
+      )}
+      <h1 className={`titre text-[28px] leading-tight ${p.actif ? '' : 'text-[#8C877E]'}`}>{p.name}</h1>
       <p className="mb-4 text-[13px] text-olivier-gris">
         {p.actif ? 'Visible sur le site' : 'Masqué du site'} · modifié le {new Date(p.updated_at).toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
       </p>
@@ -279,7 +284,8 @@ export default function FicheProduit() {
         </Link>
       )}
 
-      {modifiable && (
+      {/* Barre d'enregistrement : seulement quand il y a une modification en cours */}
+      {modifiable && (modifie.length > 0 || envoi || !!erreur) && (
         <div className="sticky bottom-[calc(84px+env(safe-area-inset-bottom))] z-30 mt-4">
           {erreur && <p role="alert" className="mb-2 rounded-2xl bg-[#F1E1DB] px-4 py-2.5 text-[13.5px] font-semibold text-[#8A3A1E] shadow">{erreur}</p>}
           <button type="button" disabled={!modifie.length || envoi || !enLigne} onClick={valider} className="min-h-[56px] w-full rounded-2xl bg-olivier text-[16px] font-extrabold text-lin shadow-lg disabled:opacity-40">
