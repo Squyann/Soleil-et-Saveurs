@@ -32,6 +32,7 @@ export default function Plus() {
   }
 
   const outils = [
+    ...(peut('clients') ? [{ href: '/gestion/factures', libelle: 'Factures pros', detail: 'factures, bons de livraison, avoirs' }] : []),
     ...(peut('promos') ? [{ href: '/gestion/codes-promo', libelle: 'Codes promo', detail: 'activer, désactiver, créer' }] : []),
     // L'admin du site est réservée à l'administrateur
     ...(role === 'admin' ? [{ href: '/admin', libelle: 'Mail, calendrier, statistiques', detail: 'dans l’admin du site' }] : []),

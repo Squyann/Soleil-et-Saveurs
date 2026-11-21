@@ -105,9 +105,9 @@ export interface MontantsDocument {
 
 const centimes = (euros: unknown) => Math.round((Number(euros) || 0) * 100);
 const horsTaxe = (ttcCentimes: number) => Math.round(ttcCentimes / (1 + TAUX_TVA / 100));
-const euros = (c: number) => formatPrix(c / 100);
+export const euros = (c: number) => formatPrix(c / 100);
 const moins = (c: number) => `−${euros(c)}`;
-const tauxAffiche = `${String(TAUX_TVA).replace('.', ',')} %`;
+export const tauxAffiche = `${String(TAUX_TVA).replace('.', ',')} %`;
 
 // Montant TTC d'une ligne. Celui calculé par le serveur à la commande fait
 // foi ; le calcul de repli ne sert qu'aux très anciennes commandes.
@@ -211,13 +211,13 @@ export function calculerMontants(source: {
   return { lignes, produitsHT, remiseHT, libelleRemise, fraisHT, totalHT, tva, totalTTC };
 }
 
-const echapper = (texte: unknown) =>
+export const echapper = (texte: unknown) =>
   String(texte ?? '').replace(/[&<>"']/g, (c) => (
     { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string
   ));
 
 // « 2026-11-12 » ou date complète → « 12 novembre 2026 »
-function dateLongue(valeur: string | null | undefined): string {
+export function dateLongue(valeur: string | null | undefined): string {
   if (!valeur) return '—';
   const date = new Date(/^\d{4}-\d{2}-\d{2}$/.test(valeur) ? `${valeur}T12:00:00` : valeur);
   if (Number.isNaN(date.getTime())) return '—';
@@ -235,7 +235,8 @@ function fraisCommande(commande: CommandeDocument): number {
 
 const LOGO = LOGO_IMPRESSION;
 
-const STYLES = `
+// Styles communs aux documents (factures du site, factures et bons pros)
+export const STYLES = `
 @page { size: A4; margin: 12mm 13mm; }
 * { box-sizing: border-box; }
 html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
