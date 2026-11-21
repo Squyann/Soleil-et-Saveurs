@@ -3,7 +3,7 @@
 // que l'admin du site : champ vide = valeur du produit (prix, unité, remise,
 // stock). Chaque modification vérifie que la variante n'a pas changé ailleurs.
 import { useState } from 'react';
-import { ArrowDown, ArrowUp, Minus, Pencil, Plus } from 'lucide-react';
+import { ArrowDown, ArrowUp, Camera, Minus, Pencil, Plus } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { formatPrix } from '@/lib/format';
 import { UNITES } from '@/lib/variantes';
@@ -13,6 +13,7 @@ import { useGestion } from './AppliGestion';
 import { Carte } from './Elements';
 import Feuille from './Feuille';
 import FeuilleStock from './FeuilleStock';
+import CadrageImage from '@/components/CadrageImage';
 
 const texte = (v: unknown) => (v == null ? '' : String(v).replace('.', ','));
 const nombre = (s: string) => { const n = Number(s.replace(',', '.').trim()); return s.trim() === '' ? null : Number.isFinite(n) ? n : NaN; };
@@ -60,6 +61,7 @@ export default function Variantes({ p, variantes, recharger }: { p: Produit; var
           {liste.map((v, i) => (
             <li key={v.id} className={`py-3 ${v.actif ? '' : 'opacity-60'}`}>
               <div className="flex items-center gap-2">
+                <img src={v.image_url || p.image_url || '/icon-192.png'} alt="" className={`h-10 w-[60px] flex-none rounded-lg object-cover ${v.image_url ? '' : 'opacity-50'}`} />
                 <span className="min-w-0 flex-1">
                   <b className="block text-[14.5px]">{v.nom}{!v.actif && <span className="font-semibold text-olivier-gris"> · masquée</span>}</b>
                   <span className="text-[12.5px] text-olivier-gris">
@@ -123,6 +125,42 @@ function EditionVariante({ p, v, ordreSuivant, fermer, apres, conflit }: {
   const [erreur, setErreur] = useState('');
   const [envoi, setEnvoi] = useState(false);
   const [suppression, setSuppression] = useState(false);
+  const [image, setImage] = useState<string | null>(v?.image_url ?? null);
+  const [version, setVersion] = useState(v?.updated_at ?? '');
+  const [cadrage, setCadrage] = useState<string | null>(null);
+  const { notifier } = useGestion();
+
+  function choisirPhoto(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0];
+    e.target.value = '';
+    if (!f) return;
+    if (!f.type.startsWith('image/') || f.size > 20 * 1024 * 1024) { notifier({ type: 'erreur', texte: 'Photo non prise en charge (20 Mo maximum).' }); return; }
+    setCadrage(URL.createObjectURL(f));
+  }
+
+  // La photo est enregistrée dès la validation du cadrage (comme dans l'admin)
+  async function enregistrerPhoto(blob: Blob | null) {
+    if (!v) return;
+    if (blob && blob.size > 5 * 1024 * 1024) { notifier({ type: 'erreur', texte: 'Image trop lourde (5 Mo maximum).' }); return; }
+    setEnvoi(true);
+    const res = await executer(blob ? `Photo de ${v.nom}` : `Retrait de la photo de ${v.nom}`, async () => {
+      let url: string | null = null;
+      if (blob) {
+        const fichier = `${Date.now()}-${Math.round(Math.random() * 1e9)}.jpg`;
+        const up = await supabase.storage.from('produits-images').upload(fichier, blob, { contentType: 'image/jpeg', upsert: false });
+        if (up.error) throw up.error;
+        url = supabase.storage.from('produits-images').getPublicUrl(fichier).data.publicUrl;
+      }
+      return enregistrerVariante(v.id, version, { image_url: url });
+    });
+    setEnvoi(false);
+    if (cadrage) { URL.revokeObjectURL(cadrage); setCadrage(null); }
+    if (!res.ok) return;
+    if (!res.donnees.ok) { conflit(); return; }
+    setImage(res.donnees.ligne.image_url);
+    setVersion(res.donnees.ligne.updated_at);
+    notifier({ type: 'ok', texte: blob ? `Photo de « ${v.nom} » enregistrée` : `Photo de « ${v.nom} » retirée (celle du produit s’affiche)` });
+  }
 
   async function enregistrer() {
     setErreur('');
@@ -144,7 +182,7 @@ function EditionVariante({ p, v, ordreSuivant, fermer, apres, conflit }: {
       if (res.ok) apres(`Variante « ${champs.nom} » ajoutée`);
       return;
     }
-    const res = await executer(`Modification de ${v.nom}`, () => enregistrerVariante(v.id, v.updated_at, champs));
+    const res = await executer(`Modification de ${v.nom}`, () => enregistrerVariante(v.id, version, champs));
     setEnvoi(false);
     if (!res.ok) return;
     if (res.donnees.ok) apres(`Variante « ${champs.nom} » enregistrée`);
@@ -154,7 +192,7 @@ function EditionVariante({ p, v, ordreSuivant, fermer, apres, conflit }: {
   async function basculerActif() {
     if (!v) return;
     setEnvoi(true);
-    const res = await executer(v.actif ? `Masquer ${v.nom}` : `Afficher ${v.nom}`, () => enregistrerVariante(v.id, v.updated_at, { actif: !v.actif }));
+    const res = await executer(v.actif ? `Masquer ${v.nom}` : `Afficher ${v.nom}`, () => enregistrerVariante(v.id, version, { actif: !v.actif }));
     setEnvoi(false);
     if (!res.ok) return;
     if (res.donnees.ok) apres(`${v.nom} ${v.actif ? 'masquée du site' : 'visible sur le site'}`);
@@ -176,6 +214,20 @@ function EditionVariante({ p, v, ordreSuivant, fermer, apres, conflit }: {
   return (
     <Feuille titre={v ? `Modifier « ${v.nom} »` : `Nouvelle variante de ${p.name}`} fermer={fermer}>
       <div className="max-h-[70dvh] space-y-3 overflow-y-auto px-4 pb-1">
+        {v ? (
+          <div className="flex items-center gap-3">
+            <img src={image || p.image_url || '/icon-192.png'} alt="" className={`h-16 w-24 flex-none rounded-xl object-cover ${image ? '' : 'opacity-50'}`} />
+            <div className="flex flex-1 flex-wrap gap-2">
+              <label className={`flex min-h-[44px] cursor-pointer items-center gap-2 rounded-xl border border-olivier px-3 text-[13.5px] font-bold ${envoi || !enLigne ? 'pointer-events-none opacity-40' : ''}`}>
+                <Camera className="h-4 w-4" aria-hidden="true" /> {image ? 'Changer la photo' : 'Ajouter une photo'}
+                <input type="file" accept="image/*" onChange={choisirPhoto} className="sr-only" />
+              </label>
+              {image && <button type="button" disabled={envoi || !enLigne} onClick={() => enregistrerPhoto(null)} className="min-h-[44px] px-2 text-[13px] font-bold text-brique disabled:opacity-40">Retirer</button>}
+            </div>
+          </div>
+        ) : (
+          <p className="text-[12.5px] text-olivier-gris">La photo de la variante s’ajoute une fois la variante créée (sinon, celle du produit s’affiche).</p>
+        )}
         <div>
           <label htmlFor="v-nom" className={libelle}>Nom</label>
           <input id="v-nom" value={nom} onChange={(e) => { setErreur(''); setNom(e.target.value); }} placeholder="ex. Préparé" className={champ} />
@@ -225,6 +277,7 @@ function EditionVariante({ p, v, ordreSuivant, fermer, apres, conflit }: {
             )}
           </div>
         )}
+        {cadrage && <CadrageImage src={cadrage} onAnnuler={() => { URL.revokeObjectURL(cadrage); setCadrage(null); }} onValider={enregistrerPhoto} />}
         {suppression && <p className="text-[12px] text-olivier-gris">Définitif. Pour la retirer temporairement, préférez « Masquer du site ». Les commandes passées ne sont pas touchées.</p>}
       </div>
     </Feuille>
