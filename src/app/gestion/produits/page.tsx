@@ -18,13 +18,25 @@ type Filtre = 'tous' | 'bas' | 'promo' | 'Fruits' | 'Légumes' | 'masques';
 type Donnees = { produits: Produit[]; versions: Record<string, number> };
 const CLE = 'produits';
 
+// Retour depuis un produit : on retrouve le même filtre, la même recherche et
+// le même endroit dans la liste (mémorisé au moment d'ouvrir le produit)
+const CLE_RETOUR = 'gestion:produits:retour';
+type Retour = { filtre: Filtre; recherche: string; y: number };
+function lireRetour(): Retour | null {
+  try {
+    const brut = sessionStorage.getItem(CLE_RETOUR);
+    return brut ? (JSON.parse(brut) as Retour) : null;
+  } catch { return null; }
+}
+
 export default function PageProduits() {
   const { executer, enLigne, peut } = useGestion();
   const [d, setD] = useState<Donnees | null>(() => lireMemoire<Donnees>(CLE)?.valeur ?? null);
   const [le, setLe] = useState<number | null>(() => lireMemoire<Donnees>(CLE)?.le ?? null);
   const [erreur, setErreur] = useState(false);
-  const [filtre, setFiltre] = useState<Filtre>('tous');
-  const [recherche, setRecherche] = useState('');
+  const [retour] = useState<Retour | null>(lireRetour);
+  const [filtre, setFiltre] = useState<Filtre>(retour?.filtre ?? 'tous');
+  const [recherche, setRecherche] = useState(retour?.recherche ?? '');
   const [enCours, setEnCours] = useState<string | null>(null);
   const [feuille, setFeuille] = useState<Produit | null>(null);
 
@@ -47,6 +59,25 @@ export default function PageProduits() {
     return () => clearTimeout(t);
   }, [charger]);
   useChangements(['products', 'product_variants'], () => { void charger(); });
+
+  // Replace la liste là où on l'avait quittée (après le retour en haut de page
+  // fait par la navigation), une seule fois
+  const pret = !!d;
+  useEffect(() => {
+    if (!retour || !pret) return;
+    try { sessionStorage.removeItem(CLE_RETOUR); } catch { /* rien */ }
+    let n = 0;
+    const replacer = () => {
+      window.scrollTo(0, retour.y);
+      if (++n < 3) requestAnimationFrame(replacer);
+    };
+    const t = setTimeout(replacer, 0);
+    return () => clearTimeout(t);
+  }, [retour, pret]);
+
+  function memoriserPosition() {
+    try { sessionStorage.setItem(CLE_RETOUR, JSON.stringify({ filtre, recherche, y: window.scrollY } satisfies Retour)); } catch { /* rien */ }
+  }
 
   const comptes = useMemo(() => {
     const l = d?.produits ?? [];
@@ -95,6 +126,8 @@ export default function PageProduits() {
           </Link>
         ) : undefined}
       />
+      {/* Recherche et filtres toujours visibles pendant le défilement */}
+      <div className="sticky top-0 z-20 -mx-4 border-b border-transparent bg-lin px-4 pb-2 pt-[max(8px,env(safe-area-inset-top))] shadow-[0_6px_10px_-8px_rgba(47,74,43,0.25)]">
       <label className="relative block">
         <span className="sr-only">Rechercher un produit</span>
         <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-olivier-pale" aria-hidden="true" />
@@ -115,8 +148,9 @@ export default function PageProduits() {
           );
         })}
       </div>
+      </div>
 
-      <div className="mt-4">
+      <div className="mt-3">
         <DonneesDu le={le} />
         {erreur && !d ? (
           <Carte><p className="text-[14px]">Impossible de charger les produits. Vérifiez la connexion.</p></Carte>
@@ -134,7 +168,7 @@ export default function PageProduits() {
               const n = d.versions[p.id];
               return (
                 <li key={p.id} className={`flex items-center gap-3 rounded-2xl border py-2 pl-2 pr-2 ${p.actif ? 'border-[#E3D6C4] bg-white' : 'border-dashed border-[#C9BBAA] bg-[#E6DED2]'}`}>
-                  <Link href={`/gestion/produits/${p.id}`} className="flex min-w-0 flex-1 items-center gap-3">
+                  <Link href={`/gestion/produits/${p.id}`} onClick={memoriserPosition} className="flex min-w-0 flex-1 items-center gap-3">
                     {/* Produit masqué : photo en noir et blanc et pâlie */}
                     {p.image_url ? <img src={p.image_url} alt="" loading="lazy" className={`h-11 w-[60px] flex-none rounded-xl object-cover ${p.actif ? '' : 'opacity-40 grayscale'}`} /> : <span className="h-11 w-[60px] flex-none rounded-xl bg-lin" />}
                     <span className="min-w-0 flex-1">
