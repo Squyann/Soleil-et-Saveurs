@@ -186,10 +186,24 @@ export default function EditeurFicheVariante({
         : null;
       const donnees = { variant_id: variante.id, ...textes, photos: form.photos, saison_mois: form.saison_mois, recettes };
       let nouvelle: FicheVariante | null = null;
+      // Fiche existante : n'écrit que si personne ne l'a modifiée depuis son
+      // ouverture (site ou appli) ; sinon rien n'est écrasé
+      const version = enregistree?.updated_at;
+      const conflit = () => setMessage({ type: 'erreur', texte: 'Cette fiche a été modifiée ailleurs (site ou appli) pendant votre saisie : rien n’a été écrasé. Copiez vos textes si besoin, fermez puis rouvrez la fiche.' });
       if (rubriquesPropres(donnees as Partial<FicheVariante>) === 0) {
         // Tout est repris du produit : pas de fiche propre
-        const { error } = await supabase.from('fiches_variantes').delete().eq('variant_id', variante.id);
+        let requete = supabase.from('fiches_variantes').delete().eq('variant_id', variante.id);
+        if (version) requete = requete.eq('updated_at', version);
+        const { data, error } = await requete.select('variant_id');
         if (error) throw error;
+        if (enregistree && !data?.length) { conflit(); return; }
+      } else if (enregistree) {
+        let requete = supabase.from('fiches_variantes').update(donnees).eq('variant_id', variante.id);
+        if (version) requete = requete.eq('updated_at', version);
+        const { data, error } = await requete.select();
+        if (error) throw error;
+        if (!data?.length) { conflit(); return; }
+        nouvelle = data[0] as FicheVariante;
       } else {
         const { data, error } = await supabase.from('fiches_variantes').upsert(donnees, { onConflict: 'variant_id' }).select().single();
         if (error) throw error;
@@ -239,7 +253,7 @@ export default function EditeurFicheVariante({
           {!ficheProduit && (
             <p className="flex gap-2.5 px-4 py-3 rounded-2xl bg-terre-pale text-sm leading-relaxed text-brique">
               <AlertTriangle className="w-5 h-5 shrink-0" />
-              <span>« {produit.name.trim()} » n’a pas encore de page détaillée : créez-la et publiez-la d’abord (bouton « Créer la fiche » sur la carte du produit). Sans elle, la fiche de la variante ne sera pas visible.</span>
+              <span>« {produit.name.trim()} » n’a pas encore de page détaillée : créez-la et publiez-la d’abord (« Page détaillée » du produit). Sans elle, la fiche de la variante ne sera pas visible.</span>
             </p>
           )}
 
@@ -340,7 +354,7 @@ export default function EditeurFicheVariante({
           </Bloc>
         </div>
 
-        <div className="bg-white border-t border-[#F0E7DA] px-3 py-3 sm:px-6 sm:py-4 space-y-2">
+        <div className="bg-white border-t border-[#F0E7DA] px-3 py-3 pb-[calc(12px+env(safe-area-inset-bottom))] sm:px-6 sm:py-4 space-y-2">
           {message && (
             <p role="status" className={`flex items-center gap-2 text-sm font-bold ${message.type === 'ok' ? 'text-[#166534]' : 'text-brique'}`}>
               {message.type === 'ok' && <CheckCircle2 className="w-4 h-4 shrink-0" />}{message.texte}

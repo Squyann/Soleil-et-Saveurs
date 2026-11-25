@@ -5,13 +5,14 @@
 // n'a modifié le produit entre-temps ; sinon les deux versions sont
 // proposées, rien n'est écrasé.
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import nextDynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Camera, Crop, ExternalLink } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { formatPrix, libelleQuantite } from '@/lib/format';
 import { contenanceSaisie, UNITES } from '@/lib/variantes';
-import { completudeFiche, type Fiche } from '@/lib/fiches';
+import { completudeFiche, type Fiche, type FicheVariante } from '@/lib/fiches';
 import {
   CATEGORIES, COLONNES_PRODUIT, COLONNES_VARIANTE, definirDisponibilite, enregistrerProduit, estIllimite, type Produit, type Variante,
 } from '@/lib/gestion/produits';
@@ -23,6 +24,9 @@ import FeuilleStock from '@/components/gestion/FeuilleStock';
 import ChampContenu, { avecContenu } from '@/components/gestion/ChampContenu';
 import Variantes from '@/components/gestion/Variantes';
 import CadrageImage from '@/components/CadrageImage';
+
+// Éditeur de la page détaillée (le même que dans l'admin du site)
+const EditeurFiche = nextDynamic(() => import('@/components/admin/EditeurFiche'), { ssr: false });
 
 // Une seule promotion à la fois (comme dans l'admin du site)
 type TypePromo = 'aucune' | 'remise' | 'lot' | 'degressif' | 'premieres';
@@ -129,6 +133,8 @@ export default function FicheProduit() {
   const [p, setP] = useState<Produit | null>(null);
   const [variantes, setVariantes] = useState<Variante[]>([]);
   const [fiche, setFiche] = useState<Fiche | null | undefined>(undefined);
+  const [fichesVariantes, setFichesVariantes] = useState<Record<string, FicheVariante>>({});
+  const [editeur, setEditeur] = useState<{ slugsPris: string[] } | null>(null);
   const [saisie, setSaisie] = useState<Saisie | null>(null);
   const [introuvable, setIntrouvable] = useState(false);
   const [erreur, setErreur] = useState('');
@@ -148,8 +154,13 @@ export default function FicheProduit() {
     if (!a.data) { setIntrouvable(true); return; }
     const prod = a.data as Produit;
     setP(prod);
-    setVariantes((b.data as Variante[]) ?? []);
+    const vs = (b.data as Variante[]) ?? [];
+    setVariantes(vs);
     if (!f.error) setFiche((f.data as Fiche) ?? null);
+    if (vs.length) {
+      const fv = await supabase.from('fiches_variantes').select('*').in('variant_id', vs.map((v) => v.id));
+      if (!fv.error) setFichesVariantes(Object.fromEntries(((fv.data as FicheVariante[]) ?? []).map((x) => [x.variant_id, x])));
+    }
     setSaisie((s) => (garderSaisie && s ? s : depuis(prod)));
   }, [id]);
   useEffect(() => {
@@ -251,6 +262,14 @@ export default function FicheProduit() {
     const ligne = (r.donnees as Fiche[] | null)?.[0];
     if (ligne) { setFiche(ligne); notifier({ type: 'ok', texte: ligne.publiee ? 'Page détaillée en ligne' : 'Page détaillée retirée du site' }); }
     else { notifier({ type: 'info', texte: 'La fiche a été modifiée ailleurs entre-temps : rechargée, réessayez.' }); void charger(true); }
+  }
+
+  // Ouvre l'éditeur de la page détaillée (adresses déjà prises par les autres fiches)
+  async function ouvrirEditeur() {
+    const r = await executer('Ouverture de la page détaillée', () => reponse(supabase.from('fiches_produits').select('product_id, slug')));
+    if (!r.ok) return;
+    const slugs = ((r.donnees as { product_id: string; slug: string }[]) ?? []).filter((x) => String(x.product_id) !== String(p!.id)).map((x) => x.slug);
+    setEditeur({ slugsPris: slugs });
   }
 
   async function supprimer() {
@@ -428,15 +447,15 @@ export default function FicheProduit() {
               {fiche.publiee ? 'Voir la page' : 'Aperçu'} <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
             </a>
           )}
-          {role === 'admin' && (
-            <Link href="/admin" className={`flex min-h-[44px] items-center justify-center gap-1.5 rounded-2xl border border-[#E3D6C4] text-[13.5px] font-bold ${fiche ? '' : 'col-span-2'}`}>
-              {fiche ? 'Modifier les textes' : 'Créer la page'} <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
-            </Link>
+          {modifiable && (
+            <button type="button" disabled={!enLigne || fiche === undefined} onClick={ouvrirEditeur} className={`flex min-h-[44px] items-center justify-center gap-1.5 rounded-2xl bg-olivier text-[13.5px] font-bold text-lin disabled:opacity-40 ${fiche ? '' : 'col-span-2'}`}>
+              {fiche ? 'Modifier la page' : 'Créer la page'}
+            </button>
           )}
         </div>
       </Carte>
 
-      <Variantes p={p} variantes={variantes} recharger={() => { void charger(true); }} />
+      <Variantes p={p} variantes={variantes} ficheProduit={fiche ?? null} fichesVariantes={fichesVariantes} recharger={() => { void charger(true); }} />
 
       {role === 'admin' && (
         <div className="mb-3 mt-6">
@@ -496,6 +515,15 @@ export default function FicheProduit() {
         />
       )}
       {cadrage && <CadrageImage src={cadrage} onAnnuler={fermerCadrage} onValider={photo} />}
+      {editeur && (
+        <EditeurFiche
+          produit={p}
+          fiche={fiche ?? null}
+          slugsPris={editeur.slugsPris}
+          onFermer={() => { setEditeur(null); void charger(true); }}
+          onEnregistre={(f) => setFiche(f)}
+        />
+      )}
     </>
   );
 }

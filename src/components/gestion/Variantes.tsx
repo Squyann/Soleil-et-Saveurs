@@ -3,10 +3,12 @@
 // que l'admin du site : champ vide = valeur du produit (prix, unité, remise,
 // stock). Chaque modification vérifie que la variante n'a pas changé ailleurs.
 import { useState } from 'react';
-import { ArrowDown, ArrowUp, Camera, Minus, Pencil, Plus } from 'lucide-react';
+import nextDynamic from 'next/dynamic';
+import { ArrowDown, ArrowUp, Camera, FileText, Minus, Pencil, Plus } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { formatPrix, libelleContenance, libelleUnite } from '@/lib/format';
-import { contenanceSaisie, UNITES } from '@/lib/variantes';
+import { contenanceSaisie, UNITES, type Variante as VarianteSite } from '@/lib/variantes';
+import { rubriquesPropres, type Fiche, type FicheVariante } from '@/lib/fiches';
 import { ajusterStock, enregistrerProduit, enregistrerVariante, estIllimite, STOCK_ILLIMITE, stockLisible, type Produit, type Variante } from '@/lib/gestion/produits';
 import { reponse } from '@/lib/gestion/memoire';
 import { useGestion } from './AppliGestion';
@@ -17,10 +19,15 @@ import CadrageImage from '@/components/CadrageImage';
 import ChampContenu, { avecContenu } from './ChampContenu';
 import Regroupement from './Regroupement';
 
+// Fiche propre d'une variante (le même éditeur que dans l'admin du site)
+const EditeurFicheVariante = nextDynamic(() => import('@/components/admin/EditeurFicheVariante'), { ssr: false });
+
 const texte = (v: unknown) => (v == null ? '' : String(v).replace('.', ','));
 const nombre = (s: string) => { const n = Number(s.replace(',', '.').trim()); return s.trim() === '' ? null : Number.isFinite(n) ? n : NaN; };
 
-export default function Variantes({ p, variantes, recharger }: { p: Produit; variantes: Variante[]; recharger: () => void }) {
+export default function Variantes({ p, variantes, ficheProduit, fichesVariantes, recharger }: {
+  p: Produit; variantes: Variante[]; ficheProduit: Fiche | null; fichesVariantes: Record<string, FicheVariante>; recharger: () => void;
+}) {
   const { peut, executer, enLigne, notifier } = useGestion();
   const modifiable = peut('catalogue');
   const [edition, setEdition] = useState<Variante | 'nouvelle' | null>(null);
@@ -87,7 +94,7 @@ export default function Variantes({ p, variantes, recharger }: { p: Produit; var
                 <span className="min-w-0 flex-1">
                   <b className={`block text-[14.5px] ${v.actif ? '' : 'text-[#8C877E]'}`}>{!v.actif && <span className="mr-1.5 rounded-full bg-[#7D776E] px-1.5 align-middle text-[11px] font-extrabold uppercase tracking-wide text-white">Masquée</span>}{v.nom}</b>
                   <span className="text-[12.5px] text-olivier-gris">
-                    {[formatPrix(Number(v.prix ?? p.price)) + (v.prix == null ? ' (prix du produit)' : ''), (v.unite && v.unite !== p.unite) || libelleContenance(v) ? `vendue ${libelleUnite(v.unite || p.unite, libelleContenance(v) ? v : null)}` : null, v.promotion ? `−${v.promotion} %` : null, principale?.id === v.id ? 'produit principal' : null, v.source_product_id ? 'regroupée' : null].filter(Boolean).join(' · ')}
+                    {[formatPrix(Number(v.prix ?? p.price)) + (v.prix == null ? ' (prix du produit)' : ''), (v.unite && v.unite !== p.unite) || libelleContenance(v) ? `vendue ${libelleUnite(v.unite || p.unite, libelleContenance(v) ? v : null)}` : null, v.promotion ? `−${v.promotion} %` : null, principale?.id === v.id ? 'produit principal' : null, v.source_product_id ? 'regroupée' : null, fichesVariantes[v.id] ? 'fiche propre' : null].filter(Boolean).join(' · ')}
                   </span>
                 </span>
                 {modifiable && (
@@ -142,6 +149,8 @@ export default function Variantes({ p, variantes, recharger }: { p: Produit; var
         <EditionVariante
           p={p}
           v={edition === 'nouvelle' ? null : edition}
+          ficheProduit={ficheProduit}
+          ficheVariante={edition === 'nouvelle' ? null : fichesVariantes[edition.id] ?? null}
           ordreSuivant={liste.length ? Math.max(...liste.map((x) => x.ordre)) + 1 : 0}
           fermer={() => setEdition(null)}
           apres={(message) => { setEdition(null); notifier({ type: 'ok', texte: message }); recharger(); }}
@@ -159,9 +168,11 @@ export default function Variantes({ p, variantes, recharger }: { p: Produit; var
   );
 }
 
-function EditionVariante({ p, v, ordreSuivant, fermer, apres, conflit }: {
-  p: Produit; v: Variante | null; ordreSuivant: number; fermer: () => void; apres: (message: string) => void; conflit: () => void;
+function EditionVariante({ p, v, ficheProduit, ficheVariante, ordreSuivant, fermer, apres, conflit }: {
+  p: Produit; v: Variante | null; ficheProduit: Fiche | null; ficheVariante: FicheVariante | null; ordreSuivant: number; fermer: () => void; apres: (message: string) => void; conflit: () => void;
 }) {
+  const [editeurFiche, setEditeurFiche] = useState(false);
+  const [ficheV, setFicheV] = useState<FicheVariante | null>(ficheVariante);
   const { executer, enLigne } = useGestion();
   const [nom, setNom] = useState(v?.nom ?? '');
   const [prix, setPrix] = useState(texte(v?.prix));
@@ -358,6 +369,13 @@ function EditionVariante({ p, v, ordreSuivant, fermer, apres, conflit }: {
             )}
           </div>
         )}
+        {v && (
+          <button type="button" disabled={!enLigne} onClick={() => setEditeurFiche(true)} className="flex min-h-[48px] w-full items-center gap-2 rounded-2xl border border-[#E3D6C4] px-3.5 text-left text-[13.5px] font-bold disabled:opacity-40">
+            <FileText className="h-4 w-4 flex-none" aria-hidden="true" />
+            <span className="flex-1">Fiche détaillée de la variante</span>
+            <span className="text-[12px] font-semibold text-olivier-gris">{ficheV ? `${rubriquesPropres(ficheV)} rubrique${rubriquesPropres(ficheV) > 1 ? 's' : ''} propre${rubriquesPropres(ficheV) > 1 ? 's' : ''}` : 'reprend le produit'}</span>
+          </button>
+        )}
         {v?.source_product_id && (
           degroupement ? (
             <div className="rounded-2xl bg-lin p-3 text-[13px] leading-relaxed">
@@ -370,6 +388,16 @@ function EditionVariante({ p, v, ordreSuivant, fermer, apres, conflit }: {
           ) : (
             <button type="button" disabled={envoi || !enLigne} onClick={() => setDegroupement(true)} className="min-h-[44px] w-full text-[13.5px] font-bold text-brique disabled:opacity-40">Dégrouper (remettre l’article d’origine)</button>
           )
+        )}
+        {editeurFiche && v && (
+          <EditeurFicheVariante
+            produit={p}
+            variante={{ ...v, image_url: image } as unknown as VarianteSite}
+            ficheProduit={ficheProduit}
+            ficheVariante={ficheV}
+            onFermer={() => setEditeurFiche(false)}
+            onEnregistre={(fv) => setFicheV(fv)}
+          />
         )}
         {cadrage && <CadrageImage src={cadrage} onAnnuler={() => { URL.revokeObjectURL(cadrage); setCadrage(null); }} onValider={enregistrerPhoto} />}
         {suppression && <p className="text-[12px] text-olivier-gris">Définitif. Pour la retirer temporairement, préférez « Masquer du site ». Les commandes passées ne sont pas touchées.</p>}
