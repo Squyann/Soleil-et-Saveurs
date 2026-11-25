@@ -25,6 +25,8 @@ export type Produit = {
   actif: boolean;
   contenance: number | null;
   contenance_unite: string | null;
+  pas_g: number | null;
+  variantes_cumulables: boolean | null;
   updated_at: string;
 };
 
@@ -39,13 +41,18 @@ export type Variante = {
   stock: number | null;
   actif: boolean;
   image_url: string | null;
+  pas_g: number | null;
+  description: string | null;
+  contenance: number | null;
+  contenance_unite: string | null;
+  source_product_id: string | null;
   updated_at: string;
 };
 
-export const COLONNES_PRODUIT = 'id, name, description, price, image_url, category, stock, unite, provenance, promotion, seuil_achat, quantite_offerte, seuil_promo_qte, prix_promo, premieres_offertes, actif, contenance, contenance_unite, updated_at';
-export const COLONNES_VARIANTE = 'id, product_id, nom, ordre, prix, unite, promotion, stock, actif, image_url, updated_at';
+export const COLONNES_PRODUIT = 'id, name, description, price, image_url, category, stock, unite, provenance, promotion, seuil_achat, quantite_offerte, seuil_promo_qte, prix_promo, premieres_offertes, actif, contenance, contenance_unite, pas_g, variantes_cumulables, updated_at';
+export const COLONNES_VARIANTE = 'id, product_id, nom, ordre, prix, unite, promotion, stock, actif, image_url, pas_g, description, contenance, contenance_unite, source_product_id, updated_at';
 
-export const CATEGORIES = ['Fruits', 'Légumes', 'Panier'];
+export const CATEGORIES = ['Fruits', 'Légumes', 'Épicerie', 'Panier'];
 
 // Sur le site, « illimité » est enregistré comme un très grand nombre
 export const STOCK_ILLIMITE = 99999;

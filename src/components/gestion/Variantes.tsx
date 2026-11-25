@@ -5,15 +5,17 @@
 import { useState } from 'react';
 import { ArrowDown, ArrowUp, Camera, Minus, Pencil, Plus } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { formatPrix } from '@/lib/format';
-import { UNITES } from '@/lib/variantes';
-import { ajusterStock, enregistrerVariante, estIllimite, STOCK_ILLIMITE, stockLisible, type Produit, type Variante } from '@/lib/gestion/produits';
+import { formatPrix, libelleContenance, libelleUnite } from '@/lib/format';
+import { contenanceSaisie, UNITES } from '@/lib/variantes';
+import { ajusterStock, enregistrerProduit, enregistrerVariante, estIllimite, STOCK_ILLIMITE, stockLisible, type Produit, type Variante } from '@/lib/gestion/produits';
 import { reponse } from '@/lib/gestion/memoire';
 import { useGestion } from './AppliGestion';
 import { Carte } from './Elements';
 import Feuille from './Feuille';
 import FeuilleStock from './FeuilleStock';
 import CadrageImage from '@/components/CadrageImage';
+import ChampContenu, { avecContenu } from './ChampContenu';
+import Regroupement from './Regroupement';
 
 const texte = (v: unknown) => (v == null ? '' : String(v).replace('.', ','));
 const nombre = (s: string) => { const n = Number(s.replace(',', '.').trim()); return s.trim() === '' ? null : Number.isFinite(n) ? n : NaN; };
@@ -23,7 +25,27 @@ export default function Variantes({ p, variantes, recharger }: { p: Produit; var
   const modifiable = peut('catalogue');
   const [edition, setEdition] = useState<Variante | 'nouvelle' | null>(null);
   const [stock, setStock] = useState<Variante | null>(null);
+  const [regroupement, setRegroupement] = useState(false);
   const liste = [...variantes].sort((a, b) => a.ordre - b.ordre);
+  const cumulables = p.variantes_cumulables !== false;
+  const memeNom = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
+  const principale = liste.find((v) => memeNom(v.nom, p.name));
+
+  // Choix du client : plusieurs variantes dans le panier, ou une seule
+  async function changerMode(valeur: boolean) {
+    const r = await executer('Choix des variantes', () => enregistrerProduit(p.id, p.updated_at, { variantes_cumulables: valeur }));
+    if (!r.ok) return;
+    if (!r.donnees.ok) notifier({ type: 'info', texte: 'Le produit a été modifié ailleurs entre-temps : rechargé, réessayez.' });
+    else notifier({ type: 'ok', texte: valeur ? 'Plusieurs variantes possibles dans une commande' : 'Une seule variante par commande' });
+    recharger();
+  }
+
+  // Le produit principal lui-même proposé parmi les choix (ex. « entier »)
+  async function ajouterPrincipale() {
+    const ordre = liste.length ? Math.min(...liste.map((v) => v.ordre ?? 0)) - 1 : 0;
+    const r = await executer(`Ajout de ${p.name}`, () => reponse(supabase.from('product_variants').insert([{ product_id: String(p.id), nom: p.name.trim(), ordre }]).select('id')), { reussite: `« ${p.name.trim()} » ajouté parmi les choix` });
+    if (r.ok) recharger();
+  }
 
   async function plusMoins(v: Variante, delta: number) {
     const r = await executer(`Stock de ${v.nom}`, () => ajusterStock(p.id, v.id, delta));
@@ -65,7 +87,7 @@ export default function Variantes({ p, variantes, recharger }: { p: Produit; var
                 <span className="min-w-0 flex-1">
                   <b className={`block text-[14.5px] ${v.actif ? '' : 'text-[#8C877E]'}`}>{!v.actif && <span className="mr-1.5 rounded-full bg-[#7D776E] px-1.5 align-middle text-[11px] font-extrabold uppercase tracking-wide text-white">Masquée</span>}{v.nom}</b>
                   <span className="text-[12.5px] text-olivier-gris">
-                    {[formatPrix(Number(v.prix ?? p.price)) + (v.prix == null ? ' (prix du produit)' : ''), v.unite && v.unite !== p.unite ? `vendue ${v.unite === 'g' ? 'au poids' : `à la ${v.unite}`}` : null, v.promotion ? `−${v.promotion} %` : null].filter(Boolean).join(' · ')}
+                    {[formatPrix(Number(v.prix ?? p.price)) + (v.prix == null ? ' (prix du produit)' : ''), (v.unite && v.unite !== p.unite) || libelleContenance(v) ? `vendue ${libelleUnite(v.unite || p.unite, libelleContenance(v) ? v : null)}` : null, v.promotion ? `−${v.promotion} %` : null, principale?.id === v.id ? 'produit principal' : null, v.source_product_id ? 'regroupée' : null].filter(Boolean).join(' · ')}
                   </span>
                 </span>
                 {modifiable && (
@@ -90,6 +112,31 @@ export default function Variantes({ p, variantes, recharger }: { p: Produit; var
           ))}
         </ul>
       )}
+
+      {modifiable && liste.length > 0 && (
+        <div className="mt-3 space-y-2 border-t border-[#F0E7DA] pt-3">
+          <p className="text-[12.5px] font-bold text-olivier-gris">Choix du client</p>
+          <div className="grid grid-cols-2 gap-1 rounded-2xl bg-[#EFE6D8] p-1" role="radiogroup" aria-label="Choix du client">
+            {([[true, 'Plusieurs variantes', 'ex. 2 laitues + 1 batavia'], [false, 'Une seule', 'ex. entier OU préparé']] as const).map(([valeur, titre, exemple]) => (
+              <button key={titre} type="button" role="radio" aria-checked={cumulables === valeur} disabled={!enLigne} onClick={() => valeur !== cumulables && changerMode(valeur)}
+                className={`min-h-[52px] rounded-xl px-2 text-[13px] font-bold leading-tight ${cumulables === valeur ? 'bg-white shadow-sm' : 'text-olivier-gris'}`}>
+                {titre}<span className="block text-[11.5px] font-medium text-olivier-gris">{exemple}</span>
+              </button>
+            ))}
+          </div>
+          {!principale && (
+            <button type="button" disabled={!enLigne} onClick={ajouterPrincipale} className="flex min-h-[48px] w-full items-center justify-between rounded-2xl border border-[#E3D6C4] px-3.5 text-left text-[13.5px] font-bold disabled:opacity-40">
+              Ajouter « {p.name.trim()} » lui-même comme choix <Plus className="h-4 w-4 flex-none" aria-hidden="true" />
+            </button>
+          )}
+        </div>
+      )}
+      {modifiable && (
+        <button type="button" disabled={!enLigne} onClick={() => setRegroupement(true)} className="mt-2 flex min-h-[48px] w-full items-center justify-between rounded-2xl border border-dashed border-[#D9CBB8] px-3.5 text-left text-[13.5px] font-bold disabled:opacity-40">
+          Regrouper un produit existant ici <Plus className="h-4 w-4 flex-none" aria-hidden="true" />
+        </button>
+      )}
+      {regroupement && <Regroupement p={p} variantes={liste} fermer={() => setRegroupement(false)} apres={() => { setRegroupement(false); recharger(); }} />}
 
       {edition && (
         <EditionVariante
@@ -120,6 +167,10 @@ function EditionVariante({ p, v, ordreSuivant, fermer, apres, conflit }: {
   const [prix, setPrix] = useState(texte(v?.prix));
   const [unite, setUnite] = useState(v?.unite ?? '');
   const [remise, setRemise] = useState(v?.promotion ? texte(v.promotion) : '');
+  const [contenu, setContenu] = useState({ quantite: texte(v?.contenance), unite: v?.contenance_unite ?? 'g' });
+  const [pasG, setPasG] = useState(v?.pas_g ? String(v.pas_g) : '');
+  const [description, setDescription] = useState(v?.description ?? '');
+  const [degroupement, setDegroupement] = useState(false);
   const [modeStock, setModeStock] = useState<'partage' | 'illimite' | 'quantite'>(v?.stock == null ? 'partage' : estIllimite(v.stock) ? 'illimite' : 'quantite');
   const [stock, setStock] = useState(v?.stock != null && !estIllimite(v.stock) ? texte(v.stock) : '');
   const [erreur, setErreur] = useState('');
@@ -171,9 +222,14 @@ function EditionVariante({ p, v, ordreSuivant, fermer, apres, conflit }: {
     if (r !== null && (Number.isNaN(r) || r < 0 || r > 90 || !Number.isInteger(r))) return setErreur('Remise invalide (0 à 90 %).');
     const s = modeStock === 'partage' ? null : modeStock === 'illimite' ? STOCK_ILLIMITE : nombre(stock);
     if (modeStock === 'quantite' && (s == null || Number.isNaN(s) || s < 0)) return setErreur('Stock invalide.');
+    const c = nombre(contenu.quantite);
+    if (avecContenu(uniteEffective) && c != null && (Number.isNaN(c) || c <= 0 || c > 100000)) return setErreur('Contenu invalide.');
+    const pas = uniteEffective === 'g' ? nombre(pasG) : null;
+    if (pas != null && (Number.isNaN(pas) || pas < 10 || pas > 5000 || !Number.isInteger(pas))) return setErreur('Tranche de vente invalide (10 à 5000 g).');
     const champs = {
       nom: nom.trim().slice(0, 80), prix: vp == null ? null : Math.round(vp * 100) / 100, unite: unite || null,
-      promotion: r || null, stock: s,
+      promotion: r || null, stock: s, description: description.trim().slice(0, 1000) || null, pas_g: pas,
+      ...contenanceSaisie(uniteEffective, contenu.quantite, contenu.unite),
     };
     setEnvoi(true);
     if (!v) {
@@ -197,6 +253,19 @@ function EditionVariante({ p, v, ordreSuivant, fermer, apres, conflit }: {
     if (!res.ok) return;
     if (res.donnees.ok) apres(`${v.nom} ${v.actif ? 'masquée du site' : 'visible sur le site'}`);
     else conflit();
+  }
+
+  // Annule un regroupement : la variante est retirée et le produit d'origine
+  // est réactivé, tel qu'il était
+  async function degrouper() {
+    if (!v?.source_product_id) return;
+    setEnvoi(true);
+    const res = await executer(`Dégroupement de ${v.nom}`, async () => {
+      await reponse(supabase.from('products').update({ actif: true }).eq('id', v.source_product_id!).select('id'));
+      await reponse(supabase.from('product_variants').delete().eq('id', v.id).select('id'));
+    });
+    setEnvoi(false);
+    if (res.ok) apres(`« ${v.nom} » dégroupé : l’article d’origine est de nouveau en ligne`);
   }
 
   async function supprimer() {
@@ -248,6 +317,18 @@ function EditionVariante({ p, v, ordreSuivant, fermer, apres, conflit }: {
             <label htmlFor="v-remise" className={libelle}>Remise propre (%)</label>
             <input id="v-remise" inputMode="numeric" value={remise} onChange={(e) => setRemise(e.target.value.replace(/\D/g, ''))} placeholder="celle du produit" className={champ} />
           </div>
+          {uniteEffective === 'g' && (
+            <div>
+              <label htmlFor="v-pas" className={libelle}>Par tranche de (g)</label>
+              <input id="v-pas" inputMode="numeric" value={pasG} onChange={(e) => setPasG(e.target.value.replace(/\D/g, ''))} placeholder={`${p.pas_g ?? 100} (produit)`} className={champ} />
+            </div>
+          )}
+        </div>
+        <ChampContenu id="v-contenu" unite={uniteEffective} quantite={contenu.quantite} uniteContenu={contenu.unite} changer={(q, u) => { setErreur(''); setContenu({ quantite: q, unite: u }); }}
+          indication={uniteEffective === (p.unite || 'pièce') && libelleContenance(p) ? `(vide : celui du produit, ${libelleContenance(p)})` : undefined} />
+        <div>
+          <label htmlFor="v-description" className={libelle}>Petite description (facultatif)</label>
+          <textarea id="v-description" rows={2} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Informations propres à cette variante" className={champ} />
         </div>
         <fieldset>
           <legend className={libelle}>Stock</legend>
@@ -276,6 +357,19 @@ function EditionVariante({ p, v, ordreSuivant, fermer, apres, conflit }: {
               <button type="button" disabled={envoi || !enLigne} onClick={() => setSuppression(true)} className="min-h-[48px] rounded-2xl border border-[#E3D6C4] text-[13.5px] font-bold text-brique disabled:opacity-40">Supprimer</button>
             )}
           </div>
+        )}
+        {v?.source_product_id && (
+          degroupement ? (
+            <div className="rounded-2xl bg-lin p-3 text-[13px] leading-relaxed">
+              La variante est retirée et l’article d’origine « {v.nom} » est remis en ligne, tel qu’il était.
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                <button type="button" onClick={() => setDegroupement(false)} className="min-h-[44px] rounded-xl border border-olivier font-bold">Annuler</button>
+                <button type="button" disabled={envoi || !enLigne} onClick={degrouper} className="min-h-[44px] rounded-xl bg-olivier font-bold text-lin disabled:opacity-40">Dégrouper</button>
+              </div>
+            </div>
+          ) : (
+            <button type="button" disabled={envoi || !enLigne} onClick={() => setDegroupement(true)} className="min-h-[44px] w-full text-[13.5px] font-bold text-brique disabled:opacity-40">Dégrouper (remettre l’article d’origine)</button>
+          )
         )}
         {cadrage && <CadrageImage src={cadrage} onAnnuler={() => { URL.revokeObjectURL(cadrage); setCadrage(null); }} onValider={enregistrerPhoto} />}
         {suppression && <p className="text-[12px] text-olivier-gris">Définitif. Pour la retirer temporairement, préférez « Masquer du site ». Les commandes passées ne sont pas touchées.</p>}

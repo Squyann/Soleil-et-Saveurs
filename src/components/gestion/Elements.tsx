@@ -71,3 +71,12 @@ export function dateCourte(iso: string | null | undefined) {
   const d = new Date(iso.length === 10 ? `${iso}T12:00:00` : iso);
   return d.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Europe/Paris' });
 }
+
+// Interrupteur (oui / non) aux couleurs de l'appli
+export function Bascule({ on, libelle, changer, desactive }: { on: boolean; libelle: string; changer: () => void; desactive?: boolean }) {
+  return (
+    <button type="button" role="switch" aria-checked={on} aria-label={libelle} disabled={desactive} onClick={changer} className={`relative h-8 w-[52px] flex-none rounded-full transition-colors disabled:opacity-40 ${on ? 'bg-olivier' : 'bg-[#C9BBAA]'}`}>
+      <span className={`absolute top-1 h-6 w-6 rounded-full bg-white transition-all ${on ? 'right-1' : 'left-1'}`} />
+    </button>
+  );
+}
