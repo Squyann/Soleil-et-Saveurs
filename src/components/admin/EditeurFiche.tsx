@@ -84,13 +84,13 @@ async function supprimerPhotos(urls: string[]) {
 // recréée à chaque frappe et perdrait le focus et son état ouvert/fermé)
 function Section({ titre, rempli, ouvert = false, children }: { titre: string; rempli: boolean; ouvert?: boolean; children: React.ReactNode }) {
   return (
-    <details open={ouvert} className="group bg-white rounded-2xl border border-slate-100 shadow-sm">
-      <summary className="list-none [&::-webkit-details-marker]:hidden cursor-pointer flex items-center justify-between gap-3 px-4 py-3.5 sm:px-5">
-        <span className="flex items-center gap-2.5 text-[11px] font-black uppercase tracking-widest text-slate-700">
-          <span className={`w-2 h-2 rounded-full ${rempli ? 'bg-green-500' : 'bg-slate-200'}`} />
+    <details open={ouvert} className="group bg-white rounded-[18px] border border-[#E3D6C4]">
+      <summary className="list-none [&::-webkit-details-marker]:hidden cursor-pointer flex items-center justify-between gap-3 px-4 py-3.5 min-h-[52px] sm:px-5">
+        <span className="flex items-center gap-2.5 text-[15px] font-extrabold text-olivier">
+          <span className={`w-2.5 h-2.5 rounded-full ${rempli ? 'bg-[#166534]' : 'bg-[#E3D6C4]'}`} />
           {titre}
         </span>
-        <span className="text-slate-300 font-black text-lg transition-transform group-open:rotate-45">+</span>
+        <span className="text-olivier-pale font-black text-xl transition-transform group-open:rotate-45">+</span>
       </summary>
       <div className="px-4 pb-4 sm:px-5 sm:pb-5">{children}</div>
     </details>
@@ -222,12 +222,24 @@ export default function EditeurFiche({ produit, fiche, slugsPris, onFermer, onEn
             ingredients: lignes(r.ingredients), etapes: lignes(r.etapes), photo: r.photo,
           })),
       };
-      const { data, error } = await supabase
-        .from('fiches_produits')
-        .upsert(donnees, { onConflict: 'product_id' })
-        .select()
-        .single();
-      if (error) throw error;
+      // Fiche existante : n'écrit que si personne ne l'a modifiée depuis son
+      // ouverture (site ou appli) ; sinon rien n'est écrasé
+      let data: unknown = null;
+      if (ficheEnregistree) {
+        let requete = supabase.from('fiches_produits').update(donnees).eq('product_id', produit.id);
+        if (ficheEnregistree.updated_at) requete = requete.eq('updated_at', ficheEnregistree.updated_at);
+        const res = await requete.select();
+        if (res.error) throw res.error;
+        if (!res.data?.length) {
+          setMessage({ type: 'erreur', texte: 'Cette page a été modifiée ailleurs (site ou appli) pendant votre saisie : rien n’a été écrasé. Copiez vos textes si besoin, fermez puis rouvrez la page.' });
+          return;
+        }
+        data = res.data[0];
+      } else {
+        const res = await supabase.from('fiches_produits').upsert(donnees, { onConflict: 'product_id' }).select().single();
+        if (res.error) throw res.error;
+        data = res.data;
+      }
 
       // Photos retirées de la fiche : supprimées du stockage
       const avant = ficheEnregistree ? photosUtilisees(versFormulaire(ficheEnregistree, produit.name)) : [];
@@ -258,26 +270,26 @@ export default function EditeurFiche({ produit, fiche, slugsPris, onFermer, onEn
     }
   }
 
-  const champ = 'w-full bg-slate-50 border border-transparent focus:border-terre-cuite/40 focus:bg-white rounded-xl p-3 text-sm outline-none transition-colors';
-  const libelle = 'text-[9px] font-black uppercase text-slate-400 tracking-widest mb-1.5 block';
+  const champ = 'w-full rounded-xl border-[1.5px] border-[#DDD0BF] bg-white p-3 text-[15px] leading-relaxed text-olivier outline-none focus:border-terre-cuite transition-colors';
+  const libelle = 'mb-1.5 block text-[13px] font-bold text-olivier-gris';
+  const aide = 'mb-2 text-xs leading-relaxed text-olivier-gris';
 
   return (
     <div className="fixed inset-0 z-[150] flex items-stretch sm:items-center justify-center sm:p-4 bg-black/50 backdrop-blur-sm animate-in fade-in">
-      <div className="relative bg-[#F6F1EA] w-full sm:max-w-3xl h-full sm:h-[92vh] sm:rounded-[2rem] shadow-2xl flex flex-col overflow-hidden">
+      <div className="relative bg-lin text-olivier w-full sm:max-w-3xl h-full sm:h-[92vh] sm:rounded-[28px] shadow-2xl flex flex-col overflow-hidden">
         {/* EN-TÊTE */}
-        <div className="flex items-center gap-3 px-4 py-3 sm:px-6 sm:py-4 bg-white border-b border-slate-100">
-          <div className="w-14 h-10 rounded-lg overflow-hidden bg-slate-100 shrink-0">
+        <div className="flex items-center gap-3 px-4 py-3 sm:px-6 sm:py-4 bg-white border-b border-[#F0E7DA]">
+          <div className="w-14 h-14 rounded-xl overflow-hidden bg-lin shrink-0">
             {produit.image_url && <img src={produit.image_url} alt="" className="w-full h-full object-cover" />}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Page détaillée</p>
-            <p className="font-black uppercase italic text-slate-800 truncate">{produit.name}</p>
+            <p className="text-xs font-extrabold uppercase tracking-[0.08em] text-brique">
+              Page détaillée · {!ficheEnregistree ? 'nouvelle' : publiee ? 'en ligne' : 'hors ligne'}
+            </p>
+            <p className="titre text-[22px] sm:text-[26px] leading-tight truncate">{produit.name}</p>
           </div>
-          <span className={`hidden sm:inline-block text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full ${!ficheEnregistree ? 'bg-slate-100 text-slate-400' : publiee ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
-            {!ficheEnregistree ? 'Nouvelle' : publiee ? 'En ligne' : 'Brouillon'}
-          </span>
-          <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 bg-slate-50 px-2.5 py-1 rounded-full" title="Rubriques remplies">{remplies}/{total}</span>
-          <button onClick={fermer} aria-label="Fermer" className="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-100 text-slate-400 hover:bg-slate-200 shrink-0"><X className="w-4 h-4" /></button>
+          <p className="text-right text-[12px] leading-tight text-olivier-gris"><strong className="block text-lg text-olivier">{remplies}/{total}</strong>rubriques</p>
+          <button onClick={fermer} aria-label="Fermer" className="w-10 h-10 flex items-center justify-center rounded-xl bg-lin text-olivier-doux hover:bg-[#EDE3D5] shrink-0"><X className="w-5 h-5" /></button>
         </div>
 
         {/* CONTENU */}
@@ -285,71 +297,73 @@ export default function EditeurFiche({ produit, fiche, slugsPris, onFermer, onEn
           <Section titre="Général" rempli={!!form.slug} ouvert>
             <div className="space-y-3">
               <div>
-                <label className={libelle}>Titre complet (facultatif — sinon le nom du produit)</label>
+                <label className={libelle}>Titre complet (facultatif, sinon le nom du produit)</label>
                 <input className={champ} value={form.titre_complet} placeholder={produit.name} onChange={e => maj('titre_complet', e.target.value)} />
               </div>
               <div>
                 <label className={libelle}>Phrase d’accroche</label>
-                <input className={champ} value={form.accroche} placeholder="Ex : Juteux et parfumé, cueilli à maturité." onChange={e => maj('accroche', e.target.value)} maxLength={200} />
+                <input className={champ} value={form.accroche} placeholder="Ex. : Juteux et parfumé, cueilli à maturité." onChange={e => maj('accroche', e.target.value)} maxLength={200} />
               </div>
               <div>
                 <label className={libelle}>Adresse de la page</label>
-                <div className={`flex items-center rounded-xl bg-slate-50 border ${erreurSlug ? 'border-red-300' : 'border-transparent'} overflow-hidden`}>
-                  <span className="pl-3 text-xs text-slate-400 font-bold whitespace-nowrap">soleiletsaveurs.fr/produits/</span>
+                <div className={`flex items-center rounded-xl bg-white border-[1.5px] ${erreurSlug ? 'border-brique' : 'border-[#DDD0BF]'} overflow-hidden`}>
+                  <span className="pl-3 text-xs text-olivier-gris font-bold whitespace-nowrap">…/produits/</span>
                   <input
-                    className="flex-1 min-w-0 bg-transparent p-3 pl-0.5 text-sm font-bold outline-none"
+                    className="flex-1 min-w-0 bg-transparent p-3 pl-0.5 text-[15px] font-bold outline-none"
                     value={form.slug}
+                    autoCapitalize="none"
+                    autoCorrect="off"
                     onChange={e => maj('slug', e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))}
                     onBlur={e => maj('slug', creerSlug(e.target.value))}
                   />
                 </div>
                 {erreurSlug
-                  ? <p className="text-[10px] font-bold text-red-500 mt-1">{erreurSlug}</p>
-                  : ficheEnregistree && form.slug !== ficheEnregistree.slug && <p className="text-[10px] font-bold text-amber-600 mt-1">Attention : les liens déjà partagés vers l’ancienne adresse ne fonctionneront plus.</p>}
+                  ? <p className="text-xs font-bold text-brique mt-1">{erreurSlug}</p>
+                  : ficheEnregistree && form.slug !== ficheEnregistree.slug && <p className="text-xs font-bold text-brique mt-1">Attention : les liens déjà partagés vers l’ancienne adresse ne fonctionneront plus.</p>}
               </div>
             </div>
           </Section>
 
           <Section titre={`Photos (${form.photos.length + (produit.image_url ? 1 : 0)})`} rempli={form.photos.length > 0}>
-            <p className="text-[10px] text-slate-400 font-bold mb-3">La photo du catalogue est toujours affichée en premier (elle se change avec « Modifier » sur la carte du produit). Ajoutez jusqu’à {PHOTOS_MAX} photos supplémentaires.</p>
+            <p className={aide}>La photo du catalogue est toujours affichée en premier (elle se change sur la fiche du produit). Ajoutez jusqu’à {PHOTOS_MAX} photos supplémentaires.</p>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
               {produit.image_url && (
                 <div className="relative aspect-[3/2] rounded-xl overflow-hidden ring-2 ring-terre-cuite/40">
                   <img src={produit.image_url} alt="" className="w-full h-full object-cover" />
-                  <span className="absolute bottom-1.5 left-1.5 bg-white/90 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full">Catalogue</span>
+                  <span className="absolute bottom-1.5 left-1.5 bg-white/90 text-[11px] font-bold px-2 py-0.5 rounded-full">Catalogue</span>
                 </div>
               )}
               {form.photos.map((url, i) => (
-                <div key={url} className="relative aspect-[3/2] rounded-xl overflow-hidden bg-slate-100 group">
+                <div key={url} className="relative aspect-[3/2] rounded-xl overflow-hidden bg-[#EDE3D5]">
                   <img src={url} alt="" className="w-full h-full object-cover" />
                   <div className="absolute inset-x-0 bottom-0 flex justify-between p-1.5 bg-gradient-to-t from-black/50 to-transparent">
                     <div className="flex gap-1">
-                      <button type="button" onClick={() => maj('photos', deplacer(form.photos, i, -1))} disabled={i === 0} aria-label="Déplacer à gauche" className="w-7 h-7 rounded-lg bg-white/90 flex items-center justify-center disabled:opacity-30"><ArrowLeft className="w-3.5 h-3.5" /></button>
-                      <button type="button" onClick={() => maj('photos', deplacer(form.photos, i, 1))} disabled={i === form.photos.length - 1} aria-label="Déplacer à droite" className="w-7 h-7 rounded-lg bg-white/90 flex items-center justify-center disabled:opacity-30"><ArrowRight className="w-3.5 h-3.5" /></button>
+                      <button type="button" onClick={() => maj('photos', deplacer(form.photos, i, -1))} disabled={i === 0} aria-label="Déplacer à gauche" className="w-8 h-8 rounded-lg bg-white/90 flex items-center justify-center disabled:opacity-30"><ArrowLeft className="w-4 h-4" /></button>
+                      <button type="button" onClick={() => maj('photos', deplacer(form.photos, i, 1))} disabled={i === form.photos.length - 1} aria-label="Déplacer à droite" className="w-8 h-8 rounded-lg bg-white/90 flex items-center justify-center disabled:opacity-30"><ArrowRight className="w-4 h-4" /></button>
                     </div>
-                    <button type="button" onClick={() => maj('photos', form.photos.filter((_, j) => j !== i))} aria-label="Retirer la photo" className="w-7 h-7 rounded-lg bg-red-500 text-white flex items-center justify-center"><Trash2 className="w-3.5 h-3.5" /></button>
+                    <button type="button" onClick={() => maj('photos', form.photos.filter((_, j) => j !== i))} aria-label="Retirer la photo" className="w-8 h-8 rounded-lg bg-brique text-white flex items-center justify-center"><Trash2 className="w-4 h-4" /></button>
                   </div>
                 </div>
               ))}
               {form.photos.length < PHOTOS_MAX && (
-                <label className="relative aspect-[3/2] rounded-xl border-2 border-dashed border-slate-200 bg-white flex flex-col items-center justify-center gap-1 text-slate-300 hover:border-terre-cuite/40 hover:text-terre-cuite cursor-pointer transition-colors">
+                <label className="relative aspect-[3/2] rounded-xl border-2 border-dashed border-[#C9BBAA] bg-white flex flex-col items-center justify-center gap-1 text-olivier-pale hover:border-terre-cuite hover:text-terre-cuite cursor-pointer">
                   <ImagePlus className="w-6 h-6" />
-                  <span className="text-[9px] font-black uppercase tracking-widest">Ajouter</span>
+                  <span className="text-xs font-bold">Ajouter</span>
                   <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => choisirPhoto(e, 'galerie')} />
                 </label>
               )}
             </div>
           </Section>
 
-          {RUBRIQUES.map(({ cle, titre, aide }) => (
+          {RUBRIQUES.map(({ cle, titre, aide: texteAide }) => (
             <Section key={cle} titre={titre} rempli={!!(form[cle] as string).trim()} ouvert={cle === 'description'}>
-              <p className="text-[10px] text-slate-400 font-bold mb-2">{aide} Les retours à la ligne sont conservés.</p>
-              <textarea className={`${champ} min-h-[110px] leading-relaxed`} rows={cle === 'description' ? 6 : 4} value={form[cle] as string} onChange={e => maj(cle, e.target.value as any)} />
+              <p className={aide}>{texteAide} Les retours à la ligne sont conservés.</p>
+              <textarea className={`${champ} min-h-[110px]`} rows={cle === 'description' ? 6 : 4} value={form[cle] as string} onChange={e => maj(cle, e.target.value as never)} />
             </Section>
           ))}
 
           <Section titre="Saisonnalité" rempli={form.saison_mois.length > 0}>
-            <p className="text-[10px] text-slate-400 font-bold mb-3">Cochez les mois de saison. Pendant ces mois, la page affiche « De saison en ce moment ».</p>
+            <p className={aide}>Cochez les mois de saison. Pendant ces mois, la page affiche « De saison en ce moment ».</p>
             <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
               {MOIS.map((nom, i) => {
                 const m = i + 1;
@@ -358,54 +372,55 @@ export default function EditeurFiche({ produit, fiche, slugsPris, onFermer, onEn
                   <button
                     key={nom}
                     type="button"
+                    aria-pressed={actif}
                     onClick={() => maj('saison_mois', actif ? form.saison_mois.filter(x => x !== m) : [...form.saison_mois, m].sort((a, b) => a - b))}
-                    className={`py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${actif ? 'bg-green-600 text-white shadow' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}`}
+                    className={`py-2.5 rounded-xl text-xs font-extrabold ${actif ? 'bg-[#166534] text-white' : 'bg-white border border-[#E3D6C4] text-olivier-gris'}`}
                   >
                     {MOIS_COURTS[i]}
                   </button>
                 );
               })}
             </div>
-            <div className="flex gap-2 mt-3">
-              <button type="button" onClick={() => maj('saison_mois', MOIS.map((_, i) => i + 1))} className="text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-700">Toute l’année</button>
-              <span className="text-slate-200">·</span>
-              <button type="button" onClick={() => maj('saison_mois', [])} className="text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-700">Effacer</button>
+            <div className="flex gap-3 mt-3 text-[13px] font-bold text-olivier-gris">
+              <button type="button" onClick={() => maj('saison_mois', MOIS.map((_, i) => i + 1))} className="min-h-[36px] hover:text-olivier">Toute l’année</button>
+              <span aria-hidden="true" className="self-center">·</span>
+              <button type="button" onClick={() => maj('saison_mois', [])} className="min-h-[36px] hover:text-olivier">Effacer</button>
             </div>
           </Section>
 
           <Section titre={`Recettes (${form.recettes.length})`} rempli={form.recettes.some(r => r.titre.trim())}>
             <div className="space-y-3">
               {form.recettes.map((r, i) => (
-                <div key={i} className="rounded-2xl border border-slate-100 bg-slate-50/60 p-3 sm:p-4 space-y-2.5">
+                <div key={i} className="rounded-2xl border border-[#E3D6C4] bg-[#FBF6F0] p-3 space-y-2">
                   <div className="flex items-center gap-2">
                     <ChefHat className="w-4 h-4 text-terre-cuite shrink-0" />
-                    <input className={`${champ} font-bold bg-white`} placeholder="Titre de la recette (obligatoire)" value={r.titre} onChange={e => majRecette(i, { titre: e.target.value })} />
-                    <button type="button" onClick={() => maj('recettes', deplacer(form.recettes, i, -1))} disabled={i === 0} aria-label="Monter" className="w-8 h-8 shrink-0 rounded-lg bg-white flex items-center justify-center text-slate-400 disabled:opacity-30"><ArrowUp className="w-3.5 h-3.5" /></button>
-                    <button type="button" onClick={() => maj('recettes', deplacer(form.recettes, i, 1))} disabled={i === form.recettes.length - 1} aria-label="Descendre" className="w-8 h-8 shrink-0 rounded-lg bg-white flex items-center justify-center text-slate-400 disabled:opacity-30"><ArrowDown className="w-3.5 h-3.5" /></button>
-                    <button type="button" onClick={() => { if (confirm('Supprimer cette recette ?')) maj('recettes', form.recettes.filter((_, j) => j !== i)); }} aria-label="Supprimer la recette" className="w-8 h-8 shrink-0 rounded-lg bg-red-50 text-red-400 flex items-center justify-center"><Trash2 className="w-3.5 h-3.5" /></button>
+                    <input className={`${champ} font-bold`} placeholder="Titre de la recette (obligatoire)" value={r.titre} onChange={e => majRecette(i, { titre: e.target.value })} />
+                    <button type="button" onClick={() => maj('recettes', deplacer(form.recettes, i, -1))} disabled={i === 0} aria-label="Monter" className="w-9 h-9 shrink-0 rounded-lg bg-white flex items-center justify-center disabled:opacity-30"><ArrowUp className="w-4 h-4" /></button>
+                    <button type="button" onClick={() => maj('recettes', deplacer(form.recettes, i, 1))} disabled={i === form.recettes.length - 1} aria-label="Descendre" className="w-9 h-9 shrink-0 rounded-lg bg-white flex items-center justify-center disabled:opacity-30"><ArrowDown className="w-4 h-4" /></button>
+                    <button type="button" onClick={() => { if (confirm('Supprimer cette recette ?')) maj('recettes', form.recettes.filter((_, j) => j !== i)); }} aria-label="Supprimer la recette" className="w-9 h-9 shrink-0 rounded-lg bg-terre-pale text-brique flex items-center justify-center"><Trash2 className="w-4 h-4" /></button>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
-                    <input className={`${champ} bg-white`} placeholder="Temps (ex : 20 min)" value={r.temps} onChange={e => majRecette(i, { temps: e.target.value })} />
-                    <input className={`${champ} bg-white`} placeholder="Personnes (ex : 4)" value={r.personnes} onChange={e => majRecette(i, { personnes: e.target.value })} />
+                    <input className={champ} placeholder="Temps (ex. : 20 min)" value={r.temps} onChange={e => majRecette(i, { temps: e.target.value })} />
+                    <input className={champ} placeholder="Personnes (ex. : 4)" value={r.personnes} onChange={e => majRecette(i, { personnes: e.target.value })} />
                   </div>
-                  <textarea className={`${champ} bg-white min-h-[90px]`} placeholder={'Ingrédients, un par ligne\nEx : 2 mangues\n1 citron vert'} value={r.ingredients} onChange={e => majRecette(i, { ingredients: e.target.value })} />
-                  <textarea className={`${champ} bg-white min-h-[110px]`} placeholder={'Étapes, une par ligne\nEx : Éplucher les mangues.\nCouper en dés.'} value={r.etapes} onChange={e => majRecette(i, { etapes: e.target.value })} />
+                  <textarea className={`${champ} min-h-[90px]`} placeholder={'Ingrédients, un par ligne\nEx. : 2 mangues\n1 citron vert'} value={r.ingredients} onChange={e => majRecette(i, { ingredients: e.target.value })} />
+                  <textarea className={`${champ} min-h-[110px]`} placeholder={'Étapes, une par ligne\nEx. : Éplucher les mangues.\nCouper en dés.'} value={r.etapes} onChange={e => majRecette(i, { etapes: e.target.value })} />
                   <div className="flex items-center gap-3">
                     {r.photo ? (
                       <>
                         <img src={r.photo} alt="" className="w-24 aspect-[3/2] object-cover rounded-lg" />
-                        <button type="button" onClick={() => majRecette(i, { photo: '' })} className="text-[9px] font-black uppercase tracking-widest text-red-400 hover:text-red-600">Retirer la photo</button>
+                        <button type="button" onClick={() => majRecette(i, { photo: '' })} className="min-h-[36px] text-xs font-bold text-brique">Retirer la photo</button>
                       </>
                     ) : (
-                      <label className="relative inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white border border-dashed border-slate-200 text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-terre-cuite cursor-pointer">
-                        <ImagePlus className="w-3.5 h-3.5" /> Photo de la recette (facultatif)
+                      <label className="relative inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-[#C9BBAA] bg-white text-xs font-bold text-olivier-gris cursor-pointer">
+                        <ImagePlus className="w-4 h-4" /> Photo de la recette (facultatif)
                         <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => choisirPhoto(e, i)} />
                       </label>
                     )}
                   </div>
                 </div>
               ))}
-              <button type="button" onClick={() => maj('recettes', [...form.recettes, recetteVide()])} className="w-full py-3 rounded-xl border-2 border-dashed border-slate-200 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:border-terre-cuite/40 hover:text-terre-cuite flex items-center justify-center gap-2">
+              <button type="button" onClick={() => maj('recettes', [...form.recettes, recetteVide()])} className="w-full py-3 rounded-xl border-2 border-dashed border-[#C9BBAA] text-sm font-bold text-olivier-gris hover:border-terre-cuite hover:text-terre-cuite flex items-center justify-center gap-2">
                 <Plus className="w-4 h-4" /> Ajouter une recette
               </button>
             </div>
@@ -413,31 +428,31 @@ export default function EditeurFiche({ produit, fiche, slugsPris, onFermer, onEn
         </div>
 
         {/* PIED : actions */}
-        <div className="bg-white border-t border-slate-100 px-3 py-3 sm:px-6 sm:py-4 space-y-2">
+        <div className="bg-white border-t border-[#F0E7DA] px-3 py-3 pb-[calc(12px+env(safe-area-inset-bottom))] sm:px-6 sm:py-4 space-y-2">
           {message && (
-            <p className={`flex items-center gap-2 text-[11px] font-bold ${message.type === 'ok' ? 'text-green-600' : 'text-red-500'}`}>
+            <p role="status" className={`flex items-center gap-2 text-sm font-bold ${message.type === 'ok' ? 'text-[#166534]' : 'text-brique'}`}>
               {message.type === 'ok' && <CheckCircle2 className="w-4 h-4 shrink-0" />}{message.texte}
             </p>
           )}
           <div className="flex flex-wrap gap-2">
-            <button onClick={() => enregistrer()} disabled={enCours || !modifie} className="flex-1 min-w-[140px] bg-slate-900 text-white py-3 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-slate-700 disabled:opacity-40">
+            <button onClick={() => enregistrer()} disabled={enCours || !modifie} className="flex-1 min-w-[130px] min-h-12 rounded-2xl bg-olivier text-lin text-sm font-extrabold flex items-center justify-center gap-2 disabled:opacity-40">
               {enCours ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Enregistrer
             </button>
             {ficheEnregistree && !modifie ? (
-              <a href={`/produits/${ficheEnregistree.slug}`} target="_blank" rel="noopener" className="px-4 py-3 rounded-xl bg-slate-100 text-slate-600 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-slate-200">
-                <Eye className="w-4 h-4" /> Aperçu <ExternalLink className="w-3 h-3" />
+              <a href={`/produits/${ficheEnregistree.slug}`} target="_blank" rel="noopener" className="min-h-12 px-4 rounded-2xl border-[1.5px] border-olivier text-sm font-extrabold flex items-center justify-center gap-2">
+                <Eye className="w-4 h-4" /> Aperçu <ExternalLink className="w-3.5 h-3.5" />
               </a>
             ) : (
-              <span className="px-4 py-3 rounded-xl bg-slate-50 text-slate-300 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2" title="Enregistrez pour voir l'aperçu">
+              <span className="min-h-12 px-4 rounded-2xl border-[1.5px] border-[#E3D6C4] text-sm font-extrabold text-olivier-pale flex items-center justify-center gap-2" title="Enregistrez pour voir l'aperçu">
                 <Eye className="w-4 h-4" /> Aperçu
               </span>
             )}
             <button
               onClick={() => enregistrer(!publiee)}
               disabled={enCours}
-              className={`flex-1 min-w-[140px] py-3 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-40 ${publiee ? 'bg-slate-100 text-slate-500 hover:bg-slate-200' : 'bg-terre-cuite text-white hover:bg-[#B0552A] shadow-lg'}`}
+              className={`flex-1 min-w-[130px] min-h-12 rounded-2xl text-sm font-extrabold flex items-center justify-center gap-2 disabled:opacity-40 ${publiee ? 'border-[1.5px] border-[#E3D6C4] text-brique' : 'bg-terre-cuite text-white shadow-lg'}`}
             >
-              {publiee ? <><EyeOff className="w-4 h-4" /> Dépublier</> : <><Globe className="w-4 h-4" /> {modifie ? 'Enregistrer et publier' : 'Publier'}</>}
+              {publiee ? <><EyeOff className="w-4 h-4" /> Mettre hors ligne</> : <><Globe className="w-4 h-4" /> {modifie ? 'Enregistrer et publier' : 'Publier'}</>}
             </button>
           </div>
         </div>
