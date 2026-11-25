@@ -257,10 +257,20 @@ export default function AdminPage() {
       // propres boutons sur la même carte, et la copie prise à l'ouverture de
       // l'édition ne doit pas écraser ce qui a été modifié entre-temps.
       const { name, price, category, unite, pas_g, provenance, description, image_url } = editFormData;
-      const { error } = await supabase.from('products')
+      // Comme dans l'appli : on n'écrit que si personne n'a modifié le produit
+      // depuis l'ouverture de l'édition (sinon rien n'est écrasé)
+      let requete = supabase.from('products')
         .update({ name, price, category, unite, pas_g, provenance, description, image_url, ...contenanceSaisie(editFormData) })
         .eq('id', id);
+      if (editFormData.updated_at) requete = requete.eq('updated_at', editFormData.updated_at);
+      const { data, error } = await requete.select('id');
       if (error) throw error;
+      if (!data?.length) {
+        alert("Ce produit a été modifié ailleurs (appli ou autre appareil) pendant votre saisie. Rien n'a été écrasé : il est rechargé, refaites votre modification.");
+        setEditingProdId(null);
+        fetchData();
+        return;
+      }
       setEditingProdId(null);
       alert("Produit mis à jour !");
       fetchData();
@@ -426,7 +436,11 @@ export default function AdminPage() {
   }
 
   async function supprimerProduit(id: string) {
-    if (confirm(fiches[id] ? "Supprimer ce produit ? Sa page détaillée (textes, photos, recettes) sera aussi supprimée." : "Supprimer ?")) {
+    const nbVariantes = variantes.filter(v => v.product_id === String(id)).length;
+    const details = [fiches[id] ? 'sa page détaillée (textes, photos, recettes)' : '', nbVariantes ? `ses ${nbVariantes} variante${nbVariantes > 1 ? 's' : ''}` : ''].filter(Boolean).join(' et ');
+    if (confirm(details ? `Supprimer ce produit ?\n\nSeront aussi supprimées : ${details}.` : "Supprimer ?")) {
+      // Les variantes ne sont pas liées par la base : on les retire d'abord
+      if (nbVariantes) await supabase.from('product_variants').delete().eq('product_id', String(id));
       await supabase.from('products').delete().eq('id', id);
       fetchData();
     }
@@ -981,11 +995,11 @@ export default function AdminPage() {
                             <p className="text-[8px] font-black uppercase text-slate-400 mb-1 tracking-tighter">Lot au kg (X kg achetés + Y kg offerts)</p>
                             <div className="flex gap-2">
                               <div className="w-1/2">
-                                <input type="number" step="0.5" min="0" placeholder="Ex: 2 kg" className="w-full p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg text-center" onChange={(e) => { setSeuilAchat(parseFloat(e.target.value) || 0); setPourcentage(0); setSeuilPromoQte(0); setPrixPromo(0); setPremieresOffertesSaisie(0); }} />
+                                <input type="number" step="1" min="0" placeholder="Ex: 2 kg" className="w-full p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg text-center" onChange={(e) => { setSeuilAchat(parseFloat(e.target.value) || 0); setPourcentage(0); setSeuilPromoQte(0); setPrixPromo(0); setPremieresOffertesSaisie(0); }} />
                                 <p className="text-[7px] text-center text-slate-300 font-bold mt-0.5 uppercase">Payés (kg)</p>
                               </div>
                               <div className="w-1/2">
-                                <input type="number" step="0.5" min="0" placeholder="Ex: 0.5 kg" className="w-full p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg text-center" onChange={(e) => setQteOfferte(parseFloat(e.target.value) || 0)} />
+                                <input type="number" step="1" min="0" placeholder="Ex: 1 kg" className="w-full p-2.5 text-xs font-bold border-none bg-slate-50 rounded-lg text-center" onChange={(e) => setQteOfferte(parseFloat(e.target.value) || 0)} />
                                 <p className="text-[7px] text-center text-slate-300 font-bold mt-0.5 uppercase">Offerts (kg)</p>
                               </div>
                             </div>

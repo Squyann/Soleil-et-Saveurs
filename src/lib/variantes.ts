@@ -19,6 +19,14 @@ export const UNITES: { valeur: string; libelle: string }[] = [
 // Unités du contenu d'un conditionnement (ex. sachet de 1 kg, barquette de 500 g)
 export const UNITES_CONTENANCE = ['g', 'kg', 'pièces'] as const;
 
+// Contenu enregistré : sans objet pour une vente au kg ou au poids, et vide
+// si la quantité n'est pas un nombre positif (même règle partout)
+export function contenanceSaisie(unite: string | null | undefined, quantite: number | string | null | undefined, uniteContenu: string | null | undefined) {
+  const q = Number(String(quantite ?? '').replace(',', '.'));
+  if (['kg', 'g'].includes(unite || '') || !(q > 0) || String(quantite ?? '').trim() === '') return { contenance: null, contenance_unite: null };
+  return { contenance: Math.round(q * 1000) / 1000, contenance_unite: (UNITES_CONTENANCE as readonly string[]).includes(uniteContenu || '') ? uniteContenu! : 'kg' };
+}
+
 export type Variante = {
   id: string;
   product_id: string;
@@ -33,7 +41,10 @@ export type Variante = {
   promotion?: number | null; // remise % propre, vide = celle du produit
   stock?: number | null;     // stock propre, vide = stock du produit / illimité
   source_product_id?: string | null; // produit d'origine (regroupement)
+  contenance?: number | null;       // contenu propre (ex. barquette de 250 g)
+  contenance_unite?: string | null; // vide = celui du produit (même unité)
   created_at?: string | null;
+  updated_at?: string | null;
 };
 
 export const varianteActive = (v: Variante) => v.actif !== false;
@@ -96,6 +107,9 @@ export function produitPourVariante<T extends Record<string, any>>(produit: T, v
   if (!v) return produit;
   const memeUnite = memeUniteQueProduit(produit, v);
   const stockPartage = memeUnite ? produit.stock : null; // autre unité : illimité sauf stock propre
+  // Contenu : celui de la variante s'il est précisé, sinon celui du produit
+  // (seulement si elle est vendue dans la même unité)
+  const contenuPropre = Number(v.contenance) > 0 && !!v.contenance_unite;
   return {
     ...produit,
     unite: uniteVariante(produit, v),
@@ -103,6 +117,7 @@ export function produitPourVariante<T extends Record<string, any>>(produit: T, v
     promotion: v.promotion != null ? Number(v.promotion) : produit.promotion,
     stock: v.stock != null ? Number(v.stock) : stockPartage,
     ...(memeUnite ? {} : { seuil_achat: 0, quantite_offerte: 0, seuil_promo_qte: 0, prix_promo: 0, premieres_offertes: 0, contenance: null, contenance_unite: null }),
+    ...(contenuPropre ? { contenance: Number(v.contenance), contenance_unite: v.contenance_unite } : {}),
   };
 }
 

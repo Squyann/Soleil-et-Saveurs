@@ -6,7 +6,8 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import CadrageImage from '@/components/CadrageImage';
-import { nomVariante, UNITES, type Variante } from '@/lib/variantes';
+import { contenanceSaisie, nomVariante, UNITES, UNITES_CONTENANCE, type Variante } from '@/lib/variantes';
+import { libelleUnite } from '@/lib/format';
 import { rubriquesPropres, type Fiche, type FicheVariante } from '@/lib/fiches';
 
 const EditeurFicheVariante = nextDynamic(() => import('@/components/admin/EditeurFicheVariante'), { ssr: false });
@@ -16,7 +17,7 @@ const TAILLE_MAX_SOURCE = 20 * 1024 * 1024;
 const TAILLE_MAX_IMAGE = 5 * 1024 * 1024;
 
 // Champs éditables d'une variante (vides = valeurs du produit)
-type Saisie = { nom: string; prix: string; description: string; unite: string; pas_g: string; promotion: string; stock: string };
+type Saisie = { nom: string; prix: string; description: string; unite: string; pas_g: string; promotion: string; stock: string; contenance: string; contenance_unite: string };
 
 const texte = (n: number | null | undefined) => (n != null ? String(n) : '');
 const versSaisie = (v: Variante): Saisie => ({
@@ -27,6 +28,8 @@ const versSaisie = (v: Variante): Saisie => ({
   pas_g: texte(v.pas_g),
   promotion: texte(v.promotion),
   stock: texte(v.stock),
+  contenance: texte(v.contenance),
+  contenance_unite: v.contenance_unite ?? 'g',
 });
 
 // « 1,70 » → 1.7 ; vide → null ; texte invalide → NaN
@@ -35,7 +38,9 @@ const uniteLibelle = (u: string | null | undefined) => (u === 'g' ? 'kg' : u || 
 const memeNom = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
 
 const messageErreur = (e: any) =>
-  e?.code === '42703' || e?.code === 'PGRST204'
+  e?.message === 'conflit'
+    ? 'Cette variante a été modifiée ailleurs (appli ou autre appareil) pendant votre saisie. Rien n’a été écrasé : elle est rechargée, refaites votre modification.'
+    : e?.code === '42703' || e?.code === 'PGRST204'
     ? 'La base n’est pas encore à jour : faites lancer la migration 20261111b_variantes_unites.sql.'
     : `Erreur : ${e?.message ?? 'enregistrement impossible'}`;
 
@@ -78,6 +83,7 @@ export default function GestionVariantes({
   const normaliser = (x: Saisie) => JSON.stringify({
     nom: x.nom.trim(), prix: nombre(x.prix), description: x.description.trim(),
     unite: x.unite || null, pas_g: x.unite === 'g' ? nombre(x.pas_g) : null, promotion: nombre(x.promotion), stock: nombre(x.stock),
+    ...contenanceSaisie(x.unite || produit.unite, x.contenance, x.contenance_unite),
   });
   const modifiee = (v: Variante) => normaliser(saisie(v)) !== normaliser(versSaisie(v));
 
@@ -110,12 +116,25 @@ export default function GestionVariantes({
     if (promotion !== null && (Number.isNaN(promotion) || promotion < 0 || promotion > 100)) { setErreur('Remise invalide (entre 0 et 100 %).'); return; }
     if (stock !== null && (Number.isNaN(stock) || stock < 0)) { setErreur('Stock invalide.'); return; }
     if (pasG !== null && (Number.isNaN(pasG) || pasG <= 0)) { setErreur('Pas en grammes invalide.'); return; }
-    executer(v.id, async () => supabase.from('product_variants')
-      .update({
-        nom: s.nom.trim(), prix, description: s.description.trim() || null,
-        unite: s.unite || null, pas_g: pasG !== null ? Math.round(pasG) : null, promotion, stock,
-      })
-      .eq('id', v.id));
+    const contenu = nombre(s.contenance);
+    if (contenu !== null && (Number.isNaN(contenu) || contenu <= 0)) { setErreur('Contenu invalide.'); return; }
+    executer(v.id, async () => {
+      // N'écrit que si la variante n'a pas changé ailleurs depuis le chargement
+      let requete = supabase.from('product_variants')
+        .update({
+          nom: s.nom.trim(), prix, description: s.description.trim() || null,
+          unite: s.unite || null, pas_g: pasG !== null ? Math.round(pasG) : null, promotion, stock,
+          ...contenanceSaisie(s.unite || produit.unite, s.contenance, s.contenance_unite),
+        })
+        .eq('id', v.id);
+      if (v.updated_at) requete = requete.eq('updated_at', v.updated_at);
+      const { data, error } = await requete.select('id');
+      if (error) return { error };
+      if (!data?.length) {
+        setSaisies(p => { const suite = { ...p }; delete suite[v.id]; return suite; });
+        return { error: { message: 'conflit' } };
+      }
+    });
   }
 
   const basculerActif = (v: Variante) => executer(`actif-${v.id}`, async () =>
@@ -372,6 +391,17 @@ export default function GestionVariantes({
                             <input className={`${champ} font-bold py-2`} inputMode="numeric" value={s.pas_g} placeholder={String(produit.pas_g || 100)} onChange={e => setSaisies(p => ({ ...p, [v.id]: { ...s, pas_g: e.target.value } }))} />
                           </label>
                         )}
+                        {!['kg', 'g'].includes(s.unite || produit.unite || '') && (
+                          <label className="col-span-2 sm:col-span-1 block">
+                            <span className="block text-[8px] font-black uppercase tracking-widest text-slate-400 mb-0.5">Contenu ({s.unite || produit.unite || 'pièce'})</span>
+                            <span className="grid grid-cols-[1fr_64px] gap-1">
+                              <input className={`${champ} font-bold py-2`} inputMode="decimal" value={s.contenance} placeholder={(s.unite || produit.unite) === produit.unite && produit.contenance ? `${String(produit.contenance).replace('.', ',')} (produit)` : 'ex. 250'} onChange={e => setSaisies(p => ({ ...p, [v.id]: { ...s, contenance: e.target.value } }))} />
+                              <select className={`${champ} font-bold py-2 px-1`} value={s.contenance_unite} onChange={e => setSaisies(p => ({ ...p, [v.id]: { ...s, contenance_unite: e.target.value } }))}>
+                                {UNITES_CONTENANCE.map(u => <option key={u} value={u}>{u}</option>)}
+                              </select>
+                            </span>
+                          </label>
+                        )}
                         <label className="block">
                           <span className="block text-[8px] font-black uppercase tracking-widest text-slate-400 mb-0.5">Remise %</span>
                           <input className={`${champ} font-bold py-2`} inputMode="decimal" value={s.promotion} placeholder={Number(produit.promotion) > 0 ? `${produit.promotion} (produit)` : '—'} onChange={e => setSaisies(p => ({ ...p, [v.id]: { ...s, promotion: e.target.value } }))} />
@@ -384,6 +414,7 @@ export default function GestionVariantes({
                       <textarea className={`${champ} min-h-[52px]`} rows={2} value={s.description} placeholder="Informations propres à cette variante (facultatif)" onChange={e => setSaisies(p => ({ ...p, [v.id]: { ...s, description: e.target.value } }))} />
                       <p className="text-[9px] font-bold text-slate-400 truncate">
                         Affiché : « {nomVariante(produit, { ...v, nom: s.nom || v.nom })} »{s.prix.trim() === '' ? ' · prix du produit' : ''}
+                        {!['kg', 'g'].includes(s.unite || produit.unite || '') && ` · vendue ${libelleUnite(s.unite || produit.unite, contenanceSaisie(s.unite || produit.unite, s.contenance, s.contenance_unite).contenance ? contenanceSaisie(s.unite || produit.unite, s.contenance, s.contenance_unite) : (s.unite || produit.unite) === produit.unite ? produit : null)}`}
                         {(s.unite || produit.unite) !== produit.unite && ' · promos par quantité du produit non appliquées (autre unité)'}
                       </p>
                     </div>

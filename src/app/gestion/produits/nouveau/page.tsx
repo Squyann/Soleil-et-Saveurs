@@ -7,10 +7,11 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Camera, Plus, Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { UNITES } from '@/lib/variantes';
+import { contenanceSaisie, UNITES } from '@/lib/variantes';
 import { CATEGORIES, STOCK_ILLIMITE } from '@/lib/gestion/produits';
 import { useGestion } from '@/components/gestion/AppliGestion';
-import { Carte } from '@/components/gestion/Elements';
+import { Bascule, Carte } from '@/components/gestion/Elements';
+import ChampContenu, { avecContenu } from '@/components/gestion/ChampContenu';
 import CadrageImage from '@/components/CadrageImage';
 
 type VarianteSaisie = { nom: string; prix: string };
@@ -25,9 +26,11 @@ export default function NouveauProduit() {
   const [pasG, setPasG] = useState('100');
   const [categorie, setCategorie] = useState('Légumes');
   const [provenance, setProvenance] = useState('');
+  const [description, setDescription] = useState('');
+  const [contenu, setContenu] = useState({ quantite: '', unite: 'g' });
   const [illimite, setIllimite] = useState(true);
   const [stock, setStock] = useState('');
-  const [visible, setVisible] = useState(false);
+  const [visible, setVisible] = useState(true);
   const [variantes, setVariantes] = useState<VarianteSaisie[]>([]);
   const [photo, setPhoto] = useState<{ blob: Blob; apercu: string } | null>(null);
   const [cadrage, setCadrage] = useState<string | null>(null);
@@ -52,6 +55,8 @@ export default function NouveauProduit() {
     if (!nom.trim()) return setErreur('Le nom est obligatoire.');
     if (p == null || Number.isNaN(p) || p <= 0 || p > 1000) return setErreur('Prix invalide.');
     const pas = unite === 'g' ? nombre(pasG) : null;
+    const c = nombre(contenu.quantite);
+    if (c != null && (Number.isNaN(c) || c <= 0 || c > 100000)) return setErreur('Contenu invalide.');
     if (unite === 'g' && (pas == null || Number.isNaN(pas) || pas < 10 || pas > 5000 || !Number.isInteger(pas))) return setErreur('Tranche de vente invalide (entre 10 et 5000 g).');
     const s = illimite ? STOCK_ILLIMITE : nombre(stock);
     if (s == null || Number.isNaN(s) || s < 0 || (!Number.isInteger(s) && unite !== 'kg')) return setErreur('Stock invalide.');
@@ -74,7 +79,7 @@ export default function NouveauProduit() {
       const ins = await supabase.from('products').insert([{
         name: nom.trim().slice(0, 120), price: Math.round(p * 100) / 100, unite, pas_g: unite === 'g' ? pas : 100,
         category: categorie, provenance: provenance.trim().slice(0, 80) || null, stock: unite === 'g' || unite === 'kg' ? s : Math.round(s),
-        actif: visible, image_url, description: '', promotion: 0, seuil_achat: 0, quantite_offerte: 0, seuil_promo_qte: 0, prix_promo: 0,
+        actif: visible, image_url, description: description.trim().slice(0, 1000), ...contenanceSaisie(unite, contenu.quantite, contenu.unite), promotion: 0, seuil_achat: 0, quantite_offerte: 0, seuil_promo_qte: 0, prix_promo: 0,
       }]).select('id').single();
       if (ins.error) {
         if (ins.error.code === '23505') throw new Error(`Un produit nommé « ${nom.trim()} » existe déjà`);
@@ -138,6 +143,11 @@ export default function NouveauProduit() {
               <input id="pas" inputMode="numeric" value={pasG} onChange={(e) => setPasG(e.target.value.replace(/\D/g, ''))} className={champ} />
             </div>
           )}
+          {avecContenu(unite) && (
+            <div className="col-span-2">
+              <ChampContenu id="contenu" unite={unite} quantite={contenu.quantite} uniteContenu={contenu.unite} changer={(q, u) => setContenu({ quantite: q, unite: u })} />
+            </div>
+          )}
           <div>
             <label htmlFor="categorie" className={libelle}>Catégorie</label>
             <select id="categorie" value={categorie} onChange={(e) => setCategorie(e.target.value)} className={champ}>
@@ -148,6 +158,10 @@ export default function NouveauProduit() {
             <label htmlFor="provenance" className={libelle}>Provenance</label>
             <input id="provenance" value={provenance} onChange={(e) => setProvenance(e.target.value)} placeholder="facultatif" className={champ} />
           </div>
+        </div>
+        <div>
+          <label htmlFor="description" className={libelle}>Description courte (facultatif)</label>
+          <textarea id="description" rows={2} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="ex. Cueillis jeunes, extra-fins" className={champ} />
         </div>
       </Carte>
 
@@ -211,13 +225,6 @@ export default function NouveauProduit() {
   );
 }
 
-function Bascule({ on, libelle, changer }: { on: boolean; libelle: string; changer: () => void }) {
-  return (
-    <button type="button" role="switch" aria-checked={on} aria-label={libelle} onClick={changer} className={`relative h-8 w-[52px] flex-none rounded-full transition-colors ${on ? 'bg-olivier' : 'bg-[#C9BBAA]'}`}>
-      <span className={`absolute top-1 h-6 w-6 rounded-full bg-white transition-all ${on ? 'right-1' : 'left-1'}`} />
-    </button>
-  );
-}
 
 function Retour() {
   return (
