@@ -3,6 +3,15 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { roleEquipe } from '@/lib/gestion/roles';
 
 export async function middleware(request: NextRequest) {
+  // Navigation interne de l'application de gestion (requêtes RSC, préchargements
+  // compris) : pas d'aller-retour vers Supabase à chaque appui. La page a déjà
+  // été contrôlée à son ouverture, l'appli suit la session côté téléphone, et
+  // ces réponses ne contiennent aucune donnée (tout passe par la base, qui
+  // vérifie chaque lecture et écriture).
+  if (estPageGestionProtegee(request.nextUrl.pathname) && request.headers.get('rsc') === '1') {
+    return NextResponse.next({ request });
+  }
+
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
