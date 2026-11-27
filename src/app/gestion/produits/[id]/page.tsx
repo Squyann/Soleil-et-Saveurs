@@ -16,7 +16,7 @@ import { completudeFiche, type Fiche, type FicheVariante } from '@/lib/fiches';
 import {
   CATEGORIES, COLONNES_PRODUIT, COLONNES_VARIANTE, definirDisponibilite, enregistrerProduit, estIllimite, type Produit, type Variante,
 } from '@/lib/gestion/produits';
-import { reponse } from '@/lib/gestion/memoire';
+import { lireMemoire, reponse } from '@/lib/gestion/memoire';
 import { useChangements, useGestion } from '@/components/gestion/AppliGestion';
 import { Bascule, Carte, Chargement } from '@/components/gestion/Elements';
 import Feuille from '@/components/gestion/Feuille';
@@ -130,12 +130,14 @@ export default function FicheProduit() {
   const router = useRouter();
   const { peut, role, executer, enLigne, notifier } = useGestion();
   const modifiable = peut('catalogue');
-  const [p, setP] = useState<Produit | null>(null);
+  // Affichage immédiat depuis la liste déjà chargée sur le téléphone, puis
+  // remplacé par la version du serveur dès qu'elle arrive
+  const [p, setP] = useState<Produit | null>(() => lireMemoire<{ produits: Produit[] }>('produits')?.valeur?.produits?.find((x) => String(x.id) === id) ?? null);
   const [variantes, setVariantes] = useState<Variante[]>([]);
   const [fiche, setFiche] = useState<Fiche | null | undefined>(undefined);
   const [fichesVariantes, setFichesVariantes] = useState<Record<string, FicheVariante>>({});
   const [editeur, setEditeur] = useState<{ slugsPris: string[] } | null>(null);
-  const [saisie, setSaisie] = useState<Saisie | null>(null);
+  const [saisie, setSaisie] = useState<Saisie | null>(() => (p ? depuis(p) : null));
   const [introuvable, setIntrouvable] = useState(false);
   const [erreur, setErreur] = useState('');
   const [conflit, setConflit] = useState<Produit | null>(null);
@@ -143,6 +145,7 @@ export default function FicheProduit() {
   const [cadrage, setCadrage] = useState<string | null>(null);
   const [envoi, setEnvoi] = useState(false);
   const [suppression, setSuppression] = useState(false);
+  const [charge, setCharge] = useState(false);
 
   const charger = useCallback(async (garderSaisie = true) => {
     const [a, b, f] = await Promise.all([
@@ -157,11 +160,13 @@ export default function FicheProduit() {
     const vs = (b.data as Variante[]) ?? [];
     setVariantes(vs);
     if (!f.error) setFiche((f.data as Fiche) ?? null);
+    setSaisie((s) => (garderSaisie && s ? s : depuis(prod)));
+    setCharge(true);
+    // Fiches des variantes ensuite, sans faire attendre l'écran
     if (vs.length) {
       const fv = await supabase.from('fiches_variantes').select('*').in('variant_id', vs.map((v) => v.id));
       if (!fv.error) setFichesVariantes(Object.fromEntries(((fv.data as FicheVariante[]) ?? []).map((x) => [x.variant_id, x])));
     }
-    setSaisie((s) => (garderSaisie && s ? s : depuis(prod)));
   }, [id]);
   useEffect(() => {
     const t = setTimeout(() => { void charger(false); }, 0);
@@ -455,7 +460,7 @@ export default function FicheProduit() {
         </div>
       </Carte>
 
-      <Variantes p={p} variantes={variantes} ficheProduit={fiche ?? null} fichesVariantes={fichesVariantes} recharger={() => { void charger(true); }} />
+      {!charge ? <div className="mb-3"><Chargement lignes={1} /></div> : <Variantes p={p} variantes={variantes} ficheProduit={fiche ?? null} fichesVariantes={fichesVariantes} recharger={() => { void charger(true); }} />}
 
       {role === 'admin' && (
         <div className="mb-3 mt-6">
