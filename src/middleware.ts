@@ -8,7 +8,9 @@ export async function middleware(request: NextRequest) {
   // été contrôlée à son ouverture, l'appli suit la session côté téléphone, et
   // ces réponses ne contiennent aucune donnée (tout passe par la base, qui
   // vérifie chaque lecture et écriture).
-  if (estPageGestionProtegee(request.nextUrl.pathname) && request.headers.get('rsc') === '1') {
+  // (Next retire l'en-tête « RSC » avant le middleware ; « Next-Url » n'est
+  // envoyé que par la navigation interne, jamais au chargement d'une page.)
+  if (estPageGestionProtegee(request.nextUrl.pathname) && request.headers.has('next-url')) {
     return NextResponse.next({ request });
   }
 
